@@ -1,0 +1,93 @@
+netcdf s4dvar_obs_rays {
+
+dimensions:
+  survey = 1 ;
+  state_variable = 20 ;
+  ray_datum = 1 ;
+  datum = UNLIMITED ; // (0 currently)
+variables:
+  int spherical ;
+    spherical:long_name = "grid type logical switch" ;
+    spherical:flag_values = "0, 1" ;
+    spherical:flag_meanings = "Cartesian spherical" ;
+  int Nobs(survey) ;
+    Nobs:long_name = "number of observations with the same survey time" ;
+  double survey_time(survey) ;
+    survey_time:long_name = "survey time" ;
+    survey_time:units = "day" ;
+  double obs_variance(state_variable) ;
+    obs_variance:long_name = "global time and space observation variance" ;
+    obs_variance:units = "squared state variable units" ;
+  int obs_type(datum) ;
+    obs_type:long_name = "model state variable associated with observation" ;
+    obs_type:flag_values = "see global state variables" ;
+  int obs_provenance(datum) ;
+    obs_provenance:long_name = "observation origin" ;
+  double obs_time(datum) ;
+    obs_time:long_name = "time of observation" ;
+    obs_time:units = "day" ;
+  double obs_lat(datum) ;
+    obs_lat:long_name = "latitude of observation" ;
+    obs_lat:units = "degrees" ;
+  double obs_lon(datum) ;
+    obs_lon:long_name = "longitude of observation" ;
+    obs_lon:units = "degrees" ;
+  double obs_depth(datum) ;
+    obs_depth:long_name = "depth of observation" ;
+    obs_depth:units = "meter" ;
+    obs_depth:negative = "downwards" ;
+  double obs_Xgrid(datum) ;
+    obs_Xgrid:long_name = "x-grid observation location" ;
+    obs_Xgrid:left = "INT(obs_Xgrid(datum))" ;
+    obs_Xgrid:right = "INT(obs_Xgrid(datum))+1" ;
+  double obs_Ygrid(datum) ;
+    obs_Ygrid:long_name = "y-grid observation location" ;
+    obs_Ygrid:top = "INT(obs_Ygrid(datum))+1" ;
+    obs_Ygrid:bottom = "INT(obs_Ygrid(datum))" ;
+  double obs_Zgrid(datum) ;
+    obs_Zgrid:long_name = "z-grid observation location" ;
+    obs_Zgrid:up = "INT(obs_Zgrid(datum))+1" ;
+    obs_Zgrid:down = "INT(obs_Zgrid(datum))" ;
+  double obs_error(datum) ;
+    obs_error:long_name = "observation error covariance" ;
+    obs_error:units = "squared state variable units" ;
+  double obs_value(datum) ;
+    obs_value:long_name = "observation value" ;
+    obs_value:units = "state variable units" ;
+  double obs_meta(datum) ;
+    obs_value:long_name = "observation meta value" ;
+    obs_value:units = "state variable units" ;
+  int ray_id(ray_datum) ;
+    ray_id:long_name = "Ray ID for grouping" ;
+  double ray_Xgrid(ray_datum) ;
+    ray_Xgrid:long_name = "x-grid of ray position" ;
+    ray_Xgrid:left = "INT(ray_Xgrid(datum))" ;
+    ray_Xgrid:right = "INT(ray_Xgrid(datum))+1" ;
+  double ray_Ygrid(ray_datum) ;
+    ray_Ygrid:long_name = "y-grid of ray position" ;
+    ray_Ygrid:top = "INT(ray_Ygrid(datum))+1" ;
+    ray_Ygrid:bottom = "INT(ray_Ygrid(datum))" ;
+  double ray_Zgrid(ray_datum) ;
+    ray_Zgrid:long_name = "z-grid of ray position" ;
+    ray_Zgrid:up = "INT(ray_Zgrid(datum))+1" ;
+    ray_Zgrid:down = "INT(ray_Zgrid(datum))" ;
+  double ray_depth(ray_datum) ;
+    ray_depth:long_name = "depth of ray position (positive down)" ;
+    ray_depth:units = "meters" ;
+  double ray_length(ray_datum) ;
+    ray_length:long_name = "arc-length of this portion of the ray" ;
+    ray_length:units = "meters" ;
+
+// global attributes:
+    :type = "ROMS Observations" ;
+    :state_variables = "\n",
+      "1: free-surface (m)",
+      "2: vertically integrated u-momentum component (m/s)",
+      "3: vertically integrated v-momentum component (m/s)",
+      "4: u-momentum component (m/s)",
+      "5: v-momentum component (m/s)",
+      "6: potential temperature (Celsius)",
+      "7: salinity (nondimensional)",
+      "19: acoustic travel time (s)" ;
+      "20: radial velocity (m/s)" ;
+}
