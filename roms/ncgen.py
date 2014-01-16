@@ -62,6 +62,13 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, N):
     dims["eta_v"] = eta_rho-1
     dims["eta_psi"] = eta_rho-1
     dims["N"] = N
+
+    # Fill in the appropriate dimension values
+    if dims.has_key("s_rho"):
+        dims["s_rho"] = N
+    if dims.has_key("s_w"):
+        dims["s_w"] = N+1
+    
     return dims
 
 def _set_time_ref(vars, timevar, timebase, cycle=None):
@@ -107,7 +114,6 @@ def create_river(file, nriver=1, s_rho=5,
     
     # Fill in the appropriate river values
     dims["river"]=nriver
-    dims["s_rho"]=s_rho
     vars = _set_time_ref(vars, "river_time", "days since %s" % timebase)
 
     # Create the river file
@@ -266,8 +272,6 @@ def create_ini(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    dims["s_rho"] = N
-    dims["s_w"] = N+1
     vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
 
     # Create the file
@@ -330,8 +334,6 @@ def create_da_bry_std(file, eta_rho=10, xi_rho=10, N=1, bry=4,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    dims["s_rho"] = N
-    dims["s_w"] = N+1
     dims["IorJ"] = max(eta_rho,xi_rho)
     dims["boundary"] = bry
     vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
@@ -352,8 +354,6 @@ def create_da_frc_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    dims["s_rho"] = N
-    dims["s_w"] = N+1
     vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
 
     # Create the file
@@ -372,8 +372,6 @@ def create_da_ini_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    dims["s_rho"] = N
-    dims["s_w"] = N+1
     vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
 
     # Create the file
@@ -392,8 +390,6 @@ def create_da_model_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    dims["s_rho"] = N
-    dims["s_w"] = N+1
     vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
 
     # Create the file

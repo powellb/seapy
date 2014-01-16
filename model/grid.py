@@ -13,24 +13,28 @@ from __future__ import print_function
 import netCDF4
 import datetime
 import os
+import re
 import seapy
 import numpy as np
 
 class grid:
     def __init__(self, file=None, lat=None, lon=None, depth=None,
-                 minimal=True, cgrid=False, nc="r"):
+                 minimal=True, cgrid=False):
         """
             Class to wrap around a numerical model grid for oceanography. 
             It attempts to track latitude, longitude, depth, and other
             parameters.
         """
-        self._file = file
+        self.file = file
         self.cgrid = cgrid
-        if self._file != None:
-            self._init_file(nc)
-            self._isroms = True if ("s_rho" or "theta_s" or \
-                                    "vtransform" or "pm" or "lon_rho" ) \
-                                in self.__dict__ else False
+
+        if self.file != None:
+            self._initfile()
+            self._isroms = True if \
+              (len(list(set(("s_rho","pm","pn","theta_s","theta_b", \
+                            "vtransform", "vstretching")).intersection( \
+                            set(self.__dict__)))) > 0) \
+              else False
             self.cgrid = True if self._isroms else self.cgrid
         else:
             self._nc = None
@@ -42,8 +46,11 @@ class grid:
         if not minimal:
             self.set_dims()
             self.set_depth()
-    
-    def _init_file(self, nc):
+        if self._nc is not None:
+            self._nc.close()
+            self._nc = None
+            
+    def _initfile(self):
         """
             Using an input file, try to load as much information
             as can be found in the given file.
@@ -77,7 +84,8 @@ class grid:
                 }
 
         # Open the file
-        self._nc = netCDF4.Dataset(self._file,nc)
+        self._nc = netCDF4.Dataset(self.file,"r")
+        self.name = re.search("[^\.]*",os.path.basename(self.file)).group();
         for var in gvars.keys():
             for inp in gvars[var]:
                 if inp in self._nc.variables:

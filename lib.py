@@ -14,13 +14,16 @@ from __future__ import print_function
 
 import numpy as np
 
+secs2day = 1.0/86400.0
+
 def adddim(fld,size=1):
     """
-    Given a 2D field, fld, add a new first dimension of given size
+    Given a field, replicate with a new first dimension of given size
     """
+    fld=np.asanyarray(fld)
     return np.transpose( \
-       np.kron(fld,np.ones(size)).reshape([fld.shape[0],fld.shape[1],size]), \
-       [2,0,1])
+       np.kron(fld,np.ones(size)).reshape(np.append(np.asarray(fld.shape),size)),
+       np.append(fld.ndim,np.arange(0,fld.ndim))) 
 
 
 def convolve_mask(fld, ksize=3, kernel=None):
@@ -28,6 +31,7 @@ def convolve_mask(fld, ksize=3, kernel=None):
     Given a masked array, convolve data over the masking using the
     specified kernel size, or the provided kernel
     """
+    fld = np.ma.array(fld, copy=False)
     if kernel == None:
         center=np.round(ksize/2)
         kernel=np.ones([ksize,ksize])
@@ -36,8 +40,9 @@ def convolve_mask(fld, ksize=3, kernel=None):
     msk=np.ma.getmaskarray(fld)
     count=np.convolve( (~msk).view(np.int8).ravel(), kernel.ravel(), \
                       'same').reshape(msk.shape)
-    nfld=np.convolve(fld.ravel(),kernel.ravel(),'same').reshape(msk.shape)
-    lst=np.nonzero(msk is True and count>0)
+    nfld=np.convolve((fld.data*(~msk).view(np.int8)).ravel(),kernel.ravel(), \
+                      'same').reshape(msk.shape)
+    lst=np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]
 
@@ -51,6 +56,11 @@ def earth_distance(lon1, lat1, lon2, lat2):
     radius = 6378137; # Radius in meters
     d2r = np.pi/180.0
     
+    lon1 = np.asanyarray(lon1)
+    lat1 = np.asanyarray(lat1)
+    lon2 = np.asanyarray(lon2)
+    lat2 = np.asanyarray(lat2)
+    
     # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for 
     # working with geocentric where lat_gc = atan(epsilon * tan(lat))
     tan_lat = epsilon * np.tan(d2r*lat1)
@@ -63,4 +73,18 @@ def earth_distance(lon1, lat1, lon2, lat2):
     return radius*np.sqrt(2.0*(1.0-cos_lat*cos_latj* \
                           np.cos(d2r*(lon1-lon2))-sin_lat*sin_latj))
 
+def rotate(u, v, angle):
+    """
+    rotate(u,v,angle)
+    
+    Rotate a vector field, given by u and v, by the angle given.
+    """
+    u=np.asanyarray(u)
+    v=np.asanyarray(v)
+    sa=np.sin(np.asanyarray(angle))
+    ca=np.cos(np.asanyarray(angle))
+
+    return u*ca - v*sa, u*sa + v*ca
+    
+    
 pass

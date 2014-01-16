@@ -11,14 +11,34 @@ from __future__ import print_function
 import numpy as np
 import netcdftime
 
-fields={ # "zeta":{"grid":"rho","dims":2},
-           # "ubar":{"grid":"u","dims":2},
-           # "vbar":{"grid":"v","dims":2},
-           "u":{"grid":"u","dims":3}}
-           # "v":{"grid":"v","dims":3},
-           # "temp":{"grid":"rho","dims":3},
-           # "salt":{"grid":"rho","dims":3}}
+fields={   "zeta":{"grid":"rho","dims":2},
+           "ubar":{"grid":"u","dims":2,"rotate":"vbar"},
+           "vbar":{"grid":"v","dims":2,"rotate":"ubar"},
+           "u":{"grid":"u","dims":3,"rotate":"v"},
+           "v":{"grid":"v","dims":3,"rotate":"u"},
+           "temp":{"grid":"rho","dims":3},
+           "salt":{"grid":"rho","dims":3}}
 
+def get_timevar(nc):
+    """
+    get_timevar(nc)
+    
+    Find the appropriate time variable from a given netcdf file
+    
+    Parameters
+    ----------
+    nc : netCDF4.Dataset netcdf input file
+    
+    Returns
+    -------
+    string of time name
+    
+    """
+    for time in ("ocean_time", "time", "zeta_time"):
+        if time in nc.variables:
+            return time
+    return None
+    
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
                w_grid=False):
@@ -133,7 +153,7 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
 
 def get_timebase(time):
     """
-    Give a netCDF4 time record from a ROMS file, compute the timebase
+    Given a netCDF4 time record from a ROMS file, compute the timebase
     for the file
     """
     return netcdftime.utime(time.units).origin
