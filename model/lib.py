@@ -11,7 +11,6 @@
 from __future__ import print_function
 
 import numpy as np
-import pudb
     
 def _cgrid_rho_vel( field, dim ):
     """

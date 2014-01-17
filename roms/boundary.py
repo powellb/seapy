@@ -13,7 +13,6 @@ import seapy
 import numpy as np
 import netCDF4
 import netcdftime
-import pudb
 
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """

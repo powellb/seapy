@@ -41,36 +41,52 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
     
-    # Convolve the water over the land
-    seapy.convolve_mask(data, 7)
-    
-    # Add upper and lower boundaries
-    ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
-    ndat[0,:,:]=data[0,:,:]*factor
-    ndat[1:-1,:,:]=data
-    ndat[-1,:,:]=data[-1,:,:]*factor
-    nrz = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
-    nrz[1:-1,:,:]=rz
+    # To avoid extrapolation, add a new top and bottom layer that replicates 
+    # the data of the existing current and top. 1) Determine which way the 
+    # depth goes and add/subtract new layers, and 2) fill in masked values
+    # from the layer above/below.
     gradsrc = (rz[0,1,1]-rz[-1,1,1]) > 0
     graddest = (zz[0,1,1]-zz[-1,1,1]) > 0
-    # Determine which way the depth goes and add/subtract new layers
+    nrz = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
+    nrz[1:-1,:,:]=rz
     if not gradsrc:
+        # The first level is the bottom
         nrz[0,:,:]=rz[0,:,:]-500
         nrz[-1,:,:]=np.minimum(rz[-1,:,:]+50,0)
+        # Fill in missing values where we have them from above (level above)
+        for k in np.arange(data.shape[0]-2,-1,-1):
+            idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k+1,:,:]))
+            data.mask[k,idx[0],idx[1]]=data.mask[k+1,idx[0],idx[1]]
+            data[k,idx[0],idx[1]]=data[k+1,idx[0],idx[1]]*factor
     else:
+        # The first level is the top
         nrz[0,:,:]=np.minimum(rz[0,:,:]+50,0)
         nrz[-1,:,:]=rz[-1,:,:]-500
+        # Fill in missing values where we have them from above (level below)
+        for k in np.arange(1,data.shape[0]):
+            idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k-1,:,:]))
+            data.mask[k,idx[0],idx[1]]=data.mask[k-1,idx[0],idx[1]]
+            data[k,idx[0],idx[1]]=data[k-1,idx[0],idx[1]]*factor
+
+    # Convolve the water over the land
+    seapy.convolve_mask(data, 7)
+
+    # Add upper and lower boundaries
+    ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
+    ndat[0,:,:]=data[0,:,:].filled(np.nan)*factor
+    ndat[1:-1,:,:]=data.filled(np.nan)
+    ndat[-1,:,:]=data[-1,:,:].filled(np.nan)*factor
 
     # Interpolate the field and return the result
     if gradsrc:
         res, pm = seapy.oavol(rx, ry, \
-                            nrz[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                            ndat[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                            zx, zy, zz, pmap, \
-                            weight, nx, ny)
+                    nrz[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
+                    ndat[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
+                    zx, zy, zz, pmap, \
+                    weight, nx, ny)
     else:
-        res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, pmap, \
-                            weight, nx, ny)
+        res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
+                            pmap, weight, nx, ny)
     return np.ma.array(res, mask=np.logical_or(mask==0,np.abs(res)>9e10), 
                        copy=False)
 
@@ -193,7 +209,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                              (delayed(_interp3_thread)( 
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
               getattr(src_grid,"depth_"+grd),
-              ncsrc.variables[k][i,:,:,:], 
+              ncsrc.variables[k][i,:,:,:],
               getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
               getattr(child_grid,"depth_"+grd),
               pmap["pmap"+grd], weight,
