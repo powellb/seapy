@@ -50,7 +50,7 @@ class process_thread(threading.Thread):
             item.run()
             self.queue.task_done()
 
-def start(tasks, nthreads=2):
+def execute(tasks, nthreads=2):
     q = Queue.Queue()
     for i in range(nthreads):
          t = process_thread(q)
