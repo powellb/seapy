@@ -19,6 +19,8 @@ from __future__ import print_function
 import Queue
 import threading
 import subprocess
+import sys
+import datetime
 
 class task:
     def __init__(self, name, cmd, *args):
@@ -46,8 +48,13 @@ class process_thread(threading.Thread):
     def run(self):
         while True:
             item = self.queue.get()
-            print(self.getName()+" running "+item.name+"\n")
+            print(self.getName()+" running "+ \
+                  item.name+" at "+str(datetime.datetime.now())+"\n")
+            sys.stdout.flush()
             item.run()
+            print(self.getName()+" completed "+item.name+ \
+                  " at "+str(datetime.datetime.now())+"\n")
+            sys.stdout.flush()
             self.queue.task_done()
 
 def execute(tasks, nthreads=2):
