@@ -235,30 +235,32 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             child_grid.depth_rho, dstangle, \
             pmap["pmaprho"], weight, nx, ny,  \
             child_grid.mask_rho) for i in records)
-        vel_u = np.ma.array(vel[0],copy=False)
-        vel_v = np.ma.array(vel[1],copy=False)
-        if z_mask:
-            _mask_z_grid(vel_u,src_grid.depth_rho,child_grid.depth_rho)
-            _mask_z_grid(vel_v,src_grid.depth_rho,child_grid.depth_rho)
 
-        if child_grid.cgrid is True:
-            vel_u = seapy.model.rho2u(vel_u)
-            vel_v = seapy.model.rho2v(vel_v)
+        for j in np.arange(0,len(vel)):
+            vel_u = np.ma.array(vel[j][0],copy=False)
+            vel_v = np.ma.array(vel[j][1],copy=False)
+            if z_mask:
+                _mask_z_grid(vel_u,src_grid.depth_rho,child_grid.depth_rho)
+                _mask_z_grid(vel_v,src_grid.depth_rho,child_grid.depth_rho)
+
+            if child_grid.cgrid is True:
+                vel_u = seapy.model.rho2u(vel_u)
+                vel_v = seapy.model.rho2v(vel_v)
 
 
-        ncout.variables[vmap["u"]][:] = vel_u
-        ncout.variables[vmap["v"]][:] = vel_v
+            ncout.variables[vmap["u"]][j,:] = vel_u
+            ncout.variables[vmap["v"]][j,:] = vel_v
 
-        if vmap.has_key("ubar") and vmap["ubar"] in ncout.variables:
-            # Create ubar and vbar
-            depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
-            ncout.variables[vmap["ubar"]][:] = \
-                np.sum(vel_u * depth, 1) / np.sum(depth, 1)
+            if vmap.has_key("ubar") and vmap["ubar"] in ncout.variables:
+                # Create ubar and vbar
+                depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
+                ncout.variables[vmap["ubar"]][j,:] = \
+                    np.sum(vel_u * depth, 1) / np.sum(depth, 1)
 
-        if vmap.has_key("vbar") and vmap["vbar"] in ncout.variables:
-            depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
-            ncout.variables[vmap["vbar"]][:] = \
-                np.sum(vel_v * depth, 1) / np.sum(depth, 1)
+            if vmap.has_key("vbar") and vmap["vbar"] in ncout.variables:
+                depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
+                ncout.variables[vmap["vbar"]][j,:] = \
+                    np.sum(vel_v * depth, 1) / np.sum(depth, 1)
 
 # def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 #             nx=0, ny=0, vmap=None):
