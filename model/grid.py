@@ -154,20 +154,20 @@ class grid:
         if "pm" in self.__dict__:
             self.dm = 1.0/self.pm
         else:
-            self.dm = np.ones(self.lon_rho.shape)
+            self.dm = np.ones(self.lon_rho.shape,dtype=np.float32)
             self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:,1:], \
-                                              self.lat_rho[:,1:], \
-                                              self.lon_rho[:,0:-1], \
-                                              self.lat_rho[:,0:-1] )
+                                      self.lat_rho[:,1:], \
+                                      self.lon_rho[:,0:-1], \
+                                      self.lat_rho[:,0:-1]).astype(np.float32)
             self.dm[:,-1] = self.dm[:,-2]
         if "pn" in self.__dict__:
             self.dn = 1.0/self.pn
         else:
-            self.dn = np.ones(self.lat_rho.shape)
+            self.dn = np.ones(self.lat_rho.shape,dtype=np.float32)
             self.dn[0:-1,:] = seapy.earth_distance( self.lon_rho[1:,:], \
-                                              self.lat_rho[1:,:], \
-                                              self.lon_rho[0:-1,:], \
-                                              self.lat_rho[0:-1,:] )
+                                      self.lat_rho[1:,:], \
+                                      self.lon_rho[0:-1,:], \
+                                      self.lat_rho[0:-1,:] ).astype(np.float32)
             self.dn[-1,:] = self.dn[-2,:]
         
         # Compute the Coriolis

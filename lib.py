@@ -71,7 +71,7 @@ def earth_distance(lon1, lat1, lon2, lat2):
     sin_latj = tan_lat / np.sqrt(1.0+tan_lat**2)
 
     return radius*np.sqrt(2.0*(1.0-cos_lat*cos_latj* \
-                  np.cos(d2r*(lon1-lon2))-sin_lat*sin_latj)).astype(np.float32)
+                  np.cos(d2r*(lon1-lon2))-sin_lat*sin_latj))
 
 def rotate(u, v, angle):
     """
