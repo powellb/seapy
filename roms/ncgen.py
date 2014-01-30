@@ -81,7 +81,7 @@ def _set_time_ref(vars, timevar, timebase, cycle=None):
     for tvar in timevar:
         for nvar in vars:
             if nvar["name"] == tvar:
-                if nvar["attr"].haskey("units"):
+                if nvar["attr"].has_key("units"):
                     t = netcdftime.utime(nvar["attr"]["units"])                
                     nvar["attr"]["units"] = "%s since %s" % ( t.units, timebase )
                 else:
