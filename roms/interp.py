@@ -154,13 +154,11 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     # Create or load the pmaps depending on if they exist
     weight=8
     if nx==0 and hasattr(src_grid,"dm") and hasattr(child_grid,"dm"):
-        nx = np.ceil( np.round( np.mean( (src_grid.dm / \
-                    child_grid.dm).flatten() ),1))
+        nx = np.ceil( np.mean( src_grid.dm ) / np.mean( child_grid.dm) ) 
     else:
         nx = 5
     if ny==0 and hasattr(src_grid,"dn") and hasattr(child_grid,"dn"):
-        ny = np.ceil( np.round( np.mean( (src_grid.dn / \
-                    child_grid.dn).flatten() ),1))
+        nx = np.ceil( np.mean( src_grid.dn ) / np.mean( child_grid.dn) ) 
     else:
         ny = 5
         
@@ -495,7 +493,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  vmap=vmap)
+                  nx=1, ny=1, vmap=vmap)
 
     # Clean up
     ncout.close()
