@@ -302,6 +302,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     [nx] : decorrelation length in grid-cells for x
     [ny] : decorrelation length in grid-cells for y
     [vmap] : dictionary mapping source and destination variables
+    [dims] : make a 1-d lat/lon or 2-d lat/lon z-grid file
     
     Returns
     -------
