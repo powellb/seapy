@@ -281,7 +281,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
 #     ncout.close()
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
-             threads=1, nx=0, ny=0, vmap=None):
+             threads=1, nx=0, ny=0, vmap=None, dims=2):
     """
     to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
                  threads=1, nx=0, ny=0)
@@ -330,9 +330,13 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             if depth==None:
                 raise ValueError("depth must be specified")
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
-                                   src_time.origin,"ROMS z-level")
-            ncout.variables["lat"][:]=roms_grid.lat_rho
-            ncout.variables["lon"][:]=roms_grid.lon_rho
+                                   src_time.origin,"ROMS z-level", dims=dims)
+            if dims==1:
+                ncout.variables["lat"][:]=roms_grid.lat_rho[:,0]
+                ncout.variables["lon"][:]=roms_grid.lon_rho[0,:]
+            else:
+                ncout.variables["lat"][:]=roms_grid.lat_rho
+                ncout.variables["lon"][:]=roms_grid.lon_rho
             ncout.variables["depth"][:]=depth
             ncout.variables["mask"][:]=roms_grid.mask_rho
             ncout.sync()
@@ -341,9 +345,13 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             lat=z_grid.lat_rho.shape[0]
             lon=z_grid.lat_rho.shape[1]
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.depth),
-                               src_time.origin,"ROMS z-level")
-            ncout.variables["lat"][:]=z_grid.lat_rho
-            ncout.variables["lon"][:]=z_grid.lon_rho
+                               src_time.origin,"ROMS z-level",dims=dims)
+            if dims==1:
+                ncout.variables["lat"][:]=z_grid.lat_rho[:,0]
+                ncout.variables["lon"][:]=z_grid.lon_rho[0,:]
+            else:
+                ncout.variables["lat"][:]=z_grid.lat_rho
+                ncout.variables["lon"][:]=z_grid.lon_rho
             ncout.variables["depth"][:]=z_grid.depth
             ncout.variables["mask"][:]=z_grid.mask_rho
     ncout_time = netcdftime.utime(ncout.variables["time"].units)

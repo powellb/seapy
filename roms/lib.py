@@ -128,13 +128,10 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
         raise ValueError("the stretching and scoord arrays must be the same size")
     N=scoord.size
     hinv = 1/h
+    z = np.zeros([N,h.shape[0],h.shape[1]])
+    r = np.arange(0,N)
     if w_grid:
-        z = np.zeros([N+1,h.shape[0],h.shape[1]])
         z[0,:,:] = -h
-        r = np.arange(1,N+1)
-    else:
-        z = np.zeros([N,h.shape[0],h.shape[1]])
-        r = np.arange(0,N)
 
     if vtransform == 1:
         cff = hc*(scoord-stretching)
@@ -151,6 +148,18 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
 
     return z
 
+def thickness(vtransform=1, h=None, hc=100, scoord=None,
+          stretching=None, zeta=0):
+    """
+     Given the transform method, the bathyemtry, the sea surface height
+     [optional], the critical depth, the s-coordinates, and stretching
+     function (returned by the roms.utils.stretching function), determine
+     the thickness of the grid cells
+    """
+    # We need the w-coordinate depths
+    z_w = depth(vtransform,h,hc,scoord,stretching,zeta,True)
+    return z_w[1:,:,:]-z_w[0:-1,:,:]
+    
 def get_timebase(time):
     """
     Given a netCDF4 time record from a ROMS file, compute the timebase

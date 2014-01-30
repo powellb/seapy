@@ -235,3 +235,39 @@ class grid:
                 self.depth_v = self.depth_rho
 
         pass
+
+    def set_thickness(self):
+        """
+          Create a thickness array for the model grid.
+        """
+        if self._isroms:
+            s_w, cs_w = seapy.roms.stretching(self.vtransform,
+                   self.theta_s, self.theta_b, self.hc, self.n, w_grid=True)
+            self.thick_rho = seapy.roms.thickness(self.vtransform, 
+                 self.h, self.hc, s_w, cs_w)
+            self.thick_u=seapy.model.rho2u(self.thick_rho)
+            self.thick_v=seapy.model.rho2v(self.thick_rho)
+        else:
+            d=np.abs(self.depth.copy())
+            w=np.zeros(len(d))
+            # Check which way the depths are going
+            if d[0] < d[-1]:
+                w[0]=d[0]
+                w[1:]=d[1:]-d[0:-1]
+            else:
+                w[-1]=d[-1]
+                w[0:-1]=d[0:-1]-d[1:]
+            
+            self.thick_rho = np.kron( np.kron( w,
+                                    np.ones(self.lon_rho.shape[1])),
+                                    np.ones(self.lon_rho.shape[0])).reshape(
+                                    [self.depth.size,self.lon_rho.shape[0],
+                                     self.lon_rho.shape[1]])
+            if self.cgrid is True:
+                self.thick_u=seapy.model.rho2u(self.thick_rho)
+                self.thick_v=seapy.model.rho2v(self.thick_rho)
+            else:
+                self.thick_u = self.thick_rho
+                self.thick_v = self.thick_rho
+
+        pass

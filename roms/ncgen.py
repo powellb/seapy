@@ -13,6 +13,7 @@ from datetime import datetime
 from seapy.roms import lib
 import seapy.cdl_parser as cdl_parser
 import seapy.Null as Null
+import netcdftime
 
 """
     Module variables
@@ -80,7 +81,8 @@ def _set_time_ref(vars, timevar, timebase, cycle=None):
     for tvar in timevar:
         for nvar in vars:
             if nvar["name"] == tvar:
-                nvar["attr"]["units"] = timebase
+                t = netcdftime.utime(nvar["attr"]["units"])
+                nvar["attr"]["units"] = "%s since %s" % ( t.units, timebase )
                 if cycle != None:
                     nvar["attr"]["cycle_length"] = cycle
     return vars
@@ -96,7 +98,7 @@ def _create_generic_file(file, cdl, eta_rho, xi_rho, N,
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
     if timebase != None:
-        vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+        vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -114,7 +116,7 @@ def create_river(file, nriver=1, s_rho=5,
     
     # Fill in the appropriate river values
     dims["river"]=nriver
-    vars = _set_time_ref(vars, "river_time", "days since %s" % timebase)
+    vars = _set_time_ref(vars, "river_time", timebase)
 
     # Create the river file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -157,7 +159,7 @@ def create_bry(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "bry_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "bry_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -178,7 +180,7 @@ def create_clim(file, eta_rho=10, xi_rho=10, N=1, ntimes=1,
     times=("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
     for n in times:
         dims[n] = ntimes 
-    vars = _set_time_ref(vars, times, "days since %s" % timebase)
+    vars = _set_time_ref(vars, times, timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -196,7 +198,7 @@ def create_frc_bulk(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -214,11 +216,11 @@ def create_frc_flux(file, eta_rho=10, xi_rho=10, N=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "srf_time", "seconds since %s" % timebase, cycle)
-    vars = _set_time_ref(vars, "sst_time", "seconds since %s" % timebase, cycle)
-    vars = _set_time_ref(vars, "shf_time", "seconds since %s" % timebase, cycle)
-    vars = _set_time_ref(vars, "swf_time", "seconds since %s" % timebase, cycle)
-    vars = _set_time_ref(vars, "sss_time", "seconds since %s" % timebase, cycle)
+    vars = _set_time_ref(vars, "srf_time", timebase, cycle)
+    vars = _set_time_ref(vars, "sst_time", timebase, cycle)
+    vars = _set_time_ref(vars, "shf_time", timebase, cycle)
+    vars = _set_time_ref(vars, "swf_time", timebase, cycle)
+    vars = _set_time_ref(vars, "sss_time", timebase, cycle)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -236,7 +238,7 @@ def create_frc_wind(file, eta_rho=10, xi_rho=10, N=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "sms_time", "seconds since %s" % timebase, cycle)
+    vars = _set_time_ref(vars, "sms_time", timebase, cycle)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -272,7 +274,7 @@ def create_ini(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -291,7 +293,7 @@ def create_da_obs(file, state_variable=20, provenance="None",
 
     # Fill in the appropriate dimension values
     dims["state_variable"] = state_variable
-    vars = _set_time_ref(vars, "obs_time", "days since %s" % timebase)
+    vars = _set_time_ref(vars, "obs_time", timebase)
 
     # Set the provenance values in the global attributes
     attr["obs_provenance"] = provenance
@@ -313,7 +315,7 @@ def create_da_ray_obs(file, ray_datum=1, provenance="None",
 
     # Fill in the appropriate dimension values
     dims["ray_datum"] = ray_datum
-    vars = _set_time_ref(vars, "obs_time", "days since %s" % timebase)
+    vars = _set_time_ref(vars, "obs_time", timebase)
 
     # Set the provenance values in the global attributes
     attr["obs_provenance"] = provenance
@@ -336,7 +338,7 @@ def create_da_bry_std(file, eta_rho=10, xi_rho=10, N=1, bry=4,
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
     dims["IorJ"] = max(eta_rho,xi_rho)
     dims["boundary"] = bry
-    vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -354,7 +356,7 @@ def create_da_frc_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -372,7 +374,7 @@ def create_da_ini_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -390,7 +392,7 @@ def create_da_model_std(file, eta_rho=10, xi_rho=10, N=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "ocean_time", "seconds since %s" % timebase)
+    vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
@@ -400,18 +402,23 @@ def create_da_model_std(file, eta_rho=10, xi_rho=10, N=1,
 
 def create_zlevel(file, lat=10, lon=10, depth=1,
                   timebase=datetime(2000,1,1), 
-                  title="Zlevel Model Data"):
+                  title="Zlevel Model Data",dims=2):
     """
         Create an time varying model standard deviation file
     """
+    if dims==1:
+        cdlfile = "zlevel_1d.cdl"
+    else:
+        cdlfile = "zlevel_2d.cdl"
+        
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "zlevel.cdl")
+    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + cdlfile)
 
     # Fill in the appropriate dimension values
     dims["lat"]=lat
     dims["lon"]=lon
     dims["depth"]=depth
-    vars = _set_time_ref(vars, "time", "days since %s" % timebase)
+    vars = _set_time_ref(vars, "time", timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
