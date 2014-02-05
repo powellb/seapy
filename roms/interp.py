@@ -438,7 +438,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
     ncout.close()
 
 def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
-            vmap=None):
+            nx=0, ny=0, vmap=None):
     """
     to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1)
     
@@ -493,7 +493,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  nx=1, ny=1, vmap=vmap)
+                  nx=nx, ny=ny, vmap=vmap)
 
     # Clean up
     ncout.close()

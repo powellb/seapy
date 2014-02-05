@@ -50,6 +50,8 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     ncbry=seapy.roms.ncgen.create_bry(bry_file, 
              eta_rho=grid.ln,xi_rho=grid.lm,N=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
+    brytime = seapy.roms.get_timevar(ncbry)
+    bry_time=netcdftime.utime(ncbry.variables[brytime].units)
     ncbry.variables["lat_rho"][:]=grid.lat_rho
     ncbry.variables["lon_rho"][:]=grid.lon_rho
     ncbry.variables["lat_u"][:]=grid.lat_u
@@ -65,7 +67,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     ncbry.variables["s_rho"][:]=grid.s_rho
     ncbry.variables["Cs_r"][:]=grid.cs_r
     ncbry.variables["h"][:]=grid.h
-    ncbry.variables["bry_time"][:]=src_time.date2num(
+    ncbry.variables["bry_time"][:]=bry_time.date2num(
         src_time.num2date(ncroms.variables[time][records]))
 
     # Go over the variables for each side

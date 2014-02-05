@@ -34,7 +34,7 @@ def get_timevar(nc):
     string of time name
     
     """
-    for time in ("ocean_time", "time", "zeta_time"):
+    for time in ("ocean_time", "time", "zeta_time", "bry_time"):
         if time in nc.variables:
             return time
     return None
