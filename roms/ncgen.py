@@ -20,13 +20,14 @@ import netcdftime
 """
 _cdl_dir = os.path.dirname(lib.__file__)
 _cdl_dir =('.' if len(_cdl_dir) == 0 else _cdl_dir) + "/cdl/"
+_format="NETCDF4_CLASSIC"
 
 def ncgen(file, dims=Null(), vars=Null(), attr=Null(), title=None):
     """
         Create a new netcdf file
     """
     # Create the file
-    _nc=netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
+    _nc=netCDF4.Dataset(file, "w", format=_format)
     # Loop over the dimensions and add them
     for dim in dims.keys():
         _nc.createDimension(dim, dims[dim])

@@ -18,7 +18,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     from_roms(roms_file, bry_file, grid=None, recors=None)
     
-    Given a ROMS history, average, or romsatology file, generate 
+    Given a ROMS history, average, or climatology file, generate 
     boundary conditions on the same grid.
     
     Parameters
