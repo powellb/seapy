@@ -22,9 +22,8 @@ def _mask_z_grid(z_data, src_depth, z_depth):
     When interpolating to z-grid, we need to apply depth dependent masking
     based on the original ROMS depths
     """
-    min_depth = np.min(src_depth,0)
     for k in np.arange(0,z_depth.shape[0]):
-        idx=np.nonzero(z_depth[k,:,:]<min_depth)
+        idx=np.nonzero(z_depth[k,:,:]<src_depth)
         z_data.mask[:,k,idx[0],idx[1]]=True
         
 def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
@@ -40,7 +39,8 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
                     weight, nx, ny, mask, factor=1.0):
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
-    
+    data = np.ma.array(data, copy=False)
+
     # To avoid extrapolation, add a new top and bottom layer that replicates 
     # the data of the existing current and top. 1) Determine which way the 
     # depth goes and add/subtract new layers, and 2) fill in masked values
@@ -184,6 +184,11 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     ncsrc = netCDF4.Dataset(src_grid.file)
     time = seapy.roms.get_timevar(ncsrc)
     
+    # Interpolate the depths from the source to final grid
+    src_depth=np.min(src_grid.depth_rho,0)
+    dst_depth=_interp2_thread(src_grid.lon_rho, src_grid.lat_rho, src_depth,
+                    child_grid.lon_rho, child_grid.lat_rho, pmap["pmaprho"],
+                    weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
     records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records == None else records
@@ -214,8 +219,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
               nx, ny, getattr(child_grid,"mask_"+grd)) 
             for i in records), copy=False)
             if z_mask:
-                _mask_z_grid(ndata,getattr(src_grid,"depth_"+grd),
-                             getattr(child_grid,"depth_"+grd))
+                _mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
         ncout.variables[vmap[k]][:] = ndata
 
     # Rotate and Interpolate the vector fields
@@ -238,8 +242,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             vel_u = np.ma.array(vel[j][0],copy=False)
             vel_v = np.ma.array(vel[j][1],copy=False)
             if z_mask:
-                _mask_z_grid(vel_u,src_grid.depth_rho,child_grid.depth_rho)
-                _mask_z_grid(vel_v,src_grid.depth_rho,child_grid.depth_rho)
+                _mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
+                _mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
             if child_grid.cgrid is True:
                 vel_u = seapy.model.rho2u(vel_u)
@@ -320,7 +324,6 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     else:
         if os.path.isfile(z_file):
             z_grid = seapy.model.grid(z_file, minimal=False)
-            ncout = netCDF4.Dataset(z_file, "a")
             
     if not os.path.isfile(z_file):
         if z_grid is None:
@@ -353,6 +356,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
                 ncout.variables["lon"][:]=z_grid.lon_rho
             ncout.variables["depth"][:]=z_grid.depth
             ncout.variables["mask"][:]=z_grid.mask_rho
+    else:
+        ncout = netCDF4.Dataset(z_file, "a")
+        
     ncout_time = netcdftime.utime(ncout.variables["time"].units)
     ncout.variables["time"][:]=\
       ncout_time.date2num(src_time.num2date(ncroms.variables[time][records]))
