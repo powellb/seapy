@@ -13,6 +13,7 @@
 from __future__ import print_function
 
 import numpy as np
+from scipy import ndimage
 
 secs2day = 1.0/86400.0
 
@@ -32,16 +33,26 @@ def convolve_mask(fld, ksize=3, kernel=None):
     specified kernel size, or the provided kernel
     """
     fld = np.ma.array(fld, copy=False)
+    if fld.ndim > 3 or fld.ndim < 2:
+        raise AttributeError("Can only convolve 2- or 3-D fields")
+        
     if kernel == None:
         center=np.round(ksize/2)
         kernel=np.ones([ksize,ksize])
         kernel[center,center]=0.0
+
     # Convolve the mask
     msk=np.ma.getmaskarray(fld)
-    count=np.convolve( (~msk).view(np.int8).ravel(), kernel.ravel(), \
-                      'same').reshape(msk.shape)
-    nfld=np.convolve((fld.data*(~msk).view(np.int8)).ravel(),kernel.ravel(), \
-                      'same').reshape(msk.shape)
+    if fld.ndim == 2:
+        count=ndimage.convolve((~msk).view(np.int8), kernel)
+        nfld=ndimage.convolve(fld.data*(~msk).view(np.int8), kernel)
+    else:
+        kernel=np.expand_dims(kernel, axis=3)
+        count=np.transpose( ndimage.convolve( 
+                (~msk).view(np.int8).transpose(1,2,0), kernel),(2,0,1))
+        nfld=np.transpose( ndimage.convolve( 
+            (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel),(2,0,1))
+        
     lst=np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]

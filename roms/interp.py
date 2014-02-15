@@ -17,6 +17,8 @@ import seapy
 from joblib import Parallel, delayed
 import pudb
 
+_scaling={"zeta":2.0, "u":1.0, "v":1.0, "temp":1.25, "salt":3.0}
+
 def _mask_z_grid(z_data, src_depth, z_depth):
     """
     When interpolating to z-grid, we need to apply depth dependent masking
@@ -87,7 +89,7 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     else:
         res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
                             pmap, weight, nx, ny)
-    return np.ma.array(res, mask=np.logical_or(mask==0,np.abs(res)>9e10), 
+    return np.ma.array(res, mask=np.logical_or(mask==0,np.abs(res)>9e5), 
                        copy=False)
 
 def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap, 
@@ -115,7 +117,7 @@ def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
     return u, v
         
 def _interp_grids(src_grid, child_grid, ncout, records=None, 
-            threads=1, nx=0, ny=0, vmap=None, z_mask=False):
+            threads=1, nx=0, ny=0, weight=10, vmap=None, z_mask=False):
     """
     _interp_grids(src_grid, ncout[, child_grid=None, records=None, 
                 threads=1, nx=0, ny=0, vmap=None])
@@ -152,7 +154,6 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     pmap_file = sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
-    weight=8
     if nx==0 and hasattr(src_grid,"dm") and hasattr(child_grid,"dm"):
         nx = np.ceil( np.mean( src_grid.dm ) / np.mean( child_grid.dm) ) 
     else:
@@ -283,7 +284,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
 #     ncout.close()
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
-             threads=1, nx=0, ny=0, vmap=None, dims=2):
+             threads=1, nx=0, ny=0, weight=10, vmap=None, dims=2):
     """
     to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
                  threads=1, nx=0, ny=0)
@@ -366,13 +367,14 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     
     # Call the interpolation
     _interp_grids(roms_grid, z_grid, ncout, records=records,
-                  threads=threads, nx=nx, ny=ny, vmap=vmap, z_mask=True)
+                  threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
+                  z_mask=True)
 
     # Clean up
     ncout.close()
     
 def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
-            vmap=None):
+            weight=10, vmap=None):
     """
     to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1)
     
@@ -438,13 +440,13 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  vmap=vmap)
+                  weight=weight, vmap=vmap)
 
     # Clean up
     ncout.close()
 
 def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
-            nx=0, ny=0, vmap=None):
+            nx=0, ny=0, weight=10, vmap=None):
     """
     to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1)
     
@@ -499,7 +501,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  nx=nx, ny=ny, vmap=vmap)
+                  nx=nx, ny=ny, vmap=vmap, weight=weight)
 
     # Clean up
     ncout.close()

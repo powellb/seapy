@@ -16,6 +16,7 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
     # Do some error checking
     nx = ny if nx==0 else nx
     ny = nx if ny==0 else ny
+    d = np.ma.fix_invalid(d, copy=False, fill_value=-999999.0)
     
     # Generate a mapping weight matrix if not passed
     if pmap == None:
@@ -32,6 +33,7 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
     # Do some error checking
     nx = ny if nx==0 else nx
     ny = nx if ny==0 else ny
+    z = np.ma.fix_invalid(z, copy=False, fill_value=-999999.0)
 
     # Generate a mapping weight matrix if not passed
     if pmap == None:
