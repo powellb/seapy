@@ -34,7 +34,7 @@ def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     
     # Interpolate the field and return the result
     res, pm = seapy.oasurf(rx, ry, data, zx, zy, pmap, weight, nx, ny)
-    return np.ma.masked_where(res, np.logical_or(mask==0,np.abs(res)>9e10), 
+    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e10), res,
                        copy=False)
 
 def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap, 
@@ -90,7 +90,7 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
                             pmap, weight, nx, ny)
 
-    return np.ma.masked_where(res, np.logical_or(mask==0,np.abs(res)>9e5), 
+    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e5), res,
                        copy=False)
 
 def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap, 
