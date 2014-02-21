@@ -27,7 +27,8 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
                                  xx.ravel(), yy.ravel(), nx, ny, pmap)
     
     # Reshape the results and return
-    return vv.reshape(xx.shape), pmap
+    return np.ma.fix_invalid(vv.reshape(xx.shape), copy=False, 
+               fill_value=-999999.0), pmap
     
 def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
     # Do some error checking
@@ -44,13 +45,14 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
         
     # Call FORTRAN library to objectively map
     vv, err = seapy.oalib.oa3d(x.ravel(),y.ravel(),
-                                 z.reshape(z.shape[0],-1).transpose(),
+                                 z.data.reshape(z.shape[0],-1).transpose(),
                                  v.reshape(v.shape[0],-1).transpose(),
                                  xx.ravel(), yy.ravel(), 
                                  zz.reshape(zz.shape[0],-1).transpose(), 
                                  nx, ny, pmap)
     
     # Reshape the results and return
-    return vv.transpose().reshape(zz.shape), pmap
+    return np.ma.fix_invalid(vv.transpose().reshape(zz.shape), copy=False, 
+               fill_value=-999999.0), pmap
 
     

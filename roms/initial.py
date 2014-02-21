@@ -67,12 +67,12 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     ncini.variables["Cs_r"][:]=grid.cs_r
     ncini.variables["h"][:]=grid.h
     if time is None:
-        time=src_time.num2date(ncroms.variables[seapy.roms.get_timevar(ncini)][record])
-    ncini.variables["ocean_time"][:]=bry_time.date2num(time)
+        time=src_time.num2date(ncroms.variables[romstime][record])
+    ncini.variables["ocean_time"][:]=ini_time.date2num(time)
 
     # Fill up the initial state with the roms file data
     for var in seapy.roms.fields.keys():
-        ncini.variables[var][:]=ncroms.variables[var][record,:]
+        ncini.variables[var][0,:]=ncroms.variables[var][record,:]
 
     # Close up
     ncini.close()
