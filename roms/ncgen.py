@@ -406,14 +406,15 @@ def create_da_model_std(file, eta_rho=10, xi_rho=10, N=1,
 
 def create_zlevel(file, lat=10, lon=10, depth=1,
                   timebase=datetime(2000,1,1), 
-                  title="Zlevel Model Data",dims=2):
+                  title="Zlevel Model Data",cdlfile=None,dims=2):
     """
         Create an time varying model standard deviation file
     """
-    if dims==1:
-        cdlfile = "zlevel_1d.cdl"
-    else:
-        cdlfile = "zlevel_2d.cdl"
+    if cdlfile==None:
+        if dims==1:
+            cdlfile = "zlevel_1d.cdl"
+        else:
+            cdlfile = "zlevel_2d.cdl"
         
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + cdlfile)
