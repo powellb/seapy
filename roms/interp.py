@@ -285,7 +285,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
 #     ncout.close()
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
-             threads=1, nx=0, ny=0, weight=10, vmap=None, dims=2):
+             threads=1, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2):
     """
     to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
                  threads=1, nx=0, ny=0)
@@ -306,6 +306,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     [nx] : decorrelation length in grid-cells for x
     [ny] : decorrelation length in grid-cells for y
     [vmap] : dictionary mapping source and destination variables
+    [cdlfile] : CDL template for the resulting netcdf file
     [dims] : make a 1-d lat/lon or 2-d lat/lon z-grid file
     
     Returns
@@ -334,7 +335,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             if depth==None:
                 raise ValueError("depth must be specified")
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
-                                   src_time.origin,"ROMS z-level", dims=dims)
+                                   src_time.origin,"ROMS z-level", 
+                                   cdlfile=cdfile, dims=dims)
             if dims==1:
                 ncout.variables["lat"][:]=roms_grid.lat_rho[:,0]
                 ncout.variables["lon"][:]=roms_grid.lon_rho[0,:]
@@ -349,7 +351,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             lat=z_grid.lat_rho.shape[0]
             lon=z_grid.lat_rho.shape[1]
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.depth),
-                               src_time.origin,"ROMS z-level",dims=dims)
+                               src_time.origin,"ROMS z-level", 
+                               cdlfile=cdlfile, dims=dims)
             if dims==1:
                 ncout.variables["lat"][:]=z_grid.lat_rho[:,0]
                 ncout.variables["lon"][:]=z_grid.lon_rho[0,:]
