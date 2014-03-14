@@ -306,7 +306,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     [nx] : decorrelation length in grid-cells for x
     [ny] : decorrelation length in grid-cells for y
     [vmap] : dictionary mapping source and destination variables
-    [dims] : make a 1-d lat/lon or 2-d lat/lon z-grid file
+    [dims] : make a 1-d lat/lon or 2-d lat/lon z-grid file. This is 
+             overwritten by the z_grid if specified
     
     Returns
     -------
@@ -348,6 +349,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         else:
             lat=z_grid.lat_rho.shape[0]
             lon=z_grid.lat_rho.shape[1]
+            dims=z_grid.spatial_dims
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.depth),
                                src_time.origin,"ROMS z-level",dims=dims)
             if dims==1:

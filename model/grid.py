@@ -101,6 +101,7 @@ class grid:
             raise AttributeError("grid does not have attribute lat_rho or lon_rho")
         
         # Check that it is formatted into 2-D
+        self.spatial_dims=self.lat_rho.ndim
         if self.lat_rho.ndim==1 and self.lon_rho.ndim==1:
             [self.lon_rho, self.lat_rho] = np.meshgrid(self.lon_rho, 
                                                        self.lat_rho)
