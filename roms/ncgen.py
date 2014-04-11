@@ -210,7 +210,7 @@ def create_frc_bulk(file, eta_rho=10, xi_rho=10, N=1,
     # Return the new file
     return _nc
 
-def create_frc_flux(file, eta_rho=10, xi_rho=10, N=1, cycle=None, 
+def create_frc_flux(file, eta_rho=10, xi_rho=10, N=1, ntimes=1, cycle=None, 
                  timebase=datetime(2000,1,1), title="My Flux"):
     """
         Create a surface flux forcing file
@@ -220,11 +220,10 @@ def create_frc_flux(file, eta_rho=10, xi_rho=10, N=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    vars = _set_time_ref(vars, "srf_time", timebase, cycle)
-    vars = _set_time_ref(vars, "sst_time", timebase, cycle)
-    vars = _set_time_ref(vars, "shf_time", timebase, cycle)
-    vars = _set_time_ref(vars, "swf_time", timebase, cycle)
-    vars = _set_time_ref(vars, "sss_time", timebase, cycle)
+    times=("srf_time", "sst_time", "shf_time", "swf_time", "sss_time")
+    for n in times:
+        dims[n] = ntimes 
+    vars = _set_time_ref(vars, times, timebase)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
