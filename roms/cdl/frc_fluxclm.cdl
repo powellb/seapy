@@ -16,19 +16,19 @@ dimensions:
 variables:
 	float srf_time(srf_time) ;
 		srf_time:long_name = "solar shortwave radiation time" ;
-		srf_time:units = "day" ;
+		srf_time:units = "days since 1900-01-01" ;
 	float sst_time(sst_time) ;
 		sst_time:long_name = "sea surface temperature" ;
-		sst_time:units = "day" ;
+		sst_time:units = "days since 1900-01-01" ;
 	float shf_time(shf_time) ;
 		shf_time:long_name = "surface heat flux time" ;
-		shf_time:units = "day" ;
+		shf_time:units = "days since 1900-01-01" ;
 	float swf_time(swf_time) ;
 		swf_time:long_name = "surface freshwater flux time" ;
-		swf_time:units = "day" ;
+		swf_time:units = "days since 1900-01-01" ;
 	float sss_time(sss_time) ;
 		sss_time:long_name = "sea surface salinity" ;
-		sss_time:units = "day" ;
+		sss_time:units = "days since 1900-01-01" ;
 	float swrad(srf_time, eta_rho, xi_rho) ;
 		swrad:long_name = "solar shortwave radiation" ;
 		swrad:units = "Watts meter-2" ;

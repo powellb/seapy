@@ -12,8 +12,9 @@ from __future__ import print_function
 import numpy as np
 import netCDF4
 import netcdftime
-import os.path
+import os.path,os.remove
 import seapy
+from timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 import pudb
 
@@ -33,7 +34,9 @@ def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     seapy.convolve_mask(data, 7)
     
     # Interpolate the field and return the result
-    res, pm = seapy.oasurf(rx, ry, data, zx, zy, pmap, weight, nx, ny)
+    with timeout(minutes=30):
+        res, pm = seapy.oasurf(rx, ry, data, zx, zy, pmap, weight, nx, ny)
+
     return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e10), res,
                        copy=False)
 
@@ -80,15 +83,16 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     ndat[-1,:,:]=data[-1,:,:].filled(np.nan)*factor
 
     # Interpolate the field and return the result
-    if gradsrc:
-        res, pm = seapy.oavol(rx, ry, \
-                    nrz[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                    ndat[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                    zx, zy, zz, pmap, \
-                    weight, nx, ny)
-    else:
-        res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
-                            pmap, weight, nx, ny)
+    with timeout(minutes=30):
+        if gradsrc:
+            res, pm = seapy.oavol(rx, ry, \
+                        nrz[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
+                        ndat[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
+                        zx, zy, zz, pmap, \
+                        weight, nx, ny)
+        else:
+            res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
+                                pmap, weight, nx, ny)
 
     return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e5), res,
                        copy=False)
@@ -197,10 +201,10 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     for k in vmap:
         # Only interpolate the fields we want in the destination
         if vmap[k] not in ncout.variables or \
-           seapy.roms.fields[vmap[k]].has_key("rotate"):
+           seapy.roms.fields[k].has_key("rotate"):
             continue
-        grd = seapy.roms.fields[vmap[k]]["grid"]
-        if seapy.roms.fields[vmap[k]]["dims"]==2:
+        grd = seapy.roms.fields[k]["grid"]
+        if seapy.roms.fields[k]["dims"]==2:
             ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
                              (delayed(_interp2_thread) (
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -372,12 +376,18 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     ncroms.close()
     
     # Call the interpolation
-    _interp_grids(roms_grid, z_grid, ncout, records=records,
+    try:
+        _interp_grids(roms_grid, z_grid, ncout, records=records,
                   threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
                   z_mask=True)
-
-    # Clean up
-    ncout.close()
+    except TimeoutError:
+        print("Timeout: process is hung, deleting output.")
+        # Delete the output file
+        ncout.close()
+        os.remove(z_file)
+    else:
+        # Clean up
+        ncout.close()
     
 def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             weight=10, vmap=None):
@@ -445,11 +455,17 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             destg = seapy.model.grid(dest_file, minimal=False)
 
     # Call the interpolation
-    _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+    try:
+        _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   weight=weight, vmap=vmap)
-
-    # Clean up
-    ncout.close()
+    except TimeoutError:
+        print("Timeout: process is hung, deleting output.")
+        # Delete the output file
+        ncout.close()
+        os.remove(dest_file)
+    else:
+        # Clean up
+        ncout.close()
 
 def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
             nx=0, ny=0, weight=10, vmap=None):
@@ -506,10 +522,16 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         raise AttributeError("you must supply a destination file or a grid to make the file")
 
     # Call the interpolation
-    _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+    try:
+        _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   nx=nx, ny=ny, vmap=vmap, weight=weight)
-
-    # Clean up
-    ncout.close()
+    except TimeoutError:
+        print("Timeout: process is hung, deleting output.")
+        # Delete the output file
+        ncout.close()
+        os.remove(dest_file)
+    else:
+        # Clean up
+        ncout.close()
     
 pass
