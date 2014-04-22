@@ -12,7 +12,7 @@ from __future__ import print_function
 import numpy as np
 import netCDF4
 import netcdftime
-import os.path,os.remove
+import os
 import seapy
 from timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
