@@ -14,7 +14,7 @@ import netCDF4
 import netcdftime
 import os
 import seapy
-from timeout import timeout,TimeoutError
+from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 import pudb
 

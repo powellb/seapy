@@ -21,7 +21,7 @@ import threading
 import subprocess
 import sys
 import datetime
-from timeout import timeout,TimeoutError
+from seapy.timeout import timeout,TimeoutError
 
 class task:
     def __init__(self, name, cmd, *args):
@@ -41,8 +41,8 @@ class os_task(task):
     def run(self):
         subprocess.call(self.cmd, shell=True)
 
-class process_thread(threading.Thread, minutes):
-    def __init__(self, queue):
+class process_thread(threading.Thread):
+    def __init__(self, queue, minutes=None):
         threading.Thread.__init__(self)
         self.queue = queue
         self.timeout = minutes
@@ -58,7 +58,7 @@ class process_thread(threading.Thread, minutes):
                     with timeout(minutes=self.timeout):
                         item.run()
                 except TimeoutError:
-                    print "process has timed out..."
+                    print("process has timed out...")
             else:
                 item.run()
             print(self.getName()+" completed "+item.name+ \
