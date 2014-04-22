@@ -201,10 +201,10 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     for k in vmap:
         # Only interpolate the fields we want in the destination
         if vmap[k] not in ncout.variables or \
-           seapy.roms.fields[vmap[k]].has_key("rotate"):
+           seapy.roms.fields[k].has_key("rotate"):
             continue
-        grd = seapy.roms.fields[vmap[k]]["grid"]
-        if seapy.roms.fields[vmap[k]]["dims"]==2:
+        grd = seapy.roms.fields[k]["grid"]
+        if seapy.roms.fields[k]["dims"]==2:
             ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
                              (delayed(_interp2_thread) (
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
