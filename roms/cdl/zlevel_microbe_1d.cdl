@@ -39,8 +39,8 @@ variables:
     salt:long_name = "salinity" ;
     salt:missing_value = 9.99E10 ;
   float turbidity(time, depth, lat, lon) ;
-    salt:long_name = "salinity" ;
-    salt:missing_value = 9.99E10 ;
+    turbidity:long_name = "turbidity" ;
+    turbidity:missing_value = 9.99E10 ;
 
 // global attributes:
 		:title = "Z Grid File" ;
