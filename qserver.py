@@ -57,8 +57,8 @@ class process_thread(threading.Thread, minutes):
                 try:
                     with timeout(minutes=self.timeout):
                         item.run()
-                    except TimeoutError:
-                        print "process has timed out..."
+                except TimeoutError:
+                    print "process has timed out..."
             else:
                 item.run()
             print(self.getName()+" completed "+item.name+ \
