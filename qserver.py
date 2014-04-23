@@ -21,7 +21,7 @@ import threading
 import subprocess
 import sys
 import datetime
-from timeout import timeout,TimeoutError
+from seapy.timeout import timeout,TimeoutError
 
 class task:
     def __init__(self, name, cmd, *args):
