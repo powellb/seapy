@@ -97,5 +97,22 @@ def rotate(u, v, angle):
 
     return u*ca - v*sa, u*sa + v*ca
     
+def vecfind(a, b, tolerance=0):
+    """
+    index_a,index_b = vecfind(a, b, tolerance=0)
+    
+    Find all occurences of b in a within the given tolerance and return
+    the indices into a and b that correspond.
+    """
+    a=np.asanyarray(a)
+    b=np.asanyarray(b)
+    index_a=[]
+    index_b=[]
+    for i in np.arange(0,len(b)):
+        x=np.nonzero(np.abs(a-b[i])<=tolerance)[0]
+        if len(x)>0:
+            index_a.append(x[0])
+            index_b.append(i)
+    return index_a, index_b
     
 pass
