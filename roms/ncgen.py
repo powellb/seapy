@@ -220,10 +220,28 @@ def create_frc_flux(file, eta_rho=10, xi_rho=10, N=1, ntimes=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
-    times=("srf_time", "sst_time", "shf_time", "swf_time", "sss_time")
+    times=("srf_time", "shf_time", "swf_time", "sss_time")
     for n in times:
         dims[n] = ntimes 
     vars = _set_time_ref(vars, times, timebase)
+
+    # Create the file
+    _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
+
+    # Return the new file
+    return _nc
+
+def create_frc_qcorr(file, eta_rho=10, xi_rho=10, N=1, cycle=None, 
+                 timebase=datetime(2000,1,1), title="My Qcorrection"):
+    """
+        Create a Q Correction forcing file
+    """
+    # Generate the Structure
+    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_qcorr.cdl")
+
+    # Fill in the appropriate dimension values
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, N)
+    vars = _set_time_ref(vars, "sst_time", timebase, cycle)
 
     # Create the file
     _nc = ncgen(file, dims=dims, vars=vars, attr=attr, title=title)
