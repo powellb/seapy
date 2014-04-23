@@ -109,9 +109,10 @@ def vecfind(a, b, tolerance=0):
     index_a=[]
     index_b=[]
     for i in np.arange(0,len(b)):
-        x=np.nonzero(np.abs(a-b[i])<=tolerance)[0]
+        d=np.abs(a-b[i])
+        x=np.nonzero(d<tolerance)[0]
         if len(x)>0:
-            index_a.append(x[0])
+            index_a.append(np.where(d==np.min(d))[0][0])
             index_b.append(i)
     return index_a, index_b
     
