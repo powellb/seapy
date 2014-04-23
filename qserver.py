@@ -61,7 +61,7 @@ class process_thread(threading.Thread):
 def execute(tasks, nthreads=2, minutes=None):
     q = Queue.Queue()
     for i in range(nthreads):
-         t = process_thread(q, minutes)
+         t = process_thread(q)
          t.daemon = True
          t.start()
 
