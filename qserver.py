@@ -41,11 +41,10 @@ class os_task(task):
     def run(self):
         subprocess.call(self.cmd, shell=True)
 
-class process_thread(threading.Thread, minutes):
+class process_thread(threading.Thread):
     def __init__(self, queue):
         threading.Thread.__init__(self)
         self.queue = queue
-        self.timeout = minutes
         
     def run(self):
         while True:
@@ -53,14 +52,7 @@ class process_thread(threading.Thread, minutes):
             print(self.getName()+" running "+ \
                   item.name+" at "+str(datetime.datetime.now())+"\n")
             sys.stdout.flush()
-            if self.timeout != None:
-                try:
-                    with timeout(minutes=self.timeout):
-                        item.run()
-                except TimeoutError:
-                    print "process has timed out..."
-            else:
-                item.run()
+            item.run()
             print(self.getName()+" completed "+item.name+ \
                   " at "+str(datetime.datetime.now())+"\n")
             sys.stdout.flush()
