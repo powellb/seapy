@@ -132,7 +132,7 @@ class ProgBar(Prog):
             (requires 'psutil' package).
 
     """
-    def __init__(self, iterations, track_time=True, width=30, stream=2, title='', monitor=False):
+    def __init__(self, iterations, track_time=True, width=75, stream=2, title='', monitor=False):
         Prog.__init__(self, iterations, track_time, stream, title, monitor)
         self.bar_width = width
         self._adjust_width()

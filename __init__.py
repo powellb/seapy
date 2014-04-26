@@ -16,3 +16,4 @@ from environ import opt
 import roms
 import model
 import qserver
+from progbar import ProgBar
