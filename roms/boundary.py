@@ -10,6 +10,7 @@
 from __future__ import print_function
 
 import seapy
+import os
 import numpy as np
 import netCDF4
 import netcdftime
@@ -47,7 +48,10 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     src_time=netcdftime.utime(ncroms.variables[time].units)
 
     # Create the boundary file and fill up the descriptive data
-    ncbry=seapy.roms.ncgen.create_bry(bry_file, 
+    if os.path.isfile(bry_file):
+        ncbry=netCDF4.Dataset(bry_file,"a")
+    else:
+        ncbry=seapy.roms.ncgen.create_bry(bry_file, 
              eta_rho=grid.ln,xi_rho=grid.lm,N=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
@@ -74,16 +78,17 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     sides={"north":[-2,"-1"], "south":[-2,"0"], "east":[-1,"-1"], "west":[-1,"0"]}
     index=["records",":",":",":"]
     for var in seapy.roms.fields.keys():
-        for side in sides: 
-            outvar=var+"_"+side
-            ndim=seapy.roms.fields[var]["dims"]
-            if ndim==3:
-                myindex=list(index)
-            elif ndim==2:
-                myindex=list(index[:-1])
-            myindex[sides[side][0]]=sides[side][1]
-            indexstr=",".join(myindex)
-            ncbry.variables[outvar][:]=eval("ncroms.variables[var]["+indexstr+"]")
+        if var in ncbry.variables:
+            for side in sides: 
+                outvar=var+"_"+side
+                ndim=seapy.roms.fields[var]["dims"]
+                if ndim==3:
+                    myindex=list(index)
+                elif ndim==2:
+                    myindex=list(index[:-1])
+                myindex[sides[side][0]]=sides[side][1]
+                indexstr=",".join(myindex)
+                ncbry.variables[outvar][:]=eval("ncroms.variables[var]["+indexstr+"]")
     ncbry.close()
     
     pass
