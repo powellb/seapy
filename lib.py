@@ -14,6 +14,8 @@ from __future__ import print_function
 
 import numpy as np
 from scipy import ndimage
+import os
+import re
 
 secs2day = 1.0/86400.0
 
@@ -116,4 +118,18 @@ def vecfind(a, b, tolerance=0):
             index_b.append(i)
     return index_a, index_b
     
+def list_files(path=".", regex=".*"):
+    """
+    files = list_files(path, regex)
+    
+    Yield all file names in the given path that conform to the regular
+    expression pattern.
+    """
+    files=[]
+    prog=re.compile(regex)
+    for file in os.listdir(path):
+        if prog.search(file) != None:
+            files.append(file)
+    return files
+
 pass
