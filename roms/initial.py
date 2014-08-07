@@ -37,10 +37,10 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     # Load the grid
     if grid != None:
         if isinstance(grid,basestring):
-            grid = seapy.model.grid(grid, minimal=False)
+            grid = seapy.model.grid(grid, z=True)
     else:
         # If we weren't given a grid, try to construct from the romsate file
-        grid = seapy.model.grid(roms_file, minimal=False)
+        grid = seapy.model.grid(roms_file, z=True)
         
     ncroms = netCDF4.Dataset(roms_file)
     romstime = seapy.roms.get_timevar(ncroms)
