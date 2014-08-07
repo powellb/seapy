@@ -19,7 +19,7 @@ import numpy as np
 
 class grid:
     def __init__(self, file=None, lat=None, lon=None, depth=None,
-                 minimal=True, cgrid=False):
+                 z=False, cgrid=False):
         """
             Class to wrap around a numerical model grid for oceanography. 
             It attempts to track latitude, longitude, depth, and other
@@ -43,9 +43,10 @@ class grid:
             self.depth = depth
             self.cgrid = False
         self._verify_shape()
-        if not minimal:
+        if z:
             self.set_dims()
             self.set_depth()
+            self.set_thickness()
         if self._nc is not None:
             self._nc.close()
             self._nc = None
@@ -241,6 +242,8 @@ class grid:
         """
           Create a thickness array for the model grid.
         """
+        if "n" not in self.__dict__:
+            self.set_dims()
         if self._isroms:
             s_w, cs_w = seapy.roms.stretching(self.vtransform,
                    self.theta_s, self.theta_b, self.hc, self.n, w_grid=True)

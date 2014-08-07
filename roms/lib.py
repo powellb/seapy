@@ -47,7 +47,7 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
     """
     ds=1.0/N
     if w_grid:
-        lev=np.arange(0,N+1)
+        lev=np.arange(1,N+1)
     else:
         lev=np.arange(1,N+1)-0.5
     s=(lev-N)*ds

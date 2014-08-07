@@ -36,10 +36,10 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     if grid != None:
         if isinstance(grid,basestring):
-            grid = seapy.model.grid(grid, minimal=False)
+            grid = seapy.model.grid(grid, z=True)
     else:
         # If we weren't given a grid, try to construct from the romsate file
-        grid = seapy.model.grid(roms_file, minimal=False)
+        grid = seapy.model.grid(roms_file, z=True)
         
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
@@ -78,7 +78,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     sides={"north":[-2,"-1"], "south":[-2,"0"], "east":[-1,"-1"], "west":[-1,"0"]}
     index=["records",":",":",":"]
     for var in seapy.roms.fields.keys():
-        if var in ncbry.variables:
+        if var in ncroms.variables:
             for side in sides: 
                 outvar=var+"_"+side
                 ndim=seapy.roms.fields[var]["dims"]
