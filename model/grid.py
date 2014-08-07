@@ -245,7 +245,7 @@ class grid:
         if "n" not in self.__dict__:
             self.set_dims()
         if self._isroms:
-            s_w, cs_w = seapy.roms.stretching(self.vtransform,
+            s_w, cs_w = seapy.roms.stretching(self.vstretching,
                    self.theta_s, self.theta_b, self.hc, self.n, w_grid=True)
             self.thick_rho = seapy.roms.thickness(self.vtransform, 
                  self.h, self.hc, s_w, cs_w)
