@@ -213,7 +213,7 @@ class grid:
         """
         if self._isroms:
             if "s_rho" not in self.__dict__:
-                self.s_rho, self.cs_r = seapy.roms.stretching(self.vtransform,
+                self.s_rho, self.cs_r = seapy.roms.stretching(self.vstretching,
                    self.theta_s, self.theta_b, self.hc, self.n)
             self.depth_rho = seapy.roms.depth(self.vtransform, 
                  self.h, self.hc, self.s_rho, self.cs_r)

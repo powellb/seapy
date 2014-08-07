@@ -47,7 +47,7 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
     """
     ds=1.0/N
     if w_grid:
-        lev=np.arange(0,N+1)
+        lev=np.arange(1,N+1)
     else:
         lev=np.arange(1,N+1)-0.5
     s=(lev-N)*ds
@@ -128,10 +128,14 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
         raise ValueError("the stretching and scoord arrays must be the same size")
     N=scoord.size
     hinv = 1/h
-    z = np.zeros([N,h.shape[0],h.shape[1]])
+    h=np.asanyarray(h)
     r = np.arange(0,N)
     if w_grid:
-        z[0,:,:] = -h
+        N=N+1
+    if h.ndim==0:
+        z = np.zeros([N,1,1])
+    else:
+        z = np.zeros(np.hstack((N,h.shape)))
 
     if vtransform == 1:
         cff = hc*(scoord-stretching)
@@ -145,6 +149,9 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
             z[k,:,:] = zeta + ( zeta + h )*cff*cff1
     else:
         raise ValueError("transform value must be between 1 and 2")
+    if w_grid:
+        z[1:-1,:,:]=z[0:-2,:,:]
+        z[0,:,:] = -h
 
     return z
 
