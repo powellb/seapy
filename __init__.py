@@ -18,3 +18,4 @@ from environ import opt
 import roms
 import model
 import qserver
+import hawaii

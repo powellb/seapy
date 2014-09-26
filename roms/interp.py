@@ -17,7 +17,7 @@ import seapy
 from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 
-_scaling={"zeta":2.0, "u":1.0, "v":1.0, "temp":1.25, "salt":3.0}
+_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":0.99, "salt":0.99}
 
 def _mask_z_grid(z_data, src_depth, z_depth):
     """
@@ -160,14 +160,16 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     pmap_file = sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
-    if nx==0 and hasattr(src_grid,"dm") and hasattr(child_grid,"dm"):
-        nx = np.ceil( np.mean( src_grid.dm ) / np.mean( child_grid.dm) ) 
-    else:
-        nx = 5
-    if ny==0 and hasattr(src_grid,"dn") and hasattr(child_grid,"dn"):
-        ny = np.ceil( np.mean( src_grid.dn ) / np.mean( child_grid.dn) ) 
-    else:
-        ny = 5
+    if nx==0:
+        if hasattr(src_grid,"dm") and hasattr(child_grid,"dm"):
+            nx = np.ceil( np.mean( src_grid.dm ) / np.mean( child_grid.dm) ) 
+        else:
+            nx = 5
+    if ny==0:
+        if hasattr(src_grid,"dn") and hasattr(child_grid,"dn"):
+            ny = np.ceil( np.mean( src_grid.dn ) / np.mean( child_grid.dn) ) 
+        else:
+            ny = 5
 
     if pmap is None:
         if os.path.isfile(pmap_file):
@@ -224,7 +226,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
               getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
               getattr(child_grid,"depth_"+grd),
               pmap["pmap"+grd], weight,
-              nx, ny, getattr(child_grid,"mask_"+grd)) 
+              nx, ny, getattr(child_grid,"mask_"+grd),
+              factor=_scaling[k]) 
             for i in records), copy=False)
             if z_mask:
                 _mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
@@ -272,23 +275,6 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[vmap["vbar"]][j,:] = \
                     np.sum(vel_v * depth, 1) / np.sum(depth, 1)
 
-# def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
-#             nx=0, ny=0, vmap=None):
-#     # Figure out the file structures
-#     if os.path.isfile(src_file):
-#         if dest_grid != None:
-#             if isinstance(dest_grid,basestring):
-#                 dest_grid = seapy.model.grid(dest_grid)
-#         else:
-#             dest_grid=seapy.model.grid(dest_file)
-#         src_grid = seapy.model.grid(src_file)
-#         ncout=netCDF4.Dataset(dest_file,"a")
-#     
-#     # Call the base interpolator
-#     _interp_grids(src_grid, dest_grid, ncout, records, threads, nx, ny, vmap)
-#         
-#     # Clean up
-#     ncout.close()
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
              threads=1, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,

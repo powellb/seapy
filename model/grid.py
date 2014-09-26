@@ -275,3 +275,16 @@ class grid:
                 self.thick_v = self.thick_rho
 
         pass
+        
+    def plot_trace(self, basemap, **kwargs):
+        """
+            Given a basemap object, draw a trace of the grid onto the map
+            projection
+        """
+        lon=np.concatenate([self.lon_rho[0,:], self.lon_rho[:,-1], 
+                            self.lon_rho[-1,::-1], self.lon_rho[::-1,0]])
+        lat=np.concatenate([self.lat_rho[0,:], self.lat_rho[:,-1], 
+                            self.lat_rho[-1,::-1], self.lat_rho[::-1,0]])
+        x,y=basemap(lon,lat)
+        basemap.plot(x,y,**kwargs)
+        
