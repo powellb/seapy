@@ -12,7 +12,6 @@ import netCDF4
 from datetime import datetime
 from seapy.roms import lib
 import seapy.cdl_parser as cdl_parser
-import seapy.Null as Null
 import netcdftime
 
 """
@@ -22,7 +21,7 @@ _cdl_dir = os.path.dirname(lib.__file__)
 _cdl_dir =('.' if len(_cdl_dir) == 0 else _cdl_dir) + "/cdl/"
 _format="NETCDF4_CLASSIC"
 
-def ncgen(file, dims=Null(), vars=Null(), attr=Null(), title=None):
+def ncgen(file, dims={}, vars={}, attr={}, title=None):
     """
         Create a new netcdf file
     """

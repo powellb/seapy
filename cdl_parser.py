@@ -8,7 +8,6 @@
 """
 from __future__ import print_function
 
-from Null import Null
 import datetime
 import re
 

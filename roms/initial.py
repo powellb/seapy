@@ -23,7 +23,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     
     Parameters
     ----------
-    roms_file : string ROMS source (history, average, romsatology file)
+    roms_file : string ROMS source (history, average, climatology file)
     ini_file : string name for output initial condition file
     record :  record index to use as initial condition
     [time] : datetime to use for the initial condition (default to record time)
@@ -37,10 +37,10 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     # Load the grid
     if grid != None:
         if isinstance(grid,basestring):
-            grid = seapy.model.grid(grid, z=True)
+            grid = seapy.model.grid(grid)
     else:
-        # If we weren't given a grid, try to construct from the romsate file
-        grid = seapy.model.grid(roms_file, z=True)
+        # If we weren't given a grid, try to construct from the climate file
+        grid = seapy.model.grid(roms_file)
         
     ncroms = netCDF4.Dataset(roms_file)
     romstime = seapy.roms.get_timevar(ncroms)

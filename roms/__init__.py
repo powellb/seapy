@@ -1,6 +1,6 @@
-import ncgen
-import interp
-import boundary
-import initial
-import obs
-from lib import *
+from . import ncgen
+from . import interp
+from . import boundary
+from . import initial
+from . import obs
+from .lib import *

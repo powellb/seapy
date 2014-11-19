@@ -21,25 +21,50 @@ import os
 _shape_file = os.path.dirname(__file__)+"/hawaii_coast/hawaii"
 
 class map(object):
-    def __init__(self, figsize=(8.,6.), color="black", dlat=1, dlon=2):
-        self.basemap = Basemap(llcrnrlon=-164.5, llcrnrlat=16.7,
-                               urcrnrlon=-152.25, urcrnrlat=24,
+    def __init__(self, figsize=(8.,6.), dlat=1, dlon=2):
+        self.basemap = Basemap(llcrnrlon=-164.5, llcrnrlat=16.6,
+                               urcrnrlon=-152.0, urcrnrlat=24.2,
                                projection='lcc', lat_0=20,
                                lon_0=-158.0, resolution='c', area_thresh=0.0)
-                         
-        self.fig = plt.figure(figsize=figsize)
-        self.ax = self.fig.add_axes([-0.01, 0.27, 1.01, 0.7])
-        self.basemap.drawmapboundary(fill_color="aqua")
+        self.figsize=figsize
+        self.dlon=dlon
+        self.dlat=dlat
+        self.fig=None
+        self.new_figure()
 
-        self.color=color
-
-        # Create the lat/lon lines
-        self.basemap.drawmeridians(np.arange(-164.5,-152.25,dlon),color="0.5",
-            linewidth=0.25, dashes=[1,1,0,1,0], labels=[0,0,0,1],fontsize=12)
-        self.basemap.drawparallels(np.arange(16.7,24,dlat),color="0.5",
-            linewidth=0.25, dashes=[1,1,0,1,0], labels=[1,0,0,0],fontsize=12)
+    def new_figure(self):
+        if self.fig != None:
+            self.ax.set_axis_off()
+            plt.close(self.fig)
             
-    def pcolor(self, lon, lat, data, label=None, cticks=None, **kwargs):
+        self.fig = plt.figure(figsize=self.figsize)
+        self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+        self.basemap.drawmapboundary(fill_color="aqua")
+        # Create the lat/lon lines
+        self.basemap.drawmeridians(np.arange(-164.5,-152.25,self.dlon),color="0.5",
+            linewidth=0.25, dashes=[1,1,0.1,1], labels=[0,0,0,1],fontsize=12)
+        self.basemap.drawparallels(np.arange(16.7,24,self.dlat),color="0.5",
+            linewidth=0.25, dashes=[1,1,0.1,1], labels=[1,0,0,0],fontsize=12)
+        
+    def land(self, color="black"):
+        if  hasattr(self.basemap,"coast") == False or hasattr(self, "landpoly"):
+            self.basemap.readshapefile(_shape_file, "coast")
+            vert=[]
+            for shape in self.basemap.coast:
+                vert.append(shape)
+
+            self.landpoly = PolyCollection(vert,facecolors=color,edgecolors=color)
+        # Draw the loaded shapes
+        self.ax.add_collection(self.landpoly)
+            
+
+    def zoom(self, xrange, yrange):
+        x,y = self.basemap(xrange, yrange)
+        self.ax.set_xlim(x)
+        self.ax.set_ylim(y)
+        self.fig.canvas.draw()
+
+    def pcolor(self, lon, lat, data, **kwargs):
         # Pcolor requires a modification to the locations to line up with
         # the geography
         dlon=lon*0;
@@ -47,27 +72,14 @@ class map(object):
         dlon[:,0:-1]=lon[:,1:]-lon[:,0:-1]
         dlat[0:-1,:]=lat[1:,:]-lat[0:-1,:]
         x,y = self.basemap(lon-dlon*0.5,lat-dlat*0.5)
+        self.pc = self.ax.pcolor(x,y,data,**kwargs)
 
-        self.pc = self.basemap.pcolor(x,y,data,**kwargs)
-        self.cax = self.fig.add_axes([0.25, 0.18, 0.5, 0.03])
+    def colorbar(self, label=None, cticks=None, **kwargs):
+        self.cax = self.fig.add_axes([0.25, 0.16, 0.5, 0.03])
         self.cb = plt.colorbar(self.pc, cax=self.cax, orientation="horizontal",
                                 ticks=cticks)
         self.basemap.set_axes_limits(ax=self.ax)
         if label != None:
             self.cb.set_label(label)
-        self.land()
-    
-    def land(self):
-        if self.color != None:
-            self.basemap.readshapefile(_shape_file, "coast", drawbounds=False)
-            vert=[]
-            for shape in self.basemap.coast:
-                vert.append(shape)
-
-            self.land = PolyCollection(vert,facecolors=self.color, 
-                               edgecolors=self.color)
-            self.ax.add_collection(self.land)
-        else:
-            self.basemap.readshapefile(_shape_file, "coast", drawbounds=True)
-
+        
         

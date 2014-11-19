@@ -24,7 +24,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     
     Parameters
     ----------
-    roms_file : string ROMS source (history, average, romsatology file)
+    roms_file : string ROMS source (history, average, climatology file)
     bry_file : string output boundary file
     [grid] : seapy.model.grid or string for ROMS grid
     [records] : array of the record indices to put into the boundary
@@ -36,15 +36,15 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     if grid != None:
         if isinstance(grid,basestring):
-            grid = seapy.model.grid(grid, z=True)
+            grid = seapy.model.grid(grid)
     else:
-        # If we weren't given a grid, try to construct from the romsate file
-        grid = seapy.model.grid(roms_file, z=True)
+        # If we weren't given a grid, try to construct from the climate file
+        grid = seapy.model.grid(roms_file)
         
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-             if records == None else records
+             if records is None else records
     src_time=netcdftime.utime(ncroms.variables[time].units)
 
     # Create the boundary file and fill up the descriptive data

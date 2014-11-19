@@ -11,11 +11,11 @@
   Requires the following packages: joblib
 """
 
-from Null import *
-from oa import *
-from lib import *
-from environ import opt
-import roms
-import model
-import qserver
-import hawaii
+from .oa import *
+from .lib import *
+from .environ import opt
+from . import roms
+from . import model
+from . import qserver
+from . import hawaii
+from . import plot

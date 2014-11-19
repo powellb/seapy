@@ -122,7 +122,7 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
         function (returned by the roms.utils.stretching function), determine
         the depth of the given bathymetry.
     """
-    if h == None or scoord == None or stretching == None:
+    if h is None or scoord is None or stretching is None:
         raise AttributeError("you must supply h, scoord, and stretching")
     if scoord.size != stretching.size:
         raise ValueError("the stretching and scoord arrays must be the same size")

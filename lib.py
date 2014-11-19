@@ -38,7 +38,7 @@ def convolve_mask(fld, ksize=3, kernel=None):
     if fld.ndim > 3 or fld.ndim < 2:
         raise AttributeError("Can only convolve 2- or 3-D fields")
         
-    if kernel == None:
+    if kernel is None:
         center=np.round(ksize/2)
         kernel=np.ones([ksize,ksize])
         kernel[center,center]=0.0
@@ -131,5 +131,6 @@ def list_files(path=".", regex=".*"):
         if prog.search(file) != None:
             files.append(file)
     return files
+    
 
 pass

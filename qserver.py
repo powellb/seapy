@@ -16,7 +16,7 @@
   Copyright (c)2014 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
-import Queue
+from queue import Queue
 import threading
 import subprocess
 import sys

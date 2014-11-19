@@ -201,7 +201,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
     records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records == None else np.asarray(records)
+                 if records is None else np.asarray(records)
     for k in vmap:
         # Only interpolate the fields we want in the destination
         if vmap[k] not in ncout.variables or \
@@ -309,19 +309,19 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     None
     
     """
-    roms_grid = seapy.model.grid(roms_file, z=True)
+    roms_grid = seapy.model.grid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
     src_time = netcdftime.utime(ncroms.variables[time].units)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-        if records == None else np.asarray(records)
+        if records is None else np.asarray(records)
 
     if z_grid != None:
         if isinstance(z_grid,basestring):
-            z_grid = seapy.model.grid(z_grid, z=True)
+            z_grid = seapy.model.grid(z_grid)
     else:
         if os.path.isfile(z_file):
-            z_grid = seapy.model.grid(z_file, z=True)
+            z_grid = seapy.model.grid(z_file)
             
     if not os.path.isfile(z_file):
         if z_grid is None:
@@ -331,7 +331,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
                 raise ValueError("depth must be specified")
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
                                    src_time.origin,"ROMS z-level", 
-                                   cdlfile=cdfile, dims=dims)
+                                   cdlfile=cdlfile, dims=dims)
             if dims==1:
                 ncout.variables["lat"][:]=roms_grid.lat_rho[:,0]
                 ncout.variables["lon"][:]=roms_grid.lon_rho[0,:]
@@ -341,7 +341,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             ncout.variables["depth"][:]=depth
             ncout.variables["mask"][:]=roms_grid.mask_rho
             ncout.sync()
-            z_grid = seapy.model.grid(z_file, z=True)
+            z_grid = seapy.model.grid(z_file)
         else:
             lat=z_grid.lat_rho.shape[0]
             lon=z_grid.lat_rho.shape[1]
@@ -404,10 +404,10 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
     -------
     None
     """
-    src_grid = seapy.model.grid(src_file, z=True)
+    src_grid = seapy.model.grid(src_file)
     if dest_grid != None:
         if isinstance(dest_grid,basestring):
-            destg = seapy.model.grid(dest_grid, z=True)
+            destg = seapy.model.grid(dest_grid)
         else:
             destg = dest_grid
         
@@ -415,7 +415,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             ncsrc = netCDF4.Dataset(src_file)
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records == None else np.asarray(records)
+                 if records is None else np.asarray(records)
             src_time=netcdftime.utime(ncsrc.variables[time].units)
             ncout=seapy.roms.ncgen.create_ini(dest_file, 
                      eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,
@@ -442,8 +442,8 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     if os.path.isfile(dest_file):
         ncout = netCDF4.Dataset(dest_file,"a")
-        if dest_grid == None:
-            destg = seapy.model.grid(dest_file, z=True)
+        if dest_grid is None:
+            destg = seapy.model.grid(dest_file)
 
     # Call the interpolation
     try:
@@ -485,15 +485,15 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
     """
     if dest_grid != None:
         if isinstance(dest_grid,basestring):
-            destg = seapy.model.grid(dest_grid, z=True)
+            destg = seapy.model.grid(dest_grid)
         else:
             destg = dest_grid
             
-        src_grid = seapy.model.grid(src_file, z=True)
+        src_grid = seapy.model.grid(src_file)
         ncsrc = netCDF4.Dataset(src_file)
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records == None else np.asarray(records)
+                 if records is None else np.asarray(records)
         src_time=netcdftime.utime(ncsrc.variables[time].units)
         ncout=seapy.roms.ncgen.create_clim(dest_file, 
                  eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,ntimes=records.size,

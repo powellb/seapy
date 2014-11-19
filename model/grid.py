@@ -18,12 +18,24 @@ import seapy
 import numpy as np
 
 class grid:
-    def __init__(self, file=None, lat=None, lon=None, depth=None,
-                 z=False, cgrid=False):
+    def __init__(self, file=None, lat=None, lon=None, z=None,
+                 depths=True, cgrid=False):
         """
             Class to wrap around a numerical model grid for oceanography. 
-            It attempts to track latitude, longitude, depth, and other
-            parameters.
+            It attempts to track latitude, longitude, z, and other
+            parameters. A grid can be constructed by specifying a filename or
+            by specifying lat, lon, and z.
+            
+            file    : filename to load to build data structure [optional]
+                or
+            lat     : latitude values of grid
+            lon     : longitude values of grid
+            z       : z-level depths of grid
+            
+            Options
+            -------
+            depths  : Set the depths of the grid [True]
+            cgrid   : Whether the grid is an Arakawa C-Grid [False]
         """
         self.file = file
         self.cgrid = cgrid
@@ -40,10 +52,10 @@ class grid:
             self._nc = None
             self.lat_rho = lat
             self.lon_rho = lon
-            self.depth = depth
+            self.z = z
             self.cgrid = False
         self._verify_shape()
-        if z:
+        if depths:
             self.set_dims()
             self.set_depth()
             self.set_thickness()
@@ -123,7 +135,7 @@ class grid:
             if "s_rho" in self.__dict__:
                 self.n = self.s_rho.size
             elif "depths" in self.__dict__:
-                self.n = self.depths.size
+                self.n = self.z.size
             
         # Generate the u- and v-grids
         if ("lat_u" or "lon_u") not in self.__dict__:
@@ -184,7 +196,7 @@ class grid:
           Given a 3D field for a z-level model, compute a mask and an h
           based on where the values exist
         """
-        if fld == None and self._nc != None:
+        if fld is None and self._nc != None:
             # Try to load a field from the file
             for f in ["temp","temperature"]:
                 if f in self._nc.variables:
@@ -194,15 +206,15 @@ class grid:
         
         # If we don't have a field to examine, then we cannot compute the
         # mask and bathymetry
-        if fld == None:
+        if fld is None:
             raise AttributeError("Missing 3D field to evaluate")
 
         # Next, we go over the field to examine the depths and mask
         self.h = np.zeros(self.lat_rho.shape)
         self.mask_rho = np.zeros(self.lat_rho.shape)
-        for k in range(0,self.depth.size):
+        for k in range(0,self.z.size):
             water = np.nonzero( np.logical_not(fld.mask[k,:,:]) )
-            self.h[water] = self.depth[k]
+            self.h[water] = self.z[k]
             if k==0:
                 self.mask_rho[water] = 1.0
         pass
@@ -221,13 +233,13 @@ class grid:
             self.depth_u=seapy.model.rho2u(self.depth_rho)
             self.depth_v=seapy.model.rho2v(self.depth_rho)
         else:
-            d = self.depth.copy()
+            d = self.z.copy()
             l = np.nonzero(d>0)
             d[l]=-d[l]
             self.depth_rho = np.kron( np.kron( d,
                                     np.ones(self.lon_rho.shape[1])),
                                     np.ones(self.lon_rho.shape[0])).reshape(
-                                    [self.depth.size,self.lon_rho.shape[0],
+                                    [self.z.size,self.lon_rho.shape[0],
                                      self.lon_rho.shape[1]])
             if self.cgrid is True:
                 self.depth_u=seapy.model.rho2u(self.depth_rho)
@@ -252,7 +264,7 @@ class grid:
             self.thick_u=seapy.model.rho2u(self.thick_rho)
             self.thick_v=seapy.model.rho2v(self.thick_rho)
         else:
-            d=np.abs(self.depth.copy())
+            d=np.abs(self.z.copy())
             w=np.zeros(len(d))
             # Check which way the depths are going
             if d[0] < d[-1]:
@@ -265,7 +277,7 @@ class grid:
             self.thick_rho = np.kron( np.kron( w,
                                     np.ones(self.lon_rho.shape[1])),
                                     np.ones(self.lon_rho.shape[0])).reshape(
-                                    [self.depth.size,self.lon_rho.shape[0],
+                                    [self.z.size,self.lon_rho.shape[0],
                                      self.lon_rho.shape[1]])
             if self.cgrid is True:
                 self.thick_u=seapy.model.rho2u(self.thick_rho)

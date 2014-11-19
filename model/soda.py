@@ -13,7 +13,6 @@ import numpy as np
 import datetime
 import netCDF4 as nc
 from progressbar import ProgressBar
-import seapy.Null as Null
 from seapy.roms.ncgen import create_zlevel
 
 _url="http://apdrc.soest.hawaii.edu:80/dods/public_data/SODA/soda_pop2.2.4";
