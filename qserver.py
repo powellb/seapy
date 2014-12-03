@@ -16,7 +16,12 @@
   Copyright (c)2014 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
-from queue import Queue
+
+import sys
+if sys.version_info < (3, 0):
+    from Queue import Queue
+else:
+    from queue import Queue
 import threading
 import subprocess
 import sys
