@@ -311,9 +311,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     roms_grid = seapy.model.grid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
-    if "units" in ncroms.variables[time]:
+    try:
         src_time=netcdftime.utime(ncroms.variables[time].units)
-    else:
+    except AttributeError:
         src_time=netcdftime.utime(seapy.roms.default_epoch)
     records = np.arange(0, len(ncroms.variables[time][:])) \
         if records is None else np.asarray(records)
@@ -418,9 +418,9 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.asarray(records)
-            if "units" in ncsrc.variables[time]:
+            try:
                 src_time=netcdftime.utime(ncsrc.variables[time].units)
-            else:
+            except AttributeError:
                 src_time=netcdftime.utime(seapy.roms.default_epoch)
             ncout=seapy.roms.ncgen.create_ini(dest_file, 
                      eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,
@@ -499,9 +499,9 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.asarray(records)
-        if "units" in ncsrc.variables[time]:
+        try:
             src_time=netcdftime.utime(ncsrc.variables[time].units)
-        else:
+        except AttributeError:
             src_time=netcdftime.utime(seapy.roms.default_epoch)
         ncout=seapy.roms.ncgen.create_clim(dest_file, 
                  eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,ntimes=records.size,

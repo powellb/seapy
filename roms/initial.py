@@ -44,9 +44,9 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
         
     ncroms = netCDF4.Dataset(roms_file)
     romstime = seapy.roms.get_timevar(ncroms)
-    if "units" in ncroms.variables[romstime]:
+    try:
         src_time=netcdftime.utime(ncroms.variables[romstime].units)
-    else:
+    except AttributeError:
         src_time=netcdftime.utime(seapy.roms.default_epoch)
 
     # Create the initial file and fill up the descriptive data

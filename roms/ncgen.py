@@ -13,7 +13,6 @@ from datetime import datetime
 from seapy.roms import lib
 import seapy.cdl_parser as cdl_parser
 import netcdftime
-import ipdb
 
 """
     Module variables
@@ -177,7 +176,6 @@ def create_clim(file, eta_rho=10, xi_rho=10, N=1, ntimes=1,
         Create a climatology forcing file
     """
     # Generate the Structure
-    ipdb.set_trace()
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "clm_ts.cdl")
 
     # Fill in the appropriate dimension values

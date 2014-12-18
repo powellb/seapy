@@ -174,7 +174,7 @@ def get_timebase(time):
     Given a netCDF4 time record from a ROMS file, compute the timebase
     for the file
     """
-    if "units" in time:
+    if hasattr(time,"units"):
         return netcdftime.utime(time.units).origin
     else:
         return netcdftime.utime(seapy.roms.default_epoch)
