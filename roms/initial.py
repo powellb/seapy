@@ -36,7 +36,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     """
     # Load the grid
     if grid != None:
-        if isinstance(grid,basestring):
+        if isinstance(grid,str):
             grid = seapy.model.grid(grid)
     else:
         # If we weren't given a grid, try to construct from the climate file
@@ -44,7 +44,10 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
         
     ncroms = netCDF4.Dataset(roms_file)
     romstime = seapy.roms.get_timevar(ncroms)
-    src_time=netcdftime.utime(ncroms.variables[romstime].units)
+    if "units" in ncroms.variables[romstime]:
+        src_time=netcdftime.utime(ncroms.variables[romstime].units)
+    else:
+        src_time=netcdftime.utime(seapy.roms.default_epoch)
 
     # Create the initial file and fill up the descriptive data
     ncini=seapy.roms.ncgen.create_ini(ini_file, 

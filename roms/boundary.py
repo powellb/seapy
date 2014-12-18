@@ -35,7 +35,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     
     """
     if grid != None:
-        if isinstance(grid,basestring):
+        if isinstance(grid,str):
             grid = seapy.model.grid(grid)
     else:
         # If we weren't given a grid, try to construct from the climate file
@@ -45,7 +45,10 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     time = seapy.roms.get_timevar(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
              if records is None else records
-    src_time=netcdftime.utime(ncroms.variables[time].units)
+    if "units" in ncroms.variables[time]:
+        src_time=netcdftime.utime(ncroms.variables[time].units)
+    else:
+        src_time=netcdftime.utime(seapy.roms.default_epoch)
 
     # Create the boundary file and fill up the descriptive data
     if os.path.isfile(bry_file):

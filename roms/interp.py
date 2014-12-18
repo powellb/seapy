@@ -204,8 +204,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                  if records is None else np.asarray(records)
     for k in vmap:
         # Only interpolate the fields we want in the destination
-        if vmap[k] not in ncout.variables or \
-           seapy.roms.fields[k].has_key("rotate"):
+        if ( vmap[k] not in ncout.variables ) or ( "rotate" in seapy.roms.fields[k]):
             continue
         grd = seapy.roms.fields[k]["grid"]
         if seapy.roms.fields[k]["dims"]==2:
@@ -234,8 +233,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
         ncout.variables[vmap[k]][:] = ndata
 
     # Rotate and Interpolate the vector fields
-    if ( vmap.has_key("u") and vmap["u"] in ncout.variables ) and \
-       ( vmap.has_key("v") and vmap["v"] in ncout.variables ):
+    if ( ( "u" in vmap ) and ( vmap["u"] in ncout.variables ) ) and \
+       ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
         srcangle = src_grid.angle if src_grid.cgrid is True else None
         dstangle = child_grid.angle if child_grid.cgrid is True else None
         vel = Parallel(n_jobs=threads, verbose=2) \
@@ -264,13 +263,13 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             ncout.variables[vmap["u"]][j,:] = vel_u
             ncout.variables[vmap["v"]][j,:] = vel_v
 
-            if vmap.has_key("ubar") and vmap["ubar"] in ncout.variables:
+            if ( "ubar" in vmap ) and ( vmap["ubar"] in ncout.variables ):
                 # Create ubar and vbar
                 depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
                 ncout.variables[vmap["ubar"]][j,:] = \
                     np.sum(vel_u * depth, 1) / np.sum(depth, 1)
 
-            if vmap.has_key("vbar") and vmap["vbar"] in ncout.variables:
+            if ( "vbar" in vmap ) and ( vmap["vbar"] in ncout.variables ):
                 depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
                 ncout.variables[vmap["vbar"]][j,:] = \
                     np.sum(vel_v * depth, 1) / np.sum(depth, 1)
@@ -312,12 +311,15 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     roms_grid = seapy.model.grid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
-    src_time = netcdftime.utime(ncroms.variables[time].units)
+    if "units" in ncroms.variables[time]:
+        src_time=netcdftime.utime(ncroms.variables[time].units)
+    else:
+        src_time=netcdftime.utime(seapy.roms.default_epoch)
     records = np.arange(0, len(ncroms.variables[time][:])) \
         if records is None else np.asarray(records)
 
     if z_grid != None:
-        if isinstance(z_grid,basestring):
+        if isinstance(z_grid,str):
             z_grid = seapy.model.grid(z_grid)
     else:
         if os.path.isfile(z_file):
@@ -406,7 +408,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
     """
     src_grid = seapy.model.grid(src_file)
     if dest_grid != None:
-        if isinstance(dest_grid,basestring):
+        if isinstance(dest_grid,str):
             destg = seapy.model.grid(dest_grid)
         else:
             destg = dest_grid
@@ -416,7 +418,10 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.asarray(records)
-            src_time=netcdftime.utime(ncsrc.variables[time].units)
+            if "units" in ncsrc.variables[time]:
+                src_time=netcdftime.utime(ncsrc.variables[time].units)
+            else:
+                src_time=netcdftime.utime(seapy.roms.default_epoch)
             ncout=seapy.roms.ncgen.create_ini(dest_file, 
                      eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,
                      timebase=src_time.origin,title="interpolated from "+src_file)
@@ -484,7 +489,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
     None
     """
     if dest_grid != None:
-        if isinstance(dest_grid,basestring):
+        if isinstance(dest_grid,str):
             destg = seapy.model.grid(dest_grid)
         else:
             destg = dest_grid
@@ -494,7 +499,10 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.asarray(records)
-        src_time=netcdftime.utime(ncsrc.variables[time].units)
+        if "units" in ncsrc.variables[time]:
+            src_time=netcdftime.utime(ncsrc.variables[time].units)
+        else:
+            src_time=netcdftime.utime(seapy.roms.default_epoch)
         ncout=seapy.roms.ncgen.create_clim(dest_file, 
                  eta_rho=destg.ln,xi_rho=destg.lm,N=destg.n,ntimes=records.size,
                  timebase=src_time.origin,title="interpolated from "+src_file)

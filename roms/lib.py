@@ -19,6 +19,8 @@ fields={   "zeta":{"grid":"rho","dims":2},
            "temp":{"grid":"rho","dims":3},
            "salt":{"grid":"rho","dims":3}}
 
+default_epoch = "days since 2000-01-01 00:00:00"
+
 def get_timevar(nc):
     """
     get_timevar(nc)
@@ -172,8 +174,9 @@ def get_timebase(time):
     Given a netCDF4 time record from a ROMS file, compute the timebase
     for the file
     """
-    return netcdftime.utime(time.units).origin
-
-    
+    if "units" in time:
+        return netcdftime.utime(time.units).origin
+    else:
+        return netcdftime.utime(seapy.roms.default_epoch)
 pass
 

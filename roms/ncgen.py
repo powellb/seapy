@@ -13,6 +13,7 @@ from datetime import datetime
 from seapy.roms import lib
 import seapy.cdl_parser as cdl_parser
 import netcdftime
+import ipdb
 
 """
     Module variables
@@ -65,9 +66,9 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, N):
     dims["N"] = N
 
     # Fill in the appropriate dimension values
-    if dims.has_key("s_rho"):
+    if "s_rho" in dims:
         dims["s_rho"] = N
-    if dims.has_key("s_w"):
+    if "s_w" in dims:
         dims["s_w"] = N+1
     
     return dims
@@ -81,7 +82,7 @@ def _set_time_ref(vars, timevar, timebase, cycle=None):
     for tvar in timevar:
         for nvar in vars:
             if nvar["name"] == tvar:
-                if nvar["attr"].has_key("units"):
+                if "units" in nvar["attr"]:
                     t = netcdftime.utime(nvar["attr"]["units"])                
                     nvar["attr"]["units"] = "%s since %s" % ( t.units, timebase )
                 else:
@@ -176,6 +177,7 @@ def create_clim(file, eta_rho=10, xi_rho=10, N=1, ntimes=1,
         Create a climatology forcing file
     """
     # Generate the Structure
+    ipdb.set_trace()
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "clm_ts.cdl")
 
     # Fill in the appropriate dimension values
