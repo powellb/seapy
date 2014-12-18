@@ -17,5 +17,6 @@ from .environ import opt
 from . import roms
 from . import model
 from . import qserver
-from . import hawaii
+from .map import map
+from .hawaii import hawaii
 from . import plot

@@ -46,14 +46,18 @@ def convolve_mask(fld, ksize=3, kernel=None):
     # Convolve the mask
     msk=np.ma.getmaskarray(fld)
     if fld.ndim == 2:
-        count=ndimage.convolve((~msk).view(np.int8), kernel)
-        nfld=ndimage.convolve(fld.data*(~msk).view(np.int8), kernel)
+        count=ndimage.convolve((~msk).view(np.int8), kernel, 
+                               mode="constant", cval=0.0)
+        nfld=ndimage.convolve(fld.data*(~msk).view(np.int8), kernel,
+                               mode="constant", cval=0.0)
     else:
         kernel=np.expand_dims(kernel, axis=3)
         count=np.transpose( ndimage.convolve( 
-                (~msk).view(np.int8).transpose(1,2,0), kernel),(2,0,1))
+                (~msk).view(np.int8).transpose(1,2,0), kernel,
+                mode="constant", cval=0.0),(2,0,1))
         nfld=np.transpose( ndimage.convolve( 
-            (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel),(2,0,1))
+            (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel,
+            mode="constant", cval=0.0),(2,0,1))
         
     lst=np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
