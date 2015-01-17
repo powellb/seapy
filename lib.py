@@ -16,6 +16,7 @@ import numpy as np
 from scipy import ndimage
 import os
 import re
+import datetime
 
 secs2day = 1.0/86400.0
 
@@ -136,5 +137,27 @@ def list_files(path=".", regex=".*"):
             files.append(file)
     return files
     
+def day2date(day=0,epoch=datetime.datetime(2000,1,1)):
+    """
+    day2date(day, epoch=datetime.datetime(2000,1,1))
+    
+    Return a datetime object from the number of days since the epoch
+    """
+    return epoch + datetime.timedelta(days=day)
+
+def date2day(date=datetime.datetime(2000,1,1),epoch=datetime.datetime(2000,1,1)):
+    """
+    date2day(date, epoch=datetime.datetime(2000,1,1))
+    
+    Return the fractional number of days elapsed since the epoch to the date
+    given.
+    """
+    return (date-epoch).total_seconds() * secs2day
+
+def today2day(epoch=datetime.datetime(2000,1,1), tz):
+    """
+    Return the day number of today (UTC time) since the epoch.
+    """
+    return date2day(datetime.datetime.utcnow(),epoch)
 
 pass
