@@ -119,6 +119,7 @@ def create_river(file, nriver=1, s_rho=5,
     
     # Fill in the appropriate river values
     dims["river"]=nriver
+    dims["s_rho"]=s_rho
     vars = _set_time_ref(vars, "river_time", timebase)
 
     # Create the river file
