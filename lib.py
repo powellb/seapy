@@ -154,7 +154,7 @@ def date2day(date=datetime.datetime(2000,1,1),epoch=datetime.datetime(2000,1,1))
     """
     return (date-epoch).total_seconds() * secs2day
 
-def today2day(epoch=datetime.datetime(2000,1,1), tz):
+def today2day(epoch=datetime.datetime(2000,1,1)):
     """
     Return the day number of today (UTC time) since the epoch.
     """
