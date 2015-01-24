@@ -30,7 +30,7 @@ def _mask_z_grid(z_data, src_depth, z_depth):
         
 def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     # Convolve the water over the land
-    seapy.convolve_mask(data, 7)
+    seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)))
     
     # Interpolate the field and return the result
     with timeout(minutes=30):
@@ -73,7 +73,7 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
             data[k,idx[0],idx[1]]=data[k-1,idx[0],idx[1]]*factor
 
     # Convolve the water over the land
-    seapy.convolve_mask(data, 7)
+    seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)))
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
