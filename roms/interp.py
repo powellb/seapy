@@ -256,8 +256,10 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                 _mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
             if child_grid.cgrid is True:
-                vel_u = seapy.model.rho2u(vel_u)
-                vel_v = seapy.model.rho2v(vel_v)
+                #vel_u = seapy.model.rho2u(vel_u)
+                #vel_v = seapy.model.rho2v(vel_v)
+                vel_u = vel_u[:,:,1:]
+                vel_v = vel_v[:,1:,:]
 
 
             ncout.variables[vmap["u"]][j,:] = vel_u
