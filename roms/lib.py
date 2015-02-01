@@ -33,7 +33,7 @@ def get_timevar(nc):
     
     Returns
     -------
-    string of time name
+    time: string
     
     """
     for time in ("ocean_time", "time", "zeta_time", "bry_time"):
@@ -42,17 +42,37 @@ def get_timevar(nc):
     return None
     
 
-def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
+def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
                w_grid=False):
     """
-      Compute the stretching function for ROMS
+    Compute the stretching function for ROMS
+    
+    Parameters
+    ----------
+    vstretching : int, optional
+        stretching algorithm type
+    theta_s: float, optional
+        value of surface theta
+    theta_b: float, optional
+        value of bottom theta
+    hc: int, optional
+        critical depth
+    s_rho: int, optional
+        number of s-levels
+    w_grid: bool, optional
+        solve stretching on the w-grid
+    
+    Returns
+    -------
+    s, cs: array
+    
     """
-    ds=1.0/N
+    ds=1.0/s_rho
     if w_grid:
-        lev=np.arange(1,N+1)
+        lev=np.arange(1,s_rho+1)
     else:
-        lev=np.arange(1,N+1)-0.5
-    s=(lev-N)*ds
+        lev=np.arange(1,s_rho+1)-0.5
+    s=(lev-s_rho)*ds
     
     if vstretching == 1:
         if theta_s > 0:
@@ -100,8 +120,8 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
             cs=s
         pass
     elif vstretching == 5:
-        s = -(lev*lev-2*lev*N+lev+N*N-N)/(1.0*N*N-N) - \
-                0.01*(lev*lev-lev*N)/(1.0-N)
+        s = -(lev*lev-2*lev*s_rho+lev+s_rho*s_rho-s_rho)/(1.0*s_rho*s_rho-s_rho) - \
+                0.01*(lev*lev-lev*s_rho)/(1.0-s_rho)
         if theta_s > 0:
             csur=(1.0-np.cosh(theta_s*s))/(np.cosh(theta_s)-1)
         else:
@@ -119,10 +139,29 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
 def depth(vtransform=1, h=None, hc=100, scoord=None,
           stretching=None, zeta=0, w_grid=False):
     """
-        Given the transform method, the bathymetry, the sea surface height
-        [optional], the critical depth, the s-coordinates, and stretching
-        function (returned by the roms.utils.stretching function), determine
-        the depth of the given bathymetry.
+    Solve the depth of the given bathymetry in s-levels.
+
+    Parameters
+    ----------
+    vtransform : int, optional
+        transform algorithm type
+    h: array, optional
+        value of bottom depths
+    hc: int, optional
+        critical depth
+    scoord: array
+        s coordinates from stretching method
+    stretching: array
+        stretching values from stretching method
+    zeta: array
+        sea surface height to add to bottom
+    w_grid: bool, optional
+        solve stretching on the w-grid
+    
+    Returns
+    -------
+    s, cs: array
+
     """
     if h is None or scoord is None or stretching is None:
         raise AttributeError("you must supply h, scoord, and stretching")

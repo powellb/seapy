@@ -55,7 +55,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
         ncbry=netCDF4.Dataset(bry_file,"a")
     else:
         ncbry=seapy.roms.ncgen.create_bry(bry_file, 
-             eta_rho=grid.ln,xi_rho=grid.lm,N=grid.n,
+             eta_rho=grid.ln,xi_rho=grid.lm,s_rho=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
     bry_time=netcdftime.utime(ncbry.variables[brytime].units)
