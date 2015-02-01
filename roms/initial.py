@@ -16,18 +16,21 @@ import netcdftime
 
 def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     """
-    from_roms(roms_file, ini_file, grid=None, recors=None)
-    
     Given a ROMS history, average, or climatology file, generate 
     initial conditions on the same grid.
     
     Parameters
     ----------
-    roms_file : string ROMS source (history, average, climatology file)
-    ini_file : string name for output initial condition file
-    record :  record index to use as initial condition
-    [time] : datetime to use for the initial condition (default to record time)
-    [grid] : seapy.model.grid or string for ROMS grid
+    roms_file: string
+        Input ROMS source (history, average, climatology file)
+    ini_file: string 
+        Input name for output initial condition file
+    record: int
+        Input index to use as initial condition
+    time: datetime optional
+        Input datetime to use for the initial condition (default to record time)
+    grid: seapy.model.grid or string, optional 
+        Input ROMS grid: specify the grid if loaded or filename to load
     
     Returns
     -------

@@ -26,6 +26,8 @@ class grid:
             parameters. A grid can be constructed by specifying a filename or
             by specifying lat, lon, and z.
             
+            Parameters
+            ----------
             file    : filename to load to build data structure [optional]
                 or
             lat     : latitude values of grid

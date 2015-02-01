@@ -17,16 +17,32 @@ from seapy.roms.ncgen import create_zlevel
 
 _url="http://apdrc.soest.hawaii.edu:80/dods/public_data/SODA/soda_pop2.2.4";
 
-"""
-    Given a ROMS grid, output file name, and time period, load the data
-    from SODA into a new file.
-"""
-def load_history(grid=None, file_name=None, 
+def load_history(filename, 
                  time=[datetime.datetime(1,1,1),datetime.datetime(1,1,1)],
+                 grid=None,
                  epoch=datetime.datetime(1,1,1), url=_url):
+    """
+    Download soda data and save into local file
+
+    Parameters
+    ----------
+    filename: string
+        name of output file
+    time: array of datetime
+        start and end times to load SODA data
+    grid: seapy.model.grid, optional
+        if specified, only load SODA data that covers the grid
+    epoch: datetime, optional
+        timebase for new file
+    url: string, optional
+        URL to load SODA data from
+    Returns
+    -------
+    None
+    """
     if grid is None:
         raise Exception("Missing input grid size to define the boundaries")
-    if file_name is None:
+    if filename is None:
         raise Exception("Missing output file name")
     
     # Open the SODA data
@@ -60,7 +76,7 @@ def load_history(grid=None, file_name=None,
         raise Exception("Bounds not found")
 
     # Build the history file
-    his = create_zlevel(file_name, len(latlist), len(lonlist), 
+    his = create_zlevel(filename, len(latlist), len(lonlist), 
                 len(soda.variables["lev"][:])), epoch, 
                 "SODA history from "+url)
 

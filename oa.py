@@ -13,6 +13,37 @@ import numpy as np
 import seapy.oalib
 
 def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
+    """
+    Objective analysis interpolation for 2D fields
+    
+    Parameters
+    ----------
+    x: array
+        x-values of source data
+    y: array
+        y-values of source data
+    d: array
+        data values of source
+    xx: array
+        x-values of destination
+    yy: array
+        y-values of destination
+    pmap: array, optional
+        weighting array to map between source and destination. 
+        NOTE: best to save this after using to prevent recomputing
+        weights for every interpolate
+    weight: int, optional
+        number of neighbor points to consider for every destination point
+    nx: int, optional
+        decorrelation lengthscale in x [same units as x]
+    ny: int, optional
+        decorrelation lengthscale in y [same units as y]
+
+    Returns
+    -------
+    new_data, pmap: array
+    
+    """
     # Do some error checking
     nx = ny if nx==0 else nx
     ny = nx if ny==0 else ny
@@ -31,6 +62,41 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
                fill_value=-999999.0), pmap
     
 def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
+    """
+    Objective analysis interpolation for 3D fields
+    
+    Parameters
+    ----------
+    x: array
+        x-values of source data
+    y: array
+        y-values of source data
+    z: array
+        z-values of source data
+    v: array
+        data values of source
+    xx: array
+        x-values of destination
+    yy: array
+        y-values of destination
+    zz: array
+        z-values of destination
+    pmap: array, optional
+        weighting array to map between source and destination. 
+        NOTE: best to save this after using to prevent recomputing
+        weights for every interpolate
+    weight: int, optional
+        number of neighbor points to consider for every destination point
+    nx: int, optional
+        decorrelation lengthscale in x [same units as x]
+    ny: int, optional
+        decorrelation lengthscale in y [same units as y]
+
+    Returns
+    -------
+    new_data, pmap: array
+    
+    """
     # Do some error checking
     nx = ny if nx==0 else nx
     ny = nx if ny==0 else ny

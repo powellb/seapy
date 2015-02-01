@@ -11,7 +11,22 @@ from __future__ import print_function
 import datetime
 import re
 
-def cdl_parser(file):
+def cdl_parser(filename):
+    """
+    Given a netcdf-compliant CDL file, parse it to determine the structure:
+    dimensions, variables, attributes, and global attributes
+    
+    Parameters
+    ----------
+    filename : string
+        name and path of CDL file to parse
+
+    Returns
+    -------
+    dims, vars, attr: dict
+        dictionaries description dimensions, variables, and attributes
+    
+    """
     dim_pat=re.compile(r"\s*(\w+)\s*=\s*(\w*)\s*;")
     var_pat=re.compile(r"\s*(\w+)\s*(\w+)\({0,1}([\w\s,]*)\){0,1}\s*;")
     attr_pat=re.compile(r"\s*(\w+):(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")

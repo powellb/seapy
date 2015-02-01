@@ -22,7 +22,18 @@ secs2day = 1.0/86400.0
 
 def adddim(fld,size=1):
     """
-    Given a field, replicate with a new first dimension of given size
+    replicate a field and add a new first dimension with given size
+
+    Parameters
+    ----------
+    fld : array_like
+        Input field.
+    size : int, optional
+        Size of additional first dimension
+
+    Returns
+    -------
+    fld : array
     """
     fld=np.asanyarray(fld)
     return np.transpose( \
@@ -30,12 +41,26 @@ def adddim(fld,size=1):
        np.append(fld.ndim,np.arange(0,fld.ndim))) 
 
 
-def convolve_mask(fld, ksize=3, kernel=None):
+def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
-    Given a masked array, convolve data over the masking using the
-    specified kernel size, or the provided kernel
+    Convolve data over the missing regions of a mask
+    
+    Parameters
+    ----------
+    data : masked array_like
+        Input field.
+    ksize : int, optional
+        Size of square kernel
+    kernel : ndarray, optional
+        Define a convolution kernel. Default is averaging
+    copy : bool, optional
+        If true, a copy of input array is made
+
+    Returns
+    -------
+    fld : masked array
     """
-    fld = np.ma.array(fld, copy=False)
+    fld = np.ma.array(data, copy=copy)
     if fld.ndim > 3 or fld.ndim < 2:
         raise AttributeError("Can only convolve 2- or 3-D fields")
         
@@ -63,12 +88,27 @@ def convolve_mask(fld, ksize=3, kernel=None):
     lst=np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]
+    return fld
 
 def earth_distance(lon1, lat1, lon2, lat2):
     """
-    earth_distance(lon1, lat1, lon2, lat2)
-
     Compute the distance between lat/lon points
+    
+    Parameters
+    ----------
+    lon1 : array_like or scalar
+        Input array of source longitude(s)
+    lat1 : array_like or scalar
+        Input array of source latitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+
+    Returns
+    -------
+    distance : array or scalar of distance in meters
+    
     """
     epsilon = 0.99664718940443;  # This is Sqrt(1-epsilon^2)
     radius = 6378137; # Radius in meters
@@ -93,23 +133,48 @@ def earth_distance(lon1, lat1, lon2, lat2):
 
 def rotate(u, v, angle):
     """
-    rotate(u,v,angle)
-    
-    Rotate a vector field, given by u and v, by the angle given.
+    Rotate a vector field by the given angle
+
+    Parameters
+    ----------
+    u : array like
+        Input u component
+    v : array like
+        Input v component
+    angle : array like
+        Input angle of rotation
+
+    Returns
+    -------
+    rotated_u, rotated_v : array
     """
     u=np.asanyarray(u)
     v=np.asanyarray(v)
-    sa=np.sin(np.asanyarray(angle))
-    ca=np.cos(np.asanyarray(angle))
+    angle=np.asanyarray(angle)
+    sa=np.sin(angle)
+    ca=np.cos(angle)
 
     return u*ca - v*sa, u*sa + v*ca
     
 def vecfind(a, b, tolerance=0):
     """
-    index_a,index_b = vecfind(a, b, tolerance=0)
-    
     Find all occurences of b in a within the given tolerance and return
     the indices into a and b that correspond.
+
+    Parameters
+    ----------
+    a : array
+        Input vector
+    b : array
+        Input vector
+    tolerance : float, optional
+        Input tolerance for how close a==b
+
+    Returns
+    -------
+    index_a, index_b : arrays of indices for each vector where values are equal,
+            such that a[index_a] == b[index_b]
+    
     """
     a=np.asanyarray(a)
     b=np.asanyarray(b)
@@ -125,10 +190,20 @@ def vecfind(a, b, tolerance=0):
     
 def list_files(path=".", regex=".*"):
     """
-    files = list_files(path, regex)
-    
-    Yield all file names in the given path that conform to the regular
+    list all file names in the given path that conform to the regular
     expression pattern.
+
+    Parameters
+    ----------
+    path : string, optional
+        Input directory path
+    regex : string, optional
+        Input regular expression string to filter filenames
+
+    Returns
+    -------
+    files : array
+
     """
     files=[]
     prog=re.compile(regex)
@@ -139,24 +214,51 @@ def list_files(path=".", regex=".*"):
     
 def day2date(day=0,epoch=datetime.datetime(2000,1,1)):
     """
-    day2date(day, epoch=datetime.datetime(2000,1,1))
-    
     Return a datetime object from the number of days since the epoch
+
+    Parameters
+    ----------
+    day : scalar
+        Input day number
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    date : datetime
     """
     return epoch + datetime.timedelta(days=day)
 
 def date2day(date=datetime.datetime(2000,1,1),epoch=datetime.datetime(2000,1,1)):
     """
-    date2day(date, epoch=datetime.datetime(2000,1,1))
-    
-    Return the fractional number of days elapsed since the epoch to the date
+    Compute the fractional number of days elapsed since the epoch to the date
     given.
+
+    Parameters
+    ----------
+    date : datetime
+        Input date
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    numdays : scalar
     """
     return (date-epoch).total_seconds() * secs2day
 
 def today2day(epoch=datetime.datetime(2000,1,1)):
     """
     Return the day number of today (UTC time) since the epoch.
+
+    Parameters
+    ----------
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    numdays : scalar
     """
     return date2day(datetime.datetime.utcnow(),epoch)
 

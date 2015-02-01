@@ -29,8 +29,11 @@ def _mask_z_grid(z_data, src_depth, z_depth):
         z_data.mask[:,k,idx[0],idx[1]]=True
         
 def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
+    """
+    internal routine: 2D interpolation thread for parallel interpolation
+    """
     # Convolve the water over the land
-    seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)))
+    data=seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)),copy=False)
     
     # Interpolate the field and return the result
     with timeout(minutes=30):
@@ -41,6 +44,9 @@ def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
 
 def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap, 
                     weight, nx, ny, mask, factor=1.0):
+    """
+    internal routine: 3D interpolation thread for parallel interpolation
+    """
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
     data = np.ma.array(data, copy=False)
@@ -73,7 +79,7 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
             data[k,idx[0],idx[1]]=data[k-1,idx[0],idx[1]]*factor
 
     # Convolve the water over the land
-    seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)))
+    data=seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)),copy=False)
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
@@ -98,10 +104,13 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
 
 def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap, 
                     weight, nx, ny, mask):
+    """
+    internal routine: 3D velocity interpolation thread for parallel interpolation
+    """
     # Put on the same grid
     if u.shape != v.shape:
-        u = seapy.model.u2rho(u)
-        v = seapy.model.v2rho(v)
+        u = seapy.model.u2rho(u, fill=True)
+        v = seapy.model.v2rho(v, fill=True)
 
     # Rotate the fields (NOTE: ROMS angle is negative relative to "true")
     if ra is not None:
@@ -124,11 +133,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             threads=1, nx=0, ny=0, weight=10, vmap=None, z_mask=False, 
             pmap=None):
     """
-    _interp_grids(src_grid, ncout[, child_grid=None, records=None, 
-                threads=1, nx=0, ny=0, vmap=None])
-                
-    Given a model file (average, history, etc.), interpolate the fields
-    onto another gridded file. 
+    internal method:  Given a model file (average, history, etc.), 
+    interpolate the fields onto another gridded file. 
     
     Parameters
     ----------
@@ -256,11 +262,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                 _mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
             if child_grid.cgrid is True:
-                #vel_u = seapy.model.rho2u(vel_u)
-                #vel_v = seapy.model.rho2v(vel_v)
-                vel_u = vel_u[:,:,1:]
-                vel_v = vel_v[:,1:,:]
-
+                vel_u = seapy.model.rho2u(vel_u)
+                vel_v = seapy.model.rho2v(vel_v)
 
             ncout.variables[vmap["u"]][j,:] = vel_u
             ncout.variables[vmap["v"]][j,:] = vel_v

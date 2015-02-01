@@ -119,7 +119,7 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, N=10,
 def depth(vtransform=1, h=None, hc=100, scoord=None,
           stretching=None, zeta=0, w_grid=False):
     """
-        Given the transform method, the bathyemtry, the sea surface height
+        Given the transform method, the bathymetry, the sea surface height
         [optional], the critical depth, the s-coordinates, and stretching
         function (returned by the roms.utils.stretching function), determine
         the depth of the given bathymetry.
@@ -173,6 +173,15 @@ def get_timebase(time):
     """
     Given a netCDF4 time record from a ROMS file, compute the timebase
     for the file
+
+    Parameters
+    ----------
+    time : netCDF4 variable
+        Input time variable
+
+    Returns
+    -------
+    netcdftime.utime origin : scalar
     """
     if hasattr(time,"units"):
         return netcdftime.utime(time.units).origin

@@ -11,85 +11,115 @@
 from __future__ import print_function
 
 import numpy as np
+import seapy
     
-def _cgrid_rho_vel( field, dim ):
+def _cgrid_rho_vel( rho, dim, fill ):
     """
     Compute the u- or v-grid velocity from a rho-field for a c-grid
     """
-    shp = np.array(field.shape)
+    rho = np.ma.array(rho, copy=False)
+    if fill is True:
+        rho = seapy.convolve_mask(rho, copy=True)
+    shp = np.array(rho.shape)
     fore = np.product([shp[i] for i in np.arange(0,dim)])
-    aft =  np.product([shp[i] for i in np.arange(dim+1,field.ndim)])
-    nfld = 0.5 * (field.reshape([fore,shp[dim],aft])[:,0:-1,:] + 
-                  field.reshape([fore,shp[dim],aft])[:,1:,:])
-    if np.ma.isMA(field):
-        nmsk = np.logical_or(field.mask.reshape([fore,shp[dim],aft])[:,0:-1,:], 
-                             field.mask.reshape([fore,shp[dim],aft])[:,1:,:])
-        shp[dim] = shp[dim]-1
-        return np.ma.array(nfld.reshape(shp), mask=nmsk.reshape(shp), copy=False)
-    else:
-        shp[dim] = shp[dim]-1
-        return nfld.reshape(shp)
+    aft =  np.product([shp[i] for i in np.arange(dim+1,rho.ndim)])
+    nfld = 0.5 * (rho.reshape([fore,shp[dim],aft])[:,0:-1,:].filled(np.nan) + 
+                  rho.reshape([fore,shp[dim],aft])[:,1:,:].filled(np.nan))
+    shp[dim] = shp[dim]-1
+    return np.ma.fix_invalid(nfld.reshape(shp), copy=False, fill_value=1e+37)
     
-def rho2u( field ):
+def rho2u( rho, fill=False ):
     """
     Put the rho field onto the u field for the c-grid
-    """
-    return _cgrid_rho_vel(field, field.ndim-1)
 
-def rho2v( field ):
+    Parameters
+    ----------
+    rho : masked array like
+        Input rho field
+    fill : bool, optional
+        Fill the masked data before moving grids
+
+    Returns
+    -------
+    u : masked array
+    """
+    return _cgrid_rho_vel(rho, rho.ndim-1, fill)
+
+def rho2v( rho, fill=False ):
     """
     Put the rho field onto the v field for the c-grid
+
+    Parameters
+    ----------
+    rho : masked array like
+        Input rho field
+    fill : bool, optional
+        Fill the masked data before moving grids
+
+    Returns
+    -------
+    v : masked array
     """
-    return _cgrid_rho_vel(field, field.ndim-2)
+    return _cgrid_rho_vel(rho, rho.ndim-2, fill)
     
-def u2rho( field ):
+def u2rho( u, fill=False ):
     """
     Put the u field onto the rho field for the c-grid
+    
+    Parameters
+    ----------
+    u : masked array like
+        Input u field
+    fill : bool, optional
+        Fill the masked data before moving grids
+
+    Returns
+    -------
+    rho : masked array
     """
-    shp = np.array(field.shape)
+    u = np.ma.array(u, copy=False)
+    if fill is True:
+        u = seapy.convolve_mask(u, copy=True)
+    shp = np.array(u.shape)
     nshp = shp.copy()
     nshp[-1]=nshp[-1]+1
-    fore = np.product([shp[i] for i in np.arange(0,field.ndim-1)])
+    fore = np.product([shp[i] for i in np.arange(0,u.ndim-1)])
     nfld = np.ones([fore,nshp[-1]])
     nfld[:,1:-1] = 0.5 * \
-                 (field.reshape([fore,shp[-1]])[:,0:-1] + 
-                  field.reshape([fore,shp[-1]])[:,1:])
+                 (u.reshape([fore,shp[-1]])[:,0:-1].filled(np.nan) +
+                  u.reshape([fore,shp[-1]])[:,1:].filled(np.nan))
     nfld[:,0] = nfld[:,1] + (nfld[:,2]-nfld[:,3])
     nfld[:,-1] = nfld[:,-2] + (nfld[:,-2]-nfld[:,-3])
-    if np.ma.isMA(field):
-        nmsk = np.zeros([fore,nshp[-1]])
-        nmsk[:,1:-1] = np.logical_or(field.mask.reshape([fore,shp[-1]])[:,0:-1], 
-                  field.mask.reshape([fore,shp[-1]])[:,1:])
-                 
-        nmsk[:,0] = nmsk[:,1]
-        nmsk[:,-1] = nmsk[:,-2]
-        return np.ma.array(nfld.reshape(nshp), mask=nmsk.reshape(nshp), copy=False)
-    else:
-        return nfld.reshape(nshp)
+    return np.ma.fix_invalid(nfld.reshape(nshp), copy=False, fill_value=1e+37)
 
-def v2rho( field ):
+def v2rho( v, fill=False ):
     """
     Put the v field onto the rho field for the c-grid
+
+    Parameters
+    ----------
+    v : masked array like
+        Input v field
+    fill : bool, optional
+        Fill the masked data before moving grids
+
+    Returns
+    -------
+    rho : masked array
     """
-    shp = np.array(field.shape)
+    v = np.ma.array(v, copy=False)
+    if fill is True:
+        v = seapy.convolve_mask(v, copy=True)
+    shp = np.array(v.shape)
     nshp = shp.copy()
     nshp[-2]=nshp[-2]+1
-    fore = np.product([shp[i] for i in np.arange(0,field.ndim-2)])
+    fore = np.product([shp[i] for i in np.arange(0,v.ndim-2)])
     nfld = np.ones([fore,nshp[-2],nshp[-1]])
     nfld[:,1:-1,:] = 0.5 * \
-                 (field.reshape([fore,shp[-2],shp[-1]])[:,0:-1,:] + 
-                  field.reshape([fore,shp[-2],shp[-1]])[:,1:,:])
+                 (v.reshape([fore,shp[-2],shp[-1]])[:,0:-1,:].filled(np.nan) + 
+                  v.reshape([fore,shp[-2],shp[-1]])[:,1:,:].filled(np.nan))
     nfld[:,0,:] = nfld[:,1,:] + (nfld[:,2,:]-nfld[:,3,:])
     nfld[:,-1,:] = nfld[:,-2,:] + (nfld[:,-2,:]-nfld[:,-3,:])
-    if np.ma.isMA(field):
-        nmsk = np.zeros([fore,nshp[-2],nshp[-1]])
-        nmsk[:,1:-1,:] = np.logical_or( \
-                 field.mask.reshape([fore,shp[-2],shp[-1]])[:,0:-1,:], \
-                 field.mask.reshape([fore,shp[-2],shp[-1]])[:,1:,:])
-        nmsk[:,0,:] = nmsk[:,1,:]
-        nmsk[:,-1,:] = nmsk[:,-2,:]
-        return np.ma.array(nfld.reshape(nshp), mask=nmsk.reshape(nshp), copy=False)
-    else:
-        return nfld.reshape(nshp)
+    return np.ma.fix_invalid(nfld.reshape(nshp), copy=False, fill_value=1e+37)
     
     
