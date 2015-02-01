@@ -38,7 +38,7 @@ def cdl_parser(filename):
     vcount=dict()
     types={"float":"f4", "double":"f8", "short":"i2", "int":"i4", "char":"S1"}
 
-    for line in open(file, 'r'):
+    for line in open(filename, 'r'):
         # Check if this is a dimension definition line. If it is, add
         # the dimension to the definition
         parser = dim_pat.match(line)
