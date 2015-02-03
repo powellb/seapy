@@ -54,7 +54,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
 
     # Create the initial file and fill up the descriptive data
     ncini=seapy.roms.ncgen.create_ini(ini_file, 
-             eta_rho=grid.ln,xi_rho=grid.lm,N=grid.n,
+             eta_rho=grid.ln,xi_rho=grid.lm,s_rho=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
     ini_time=netcdftime.utime(ncini.variables[seapy.roms.get_timevar(ncini)].units)
     ncini.variables["lat_rho"][:]=grid.lat_rho
