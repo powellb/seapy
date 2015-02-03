@@ -21,7 +21,7 @@ _cdl_dir = os.path.dirname(lib.__file__)
 _cdl_dir =('.' if len(_cdl_dir) == 0 else _cdl_dir) + "/cdl/"
 _format="NETCDF4_CLASSIC"
 
-def ncgen(filenamename, dims=None, vars=None, attr=None, title=None):
+def ncgen(filename, dims=None, vars=None, attr=None, title=None):
     """
         internal method: Create a new netcdf file
     """
