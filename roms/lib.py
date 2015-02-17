@@ -173,26 +173,23 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
     r = np.arange(0,N)
     if w_grid:
         N=N+1
-    if h.ndim==0:
-        z = np.zeros([N,1,1])
-    else:
-        z = np.zeros(np.hstack((N,h.shape)))
+    z = np.zeros(np.hstack((N,h.shape)))
 
     if vtransform == 1:
         cff = hc*(scoord-stretching)
         for k in r:
             z0 = cff[k] + stretching[k]*h
-            z[k,:,:] = z0+zeta * (1.0 + z0*hinv)
+            z[k,:] = z0+zeta * (1.0 + z0*hinv)
     elif vtransform == 2:
         cff = 1/(hc + h)
         for k in r:
             cff1 = hc*scoord[k] + h*stretching[k]
-            z[k,:,:] = zeta + ( zeta + h )*cff*cff1
+            z[k,:] = zeta + ( zeta + h )*cff*cff1
     else:
         raise ValueError("transform value must be between 1 and 2")
     if w_grid:
-        z[1:-1,:,:]=z[0:-2,:,:]
-        z[0,:,:] = -h
+        z[1:-1,:]=z[0:-2,:]
+        z[0,:] = -h
 
     return z
 

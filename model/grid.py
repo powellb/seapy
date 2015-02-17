@@ -17,8 +17,32 @@ import re
 import seapy
 import numpy as np
 
+def asgrid(grid):
+    """
+    Return either an existing or new grid object. This decorator will ensure that
+    the variable being used is a seapy.model.grid. If it is not, it will attempt
+    to construct a new grid with the variable passed.
+    
+    Parameters
+    ----------
+    grid: string or model.seapy.grid
+        Input variable to cast. If it is already a grid, it will return it;
+        otherwise, it attempts to construct a new grid.
+        
+    Returns
+    -------
+    seapy.model.grid
+        
+    """
+    if grid is None:
+        raise AttributeError("No grid was specified")
+    if isinstance(grid,seapy.model.grid):
+        return grid
+    else:
+        return seapy.model.grid(filename=grid)
+        
 class grid:
-    def __init__(self, file=None, lat=None, lon=None, z=None,
+    def __init__(self, filename=None, lat=None, lon=None, z=None,
                  depths=True, cgrid=False):
         """
             Class to wrap around a numerical model grid for oceanography. 
@@ -28,7 +52,7 @@ class grid:
             
             Parameters
             ----------
-            file    : filename to load to build data structure [optional]
+            filename : filename to load to build data structure [optional]
                 or
             lat     : latitude values of grid
             lon     : longitude values of grid
@@ -39,10 +63,10 @@ class grid:
             depths  : Set the depths of the grid [True]
             cgrid   : Whether the grid is an Arakawa C-Grid [False]
         """
-        self.file = file
+        self.filename = filename
         self.cgrid = cgrid
 
-        if self.file != None:
+        if self.filename != None:
             self._initfile()
             self._isroms = True if \
               (len(list(set(("s_rho","pm","pn","theta_s","theta_b", \
@@ -67,8 +91,17 @@ class grid:
             
     def _initfile(self):
         """
-            Using an input file, try to load as much information
-            as can be found in the given file.
+        Using an input file, try to load as much information
+        as can be found in the given file.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None : sets attributes in grid
+        
         """
         # Define a dictionary to go through and convert netcdf variables
         # to internal class attributes
@@ -99,8 +132,8 @@ class grid:
                 }
 
         # Open the file
-        self._nc = netCDF4.Dataset(self.file,"r")
-        self.name = re.search("[^\.]*",os.path.basename(self.file)).group();
+        self._nc = netCDF4.Dataset(self.filename,"r")
+        self.name = re.search("[^\.]*",os.path.basename(self.filename)).group();
         for var in gvars.keys():
             for inp in gvars[var]:
                 if inp in self._nc.variables:
@@ -108,8 +141,16 @@ class grid:
 
     def _verify_shape(self):
         """
-            Verify the dimensionality of the system, create variables that
-            can be generated from the others if they aren't already loaded
+        Verify the dimensionality of the system, create variables that
+        can be generated from the others if they aren't already loaded
+
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None : sets attributes in grid
         """
         # Check that we have the minimum required data
         if ("lat_rho" or "lon_rho") not in self.__dict__:
@@ -129,8 +170,15 @@ class grid:
         
     def set_dims(self):
         """
-          Using the available information, compute the remaining fields that
-          we may be missing for this grid.
+        Compute the dimension attributes of the grid based upon the information provided.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None : sets attributes in grid
         """  
         # Set the number of layers
         if "n" not in self.__dict__:
@@ -193,10 +241,20 @@ class grid:
 
         pass
         
-    def set_mask_h(self, fld=None, bad=None):
+    def set_mask_h(self, fld=None):
         """
-          Given a 3D field for a z-level model, compute a mask and an h
-          based on where the values exist
+        Compute the mask and h array from a z-level model
+        
+        Parameters
+        ----------
+        fld : np.array
+            3D array of values (such as temperature) to analyze to determine
+            where the bottom and land lie
+        
+        Returns
+        -------
+        None : sets mask and h attributes in grid
+        
         """
         if fld is None and self._nc != None:
             # Try to load a field from the file
@@ -224,7 +282,15 @@ class grid:
         
     def set_depth(self):
         """
-          Create a depth array for the model grid.
+        Compute the depth of each cell for the model grid.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None : sets depth attributes in grid
         """
         if self._isroms:
             if "s_rho" not in self.__dict__:
@@ -254,7 +320,15 @@ class grid:
 
     def set_thickness(self):
         """
-          Create a thickness array for the model grid.
+        Compute the thickness of each cell for the model grid.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None : sets thick attributes in grid
         """
         if "n" not in self.__dict__:
             self.set_dims()
@@ -292,8 +366,18 @@ class grid:
         
     def plot_trace(self, basemap, **kwargs):
         """
-            Given a basemap object, draw a trace of the grid onto the map
-            projection
+        Trace the boundary of the grid onto a map projection
+
+        Parameters
+        ----------
+        basemap: basemap instance
+            The basemap instance to use for drawing
+        **kwargs: optional
+            Arguments to pass to the plot routine
+        
+        Returns
+        -------
+        None
         """
         lon=np.concatenate([self.lon_rho[0,:], self.lon_rho[:,-1], 
                             self.lon_rho[-1,::-1], self.lon_rho[::-1,0]])
@@ -301,4 +385,26 @@ class grid:
                             self.lat_rho[-1,::-1], self.lat_rho[::-1,0]])
         x,y=basemap(lon,lat)
         basemap.plot(x,y,**kwargs)
+        
+    def to_netcdf(self, nc):
+        """
+        Write all available grid information into the records present in the netcdf file.
+        This is used to pre-fill boundary, initial, etc. files that require some of the
+        grid information.
+    
+        Parameters
+        ----------
+        nc : netCDF4 
+            File to fill all known records from the grid information
+    
+        Returns
+        -------
+        None
+        """
+        for var in nc.variables:
+            if hasattr(self,var.lower()):
+                nc.variables[var][:]=getattr(self,var.lower())
+        pass
+    
+        
         

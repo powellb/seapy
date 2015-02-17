@@ -12,7 +12,6 @@ from __future__ import print_function
 import numpy as np
 import datetime
 import netCDF4 as nc
-from progressbar import ProgressBar
 from seapy.roms.ncgen import create_zlevel
 
 _url="http://apdrc.soest.hawaii.edu:80/dods/public_data/SODA/soda_pop2.2.4";
@@ -36,6 +35,7 @@ def load_history(filename,
         timebase for new file
     url: string, optional
         URL to load SODA data from
+        
     Returns
     -------
     None
@@ -77,7 +77,7 @@ def load_history(filename,
 
     # Build the history file
     his = create_zlevel(filename, len(latlist), len(lonlist), 
-                len(soda.variables["lev"][:])), epoch, 
+                len(soda.variables["lev"][:]), epoch, 
                 "SODA history from "+url)
 
     # Write out the data
@@ -90,8 +90,7 @@ def load_history(filename,
     dims = [3,4,4,4,4]
     sodavars = ("ssh", "u", "v", "temp", "salt")
     hisvars = ("zeta", "u", "v", "temp", "salt")
-    p = ProgressBar()
-    for i in p(range(len(sodavars))):
+    for i in seapy.progressbar(range(len(sodavars))):
         if dims[i]==3:
             his.put(hisvars[i], 
              soda.variables[sodavars[i]][tlist, latlist, lonlist].filled(fill_value=9.99E10))

@@ -324,11 +324,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         if records is None else np.asarray(records)
 
     if z_grid != None:
-        if isinstance(z_grid,str):
-            z_grid = seapy.model.grid(z_grid)
+        z_grid = seapy.model.asgrid(z_grid)
     else:
-        if os.path.isfile(z_file):
-            z_grid = seapy.model.grid(z_file)
+        z_grid = seapy.model.asgrid(z_file)
             
     if not os.path.isfile(z_file):
         if z_grid is None:
@@ -413,10 +411,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
     """
     src_grid = seapy.model.grid(src_file)
     if dest_grid != None:
-        if isinstance(dest_grid,str):
-            destg = seapy.model.grid(dest_grid)
-        else:
-            destg = dest_grid
+        destg = seapy.model.asgrid(dest_grid)
         
         if not os.path.isfile(dest_file):
             ncsrc = netCDF4.Dataset(src_file)
@@ -430,21 +425,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             ncout=seapy.roms.ncgen.create_ini(dest_file, 
                      eta_rho=destg.ln,xi_rho=destg.lm,s_rho=destg.n,
                      timebase=src_time.origin,title="interpolated from "+src_file)
-            ncout.variables["lat_rho"][:]=destg.lat_rho
-            ncout.variables["lon_rho"][:]=destg.lon_rho
-            ncout.variables["lat_u"][:]=destg.lat_u
-            ncout.variables["lon_u"][:]=destg.lon_u
-            ncout.variables["lat_v"][:]=destg.lat_v
-            ncout.variables["lon_v"][:]=destg.lon_v
-            ncout.variables["Vtransform"][:]=destg.vtransform
-            ncout.variables["Vstretching"][:]=destg.vstretching
-            ncout.variables["theta_s"][:]=destg.theta_s
-            ncout.variables["theta_b"][:]=destg.theta_b
-            ncout.variables["hc"][:]=destg.hc
-            ncout.variables["Tcline"][:]=destg.tcline
-            ncout.variables["s_rho"][:]=destg.s_rho
-            ncout.variables["Cs_r"][:]=destg.cs_r
-            ncout.variables["h"][:]=destg.h
+            destg.to_netcdf(ncout)
             dest_time = netcdftime.utime(ncout.variables["ocean_time"].units)
             ncout.variables["ocean_time"][:]=dest_time.date2num(
                 src_time.num2date(ncsrc.variables[time][records]))
@@ -494,10 +475,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
     None
     """
     if dest_grid != None:
-        if isinstance(dest_grid,str):
-            destg = seapy.model.grid(dest_grid)
-        else:
-            destg = dest_grid
+        destg = seapy.model.asgrid(dest_grid)
             
         src_grid = seapy.model.grid(src_file)
         ncsrc = netCDF4.Dataset(src_file)

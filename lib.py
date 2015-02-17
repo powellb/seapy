@@ -122,10 +122,10 @@ def earth_distance(lon1, lat1, lon2, lat2):
     # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for 
     # working with geocentric where lat_gc = atan(epsilon * tan(lat))
     tan_lat = epsilon * np.tan(d2r*lat1.astype(np.float64))
-    cos_lat = 1 / np.sqrt(1.0+tan_lat**2)
+    cos_lat = 1.0 / np.sqrt(1.0+tan_lat**2)
     sin_lat = tan_lat / np.sqrt(1.0+tan_lat**2)
     tan_lat = epsilon * np.tan(d2r*lat2.astype(np.float64))
-    cos_latj = 1 / np.sqrt(1.0+tan_lat**2)
+    cos_latj = 1.0 / np.sqrt(1.0+tan_lat**2)
     sin_latj = tan_lat / np.sqrt(1.0+tan_lat**2)
 
     return radius*np.sqrt(2.0*(1.0-cos_lat*cos_latj* \

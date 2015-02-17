@@ -1,2 +1,2 @@
-from .grid import grid
+from .grid import grid, asgrid
 from .lib import *

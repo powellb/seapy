@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
-  timeout.py
-  
-    This class allows you to execute code with a timing thread about it:
+  Wrap your code with a time limit to prevent something from taking too long
+  (getting into an infinite loop, etc.)
     
-  from timeout import timeout
-  with timeout(seconds=3):
-      do something
-
+  **Example**
+  
+  >>> from timeout import timeout
+  >>> with timeout(seconds=3):
+  >>>     do something
+  
   Taken and slightly modified from Thomas Ahle at:
   <http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish>
 

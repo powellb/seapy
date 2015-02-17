@@ -1,5 +1,5 @@
       subroutine oa2d(x,y,datain,xhat,yhat,a,b,pmap,dataout,
-     &                   errout,PtIn,PtOut,PtIns)
+     &                   errout,PtIn,PtOut,PtIns,debug)
     	implicit none
       integer, intent(in) :: PtIn,PtOut,PtIns
       !f2py integer, intent(in) :: PtIn,PtOut,PtIns
@@ -13,7 +13,8 @@
       !f2py  real, intent(in) :: a, b
       real(8), intent(out), dimension(PtOut) :: dataout, errout
       !f2py  real, intent(out), dimension(PtOut) :: dataout, errout
-
+      logical, intent(in) :: debug
+      
     	integer :: ii, jj,i,j,Isel
     	real(8)    :: distb, dista, dist_ref,dist
       real(8)    :: xs(PtIn),ys(PtIn),datains(PtIn)
@@ -27,12 +28,16 @@ c init to zero matricies
       enddo
 
       if (pmap(1,1).eq.0) then
-    	 print *, 'PtIns = ', PtIns
-    	 print *, '  building map '
+        if (debug .eqv. .true.) then
+          print *, 'PtIns = ', PtIns
+          print *, '  building map '
+        endif
     	 call makeMap(x,y,datain,PtIn,
      &             pmap,PtIns,xhat,yhat,PtOut)
 
-       print *, '  building map DONE.'
+        if (debug .eqv. .true.) then
+          print *, '  building map DONE.'
+        endif
       endif
 
 c do the objective map
@@ -116,7 +121,7 @@ c	enddo
 	end
 
       subroutine oa3d(x,y,z,datain,xhat,yhat,zhat,a,b,pmap,dataout,
-     &                   errout,PtIn,PtOut,PtZin,PtZout,PtIns)
+     &                   errout,PtIn,PtOut,PtZin,PtZout,PtIns,debug)
       implicit none
       integer, intent(in) :: PtIn,PtOut,PtIns,PtZin,PtZout
       !f2py integer, intent(in) :: PtIn,PtOut,PtIns,PtZin,PtZout
@@ -136,6 +141,7 @@ c	enddo
       !f2py real(8), intent(out), dimension(PtOut,PtZout) :: dataout
       real(8), intent(out), dimension(PtOut) :: errout
       !f2py  real, intent(out), dimension(PtOut) :: errout
+      logical, intent(in) :: debug
 
       integer :: ii, jj,i,j,Isel,iz
       real(8), dimension(1,PtZout) :: dataout_tmp

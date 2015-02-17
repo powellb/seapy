@@ -38,13 +38,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     
     """
     # Load the grid
-    if grid != None:
-        if isinstance(grid,str):
-            grid = seapy.model.grid(grid)
-    else:
-        # If we weren't given a grid, try to construct from the climate file
-        grid = seapy.model.grid(roms_file)
-        
+    grid=seapy.model.asgrid(grid)
     ncroms = netCDF4.Dataset(roms_file)
     romstime = seapy.roms.get_timevar(ncroms)
     try:
@@ -57,21 +51,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
              eta_rho=grid.ln,xi_rho=grid.lm,s_rho=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
     ini_time=netcdftime.utime(ncini.variables[seapy.roms.get_timevar(ncini)].units)
-    ncini.variables["lat_rho"][:]=grid.lat_rho
-    ncini.variables["lon_rho"][:]=grid.lon_rho
-    ncini.variables["lat_u"][:]=grid.lat_u
-    ncini.variables["lon_u"][:]=grid.lon_u
-    ncini.variables["lat_v"][:]=grid.lat_v
-    ncini.variables["lon_v"][:]=grid.lon_v
-    ncini.variables["Vtransform"][:]=grid.vtransform
-    ncini.variables["Vstretching"][:]=grid.vstretching
-    ncini.variables["theta_s"][:]=grid.theta_s
-    ncini.variables["theta_b"][:]=grid.theta_b
-    ncini.variables["hc"][:]=grid.hc
-    ncini.variables["Tcline"][:]=grid.tcline
-    ncini.variables["s_rho"][:]=grid.s_rho
-    ncini.variables["Cs_r"][:]=grid.cs_r
-    ncini.variables["h"][:]=grid.h
+    grid.to_netcdf(ncini)
     if time is None:
         time=src_time.num2date(ncroms.variables[romstime][record])
     ncini.variables["ocean_time"][:]=ini_time.date2num(time)

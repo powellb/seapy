@@ -15,7 +15,7 @@ import seapy
     
 def _cgrid_rho_vel( rho, dim, fill ):
     """
-    Compute the u- or v-grid velocity from a rho-field for a c-grid
+    Private Method: Compute the u- or v-grid velocity from a rho-field for a c-grid
     """
     rho = np.ma.array(rho, copy=False)
     if fill is True:

@@ -12,7 +12,7 @@ from __future__ import print_function
 import numpy as np
 import seapy.oalib
 
-def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
+def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2,verbose=False):
     """
     Objective analysis interpolation for 2D fields
     
@@ -38,6 +38,8 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
         decorrelation lengthscale in x [same units as x]
     ny: int, optional
         decorrelation lengthscale in y [same units as y]
+    verbose : bool, optional
+        display information within the OA routine
 
     Returns
     -------
@@ -55,13 +57,14 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2):
     
     # Call FORTRAN library to objectively map
     vv, err = seapy.oalib.oa2d(x.ravel(),y.ravel(),d.ravel(),
-                                 xx.ravel(), yy.ravel(), nx, ny, pmap)
+                                 xx.ravel(), yy.ravel(), nx, ny, pmap,
+                                 verbose)
     
     # Reshape the results and return
     return np.ma.fix_invalid(vv.reshape(xx.shape), copy=False, 
                fill_value=-999999.0), pmap
     
-def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
+def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2,verbose=False):
     """
     Objective analysis interpolation for 3D fields
     
@@ -91,6 +94,8 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
         decorrelation lengthscale in x [same units as x]
     ny: int, optional
         decorrelation lengthscale in y [same units as y]
+    verbose : bool, optional
+        display information within the OA routine
 
     Returns
     -------
@@ -107,7 +112,7 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
         pmap=np.zeros([xx.size,weight],order="F")
         # Build the map
         seapy.oalib.oa2d(x.ravel(),y.ravel(),ones(x.shape),
-                           xx.ravel(), yy.ravel(), nx, ny, pmap)
+                           xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
         
     # Call FORTRAN library to objectively map
     vv, err = seapy.oalib.oa3d(x.ravel(),y.ravel(),
@@ -115,7 +120,7 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2):
                                  v.reshape(v.shape[0],-1).transpose(),
                                  xx.ravel(), yy.ravel(), 
                                  zz.reshape(zz.shape[0],-1).transpose(), 
-                                 nx, ny, pmap)
+                                 nx, ny, pmap, verbose)
     
     # Reshape the results and return
     return np.ma.fix_invalid(vv.transpose().reshape(zz.shape), copy=False, 
