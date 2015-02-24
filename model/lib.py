@@ -18,7 +18,7 @@ def _cgrid_rho_vel( rho, dim, fill ):
     Private Method: Compute the u- or v-grid velocity from a rho-field for a c-grid
     """
     rho = np.ma.array(rho, copy=False)
-    if fill is True:
+    if fill:
         rho = seapy.convolve_mask(rho, copy=True)
     shp = np.array(rho.shape)
     fore = np.product([shp[i] for i in np.arange(0,dim)])
@@ -78,7 +78,7 @@ def u2rho( u, fill=False ):
     rho : masked array
     """
     u = np.ma.array(u, copy=False)
-    if fill is True:
+    if fill:
         u = seapy.convolve_mask(u, copy=True)
     shp = np.array(u.shape)
     nshp = shp.copy()
@@ -108,7 +108,7 @@ def v2rho( v, fill=False ):
     rho : masked array
     """
     v = np.ma.array(v, copy=False)
-    if fill is True:
+    if fill:
         v = seapy.convolve_mask(v, copy=True)
     shp = np.array(v.shape)
     nshp = shp.copy()

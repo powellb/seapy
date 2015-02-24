@@ -241,8 +241,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
     # Rotate and Interpolate the vector fields
     if ( ( "u" in vmap ) and ( vmap["u"] in ncout.variables ) ) and \
        ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
-        srcangle = src_grid.angle if src_grid.cgrid is True else None
-        dstangle = child_grid.angle if child_grid.cgrid is True else None
+        srcangle = src_grid.angle if src_grid.cgrid else None
+        dstangle = child_grid.angle if child_grid.cgrid else None
         vel = Parallel(n_jobs=threads, verbose=2) \
                  (delayed(_interp3_vel_thread)( \
             src_grid.lon_rho, src_grid.lat_rho, \
@@ -261,7 +261,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                 _mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
                 _mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
-            if child_grid.cgrid is True:
+            if child_grid.cgrid:
                 vel_u = seapy.model.rho2u(vel_u)
                 vel_v = seapy.model.rho2v(vel_v)
 
@@ -423,7 +423,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             except AttributeError:
                 src_time=netcdftime.utime(seapy.roms.default_epoch)
             ncout=seapy.roms.ncgen.create_ini(dest_file, 
-                     eta_rho=destg.ln,xi_rho=destg.lm,s_rho=destg.n,
+                     eta_rho=destg.eta_rho,xi_rho=destg.xi_rho,s_rho=destg.n,
                      timebase=src_time.origin,title="interpolated from "+src_file)
             destg.to_netcdf(ncout)
             dest_time = netcdftime.utime(ncout.variables["ocean_time"].units)

@@ -53,7 +53,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
         ncbry=netCDF4.Dataset(bry_file,"a")
     else:
         ncbry=seapy.roms.ncgen.create_bry(bry_file, 
-             eta_rho=grid.ln,xi_rho=grid.lm,s_rho=grid.n,
+             eta_rho=grid.eta_rho,xi_rho=grid.xi_rho,s_rho=grid.n,
              timebase=src_time.origin,title="generated from "+roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
     bry_time=netcdftime.utime(ncbry.variables[brytime].units)
@@ -280,7 +280,7 @@ def from_stations(station_file, bry_file, grid=None):
         ncbry=netCDF4.Dataset(bry_file,"a")
     else:
         ncbry=seapy.roms.ncgen.create_bry(bry_file, 
-             eta_rho=grid.ln,xi_rho=grid.lm,s_rho=grid.n,
+             eta_rho=grid.eta_rho,xi_rho=grid.xi_rho,s_rho=grid.n,
              timebase=src_time.origin,title="generated from "+station_file)
     brytime = seapy.roms.get_timevar(ncbry)
     bry_time=netcdftime.utime(ncbry.variables[brytime].units)
@@ -369,14 +369,14 @@ def from_stations(station_file, bry_file, grid=None):
         ncbry.variables["zeta_"+side][:] = sta_zeta[:,bry[side]]
 
         # 2) Ubar
-        if sides[side][0] is True:
+        if sides[side][0]:
             ncbry.variables["ubar_"+side][:] = 0.5 * ( \
                 sta_ubar[:,bry[side][0:-1]]+sta_ubar[:,bry[side][1:]])
         else:
             ncbry.variables["ubar_"+side][:] = sta_ubar[:,bry[side]]
             
         # 3) Vbar
-        if sides[side][1] is True:
+        if sides[side][1]:
             ncbry.variables["vbar_"+side][:] = 0.5 * ( \
                 sta_vbar[:,bry[side][0:-1]]+sta_vbar[:,bry[side][1:]])
         else:
@@ -398,28 +398,28 @@ def from_stations(station_file, bry_file, grid=None):
                         grid.hc, grid.s_rho, grid.cs_r, sta_zeta[t,bry[side]])
             sta_ocean = np.where(sta_mask[bry[side]]==1)[0]
             ocean = np.where(grid_mask[bry[side]]==1)[0]
-            # pu.db
             # 4) Temp
             ncbry.variables["temp_"+side][t,:]=0.0
             ncbry.variables["temp_"+side][t,:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
                 np.transpose(sta_temp[t,bry[side],:][ocean,:]), \
-                x[:,ocean], depth[:,ocean])
+                x[:,ocean], depth[:,ocean],nx=0, ny=2, weight=2)
+            # pu.db
         
             # 5) Salt
             ncbry.variables["salt_"+side][t,:]=0.0
             ncbry.variables["salt_"+side][t,:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
                 np.transpose(sta_salt[t,bry[side],:][ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap)
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
 
             # 6) U
             data = np.zeros(x.shape)
             data[:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
                 np.transpose(sta_u[t,bry[side],:][ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap)
-            if sides[side][0] is True:
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
+            if sides[side][0]:
                 ncbry.variables["u_"+side][t,:] = 0.5 * ( \
                     data[:,0:-1]+data[:,1:])
             else:
@@ -430,8 +430,8 @@ def from_stations(station_file, bry_file, grid=None):
             data[:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
                 np.transpose(sta_v[t,bry[side],:][ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap)
-            if sides[side][1] is True:
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
+            if sides[side][1]:
                 ncbry.variables["v_"+side][t,:] = 0.5 * ( \
                     data[:,0:-1]+data[:,1:])
             else:

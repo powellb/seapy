@@ -69,10 +69,9 @@ class grid:
         if self.filename != None:
             self._initfile()
             self._isroms = True if \
-              (len(list(set(("s_rho","pm","pn","theta_s","theta_b", \
-                            "vtransform", "vstretching")).intersection( \
-                            set(self.__dict__)))) > 0) \
-              else False
+              (len(list(set(("s_rho","pm","pn","theta_s","theta_b", 
+                            "vtransform", "vstretching")).intersection( 
+                            set(self.__dict__)))) > 0) else False
             self.cgrid = True if self._isroms else self.cgrid
         else:
             self._nc = None
@@ -133,7 +132,8 @@ class grid:
 
         # Open the file
         self._nc = netCDF4.Dataset(self.filename,"r")
-        self.name = re.search("[^\.]*",os.path.basename(self.filename)).group();
+        self.name = re.search("[^\.]*",
+                              os.path.basename(self.filename)).group();
         for var in gvars.keys():
             for inp in gvars[var]:
                 if inp in self._nc.variables:
@@ -154,7 +154,8 @@ class grid:
         """
         # Check that we have the minimum required data
         if ("lat_rho" or "lon_rho") not in self.__dict__:
-            raise AttributeError("grid does not have attribute lat_rho or lon_rho")
+            raise AttributeError(
+                "grid does not have attribute lat_rho or lon_rho")
         
         # Check that it is formatted into 2-D
         self.spatial_dims=self.lat_rho.ndim
@@ -179,7 +180,16 @@ class grid:
         Returns
         -------
         None : sets attributes in grid
-        """  
+        """
+        # If C-Grid, set the dimensions for consistency
+        if self.cgrid:
+            self.eta_rho = self.ln
+            self.eta_u = self.ln
+            self.eta_v = self.ln-1
+            self.xi_rho = self.lm
+            self.xi_u = self.lm-1
+            self.xi_v = self.lm
+
         # Set the number of layers
         if "n" not in self.__dict__:
             if "s_rho" in self.__dict__:
@@ -189,27 +199,27 @@ class grid:
             
         # Generate the u- and v-grids
         if ("lat_u" or "lon_u") not in self.__dict__:
-            if self.cgrid is True:
-                self.lat_u = 0.5 * ( self.lat_rho[:,1:] - self.lat_rho[:,0:-1])
-                self.lon_u = 0.5 * ( self.lon_rho[:,1:] - self.lon_rho[:,0:-1])
+            if self.cgrid:
+                self.lat_u = 0.5*(self.lat_rho[:,1:] - self.lat_rho[:,0:-1])
+                self.lon_u = 0.5*(self.lon_rho[:,1:] - self.lon_rho[:,0:-1])
             else:
                 self.lat_u = self.lat_rho
                 self.lon_u = self.lon_rho
         if ("lat_v" or "lon_v") not in self.__dict__:
-            if self.cgrid is True:
-                self.lat_v = 0.5 * ( self.lat_rho[1:,:] - self.lat_rho[0:-1,:])
-                self.lon_v = 0.5 * ( self.lon_rho[1:,:] - self.lon_rho[0:-1,:])
+            if self.cgrid:
+                self.lat_v = 0.5*(self.lat_rho[1:,:] - self.lat_rho[0:-1,:])
+                self.lon_v = 0.5*(self.lon_rho[1:,:] - self.lon_rho[0:-1,:])
             else:
                 self.lat_v = self.lat_rho
                 self.lon_v = self.lon_rho
         if "mask_rho" in self.__dict__:
             if "mask_u" not in self.__dict__:
-                if self.cgrid is True:
+                if self.cgrid:
                     self.mask_u = self.mask_rho[:,1:] * self.mask_rho[:,0:-1]
                 else:
                     self.mask_u = self.mask_rho
             if "mask_v" not in self.__dict__:
-                if self.cgrid is True:
+                if self.cgrid:
                     self.mask_v = self.mask_rho[1:,:] * self.mask_rho[0:-1,:]
                 else:
                     self.mask_v = self.mask_rho
@@ -219,18 +229,18 @@ class grid:
             self.dm = 1.0/self.pm
         else:
             self.dm = np.ones(self.lon_rho.shape,dtype=np.float32)
-            self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:,1:], \
-                                      self.lat_rho[:,1:], \
-                                      self.lon_rho[:,0:-1], \
+            self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:,1:],
+                                      self.lat_rho[:,1:],
+                                      self.lon_rho[:,0:-1],
                                       self.lat_rho[:,0:-1]).astype(np.float32)
             self.dm[:,-1] = self.dm[:,-2]
         if "pn" in self.__dict__:
             self.dn = 1.0/self.pn
         else:
             self.dn = np.ones(self.lat_rho.shape,dtype=np.float32)
-            self.dn[0:-1,:] = seapy.earth_distance( self.lon_rho[1:,:], \
-                                      self.lat_rho[1:,:], \
-                                      self.lon_rho[0:-1,:], \
+            self.dn[0:-1,:] = seapy.earth_distance( self.lon_rho[1:,:],
+                                      self.lat_rho[1:,:],
+                                      self.lon_rho[0:-1,:],
                                       self.lat_rho[0:-1,:] ).astype(np.float32)
             self.dn[-1,:] = self.dn[-2,:]
         
@@ -261,7 +271,7 @@ class grid:
             for f in ["temp","temperature"]:
                 if f in self._nc.variables:
                     fld = self._nc.variables[f][0,:,:,:]
-                    fld = np.ma.array( fld, mask=np.isnan(fld) )
+                    fld = np.ma.array(fld, mask=np.isnan(fld))
                     break
         
         # If we don't have a field to examine, then we cannot compute the
@@ -294,22 +304,23 @@ class grid:
         """
         if self._isroms:
             if "s_rho" not in self.__dict__:
-                self.s_rho, self.cs_r = seapy.roms.stretching(self.vstretching,
-                   self.theta_s, self.theta_b, self.hc, self.n)
-            self.depth_rho = seapy.roms.depth(self.vtransform, 
-                 self.h, self.hc, self.s_rho, self.cs_r)
+                self.s_rho, self.cs_r = seapy.roms.stretching(
+                    self.vstretching, self.theta_s, self.theta_b, 
+                    self.hc, self.n)
+            self.depth_rho = seapy.roms.depth(
+                self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
             self.depth_u=seapy.model.rho2u(self.depth_rho)
             self.depth_v=seapy.model.rho2v(self.depth_rho)
         else:
             d = self.z.copy()
             l = np.nonzero(d>0)
             d[l]=-d[l]
-            self.depth_rho = np.kron( np.kron( d,
-                                    np.ones(self.lon_rho.shape[1])),
+            self.depth_rho = np.kron( np.kron(
+                                    d, np.ones(self.lon_rho.shape[1])),
                                     np.ones(self.lon_rho.shape[0])).reshape(
                                     [self.z.size,self.lon_rho.shape[0],
                                      self.lon_rho.shape[1]])
-            if self.cgrid is True:
+            if self.cgrid:
                 self.depth_u=seapy.model.rho2u(self.depth_rho)
                 self.depth_v=seapy.model.rho2v(self.depth_rho)
             else:
@@ -333,10 +344,11 @@ class grid:
         if "n" not in self.__dict__:
             self.set_dims()
         if self._isroms:
-            s_w, cs_w = seapy.roms.stretching(self.vstretching,
-                   self.theta_s, self.theta_b, self.hc, self.n, w_grid=True)
-            self.thick_rho = seapy.roms.thickness(self.vtransform, 
-                 self.h, self.hc, s_w, cs_w)
+            s_w, cs_w = seapy.roms.stretching(
+                self.vstretching, self.theta_s, self.theta_b, self.hc, 
+                self.n, w_grid=True)
+            self.thick_rho = seapy.roms.thickness(
+                self.vtransform, self.h, self.hc, s_w, cs_w)
             self.thick_u=seapy.model.rho2u(self.thick_rho)
             self.thick_v=seapy.model.rho2v(self.thick_rho)
         else:
@@ -355,7 +367,7 @@ class grid:
                                     np.ones(self.lon_rho.shape[0])).reshape(
                                     [self.z.size,self.lon_rho.shape[0],
                                      self.lon_rho.shape[1]])
-            if self.cgrid is True:
+            if self.cgrid:
                 self.thick_u=seapy.model.rho2u(self.thick_rho)
                 self.thick_v=seapy.model.rho2v(self.thick_rho)
             else:

@@ -8,6 +8,13 @@
   
     Modified to include a timer and added an iterator that displays a 
     progressbar as it iterates.
+    
+    **Example**
+    
+    >>> for i in progressbar.progress(range(10)):
+    >>>     frobnicate(i)
+    
+    
 """
 from __future__ import print_function
 import sys, time
@@ -51,7 +58,8 @@ class ProgressBar:
         percent_done = int(round((new_amount / 100.0) * 100.0))
         all_full = self.width - 2
         num_hashes = int(round((percent_done / 100.0) * all_full))
-        self.prog_bar = '[' + self.fill_char * num_hashes + ' ' * (all_full - num_hashes) + ']'
+        self.prog_bar = '[' + self.fill_char * num_hashes + ' ' * \
+            (all_full - num_hashes) + ']'
         pct_place = (len(self.prog_bar) // 2) - len(str(percent_done))
         pct_string = '%d%%' % percent_done
         self.prog_bar = self.prog_bar[0:pct_place] + \
