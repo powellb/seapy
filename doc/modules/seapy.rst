@@ -68,9 +68,11 @@
 .. autoclass:: seapy.qserver.task
    :members:
    :show-inheritance:
+
 .. autoclass:: seapy.qserver.os_task
    :members:
    :show-inheritance:
+
 .. automodule:: seapy.qserver
    :members:
    :show-inheritance:

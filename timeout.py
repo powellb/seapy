@@ -3,7 +3,7 @@
   Wrap your code with a time limit to prevent something from taking too long
   (getting into an infinite loop, etc.)
     
-  **Example**
+  **Examples**
   
   >>> from timeout import timeout
   >>> with timeout(seconds=3):

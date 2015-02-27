@@ -9,7 +9,7 @@
     Modified to include a timer and added an iterator that displays a 
     progressbar as it iterates.
     
-    **Example**
+    **Examples**
     
     >>> for i in progressbar.progress(range(10)):
     >>>     frobnicate(i)

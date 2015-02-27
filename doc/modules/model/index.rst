@@ -16,9 +16,8 @@
 :mod:`grid`
 ----------------------------------
 .. automodule:: seapy.model.grid
-   :members:
-   :show-inheritance:
-
+  :noindex:
+  
 .. autoclass:: seapy.model.grid
    :members:
    :show-inheritance:

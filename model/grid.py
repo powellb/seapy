@@ -16,6 +16,10 @@ import os
 import re
 import seapy
 import numpy as np
+from scipy.interpolate import griddata
+from matplotlib.path import Path
+
+import pudb
 
 def asgrid(grid):
     """
@@ -168,7 +172,7 @@ class grid:
         self.lm = self.lat_rho.shape[1]
         
         pass
-        
+    
     def set_dims(self):
         """
         Compute the dimension attributes of the grid based upon the information provided.
@@ -248,6 +252,9 @@ class grid:
         if "f" not in self.__dict__:
             omega=2*np.pi/86400;
             self.f=2*omega*np.sin(np.radians(self.lat_rho))
+
+        # Set the grid index coordinates
+        self.I, self.J=np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
 
         pass
         
@@ -418,5 +425,75 @@ class grid:
                 nc.variables[var][:]=getattr(self,var.lower())
         pass
     
+    def ij(self, points, asint=False):
+        """
+        Compute the fractional i,j indices of the grid from a 
+        set of lat, lon points.
+    
+        Parameters
+        ----------
+        points : list of tuples
+            longitude, latitude points to compute i,j indicies
+        asint : bool, optional,
+            if True, return the integer index rather than fractional
+            
+        Returns
+        -------
+        out : tuple of ndarray (with netcdf-type indexing),
+            list of i,j indices for the given lat/lon points
+
+        Examples
+        --------
+        >>> a = [(-158, 20), (-160.5, 22.443)]
+        >>> idx = g.ij(a)
+        """
+        
+        # Interpolate the lat/lons onto the I, J
+        xgrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
+                         self.I.ravel(),points,method="linear")
+        ygrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
+                         self.J.ravel(),points,method="linear")
+        
+        if asint:
+            return (np.floor(ygrid).astype(int), np.floor(xgrid).astype(int))
+        else:
+            return (ygrid,xgrid)
+        
+    def mask_poly(self, vertices, lat_lon=False):
+        """
+        Create an np.masked_array of the same shape as the grid with values
+        masked if they are not within the given polygon vertices
+        
+        Parameters
+        ----------
+        vertices: list of tuples,
+            points that define the vertices of the polygon
+        lat_lon : bool, optional,
+            If True, the vertices are a list of lon, lat points rather
+            than indexes
+            
+        Returns
+        -------
+        mask : np.masked_array
+            mask of values that are located within the polygon
+
+        Examples
+        --------
+        >>> vertices = [ (1,2), (4,5), (1,3) ]
+        >>> mask = grid.mask_poly(vertices)
+        """
+        # If lat/lon vertices are given, we need to put these onto
+        # the grid coordinates
+        if lat_lon:
+            points = self.ij(vertices,asint=True)
+            vertices = list(zip(points[0],points[1]))
+        
+        # Now, with grid coordinates, test the grid against the vertices
+        poly=Path(vertices)
+        inside=poly.contains_points(np.vstack((self.J.flatten(),
+                                               self.I.flatten())).T)
+        return np.ma.masked_where(inside.reshape(g.lat_rho.shape)==False,
+                                  np.ones(g.lat_rho.shape))
+
         
         

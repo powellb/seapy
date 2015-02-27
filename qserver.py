@@ -6,7 +6,7 @@
   Define a list of qserver.task objects and then tell the server to 
   execute the list with a given number of threads.
   
-  **Example**
+  **Examples**
 
   >>> tasks = (qserver.os_task("list files","ls -1"), 
   >>>          qserver.task("my job",my_func,arg1,arg2,arg3))
@@ -64,9 +64,8 @@ class task:
 class os_task(task):
     """
     task class simply defines a task for the queue server to process.
-
-    It requires a descriptive name of the task for logging and the
-    
+    It requires a descriptive name of the task for logging and the command
+    to execute.
 
     Parameters
     ----------
