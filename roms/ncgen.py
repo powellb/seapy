@@ -540,8 +540,8 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
-def create_da_obs(filename, state_variable=20, provenance="None",
-                 timebase=datetime(2000,1,1), title="My Observations"):
+def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
+                  title="My Observations"):
     """
     Create an assimilation observations file
 
@@ -549,6 +549,8 @@ def create_da_obs(filename, state_variable=20, provenance="None",
     ----------
     filename : string
         name and path of file to create
+    survey: int, optional
+        number of surveys in the file
     state_variable: int, optional
         number of state variables in the observations
     provenance: string, optional
@@ -569,11 +571,12 @@ def create_da_obs(filename, state_variable=20, provenance="None",
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_obs.cdl")
 
     # Fill in the appropriate dimension values
+    dims["survey"] = survey
     dims["state_variable"] = state_variable
-    vars = _set_time_ref(vars, "obs_time", timebase)
 
     # Set the provenance values in the global attributes
-    attr["obs_provenance"] = provenance
+    if provenance is not None:
+        attr["obs_provenance"] = str(provenance)
     
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)

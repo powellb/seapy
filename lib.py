@@ -37,7 +37,8 @@ def adddim(fld,size=1):
     """
     fld=np.asanyarray(fld)
     return np.transpose( \
-       np.kron(fld,np.ones(size)).reshape(np.append(np.asarray(fld.shape),size)),
+       np.kron(fld,np.ones(size)).reshape(np.append( \
+       np.asanyarray(fld.shape),size)),
        np.append(fld.ndim,np.arange(0,fld.ndim))) 
 
 

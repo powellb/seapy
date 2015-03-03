@@ -17,7 +17,7 @@ import re
 import seapy
 import numpy as np
 from scipy.interpolate import griddata
-from matplotlib.path import Path
+import matplotlib.path
 
 import pudb
 
@@ -459,7 +459,7 @@ class grid:
         else:
             return (ygrid,xgrid)
         
-    def mask_poly(self, vertices, lat_lon=False):
+    def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """
         Create an np.masked_array of the same shape as the grid with values
         masked if they are not within the given polygon vertices
@@ -489,9 +489,10 @@ class grid:
             vertices = list(zip(points[0],points[1]))
         
         # Now, with grid coordinates, test the grid against the vertices
-        poly=Path(vertices)
+        poly=matplotlib.path.Path(vertices)
         inside=poly.contains_points(np.vstack((self.J.flatten(),
-                                               self.I.flatten())).T)
+                                               self.I.flatten())).T,
+                                    radius=radius)
         return np.ma.masked_where(inside.reshape(g.lat_rho.shape)==False,
                                   np.ones(g.lat_rho.shape))
 
