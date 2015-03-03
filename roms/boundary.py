@@ -21,17 +21,19 @@ import pudb
 
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
-    from_roms(roms_file, bry_file, grid=None, recors=None)
-    
     Given a ROMS history, average, or climatology file, generate 
     boundary conditions on the same grid.
     
     Parameters
     ----------
-    roms_file : string ROMS source (history, average, climatology file)
-    bry_file : string output boundary file
-    [grid] : seapy.model.grid or string for ROMS grid
-    [records] : array of the record indices to put into the boundary
+    roms_file : string,
+        ROMS source (history, average, climatology file)
+    bry_file : string,
+        output boundary file
+    grid : seapy.model.grid or string, optional,
+        ROMS grid for boundaries
+    [records] : array, optional 
+        record indices to put into the boundary
     
     Returns
     -------

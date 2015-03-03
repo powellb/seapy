@@ -207,7 +207,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
     records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asarray(records)
+                 if records is None else np.asanyarray(records)
     for k in vmap:
         # Only interpolate the fields we want in the destination
         if ( vmap[k] not in ncout.variables ) or ( "rotate" in seapy.roms.fields[k]):
@@ -321,7 +321,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     except AttributeError:
         src_time=netcdftime.utime(seapy.roms.default_epoch)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-        if records is None else np.asarray(records)
+        if records is None else np.asanyarray(records)
 
     if z_grid != None:
         z_grid = seapy.model.asgrid(z_grid)
@@ -417,7 +417,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             ncsrc = netCDF4.Dataset(src_file)
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asarray(records)
+                 if records is None else np.asanyarray(records)
             try:
                 src_time=netcdftime.utime(ncsrc.variables[time].units)
             except AttributeError:
@@ -481,7 +481,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         ncsrc = netCDF4.Dataset(src_file)
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asarray(records)
+                 if records is None else np.asanyarray(records)
         try:
             src_time=netcdftime.utime(ncsrc.variables[time].units)
         except AttributeError:
