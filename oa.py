@@ -18,15 +18,15 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2,verbose=False):
     
     Parameters
     ----------
-    x: array
+    x: array [2-D]
         x-values of source data
-    y: array
+    y: array [2-D]
         y-values of source data
-    d: array
+    d: array [2-D]
         data values of source
-    xx: array
+    xx: array [2-D]
         x-values of destination
-    yy: array
+    yy: array [2-D]
         y-values of destination
     pmap: array, optional
         weighting array to map between source and destination. 
@@ -70,19 +70,19 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2,verbose=False):
     
     Parameters
     ----------
-    x: array
+    x: array [2-D]
         x-values of source data
-    y: array
+    y: array [2-D]
         y-values of source data
-    z: array
+    z: array [3-D]
         z-values of source data
-    v: array
+    v: array [3-D]
         data values of source
-    xx: array
+    xx: array [2-D]
         x-values of destination
-    yy: array
+    yy: array [2-D]
         y-values of destination
-    zz: array
+    zz: array [3-D]
         z-values of destination
     pmap: array, optional
         weighting array to map between source and destination. 
@@ -109,9 +109,10 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2,verbose=False):
 
     # Generate a mapping weight matrix if not passed
     if pmap is None:
-        pmap=np.zeros([xx.size,weight],order="F")
         # Build the map
-        seapy.oalib.oa2d(x.ravel(),y.ravel(),ones(x.shape),
+        tmp=np.ones(x.ravel().shape,order="F")
+        pmap=np.zeros([xx.size, weight],order="F")
+        seapy.oalib.oa2d(x.ravel(),y.ravel(),tmp,
                            xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
         
     # Call FORTRAN library to objectively map
