@@ -493,8 +493,8 @@ class grid:
         inside=poly.contains_points(np.vstack((self.J.flatten(),
                                                self.I.flatten())).T,
                                     radius=radius)
-        return np.ma.masked_where(inside.reshape(g.lat_rho.shape)==False,
-                                  np.ones(g.lat_rho.shape))
+        return np.ma.masked_where(inside.reshape(self.lat_rho.shape)==False,
+                                  np.ones(self.lat_rho.shape))
 
         
         
