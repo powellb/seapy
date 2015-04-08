@@ -35,11 +35,10 @@ def adddim(fld,size=1):
     -------
     fld : array
     """
-    fld=np.asanyarray(fld)
-    return np.transpose( \
-       np.kron(fld,np.ones(size)).reshape(np.append( \
-       np.asanyarray(fld.shape),size)),
-       np.append(fld.ndim,np.arange(0,fld.ndim))) 
+    fld=np.atleast_1d(fld)
+    s=np.ones(fld.ndim+1)
+    s[0]=size
+    return np.tile(fld,s)
 
 
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
@@ -62,8 +61,12 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     fld : masked array
     """
     fld = np.ma.array(data, copy=copy)
+    # Make sure ksize is odd
+    ksize = int(ksize+1) if int(ksize)%2==0 else int(ksize)
     if fld.ndim > 3 or fld.ndim < 2:
         raise AttributeError("Can only convolve 2- or 3-D fields")
+    if ksize < 3:
+        raise ValueError("ksize must be greater than or equal to 3")
         
     if kernel is None:
         center=np.round(ksize/2)
@@ -181,10 +184,10 @@ def vecfind(a, b, tolerance=0):
     b=np.asanyarray(b)
     index_a=[]
     index_b=[]
-    for i in np.arange(0,len(b)):
-        d=np.abs(a-b[i])
+    for i,c in enumerate(b):
+        d=np.abs(a-c)
         x=np.nonzero(d<tolerance)[0]
-        if len(x)>0:
+        if x:
             index_a.append(np.where(d==np.min(d))[0][0])
             index_b.append(i)
     return index_a, index_b

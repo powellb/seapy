@@ -54,7 +54,7 @@ def load_history(filename,
     time[0] = np.datetime64(time[0])
     time[1] = np.datetime64(time[1])
     tlist = np.nonzero(np.logical_and(stime>=time[0],stime<=time[1]))[0]
-    if len(tlist) == 0:
+    if not tlist:
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
@@ -72,7 +72,7 @@ def load_history(filename,
     latlist = np.nonzero( np.logical_and( soda.variables["lat"][:]>=minlat, \
                                           soda.variables["lat"][:]<=maxlat))[0]
     lonlist = np.nonzero( np.logical_and( slon>=minlon, slon<=maxlon))[0]
-    if len(latlist) == 0 or len(lonlist) == 0:
+    if not latlist or not lonlist:
         raise Exception("Bounds not found")
 
     # Build the history file
@@ -87,16 +87,15 @@ def load_history(filename,
     his.variables["time"] = soda.variables["time"][tlist]
     
     # Loop over the variables
-    dims = [3,4,4,4,4]
-    sodavars = ("ssh", "u", "v", "temp", "salt")
-    hisvars = ("zeta", "u", "v", "temp", "salt")
-    for i in seapy.progressbar(range(len(sodavars))):
-        if dims[i]==3:
-            his.put(hisvars[i], 
-             soda.variables[sodavars[i]][tlist, latlist, lonlist].filled(fill_value=9.99E10))
+    sodavars = {"ssh":3, "u":4, "v":4, "temp":4, "salt":4}
+    hisvars = {"ssh":"zeta", "u":"u", "v":"v", "temp":"temp", "salt":"salt"}
+    for var in seapy.progressbar.progress(sodavars):
+        if sodavars[var]==3:
+            his.put(hisvars[var], 
+             soda.variables[var][tlist, latlist, lonlist].filled(fill_value=9.99E10))
         else:
-            his.put(hisvars[i], 
-             soda.variables[sodavars[i]][tlist, :, latlist, lonlist].filled(fill_value=9.99E10))
+            his.put(hisvars[var], 
+             soda.variables[var][tlist, :, latlist, lonlist].filled(fill_value=9.99E10))
     pass
 
 

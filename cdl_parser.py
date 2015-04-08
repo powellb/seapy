@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-  Class to load and parse Common Data Language (CDL) files and
+  Module to load and parse Common Data Language (CDL) files and
   tokenize the dimensions and variables
 
   Written by Brian Powell on 04/30/13

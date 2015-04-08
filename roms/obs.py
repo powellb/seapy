@@ -13,8 +13,11 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4
-from datetime import datetime
 import seapy
+from joblib import Parallel, delayed
+import matplotlib.path
+
+import pudb
 
 # Define the observation type
 obs_types = {
@@ -401,19 +404,154 @@ class obs:
         nc.close()
         
 
-def gridder(grid, raw):
+def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
+            threads=2):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.
     
     Parameters
     ----------
-    grid : seapy.model.grid,
+    grid : seapy.model.grid or filename string,
         Grid to place the raw observations onto
     raw : dict,
         dictionary of the raw observations. Dict must have keys:
-        "lat", "lon", "depth". Any other keys are considered data
-        and compared against the obs_types dictionary
-    """
-    pass
+            "time" : list of floats [days since epoch]
+            "lat"  : list of floats [degrees]
+            "lon"  : list of floats [degrees]
+            "depth": list of floats [m]
+        Any other keys are considered data and compared against the 
+        obs_types dictionary.
+    dx : float, optional,
+        half-width of the x-dimension box to consider from the 
+        center of each grid cell in km (e.g., dx=4 would result in an 
+        8km width)
+    dy : float, optional, 
+        half-width of the y-dimension box to consider from the 
+        center of each grid cell in km (e.g., dy=4 would result in an 
+        8km width)
+    dz : list of floats, optional,
+        The bins of vertical depths to consider for in situ observations.
+        Positive values are down and in units of m.
+    dt : float, optional,
+        The bin size of time for observations to be considered at the
+        same time in units of days.
+    nx : int, optional,
+        stride value of grid cells to consider in the x-direction (e.g., 
+        1 is every point, 2 is every other point)
+    ny : int, optional,
+        stride value of grid cells to consider in the y-direction (e.g., 
+        1 is every point, 2 is every other point)
+    threads : int, optional,
+        number of threads to run to grid the data
     
+    Returns
+    -------
+    y : obs class
+        Resulting observations from the raw data as placed onto grid.
+    """
+    # Make sure everything is in proper form.
+    grid=seapy.model.asgrid(grid)
+    raw_vars=[]
+    for key in raw:
+        raw[key] = np.asanyarray(raw[key]).ravel()
+        if key.upper() in list(obs_types.values()):
+            raw_vars.append(key)
+    if not raw_vars:
+        raise AttributeError("The raw data must contain a valid obs data type")
+
+    l=np.where(raw["lon"]>180)
+    raw["lon"][l]=raw["lon"][l]-360
+    if "depth" in raw:
+        raw["depth"]=np.sort(-np.abs(raw["depth"]))[::-1]
+
+    # Construct the grid boxes to search for data
+    rng=np.s_[::ny,::nx]
+    ocean=np.where(grid.mask_rho[rng]==1)
+    lon=grid.lon_rho[rng][ocean]
+    lat=grid.lat_rho[rng][ocean]
+    dx = dx*1000 / seapy.earth_distance(lon, lat, lon+1, lat)
+    dy = dy*1000 / seapy.earth_distance(lon, lat, lon, lat+1)
+    dxy = dx * np.sin(grid.angle[rng][ocean]);
+    dx  = dx * np.cos(grid.angle[rng][ocean]);
+    dyx = dy * np.sin(grid.angle[rng][ocean]);
+    dy  = dy * np.cos(grid.angle[rng][ocean]);
+    xv = np.vstack(((lon+dx-dyx).ravel(), 
+                    (lon+dx+dyx).ravel(),
+                    (lon-dx+dyx).ravel(),
+                    (lon-dx-dyx).ravel(),
+                    (lon+dx-dyx).ravel())).T
+    yv = np.vstack(((lat+dy+dxy).ravel(), 
+                    (lat-dy+dxy).ravel(),
+                    (lat-dy-dxy).ravel(),
+                    (lat+dy-dxy).ravel(),
+                    (lat+dy+dxy).ravel())).T
+    l=np.where(xv>180)
+    xv[l]=xv[l]-360
+    
+    # Limit the data and grid boxes to those that are overlapping
+    # First, eliminate raw data that are outside of our grid boxes
+    region=np.where(np.logical_and( \
+                    np.logical_and(raw["lon"] <= np.max(xv), 
+                                   raw["lon"] >= np.min(xv)),
+                    np.logical_and(raw["lat"] <= np.max(yv),
+                                   raw["lat"] >= np.min(yv))))
+    for key in raw:
+        if key is not "depth":
+            raw[key]=raw[key][region] 
+
+    # Next, eliminate grid boxes that are outside of the raw data
+    search=np.where(np.logical_and( \
+                    np.logical_and(xv[:,0] <= np.max(raw["lon"]), 
+                                   xv[:,2] >= np.min(raw["lon"])),
+                    np.logical_and(yv[:,0] <= np.max(raw["lat"]),
+                                   yv[:,2] >= np.min(raw["lat"]))))
+    xv=xv[search[0],:]
+    yv=yv[search[0],:]
+
+    # Build arrays that will be used many times
+    pts=np.vstack((raw["lon"],raw["lat"])).T
+    times=np.unique(raw["time"])
+    d=np.diff(times)<dt
+    while d.any():
+        i=np.min(np.where(d))
+        times[i+1]=times[i]
+        times=np.unique(times)
+        d=np.diff(times)<dt
+        
+    # Create an internal function for gridding the data
+    def __gridder_thread(xv, yv, raw, pts, dt):
+        # Find the points inside the current grid point
+        poly=matplotlib.path.Path(list(zip(xv,yv)))
+        inside=poly.contains_points(pts)
+        if inside.any():
+            pu.db
+            # Loop over the available times
+            time=np.mean(raw["time"][inside])
+            lat=np.mean(raw["lat"][inside])
+            lon=np.mean(raw["lon"][inside])
+            num=np.count_nonzero(inside)
+            z=1
+            for v in raw_vars:
+                data=np.nanmean(raw[v][inside])
+                var=np.nanvar(raw[v][inside])
+            pu.db
+        return
+        
+    # Loop over the data, calling the internal gridder
+    for i in range(xv.shape[0]):
+        # pu.db
+        __gridder_thread(xv[i,:],yv[i,:],raw,pts,dt)
+        
+    # Put the results together
+    pass
+ 
+ # ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
+#                   (delayed(__interp2_thread) (
+#    getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
+#    ncsrc.variables[k][i,:,:],
+#    getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
+#    pmap["pmap"+grd], weight,
+#    nx, ny, getattr(child_grid,"mask_"+grd))
+#  for i in records), copy=False)
+#   

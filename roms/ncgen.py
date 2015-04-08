@@ -18,7 +18,7 @@ import netcdftime
     Module variables
 """
 _cdl_dir = os.path.dirname(lib.__file__)
-_cdl_dir =('.' if len(_cdl_dir) == 0 else _cdl_dir) + "/cdl/"
+_cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
 _format="NETCDF4_CLASSIC"
 
 def ncgen(filename, dims=None, vars=None, attr=None, title=None):
@@ -38,7 +38,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None):
         _nc.createDimension(dim, dims[dim])
     # Loop over the variables and add them
     for var in vars:
-        if len(var["dims"][0]):
+        if var["dims"][0]:
             nvar = _nc.createVariable( var["name"], var["type"], var["dims"])
         else:
             nvar = _nc.createVariable( var["name"], var["type"])

@@ -16,24 +16,38 @@ import os
 import seapy
 from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
+import pudb
 
-_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":0.99, "salt":0.99}
+_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
+_ksize_range=(7,25)
 
-def _mask_z_grid(z_data, src_depth, z_depth):
+def __mask_z_grid(z_data, src_depth, z_depth):
     """
     When interpolating to z-grid, we need to apply depth dependent masking
     based on the original ROMS depths
     """
     for k in np.arange(0,z_depth.shape[0]):
         idx=np.nonzero(z_depth[k,:,:]<src_depth)
-        z_data.mask[:,k,idx[0],idx[1]]=True
+        if z_data.ndim==4:
+            z_data.mask[:,k,idx[0],idx[1]]=True
+        elif z_data.ndim==3:
+            z_data.mask[k,idx[0],idx[1]]=True
         
-def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
+def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     """
     internal routine: 2D interpolation thread for parallel interpolation
     """
     # Convolve the water over the land
-    data=seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)),copy=False)
+    ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
+                    (ny/np.median(np.diff(ry.T)))**2))+1
+    if ksize < _ksize_range[0]:
+        print("WARNING: nx or ny values are too small for stable OA")
+        ksize=_ksize_range[0]
+    elif ksize > _ksize_range[1]:
+        print("WARNING: nx or ny values are too large for stable OA")
+        ksize=_ksize_range[1]
+    print(ksize)
+    data=seapy.convolve_mask(data, ksize=ksize, copy=False)
     
     # Interpolate the field and return the result
     with timeout(minutes=30):
@@ -42,7 +56,7 @@ def _interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e10), res,
                        copy=False)
 
-def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap, 
+def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap, 
                     weight, nx, ny, mask, factor=1.0):
     """
     internal routine: 3D interpolation thread for parallel interpolation
@@ -79,7 +93,16 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
             data[k,idx[0],idx[1]]=data[k-1,idx[0],idx[1]]*factor
 
     # Convolve the water over the land
-    data=seapy.convolve_mask(data, np.round(np.sqrt(nx*nx+ny*ny)),copy=False)
+    ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
+                    (ny/np.median(np.diff(ry.T)))**2))+1
+    if ksize < _ksize_range[0]:
+        print("WARNING: nx or ny values are too small for stable OA")
+        ksize=_ksize_range[0]
+    elif ksize > _ksize_range[1]:
+        print("WARNING: nx or ny values are too large for stable OA")
+        ksize=_ksize_range[1]
+    print(ksize)
+    data=seapy.convolve_mask(data, ksize=ksize, copy=False)
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
@@ -102,7 +125,7 @@ def _interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e5), res,
                        copy=False)
 
-def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap, 
+def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap, 
                     weight, nx, ny, mask):
     """
     internal routine: 3D velocity interpolation thread for parallel interpolation
@@ -117,10 +140,10 @@ def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
         u, v = seapy.rotate(u, v, ra)
 
     # Interpolate
-    u = _interp3_thread(rx, ry, rz, u, zx, zy, zz, pmap, 
-                        weight, nx, ny, mask, 0.1)
-    v = _interp3_thread(rx, ry, rz, v, zx, zy, zz, pmap, 
-                        weight, nx, ny, mask, 0.1)
+    u = __interp3_thread(rx, ry, rz, u, zx, zy, zz, pmap, 
+                        weight, nx, ny, mask, _scaling["u"])
+    v = __interp3_thread(rx, ry, rz, v, zx, zy, zz, pmap, 
+                        weight, nx, ny, mask, _scaling["v"])
     
     # Rotate to destination (NOTE: ROMS angle is negative relative to "true")
     if za is not None:
@@ -129,7 +152,7 @@ def _interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
     # Return the masked data
     return u, v
         
-def _interp_grids(src_grid, child_grid, ncout, records=None, 
+def __interp_grids(src_grid, child_grid, ncout, records=None, 
             threads=1, nx=0, ny=0, weight=10, vmap=None, z_mask=False, 
             pmap=None):
     """
@@ -197,12 +220,12 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             pmap = {"pmaprho":pmaprho, "pmapu":pmapu, "pmapv":pmapv}
         
     # Get the time field
-    ncsrc = netCDF4.Dataset(src_grid.file)
+    ncsrc = netCDF4.Dataset(src_grid.filename)
     time = seapy.roms.get_timevar(ncsrc)
     
     # Interpolate the depths from the source to final grid
     src_depth=np.min(src_grid.depth_rho,0)
-    dst_depth=_interp2_thread(src_grid.lon_rho, src_grid.lat_rho, src_depth,
+    dst_depth=__interp2_thread(src_grid.lon_rho, src_grid.lat_rho, src_depth,
                     child_grid.lon_rho, child_grid.lat_rho, pmap["pmaprho"],
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
@@ -215,7 +238,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
         grd = seapy.roms.fields[k]["grid"]
         if seapy.roms.fields[k]["dims"]==2:
             ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
-                             (delayed(_interp2_thread) (
+                             (delayed(__interp2_thread) (
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
               ncsrc.variables[k][i,:,:],
               getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
@@ -224,7 +247,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             for i in records), copy=False)
         else:
             ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
-                             (delayed(_interp3_thread)( 
+                             (delayed(__interp3_thread)( 
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
               getattr(src_grid,"depth_"+grd),
               ncsrc.variables[k][i,:,:,:],
@@ -235,7 +258,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
               factor=_scaling[k]) 
             for i in records), copy=False)
             if z_mask:
-                _mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
+                __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
         ncout.variables[vmap[k]][:] = ndata
 
     # Rotate and Interpolate the vector fields
@@ -244,7 +267,7 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
         srcangle = src_grid.angle if src_grid.cgrid else None
         dstangle = child_grid.angle if child_grid.cgrid else None
         vel = Parallel(n_jobs=threads, verbose=2) \
-                 (delayed(_interp3_vel_thread)( \
+                 (delayed(__interp3_vel_thread)( \
             src_grid.lon_rho, src_grid.lat_rho, \
             src_grid.depth_rho, srcangle, \
             ncsrc.variables["u"][i,:,:,:], \
@@ -258,8 +281,8 @@ def _interp_grids(src_grid, child_grid, ncout, records=None,
             vel_u = np.ma.array(vel[j][0],copy=False)
             vel_v = np.ma.array(vel[j][1],copy=False)
             if z_mask:
-                _mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
-                _mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
+                __mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
+                __mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
             if child_grid.cgrid:
                 vel_u = seapy.model.rho2u(vel_u)
@@ -284,9 +307,6 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
              threads=1, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
              pmap=None):
     """
-    to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
-                 threads=1, nx=0, ny=0)
-                 
     Given an existing ROMS history or average file, create (if does not exit)
     a new z-grid file. Use the given z_grid or otherwise build one with the 
     same horizontal extent and the specified depths and interpolate the 
@@ -294,19 +314,28 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     
     Parameters
     ----------
-    roms_file : Name of ROMS file to interpolate from
-    z_file : Name of Z-grid file to write to
-    [z_grid] : (string or seapy.model.grid) Name or instance of z-grid definition
-    [depth] : array of depths to use for z-level
-    [records] : array of the record indices to interpolate
-    [threads] : number of processing threads
-    [nx] : decorrelation length in grid-cells for x
-    [ny] : decorrelation length in grid-cells for y
-    [vmap] : dictionary mapping source and destination variables
-    [cdlfile] : CDL template for the resulting netcdf file
-    [dims] : make a 1-d lat/lon or 2-d lat/lon z-grid file. This is 
-             overwritten by the z_grid if specified
-    [pmap] : use the specified pmap rather than compute it
+    roms_file  : string,
+        File name of src file to interpolate from
+    z_file : string,
+        Name of desination file to write to
+    z_grid: (string or seapy.model.grid), optional:
+        Name or instance of output definition
+    depth: numpy.ndarray, optional:
+        array of depths to use for z-level
+    records : numpy.ndarray, optional:
+        Record indices to interpolate
+    threads : int, optional:
+        number of processing threads
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    weight : int, optional:
+        number of points to use in weighting matrix
+    vmap : dictionary, optional
+        mapping source and destination variables
+    pmap : numpy.ndarray, optional:
+        use the specified pmap rather than compute it
     
     Returns
     -------
@@ -325,7 +354,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     if z_grid != None:
         z_grid = seapy.model.asgrid(z_grid)
-    else:
+    elif os.path.isfile(z_file):
         z_grid = seapy.model.asgrid(z_file)
             
     if not os.path.isfile(z_file):
@@ -351,7 +380,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             lat=z_grid.lat_rho.shape[0]
             lon=z_grid.lat_rho.shape[1]
             dims=z_grid.spatial_dims
-            ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.depth),
+            ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.z),
                                src_time.origin,"ROMS z-level", 
                                cdlfile=cdlfile, dims=dims)
             if dims==1:
@@ -360,7 +389,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             else:
                 ncout.variables["lat"][:]=z_grid.lat_rho
                 ncout.variables["lon"][:]=z_grid.lon_rho
-            ncout.variables["depth"][:]=z_grid.depth
+            ncout.variables["depth"][:]=z_grid.z
             ncout.variables["mask"][:]=z_grid.mask_rho
     else:
         ncout = netCDF4.Dataset(z_file, "a")
@@ -372,7 +401,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     
     # Call the interpolation
     try:
-        _interp_grids(roms_grid, z_grid, ncout, records=records,
+        __interp_grids(roms_grid, z_grid, ncout, records=records,
                   threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
                   z_mask=True, pmap=pmap)
     except TimeoutError:
@@ -387,8 +416,6 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             weight=10, vmap=None, pmap=None):
     """
-    to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1)
-    
     Given an existing model file, create (if does not exit) a
     new ROMS history file using the given ROMS destination grid and
     interpolate the ROMS fields onto the new grid. If an existing destination
@@ -396,14 +423,22 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     Parameters
     ----------
-    src_file  : (string or seapy.model.grid) Name or instance of src file 
-                to interpolate from
-    dest_file : Name of desination file to write to
-    [dest_grid]: (string or seapy.model.grid) Name or instance of output definition
-    [records] : array of the record indices to interpolate
-    [threads] : number of processing threads
-    [vmap] : dictionary mapping source and destination variables
-    [pmap] : use the specified pmap rather than compute it
+    src_file  : string,
+        Filename of src file to interpolate from
+    dest_file : string,
+        Name of desination file to write to
+    dest_grid: (string or seapy.model.grid), optional:
+        Name or instance of output definition
+    records : numpy.ndarray, optional:
+        Record indices to interpolate
+    threads : int, optional:
+        number of processing threads
+    weight : int, optional:
+        number of points to use in weighting matrix
+    vmap : dictionary, optional
+        mapping source and destination variables
+    pmap : numpy.ndarray, optional:
+        use the specified pmap rather than compute it
     
     Returns
     -------
@@ -438,7 +473,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     try:
-        _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+        __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   weight=weight, vmap=vmap, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
@@ -452,8 +487,6 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
             nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
-    to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1)
-    
     Given an model output file, create (if does not exit) a
     new ROMS climatology file using the given ROMS destination grid and
     interpolate the ROMS fields onto the new grid. If an existing destination
@@ -461,14 +494,26 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     Parameters
     ----------
-    src_file  : (string or seapy.model.grid) Name or instance of src file 
-                to interpolate from
-    dest_file : Name of desination file to write to
-    [dest_grid]: (string or seapy.model.grid) Name or instance of output definition
-    [records] : array of the record indices to interpolate
-    [threads] : number of processing threads
-    [vmap] : dictionary mapping source and destination variables
-    [pmap] : use the specified pmap rather than compute it
+    src_file  : string,
+        Filename of src file to interpolate from
+    dest_file : string,
+        Name of desination file to write to
+    dest_grid: (string or seapy.model.grid), optional:
+        Name or instance of output definition
+    records : numpy.ndarray, optional:
+        Record indices to interpolate
+    threads : int, optional:
+        number of processing threads
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    weight : int, optional:
+        number of points to use in weighting matrix
+    vmap : dictionary, optional
+        mapping source and destination variables
+    pmap : numpy.ndarray, optional:
+        use the specified pmap rather than compute it
     
     Returns
     -------
@@ -506,7 +551,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     try:
-        _interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+        __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   nx=nx, ny=ny, vmap=vmap, weight=weight, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")

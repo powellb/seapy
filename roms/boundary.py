@@ -386,56 +386,56 @@ def from_stations(station_file, bry_file, grid=None):
         
         # For 3D variables, we need to loop through time and interpolate
         # onto the child grid. Construct the distances
-        x = np.zeros(len(bry[side]))
+        x = bry[side]*0
         x[1:] = np.cumsum(seapy.earth_distance(grid_lon[bry[side][0:-1]],
                                      grid_lat[bry[side][0:-1]],
                                      grid_lon[bry[side][1:]],
                                      grid_lat[bry[side][1:]]))
         sta_x = seapy.adddim(x,len(sta_s_rho))
         x = seapy.adddim(x,len(grid.s_rho))
-        for t in seapy.progress(range(len(ncstation.variables[time][:]))):
+        for n,t in seapy.progress(enumerate(ncstation.variables[time][:])):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc, 
-                            sta_s_rho, sta_cs_r, sta_zeta[t,bry[side]])
+                            sta_s_rho, sta_cs_r, sta_zeta[n,bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]], 
-                        grid.hc, grid.s_rho, grid.cs_r, sta_zeta[t,bry[side]])
+                        grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n,bry[side]])
             sta_ocean = np.where(sta_mask[bry[side]]==1)[0]
             ocean = np.where(grid_mask[bry[side]]==1)[0]
             # 4) Temp
-            ncbry.variables["temp_"+side][t,:]=0.0
-            ncbry.variables["temp_"+side][t,:,ocean],pmap = seapy.oa.oasurf( \
+            ncbry.variables["temp_"+side][n,:]=0.0
+            ncbry.variables["temp_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
-                np.transpose(sta_temp[t,bry[side],:][ocean,:]), \
+                np.transpose(sta_temp[n,bry[side],:][ocean,:]), \
                 x[:,ocean], depth[:,ocean],nx=0, ny=2, weight=2)
             # pu.db
         
             # 5) Salt
-            ncbry.variables["salt_"+side][t,:]=0.0
-            ncbry.variables["salt_"+side][t,:,ocean],pmap = seapy.oa.oasurf( \
+            ncbry.variables["salt_"+side][n,:]=0.0
+            ncbry.variables["salt_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
-                np.transpose(sta_salt[t,bry[side],:][ocean,:]), \
+                np.transpose(sta_salt[n,bry[side],:][ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
 
             # 6) U
             data = np.zeros(x.shape)
             data[:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
-                np.transpose(sta_u[t,bry[side],:][ocean,:]), \
+                np.transpose(sta_u[n,bry[side],:][ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
             if sides[side][0]:
-                ncbry.variables["u_"+side][t,:] = 0.5 * ( \
+                ncbry.variables["u_"+side][n,:] = 0.5 * ( \
                     data[:,0:-1]+data[:,1:])
             else:
-                ncbry.variables["u_"+side][t,:] = data
+                ncbry.variables["u_"+side][n,:] = data
 
             # 7) V
             data = data * 0
             data[:,ocean],pmap = seapy.oa.oasurf( \
                 sta_x[:,ocean], sta_depth[:,ocean], 
-                np.transpose(sta_v[t,bry[side],:][ocean,:]), \
+                np.transpose(sta_v[n,bry[side],:][ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
             if sides[side][1]:
-                ncbry.variables["v_"+side][t,:] = 0.5 * ( \
+                ncbry.variables["v_"+side][n,:] = 0.5 * ( \
                     data[:,0:-1]+data[:,1:])
             else:
-                ncbry.variables["v_"+side][t,:] = data
+                ncbry.variables["v_"+side][n,:] = data
             
