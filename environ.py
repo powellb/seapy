@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-  Class to store all environment variables in an easy dictionary
+  Module to store all environment variables in an easy dictionary
 
   Written by Brian Powell on 04/26/13
   Copyright (c)2013 University of Hawaii under the BSD-License.

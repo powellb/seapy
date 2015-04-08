@@ -19,8 +19,6 @@ import numpy as np
 from scipy.interpolate import griddata
 import matplotlib.path
 
-import pudb
-
 def asgrid(grid):
     """
     Return either an existing or new grid object. This decorator will ensure that
@@ -128,17 +126,17 @@ class grid:
                  "vstretching": ["Vstretching"],
                  "s_rho": ["s_rho"],
                  "cs_r": ["Cs_r"],
-                 "depth": ["depth", "lev"],
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
+                 "z": ["z","depth","lev"]
                 }
 
         # Open the file
         self._nc = netCDF4.Dataset(self.filename,"r")
         self.name = re.search("[^\.]*",
                               os.path.basename(self.filename)).group();
-        for var in gvars.keys():
+        for var in gvars:
             for inp in gvars[var]:
                 if inp in self._nc.variables:
                     self.__dict__[var] = self._nc.variables[inp][:]
@@ -168,11 +166,19 @@ class grid:
                                                        self.lat_rho)
         
         # Compute the dimensions
-        self.ln = self.lat_rho.shape[0]
-        self.lm = self.lat_rho.shape[1]
+        self.ln = int(self.lat_rho.shape[0])
+        self.lm = int(self.lat_rho.shape[1])
+        self.shape = (self.ln, self.lm)
+            
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return "\n".join((self.filename if self.filename else "Constructed",
+            "{:d}x{:d}x{:d}".format(self.n,self.ln,self.lm),
+            "C-Grid" if self.cgrid else "",
+            "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
         
-        pass
-    
     def set_dims(self):
         """
         Compute the dimension attributes of the grid based upon the information provided.
@@ -197,9 +203,11 @@ class grid:
         # Set the number of layers
         if "n" not in self.__dict__:
             if "s_rho" in self.__dict__:
-                self.n = self.s_rho.size
-            elif "depths" in self.__dict__:
-                self.n = self.z.size
+                self.n = int(self.s_rho.size)
+            elif "z" in self.__dict__:
+                self.n = int(self.z.size)
+        else:
+            self.n = int(self.n)
             
         # Generate the u- and v-grids
         if ("lat_u" or "lon_u") not in self.__dict__:
@@ -255,8 +263,6 @@ class grid:
 
         # Set the grid index coordinates
         self.I, self.J=np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
-
-        pass
         
     def set_mask_h(self, fld=None):
         """
@@ -294,7 +300,6 @@ class grid:
             self.h[water] = self.z[k]
             if k==0:
                 self.mask_rho[water] = 1.0
-        pass
         
         
     def set_depth(self):
@@ -334,8 +339,6 @@ class grid:
                 self.depth_u = self.depth_rho
                 self.depth_v = self.depth_rho
 
-        pass
-
     def set_thickness(self):
         """
         Compute the thickness of each cell for the model grid.
@@ -360,7 +363,7 @@ class grid:
             self.thick_v=seapy.model.rho2v(self.thick_rho)
         else:
             d=np.abs(self.z.copy())
-            w=np.zeros(len(d))
+            w=d*0
             # Check which way the depths are going
             if d[0] < d[-1]:
                 w[0]=d[0]
@@ -381,7 +384,6 @@ class grid:
                 self.thick_u = self.thick_rho
                 self.thick_v = self.thick_rho
 
-        pass
         
     def plot_trace(self, basemap, **kwargs):
         """
@@ -423,7 +425,6 @@ class grid:
         for var in nc.variables:
             if hasattr(self,var.lower()):
                 nc.variables[var][:]=getattr(self,var.lower())
-        pass
     
     def ij(self, points, asint=False):
         """
@@ -493,8 +494,8 @@ class grid:
         inside=poly.contains_points(np.vstack((self.J.flatten(),
                                                self.I.flatten())).T,
                                     radius=radius)
-        return np.ma.masked_where(inside.reshape(g.lat_rho.shape)==False,
-                                  np.ones(g.lat_rho.shape))
+        return np.ma.masked_where(inside.reshape(self.lat_rho.shape),
+                                  np.ones(self.lat_rho.shape))
 
         
         

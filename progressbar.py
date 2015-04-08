@@ -47,7 +47,7 @@ class ProgressBar:
         t=time.process_time()
         delta=t-self.start
         togo=(delta/elapsed_iter)*(self.iterations-elapsed_iter)
-        self.prog_bar += '  [%d of %d, %.1f secs elapsed/%.1f secs estimate]' % \
+        self.prog_bar += '  [%d of %d, %.1f secs elapsed/%.1f secs ETA]' % \
             (elapsed_iter, self.iterations, delta, togo)
         if elapsed_iter > self.iterations:
             print("\r [ COMPLETED %d ITERATIONS IN %.1f SECS ] %s" % \
