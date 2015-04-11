@@ -18,8 +18,9 @@ from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 import pudb
 
-_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
-_ksize_range=(7,25)
+_up_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
+_down_scaling={"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
+_ksize_range=(7,15)
 
 def __mask_z_grid(z_data, src_depth, z_depth):
     """
@@ -46,7 +47,6 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     elif ksize > _ksize_range[1]:
         print("WARNING: nx or ny values are too large for stable OA")
         ksize=_ksize_range[1]
-    print(ksize)
     data=seapy.convolve_mask(data, ksize=ksize, copy=False)
     
     # Interpolate the field and return the result
@@ -57,7 +57,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
                        copy=False)
 
 def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap, 
-                    weight, nx, ny, mask, factor=1.0):
+                    weight, nx, ny, mask, up_factor=1.0, down_factor=1.0):
     """
     internal routine: 3D interpolation thread for parallel interpolation
     """
@@ -77,6 +77,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         # The first level is the bottom
         nrz[0,:,:]=rz[0,:,:]-500
         nrz[-1,:,:]=np.minimum(rz[-1,:,:]+50,0)
+        factor=down_factor
         # Fill in missing values where we have them from above (level above)
         for k in np.arange(data.shape[0]-2,-1,-1):
             idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k+1,:,:]))
@@ -86,7 +87,8 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         # The first level is the top
         nrz[0,:,:]=np.minimum(rz[0,:,:]+50,0)
         nrz[-1,:,:]=rz[-1,:,:]-500
-        # Fill in missing values where we have them from above (level below)
+        factor=up_factor
+        # Fill in missing values where we have them from below (level below)
         for k in np.arange(1,data.shape[0]):
             idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k-1,:,:]))
             data.mask[k,idx[0],idx[1]]=data.mask[k-1,idx[0],idx[1]]
@@ -101,7 +103,6 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     elif ksize > _ksize_range[1]:
         print("WARNING: nx or ny values are too large for stable OA")
         ksize=_ksize_range[1]
-    print(ksize)
     data=seapy.convolve_mask(data, ksize=ksize, copy=False)
 
     # Add upper and lower boundaries
@@ -141,9 +142,11 @@ def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
 
     # Interpolate
     u = __interp3_thread(rx, ry, rz, u, zx, zy, zz, pmap, 
-                        weight, nx, ny, mask, _scaling["u"])
+                        weight, nx, ny, mask, _up_scaling["u"],
+                        _down_scaling["u"])
     v = __interp3_thread(rx, ry, rz, v, zx, zy, zz, pmap, 
-                        weight, nx, ny, mask, _scaling["v"])
+                        weight, nx, ny, mask, _up_scaling["v"],
+                        _down_scaling["v"])
     
     # Rotate to destination (NOTE: ROMS angle is negative relative to "true")
     if za is not None:
@@ -230,7 +233,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
     records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asanyarray(records)
+                 if records is None else np.atleast_1d(records)
     for k in vmap:
         # Only interpolate the fields we want in the destination
         if ( vmap[k] not in ncout.variables ) or ( "rotate" in seapy.roms.fields[k]):
@@ -255,7 +258,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
               getattr(child_grid,"depth_"+grd),
               pmap["pmap"+grd], weight,
               nx, ny, getattr(child_grid,"mask_"+grd),
-              factor=_scaling[k]) 
+              up_factor=_up_scaling[k], down_factor=_down_scaling[k]) 
             for i in records), copy=False)
             if z_mask:
                 __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
@@ -293,14 +296,16 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
 
             if ( "ubar" in vmap ) and ( vmap["ubar"] in ncout.variables ):
                 # Create ubar and vbar
-                depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
+                # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
                 ncout.variables[vmap["ubar"]][j,:] = \
-                    np.sum(vel_u * depth, 1) / np.sum(depth, 1)
+                    np.sum(vel_u * child_grid.depth_u, axis=0) /  \
+                    np.sum(child_grid.depth_u, axis=0)
 
             if ( "vbar" in vmap ) and ( vmap["vbar"] in ncout.variables ):
-                depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
+                # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
                 ncout.variables[vmap["vbar"]][j,:] = \
-                    np.sum(vel_v * depth, 1) / np.sum(depth, 1)
+                    np.sum(vel_v * child_grid.depth_v, axis=0) /  \
+                    np.sum(child_grid.depth_v, axis=0)
 
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None, 
@@ -334,6 +339,10 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
+    cdlfile : string, optional
+        cdlfile to use for generating the z-file
+    dims : int, optional
+        number of dimensions to use for lat/lon arrays (default 2)
     pmap : numpy.ndarray, optional:
         use the specified pmap rather than compute it
     
@@ -350,8 +359,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     except AttributeError:
         src_time=netcdftime.utime(seapy.roms.default_epoch)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-        if records is None else np.asanyarray(records)
+        if records is None else np.atleast_1d(records)
 
+    # Load the grid
     if z_grid != None:
         z_grid = seapy.model.asgrid(z_grid)
     elif os.path.isfile(z_file):
@@ -452,7 +462,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             ncsrc = netCDF4.Dataset(src_file)
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asanyarray(records)
+                 if records is None else np.atleast_1d(records)
             try:
                 src_time=netcdftime.utime(ncsrc.variables[time].units)
             except AttributeError:
@@ -526,7 +536,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         ncsrc = netCDF4.Dataset(src_file)
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
-                 if records is None else np.asanyarray(records)
+                 if records is None else np.atleast_1d(records)
         try:
             src_time=netcdftime.utime(ncsrc.variables[time].units)
         except AttributeError:

@@ -360,11 +360,9 @@ def from_stations(station_file, bry_file, grid=None):
     # array whether the u[0] or v[1] dimensions need to be averaged
     sides={"north":[True,False], "south":[True,False], 
            "east":[False,True], "west":[False,True]}
-    delta_angle = seapy.adddim(sta_angle-grid_angle, sta_zeta.shape[0])
+    delta_angle = sta_angle-grid_angle
     sta_ubar, sta_vbar = seapy.rotate(sta_ubar,sta_vbar,delta_angle)
-    delta_angle = np.transpose(seapy.adddim(delta_angle, sta_u.shape[-1]),
-                  [1,2,0])
-    sta_u, sta_v = seapy.rotate(sta_u,sta_v,delta_angle)
+    sta_u, sta_v = seapy.rotate(sta_u,sta_v,delta_angle.T)
     for side in sides.keys():
         print(side)
         # 1) Zeta

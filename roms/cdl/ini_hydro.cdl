@@ -41,6 +41,9 @@ variables:
     h:long_name = "bathymetry at RHO-points" ;
     h:units = "meter" ;
     h:coordinates = "lon_rho lat_rho" ;
+	double angle(eta_rho, xi_rho) ;
+		angle:long_name = "angle between xi axis and east" ;
+		angle:units = "radian" ;
   double lon_rho(eta_rho, xi_rho) ;
     lon_rho:long_name = "longitude of RHO-points" ;
     lon_rho:units = "degree_east" ;

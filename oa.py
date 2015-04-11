@@ -12,7 +12,7 @@ from __future__ import print_function
 import numpy as np
 import seapy.oalib
 
-def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2,verbose=True):
+def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2,verbose=False):
     """
     Objective analysis interpolation for 2D fields
     
