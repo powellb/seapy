@@ -7,7 +7,7 @@ dimensions:
 	eta_rho = 130 ;
 	eta_u = 130 ;
 	eta_v = 129 ;
-	sst_time = 12 ;
+	sst_time = UNLIMITED ; // (0 currently)
 
 variables:
 	float sst_time(sst_time) ;
