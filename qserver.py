@@ -116,7 +116,7 @@ def execute(tasks, nthreads=2):
     -------
     None
     """
-    q = Queue.Queue()
+    q = Queue()
     for i in range(nthreads):
          t = process_thread(q)
          t.daemon = True
