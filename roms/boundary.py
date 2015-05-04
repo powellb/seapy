@@ -17,8 +17,6 @@ import netcdftime
 import textwrap
 from scipy import interpolate
 
-import pudb
-
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     Given a ROMS history, average, or climatology file, generate 

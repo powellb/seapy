@@ -17,8 +17,6 @@ import seapy
 from joblib import Parallel, delayed
 import matplotlib.path
 
-import pudb
-
 # Define the observation type
 obs_types = {
     1:"ZETA",
@@ -155,6 +153,7 @@ class obs:
                 self.meta = nc.variables["obs_meta"][:]
             else:
                 self.meta = self.value.copy() * 0
+            nc.close()
         else:
             if time: self.time = np.atleast_1d(time)
             if x: self.x = np.atleast_1d(x)
@@ -363,7 +362,7 @@ class obs:
         Build the survey structure from the observations
         """
         # Generate the sort list
-        self.sort = np.argsort(self.time)
+        self.sort = np.argsort(self.time,kind='mergesort')
 
         # Build the survey structure
         times, counts = np.unique(self.time[self.sort], return_counts=True)

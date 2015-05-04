@@ -16,7 +16,7 @@ import os
 import seapy
 from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
-import pudb
+from warnings import warn
 
 _up_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
 _down_scaling={"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
@@ -42,10 +42,10 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
     if ksize < _ksize_range[0]:
-        print("WARNING: nx or ny values are too small for stable OA")
+        warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[0]
     elif ksize > _ksize_range[1]:
-        print("WARNING: nx or ny values are too large for stable OA")
+        warn("nx or ny values are too large for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[1]
     data=seapy.convolve_mask(data, ksize=ksize, copy=False)
     
@@ -98,10 +98,10 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
     if ksize < _ksize_range[0]:
-        print("WARNING: nx or ny values are too small for stable OA")
+        warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[0]
     elif ksize > _ksize_range[1]:
-        print("WARNING: nx or ny values are too large for stable OA")
+        warn("nx or ny values are too large for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[1]
     data=seapy.convolve_mask(data, ksize=ksize, copy=False)
 
@@ -249,6 +249,12 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
               nx, ny, getattr(child_grid,"mask_"+grd)) 
             for i in records), copy=False)
         else:
+            try:
+                upscale=_up_scaling[k]
+                downscale=_down_scaling[k]
+            except:
+                upscale=1.0
+                downscale=1.0
             ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
                              (delayed(__interp3_thread)( 
               getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -258,7 +264,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
               getattr(child_grid,"depth_"+grd),
               pmap["pmap"+grd], weight,
               nx, ny, getattr(child_grid,"mask_"+grd),
-              up_factor=_up_scaling[k], down_factor=_down_scaling[k]) 
+              up_factor=upscale, down_factor=downscale) 
             for i in records), copy=False)
             if z_mask:
                 __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
@@ -362,7 +368,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         if records is None else np.atleast_1d(records)
 
     # Load the grid
-    if z_grid != None:
+    if z_grid is not None:
         z_grid = seapy.model.asgrid(z_grid)
     elif os.path.isfile(z_file):
         z_grid = seapy.model.asgrid(z_file)

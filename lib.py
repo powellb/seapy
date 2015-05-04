@@ -17,6 +17,7 @@ from scipy import ndimage
 import os
 import re
 import datetime
+import itertools
 
 secs2day = 1.0/86400.0
 
@@ -265,5 +266,59 @@ def today2day(epoch=datetime.datetime(2000,1,1)):
     numdays : scalar
     """
     return date2day(datetime.datetime.utcnow(),epoch)
+
+def primes(number):
+    """
+    Return a list of primes less than or equal to a given value.
+
+    This code was taken from "Cooking with Python, Part 2" by Martelli, et al.
+    
+    <http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last>
+
+    Parameters
+    ----------
+    number : int
+        Find prime values up to this value
+
+    Returns
+    -------
+    primes : ndarray
+    """
+    def __erat2( ):
+        D = {  }
+        yield 2
+        for q in itertools.islice(itertools.count(3), 0, None, 2):
+            p = D.pop(q, None)
+            if p is None:
+                D[q*q] = q
+                yield q
+            else:
+                x = p + q
+                while x in D or not (x&1):
+                    x += p
+                D[x] = p
+                
+    return np.array(list(itertools.takewhile(lambda p: p<number, __erat2())))
+
+def godelnumber(x):
+    """
+    Convert the columns of x into godel numbers. If x is MxN, return an Mx1 
+    vector. The Godel number is prime**x
+    
+    Parameters
+    ----------
+    x : ndarray,
+        Values to convert into Godel number(s)
+    
+    Returns
+    -------
+    godel : ndarray
+    """
+    x=np.atleast_2d(x)
+    if x.ndim>1:
+        primevals=primes(x.shape[1]*10)[:x.shape[1]]
+        return(np.prod(primevals**x,axis=1))
+    else:
+        return 2.0**x
 
 pass

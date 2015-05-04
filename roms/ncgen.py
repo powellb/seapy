@@ -13,6 +13,7 @@ from datetime import datetime
 from seapy.roms import lib
 import seapy.cdl_parser as cdl_parser
 import netcdftime
+from warnings import warn
 
 """
     Module variables
@@ -32,27 +33,32 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None):
     if attr is None:
         attr={}
     # Create the file
-    _nc=netCDF4.Dataset(filename, "w", format=_format)
-    # Loop over the dimensions and add them
-    for dim in dims.keys():
-        _nc.createDimension(dim, dims[dim])
-    # Loop over the variables and add them
-    for var in vars:
-        if var["dims"][0]:
-            nvar = _nc.createVariable( var["name"], var["type"], var["dims"])
-        else:
-            nvar = _nc.createVariable( var["name"], var["type"])
-        if "attr" in var:
-            for key in var["attr"]:
-                setattr(nvar, key, var["attr"][key])
-    # Add global attributes
-    for a in attr:
-        setattr(_nc, a, attr[a])
-    _nc.author = os.getlogin()
-    _nc.history = datetime.now().strftime("Created on %a, %B %d, %Y at %H:%M")
-    if title != None:
-        _nc.title = title
-    _nc.close()
+    if not os.path.isfile(filename):
+        _nc=netCDF4.Dataset(filename, "w", format=_format)
+        # Loop over the dimensions and add them
+        for dim in dims.keys():
+            _nc.createDimension(dim, dims[dim])
+        # Loop over the variables and add them
+        for var in vars:
+            if var["dims"][0]:
+                nvar = _nc.createVariable( var["name"], var["type"], 
+                                           var["dims"])
+            else:
+                nvar = _nc.createVariable( var["name"], var["type"])
+            if "attr" in var:
+                for key in var["attr"]:
+                    setattr(nvar, key, var["attr"][key])
+        # Add global attributes
+        for a in attr:
+            setattr(_nc, a, attr[a])
+        _nc.author = os.getlogin()
+        _nc.history = datetime.now().strftime( \
+                 "Created on %a, %B %d, %Y at %H:%M")
+        if title != None:
+            _nc.title = title
+        _nc.close()
+    else:
+        warn(filename+" already exists. Using existing definition")
     return netCDF4.Dataset(filename, "a")
     pass
 
