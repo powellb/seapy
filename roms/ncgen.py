@@ -41,7 +41,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None):
         # Loop over the variables and add them
         for var in vars:
             if var["dims"][0]:
-                nvar = _nc.createVariable( var["name"], var["type"], 
+                nvar = _nc.createVariable( var["name"], var["type"],
                                            var["dims"])
             else:
                 nvar = _nc.createVariable( var["name"], var["type"])
@@ -54,7 +54,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None):
         _nc.author = os.getlogin()
         _nc.history = datetime.now().strftime( \
                  "Created on %a, %B %d, %Y at %H:%M")
-        if title != None:
+        if title is not None:
             _nc.title = title
         _nc.close()
     else:
@@ -81,7 +81,7 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho):
         dims["s_rho"] = s_rho
     if "s_w" in dims:
         dims["s_w"] = s_rho+1
-    
+
     return dims
 
 def _set_time_ref(vars, timevar, timebase, cycle=None):
@@ -94,15 +94,15 @@ def _set_time_ref(vars, timevar, timebase, cycle=None):
         for nvar in vars:
             if nvar["name"] == tvar:
                 if "units" in nvar["attr"]:
-                    t = netcdftime.utime(nvar["attr"]["units"])                
+                    t = netcdftime.utime(nvar["attr"]["units"])
                     nvar["attr"]["units"] = "%s since %s" % ( t.units, timebase )
                 else:
                     nvar["attr"]["units"] = "days since %s" % ( timebase )
-                if cycle != None:
+                if cycle is not None:
                     nvar["attr"]["cycle_length"] = cycle
     return vars
-    
-def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho, 
+
+def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
                          timebase=None, title="ROMS"):
     """
         internal method: Generic file creator that uses ocean_time
@@ -112,7 +112,7 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    if timebase != None:
+    if timebase is not None:
         vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
@@ -121,11 +121,11 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
     # Return the new file
     return _nc
 
-def create_river(filename, nriver=1, s_rho=5, 
+def create_river(filename, nriver=1, s_rho=5,
                 timebase=datetime(2000,1,1), title="My River"):
     """
     Create a new, blank river file
-    
+
     Parameters
     ----------
     filename : string
@@ -142,11 +142,11 @@ def create_river(filename, nriver=1, s_rho=5,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_rivers.cdl")
-    
+
     # Fill in the appropriate river values
     dims["river"]=nriver
     dims["s_rho"]=s_rho
@@ -154,7 +154,7 @@ def create_river(filename, nriver=1, s_rho=5,
 
     # Create the river file
     _nc = ncgen(filenamename, dims=dims, vars=vars, attr=attr, title=title)
-    
+
     # Return the new file
     return _nc
 
@@ -162,7 +162,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, title="My Grid"):
     """
     Create a new, blank grid file
 
-    
+
     Parameters
     ----------
     filename : string
@@ -179,21 +179,21 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, title="My Grid"):
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "roms_grid.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    
+
     # Create the grid file
     _nc = ncgen(filenamename, dims=dims, vars=vars, attr=attr, title=title)
 
     # Return the new file
     return _nc
-    
-def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1, 
+
+def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
                  timebase=datetime(2000,1,1), title="My Adsen"):
     """
     Create a new adjoint sensitivity file
@@ -216,13 +216,13 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Create the general file
     return _create_generic_file(filename, "adsen.cdl", eta_rho, xi_rho, s_rho,
                                 timebase, title)
 
-def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1, 
+def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
                  timebase=datetime(2000,1,1), title="My BRY"):
     """
     Create a bry forcing file
@@ -245,7 +245,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "bry_unlimit.cdl")
@@ -259,8 +259,8 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     # Return the new file
     return _nc
-    
-def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, 
+
+def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
                  timebase=datetime(2000,1,1), title="My CLIM"):
     """
     Create a climatology forcing file
@@ -286,7 +286,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "clm_ts.cdl")
@@ -295,7 +295,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     times=("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
     for n in times:
-        dims[n] = ntimes 
+        dims[n] = ntimes
     vars = _set_time_ref(vars, times, timebase)
 
     # Create the file
@@ -303,8 +303,8 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
 
     # Return the new file
     return _nc
-    
-def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1, 
+
+def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
                  timebase=datetime(2000,1,1), title="My Forcing"):
     """
     Create a bulk flux forcing file
@@ -327,7 +327,7 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_bulk.cdl")
@@ -342,7 +342,7 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
-def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, cycle=None, 
+def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, cycle=None,
                  timebase=datetime(2000,1,1), title="My Flux"):
     """
     Create a surface flux forcing file
@@ -370,7 +370,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, cycle=No
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_fluxclm.cdl")
@@ -379,7 +379,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, cycle=No
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     times=("srf_time", "shf_time", "swf_time", "sss_time")
     for n in times:
-        dims[n] = ntimes 
+        dims[n] = ntimes
     vars = _set_time_ref(vars, times, timebase)
 
     # Create the file
@@ -388,7 +388,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1, cycle=No
     # Return the new file
     return _nc
 
-def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None, 
+def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
                  timebase=datetime(2000,1,1), title="My Qcorrection"):
     """
     Create a Q Correction forcing file
@@ -413,7 +413,7 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_qcorr.cdl")
@@ -428,7 +428,7 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     # Return the new file
     return _nc
 
-def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None, 
+def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
                  timebase=datetime(2000,1,1), title="My Winds"):
     """
     Create a surface wind stress forcing file
@@ -453,7 +453,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_windstress.cdl")
@@ -468,7 +468,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     # Return the new file
     return _nc
 
-def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1, 
+def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
                  timebase=datetime(2000,1,1), title="My Tides"):
     """
     Create a barotropic tide forcing file
@@ -493,7 +493,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_tides.cdl")
@@ -508,7 +508,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
     # Return the new file
     return _nc
 
-def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1, 
+def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
                  timebase=datetime(2000,1,1), title="My Ini"):
     """
     Create an initial condition file
@@ -531,7 +531,7 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "ini_hydro.cdl")
@@ -569,10 +569,10 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     Returns
     -------
     nc, netCDF4 object
-    
+
 
     """
-                 
+
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_obs.cdl")
 
@@ -583,7 +583,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     # Set the provenance values in the global attributes
     if provenance is not None:
         attr["obs_provenance"] = str(provenance)
-    
+
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)
 
@@ -611,9 +611,9 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
-                 
+
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_obs_ray.cdl")
 
@@ -623,7 +623,7 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
 
     # Set the provenance values in the global attributes
     attr["obs_provenance"] = provenance
-    
+
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)
 
@@ -655,7 +655,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_b.cdl")
@@ -695,7 +695,7 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_f.cdl")
@@ -733,7 +733,7 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_i.cdl")
@@ -771,7 +771,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_m.cdl")
@@ -787,7 +787,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_zlevel(filename, lat=10, lon=10, depth=1,
-                  timebase=datetime(2000,1,1), 
+                  timebase=datetime(2000,1,1),
                   title="Zlevel Model Data",cdlfile=None,dims=2):
     """
     Create an time varying model standard deviation file
@@ -814,14 +814,14 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     Returns
     -------
     nc, netCDF4 object
-    
+
     """
     if cdlfile==None:
         if dims==1:
             cdlfile = "zlevel_1d.cdl"
         else:
             cdlfile = "zlevel_2d.cdl"
-        
+
     # Generate the Structure
     dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + cdlfile)
 
@@ -839,5 +839,5 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
 
 if __name__ == "__main__":
     grid = create_zlevel("test.nc")
-                                         
-    
+
+

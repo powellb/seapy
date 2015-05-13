@@ -2,13 +2,13 @@
 """
   Wrap your code with a time limit to prevent something from taking too long
   (getting into an infinite loop, etc.)
-    
+
   **Examples**
-  
+
   >>> from timeout import timeout
   >>> with timeout(seconds=3):
   >>>     do something
-  
+
   Taken and slightly modified from Thomas Ahle at:
   <http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish>
 
@@ -25,7 +25,7 @@ class TimeoutError(Exception):
 class timeout:
     def __init__(self, seconds=1, minutes=None, error_message='Timeout'):
         self.seconds = seconds
-        if minutes != None:
+        if minutes is not None:
             self.seconds = minutes*60
         self.error_message = error_message
     def handle_timeout(self, signum, frame):
@@ -35,5 +35,5 @@ class timeout:
         signal.alarm(self.seconds)
     def __exit__(self, type, value, traceback):
         signal.alarm(0)
-        
-        
+
+

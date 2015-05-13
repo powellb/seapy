@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
   map.py
-  
+
   State Estimation and Analysis for PYthon
 
   Utilities for dealing with basemap plotting. These routnes are simply
@@ -10,9 +10,9 @@
 
     Examples
     -------
-    
+
     Assume you have longitude, latitude, and sst values:
-    
+
     >>> m=seapy.map(llcrnrlon=lon[0,0],llcrnrlat=lat[0,0],
     >>>     urcrnrlon=lon[-1,-1],urcrnrlat=lat[-1,-1],dlat=2,dlon=2)
     >>> m.pcolor(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
@@ -22,8 +22,8 @@
     >>> m.ax.patch.set_alpha(1)
     >>> m.fig.patch.set_alpha(0.0)
     >>> m.fig.savefig("sst.png",dpi=100)
-    
-    
+
+
   Written by Brian Powell on 9/4/14
   Copyright (c)2013 University of Hawaii under the BSD-License.
 """
@@ -35,13 +35,13 @@ from mpl_toolkits.basemap import Basemap
 import os
 
 class map(object):
-    def __init__(self, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180, 
+    def __init__(self, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
                  urcrnrlat=40, figsize=(8.,6.), dlat=1, dlon=2):
         """
         map class for abstracting the basemap methods for quick and easy creation
         of geographically referenced data figures
-    
-    
+
+
         Parameters
         ----------
         llcrnrlon: float, optional
@@ -58,15 +58,15 @@ class map(object):
             how often to mark latitude lines
         dlon: float, optional
             how often to mark longitude lines
-        
+
         Returns
         -------
         None
-    
+
         """
         self.basemap = Basemap(llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
                                urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
-                               projection='lcc', 
+                               projection='lcc',
                                lat_0=urcrnrlat-(urcrnrlat-llcrnrlat)/2.,
                                lon_0=urcrnrlon-(urcrnrlon-llcrnrlon)/2.,
                                resolution='c', area_thresh=0.0)
@@ -80,10 +80,10 @@ class map(object):
         """
         Create a new figure for plotting
         """
-        if self.fig != None:
+        if self.fig is not None:
             self.ax.set_axis_off()
             plt.close(self.fig)
-            
+
         self.fig = plt.figure(figsize=self.figsize)
         self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
         self.basemap.drawmapboundary(fill_color="aqua")
@@ -94,11 +94,11 @@ class map(object):
         self.basemap.drawparallels(np.arange(self.basemap.llcrnrlat,
             self.basemap.urcrnrlat,self.dlat),color="0.5",
             linewidth=0.25, dashes=[1,1,0.1,1], labels=[1,0,0,0],fontsize=12)
-        
+
     def land(self, color="black"):
         """
         Draw the land mask
-        
+
         Parameters
         ----------
         color: string, optional
@@ -107,11 +107,11 @@ class map(object):
         self.basemap.drawcoastlines()
         self.basemap.drawcountries()
         self.basemap.fillcontinents(color=color)
-            
+
     def zoom(self, xrange, yrange):
         """
         zoom the figure to a specified lat, lon range
-        
+
         Parameters
         ----------
         xrange: array
@@ -127,7 +127,7 @@ class map(object):
     def pcolor(self, lon, lat, data, **kwargs):
         """
         pcolor field data onto our geographic plot
-        
+
         Parameters
         ----------
         lon: array
@@ -151,7 +151,7 @@ class map(object):
     def colorbar(self, label=None, cticks=None, **kwargs):
         """
         Display a colorbar on the figure
-        
+
         Parameters
         ----------
         label: string, optional
@@ -163,7 +163,7 @@ class map(object):
         self.cb = plt.colorbar(self.pc, cax=self.cax, orientation="horizontal",
                                 ticks=cticks)
         self.basemap.set_axes_limits(ax=self.ax)
-        if label != None:
+        if label is not None:
             self.cb.set_label(label)
-        
-        
+
+

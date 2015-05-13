@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
   lib.py
-  
+
   State Estimation and Analysis for PYthon
 
   Library of utilities for general seapy module, imported into the namespace
@@ -21,7 +21,8 @@ import itertools
 
 secs2day = 1.0/86400.0
 
-def adddim(fld,size=1):
+
+def adddim(fld, size=1):
     """
     replicate a field and add a new first dimension with given size
 
@@ -45,7 +46,7 @@ def adddim(fld,size=1):
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
     Convolve data over the missing regions of a mask
-    
+
     Parameters
     ----------
     data : masked array_like
@@ -68,7 +69,7 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         raise AttributeError("Can only convolve 2- or 3-D fields")
     if ksize < 3:
         raise ValueError("ksize must be greater than or equal to 3")
-        
+
     if kernel is None:
         center=np.round(ksize/2)
         kernel=np.ones([ksize,ksize])
@@ -77,19 +78,19 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     # Convolve the mask
     msk=np.ma.getmaskarray(fld)
     if fld.ndim == 2:
-        count=ndimage.convolve((~msk).view(np.int8), kernel, 
+        count=ndimage.convolve((~msk).view(np.int8), kernel,
                                mode="constant", cval=0.0)
         nfld=ndimage.convolve(fld.data*(~msk).view(np.int8), kernel,
                                mode="constant", cval=0.0)
     else:
         kernel=np.expand_dims(kernel, axis=3)
-        count=np.transpose( ndimage.convolve( 
+        count=np.transpose( ndimage.convolve(
                 (~msk).view(np.int8).transpose(1,2,0), kernel,
                 mode="constant", cval=0.0),(2,0,1))
-        nfld=np.transpose( ndimage.convolve( 
+        nfld=np.transpose( ndimage.convolve(
             (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel,
             mode="constant", cval=0.0),(2,0,1))
-        
+
     lst=np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]
@@ -98,7 +99,7 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
 def earth_distance(lon1, lat1, lon2, lat2):
     """
     Compute the distance between lat/lon points
-    
+
     Parameters
     ----------
     lon1 : array_like or scalar
@@ -113,18 +114,18 @@ def earth_distance(lon1, lat1, lon2, lat2):
     Returns
     -------
     distance : array or scalar of distance in meters
-    
+
     """
     epsilon = 0.99664718940443;  # This is Sqrt(1-epsilon^2)
     radius = 6378137; # Radius in meters
     d2r = np.pi/180.0
-    
+
     lon1 = np.asanyarray(lon1)
     lat1 = np.asanyarray(lat1)
     lon2 = np.asanyarray(lon2)
     lat2 = np.asanyarray(lat2)
-    
-    # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for 
+
+    # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for
     # working with geocentric where lat_gc = atan(epsilon * tan(lat))
     tan_lat = epsilon * np.tan(d2r*lat1.astype(np.float64))
     cos_lat = 1.0 / np.sqrt(1.0+tan_lat**2)
@@ -160,7 +161,7 @@ def rotate(u, v, angle):
     ca=np.cos(angle)
 
     return u*ca - v*sa, u*sa + v*ca
-    
+
 def vecfind(a, b, tolerance=0):
     """
     Find all occurences of b in a within the given tolerance and return
@@ -179,7 +180,7 @@ def vecfind(a, b, tolerance=0):
     -------
     index_a, index_b : arrays of indices for each vector where values are equal,
             such that a[index_a] == b[index_b]
-    
+
     """
     a=np.asanyarray(a)
     b=np.asanyarray(b)
@@ -192,7 +193,7 @@ def vecfind(a, b, tolerance=0):
             index_a.append(np.where(d==np.min(d))[0][0])
             index_b.append(i)
     return index_a, index_b
-    
+
 def list_files(path=".", regex=".*"):
     """
     list all file names in the given path that conform to the regular
@@ -213,10 +214,10 @@ def list_files(path=".", regex=".*"):
     files=[]
     prog=re.compile(regex)
     for file in os.listdir(path):
-        if prog.search(file) != None:
+        if prog.search(file) is not None:
             files.append(file)
     return files
-    
+
 def day2date(day=0,epoch=datetime.datetime(2000,1,1)):
     """
     Return a datetime object from the number of days since the epoch
@@ -272,7 +273,7 @@ def primes(number):
     Return a list of primes less than or equal to a given value.
 
     This code was taken from "Cooking with Python, Part 2" by Martelli, et al.
-    
+
     <http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last>
 
     Parameters
@@ -297,19 +298,19 @@ def primes(number):
                 while x in D or not (x&1):
                     x += p
                 D[x] = p
-                
+
     return np.array(list(itertools.takewhile(lambda p: p<number, __erat2())))
 
 def godelnumber(x):
     """
-    Convert the columns of x into godel numbers. If x is MxN, return an Mx1 
+    Convert the columns of x into godel numbers. If x is MxN, return an Mx1
     vector. The Godel number is prime**x
-    
+
     Parameters
     ----------
     x : ndarray,
         Values to convert into Godel number(s)
-    
+
     Returns
     -------
     godel : ndarray
@@ -320,5 +321,32 @@ def godelnumber(x):
         return(np.prod(primevals**x,axis=1))
     else:
         return 2.0**x
+
+def unique_rows(x):
+    """
+    Convert rows into godelnumbers and find the rows that are unique using
+    np.unique
+
+    Parameters
+    ----------
+    x : ndarray or tuple,
+        array of elements to find unique value. If columns are greater
+        than 1, then the columns are combined into a single Godel number.
+        If a tuple of arrays are passed, they are combined.
+
+    Returns
+    -------
+    vals : ndarray,
+        unique values
+    idx : ndarray,
+        Indices of the unique values
+    """
+    if isinstance(x,tuple):
+        x=np.vstack(x).T
+    else:
+        x=np.atleast_1d(x)
+    vals, idx = np.unique(godelnumber(x.astype(int)),return_index=True)
+
+    return vals, idx
 
 pass

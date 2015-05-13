@@ -15,7 +15,7 @@ def cdl_parser(filename):
     """
     Given a netcdf-compliant CDL file, parse it to determine the structure:
     dimensions, variables, attributes, and global attributes
-    
+
     Parameters
     ----------
     filename : string
@@ -25,13 +25,12 @@ def cdl_parser(filename):
     -------
     dims, vars, attr: dict
         dictionaries description dimensions, variables, and attributes
-    
+
     """
     dim_pat=re.compile(r"\s*(\w+)\s*=\s*(\w*)\s*;")
     var_pat=re.compile(r"\s*(\w+)\s*(\w+)\({0,1}([\w\s,]*)\){0,1}\s*;")
     attr_pat=re.compile(r"\s*(\w+):(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
     global_attr_pat=re.compile(r"\s*:(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
-    mode=None
     dims=dict()
     attr=dict()
     vars=list()
@@ -42,7 +41,7 @@ def cdl_parser(filename):
         # Check if this is a dimension definition line. If it is, add
         # the dimension to the definition
         parser = dim_pat.match(line)
-        if parser != None:
+        if parser is not None:
             tokens = parser.groups()
             if tokens[1].upper() == "UNLIMITED":
                 dims[tokens[0]]=0
@@ -53,10 +52,10 @@ def cdl_parser(filename):
         # Check if this is a variable definition line. If it is, add
         # the variable to the definition
         parser = var_pat.match(line)
-        if parser != None:
+        if parser is not None:
             tokens = parser.groups()
-            nvar = { "name": tokens[1], 
-                     "type": types[tokens[0]], 
+            nvar = { "name": tokens[1],
+                     "type": types[tokens[0]],
                      "dims": tokens[2].strip().split(", ") }
             vars.append(nvar)
             vcount[tokens[1]]=len(vars)-1
@@ -64,7 +63,7 @@ def cdl_parser(filename):
 
         # If this is an attribute, add the info to the appropriate variable
         parser = attr_pat.match(line)
-        if parser != None:
+        if parser is not None:
             tokens = parser.groups()
             if "attr" not in vars[vcount[tokens[0]]]:
                 vars[vcount[tokens[0]]]["attr"] = dict()
@@ -73,7 +72,7 @@ def cdl_parser(filename):
 
         # If this is a global attribute, add the info
         parser = global_attr_pat.match(line)
-        if parser != None:
+        if parser is not None:
             tokens = parser.groups()
             attr[tokens[0]]=tokens[1]
             continue

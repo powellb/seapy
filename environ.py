@@ -11,7 +11,7 @@ import os
 
 class options(object):
     pass
-    
+
 opt = options()
 for key in os.environ.keys():
     setattr(opt,key,os.environ[key])

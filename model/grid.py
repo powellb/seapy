@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
   grid
-  
+
   This module handles general model grid information, whether from ROMS or
   other models; however, it is mostly geared towards ROMS
 
@@ -24,17 +24,17 @@ def asgrid(grid):
     Return either an existing or new grid object. This decorator will ensure that
     the variable being used is a seapy.model.grid. If it is not, it will attempt
     to construct a new grid with the variable passed.
-    
+
     Parameters
     ----------
     grid: string or model.seapy.grid
         Input variable to cast. If it is already a grid, it will return it;
         otherwise, it attempts to construct a new grid.
-        
+
     Returns
     -------
     seapy.model.grid
-        
+
     """
     if grid is None:
         raise AttributeError("No grid was specified")
@@ -42,16 +42,16 @@ def asgrid(grid):
         return grid
     else:
         return seapy.model.grid(filename=grid)
-        
+
 class grid:
     def __init__(self, filename=None, lat=None, lon=None, z=None,
                  depths=True, cgrid=False):
         """
-            Class to wrap around a numerical model grid for oceanography. 
+            Class to wrap around a numerical model grid for oceanography.
             It attempts to track latitude, longitude, z, and other
             parameters. A grid can be constructed by specifying a filename or
             by specifying lat, lon, and z.
-            
+
             Parameters
             ----------
             filename : filename to load to build data structure [optional]
@@ -59,7 +59,7 @@ class grid:
             lat     : latitude values of grid
             lon     : longitude values of grid
             z       : z-level depths of grid
-            
+
             Options
             -------
             depths  : Set the depths of the grid [True]
@@ -68,11 +68,11 @@ class grid:
         self.filename = filename
         self.cgrid = cgrid
 
-        if self.filename != None:
+        if self.filename is not None:
             self._initfile()
             self._isroms = True if \
-              (len(list(set(("s_rho","pm","pn","theta_s","theta_b", 
-                            "vtransform", "vstretching")).intersection( 
+              (len(list(set(("s_rho","pm","pn","theta_s","theta_b",
+                            "vtransform", "vstretching")).intersection(
                             set(self.__dict__)))) > 0) else False
             self.cgrid = True if self._isroms else self.cgrid
         else:
@@ -89,20 +89,20 @@ class grid:
         if self._nc is not None:
             self._nc.close()
             self._nc = None
-            
+
     def _initfile(self):
         """
         Using an input file, try to load as much information
         as can be found in the given file.
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None : sets attributes in grid
-        
+
         """
         # Define a dictionary to go through and convert netcdf variables
         # to internal class attributes
@@ -149,7 +149,7 @@ class grid:
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None : sets attributes in grid
@@ -158,18 +158,18 @@ class grid:
         if ("lat_rho" or "lon_rho") not in self.__dict__:
             raise AttributeError(
                 "grid does not have attribute lat_rho or lon_rho")
-        
+
         # Check that it is formatted into 2-D
         self.spatial_dims=self.lat_rho.ndim
         if self.lat_rho.ndim==1 and self.lon_rho.ndim==1:
-            [self.lon_rho, self.lat_rho] = np.meshgrid(self.lon_rho, 
+            [self.lon_rho, self.lat_rho] = np.meshgrid(self.lon_rho,
                                                        self.lat_rho)
-        
+
         # Compute the dimensions
         self.ln = int(self.lat_rho.shape[0])
         self.lm = int(self.lat_rho.shape[1])
         self.shape = (self.ln, self.lm)
-            
+
     def __repr__(self):
         return str(self)
 
@@ -179,15 +179,15 @@ class grid:
                 "C-Grid" if self.cgrid else "A-Grid",
                 "S-level" if self._isroms else "Z-Level"),
             "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
-        
+
     def set_dims(self):
         """
         Compute the dimension attributes of the grid based upon the information provided.
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None : sets attributes in grid
@@ -209,7 +209,7 @@ class grid:
                 self.n = int(self.z.size)
         else:
             self.n = int(self.n)
-            
+
         # Generate the u- and v-grids
         if ("lat_u" or "lon_u") not in self.__dict__:
             if self.cgrid:
@@ -236,7 +236,7 @@ class grid:
                     self.mask_v = self.mask_rho[1:,:] * self.mask_rho[0:-1,:]
                 else:
                     self.mask_v = self.mask_rho
-        
+
         # Compute the resolution
         if "pm" in self.__dict__:
             self.dm = 1.0/self.pm
@@ -256,7 +256,7 @@ class grid:
                                       self.lon_rho[0:-1,:],
                                       self.lat_rho[0:-1,:] ).astype(np.float32)
             self.dn[-1,:] = self.dn[-2,:]
-        
+
         # Compute the Coriolis
         if "f" not in self.__dict__:
             omega=2*np.pi/86400;
@@ -264,30 +264,30 @@ class grid:
 
         # Set the grid index coordinates
         self.I, self.J=np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
-        
+
     def set_mask_h(self, fld=None):
         """
         Compute the mask and h array from a z-level model
-        
+
         Parameters
         ----------
         fld : np.array
             3D array of values (such as temperature) to analyze to determine
             where the bottom and land lie
-        
+
         Returns
         -------
         None : sets mask and h attributes in grid
-        
+
         """
-        if fld is None and self._nc != None:
+        if fld is None and self._nc is not None:
             # Try to load a field from the file
             for f in ["temp","temperature"]:
                 if f in self._nc.variables:
                     fld = self._nc.variables[f][0,:,:,:]
                     fld = np.ma.array(fld, mask=np.isnan(fld))
                     break
-        
+
         # If we don't have a field to examine, then we cannot compute the
         # mask and bathymetry
         if fld is None:
@@ -301,16 +301,16 @@ class grid:
             self.h[water] = self.z[k]
             if k==0:
                 self.mask_rho[water] = 1.0
-        
-        
+
+
     def set_depth(self):
         """
         Compute the depth of each cell for the model grid.
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None : sets depth attributes in grid
@@ -318,7 +318,7 @@ class grid:
         if self._isroms:
             if "s_rho" not in self.__dict__:
                 self.s_rho, self.cs_r = seapy.roms.stretching(
-                    self.vstretching, self.theta_s, self.theta_b, 
+                    self.vstretching, self.theta_s, self.theta_b,
                     self.hc, self.n)
             self.depth_rho = seapy.roms.depth(
                 self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
@@ -343,11 +343,11 @@ class grid:
     def set_thickness(self):
         """
         Compute the thickness of each cell for the model grid.
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None : sets thick attributes in grid
@@ -356,7 +356,7 @@ class grid:
             self.set_dims()
         if self._isroms:
             s_w, cs_w = seapy.roms.stretching(
-                self.vstretching, self.theta_s, self.theta_b, self.hc, 
+                self.vstretching, self.theta_s, self.theta_b, self.hc,
                 self.n, w_grid=True)
             self.thick_rho = seapy.roms.thickness(
                 self.vtransform, self.h, self.hc, s_w, cs_w)
@@ -372,7 +372,7 @@ class grid:
             else:
                 w[-1]=d[-1]
                 w[0:-1]=d[0:-1]-d[1:]
-            
+
             self.thick_rho = np.kron( np.kron( w,
                                     np.ones(self.lon_rho.shape[1])),
                                     np.ones(self.lon_rho.shape[0])).reshape(
@@ -385,7 +385,7 @@ class grid:
                 self.thick_u = self.thick_rho
                 self.thick_v = self.thick_rho
 
-        
+
     def plot_trace(self, basemap, **kwargs):
         """
         Trace the boundary of the grid onto a map projection
@@ -396,29 +396,29 @@ class grid:
             The basemap instance to use for drawing
         **kwargs: optional
             Arguments to pass to the plot routine
-        
+
         Returns
         -------
         None
         """
-        lon=np.concatenate([self.lon_rho[0,:], self.lon_rho[:,-1], 
+        lon=np.concatenate([self.lon_rho[0,:], self.lon_rho[:,-1],
                             self.lon_rho[-1,::-1], self.lon_rho[::-1,0]])
-        lat=np.concatenate([self.lat_rho[0,:], self.lat_rho[:,-1], 
+        lat=np.concatenate([self.lat_rho[0,:], self.lat_rho[:,-1],
                             self.lat_rho[-1,::-1], self.lat_rho[::-1,0]])
         x,y=basemap(lon,lat)
         basemap.plot(x,y,**kwargs)
-        
+
     def to_netcdf(self, nc):
         """
         Write all available grid information into the records present in the netcdf file.
         This is used to pre-fill boundary, initial, etc. files that require some of the
         grid information.
-    
+
         Parameters
         ----------
-        nc : netCDF4 
+        nc : netCDF4
             File to fill all known records from the grid information
-    
+
         Returns
         -------
         None
@@ -426,19 +426,19 @@ class grid:
         for var in nc.variables:
             if hasattr(self,var.lower()):
                 nc.variables[var][:]=getattr(self,var.lower())
-    
+
     def ij(self, points, asint=False):
         """
-        Compute the fractional i,j indices of the grid from a 
+        Compute the fractional i,j indices of the grid from a
         set of lat, lon points.
-    
+
         Parameters
         ----------
         points : list of tuples
             longitude, latitude points to compute i,j indicies
         asint : bool, optional,
             if True, return the integer index rather than fractional
-            
+
         Returns
         -------
         out : tuple of ndarray (with netcdf-type indexing),
@@ -449,23 +449,23 @@ class grid:
         >>> a = [(-158, 20), (-160.5, 22.443)]
         >>> idx = g.ij(a)
         """
-        
+
         # Interpolate the lat/lons onto the I, J
         xgrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
                          self.I.ravel(),points,method="linear")
         ygrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
                          self.J.ravel(),points,method="linear")
-        
+
         if asint:
             return (np.floor(ygrid).astype(int), np.floor(xgrid).astype(int))
         else:
             return (ygrid,xgrid)
-        
+
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """
         Create an np.masked_array of the same shape as the grid with values
         masked if they are not within the given polygon vertices
-        
+
         Parameters
         ----------
         vertices: list of tuples,
@@ -473,7 +473,7 @@ class grid:
         lat_lon : bool, optional,
             If True, the vertices are a list of lon, lat points rather
             than indexes
-            
+
         Returns
         -------
         mask : np.masked_array
@@ -489,7 +489,7 @@ class grid:
         if lat_lon:
             points = self.ij(vertices,asint=True)
             vertices = list(zip(points[0],points[1]))
-        
+
         # Now, with grid coordinates, test the grid against the vertices
         poly=matplotlib.path.Path(vertices)
         inside=poly.contains_points(np.vstack((self.J.flatten(),
@@ -498,5 +498,5 @@ class grid:
         return np.ma.masked_where(inside.reshape(self.lat_rho.shape),
                                   np.ones(self.lat_rho.shape))
 
-        
-        
+
+
