@@ -530,7 +530,6 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
     """
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
-
         src_grid = seapy.model.grid(src_file)
         ncsrc = netCDF4.Dataset(src_file)
         time = seapy.roms.get_timevar(ncsrc)

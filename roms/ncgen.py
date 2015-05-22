@@ -116,7 +116,7 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
         vars = _set_time_ref(vars, "ocean_time", timebase)
 
     # Create the file
-    _nc = ncgen(filenamename, dims=dims, vars=vars, attr=attr, title=title)
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)
 
     # Return the new file
     return _nc
@@ -153,7 +153,7 @@ def create_river(filename, nriver=1, s_rho=5,
     vars = _set_time_ref(vars, "river_time", timebase)
 
     # Create the river file
-    _nc = ncgen(filenamename, dims=dims, vars=vars, attr=attr, title=title)
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)
 
     # Return the new file
     return _nc
@@ -188,7 +188,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, title="My Grid"):
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
 
     # Create the grid file
-    _nc = ncgen(filenamename, dims=dims, vars=vars, attr=attr, title=title)
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, title=title)
 
     # Return the new file
     return _nc
