@@ -94,7 +94,7 @@ class map(object):
         self.fig = None
         self.new_figure()
 
-    def new_figure(self):
+    def new_figure(self, fill_color="aqua"):
         """
         Create a new figure for plotting
         """
@@ -104,7 +104,7 @@ class map(object):
 
         self.fig = plt.figure(figsize=self.figsize)
         self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
-        self.basemap.drawmapboundary(fill_color="aqua")
+        self.basemap.drawmapboundary(fill_color=fill_color)
         # Create the lat/lon lines
         delta = self.basemap.urcrnrlon - self.basemap.llcrnrlon
         nticks = int(delta / self.dlon)
