@@ -17,6 +17,7 @@ import seapy
 from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 from warnings import warn
+import pudb
 
 _up_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
 _down_scaling={"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
@@ -63,7 +64,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     """
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
-    data = np.ma.array(data, copy=False)
+    data = np.ma.masked_invalid(data, copy=False)
 
     # To avoid extrapolation, add a new top and bottom layer that replicates
     # the data of the existing current and top. 1) Determine which way the

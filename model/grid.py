@@ -280,13 +280,19 @@ class grid:
         None : sets mask and h attributes in grid
 
         """
-        if fld is None and self._nc is not None:
+        if fld is None and self.filename is not None:
+            if self._nc is None:
+                self._nc = netCDF4.Dataset(self.filename)
+
             # Try to load a field from the file
             for f in ["temp","temperature"]:
                 if f in self._nc.variables:
                     fld = self._nc.variables[f][0,:,:,:]
                     fld = np.ma.array(fld, mask=np.isnan(fld))
                     break
+
+            # Close the file
+            self._nc.close()
 
         # If we don't have a field to examine, then we cannot compute the
         # mask and bathymetry
@@ -301,6 +307,7 @@ class grid:
             self.h[water] = self.z[k]
             if k==0:
                 self.mask_rho[water] = 1.0
+        self.mask_u = self.mask_v = self.mask_rho
 
 
     def set_depth(self):
