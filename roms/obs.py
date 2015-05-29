@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
   obs.py
-  
+
   State Estimation and Analysis for PYthon
 
   Module to handle the observation structure within ROMS
@@ -95,15 +95,15 @@ def _provenance_from_string(s):
     # Search the dictionary for the key of the given the value
     return list(obs_provenance.keys())[ \
                 list(obs_provenance.values()).index(s.upper())]
-    
+
 class obs:
-    def __init__(self, filename=None, time=None, x=None, y=None, z=None, 
-                 lat=None, lon=None, depth=None, value=None, error=None, 
-                 type=None, provenance=None, meta=None, 
+    def __init__(self, filename=None, time=None, x=None, y=None, z=None,
+                 lat=None, lon=None, depth=None, value=None, error=None,
+                 type=None, provenance=None, meta=None,
                  title="ROMS Observations"):
         """
         Class to deal with ROMS observations for data assimilation
-    
+
         Parameters
         ----------
         filename : string, optional,
@@ -170,7 +170,7 @@ class obs:
 
         # ensure everything is good
         self._consistent()
-        
+
     def _astype(self, type):
         """
         PRIVATE method: build the type array from either string or values
@@ -220,7 +220,7 @@ class obs:
             # If these lengths are not equal, then there is a serious issue
             raise ValueError("Lengths of observation attributes are not equal.")
         else:
-            # For the others, we can pad the information to ensure 
+            # For the others, we can pad the information to ensure
             # consistency
             def _resizearr(arr,n):
                 if not hasattr(self,arr):
@@ -234,7 +234,7 @@ class obs:
                         return np.pad(arr, (0,n-la), 'edge')
                     else:
                         return arr[:n]
-                    
+
             self.z = _resizearr("z", lt)
             self.lat = _resizearr("lat", lt)
             self.lon = _resizearr("lon", lt)
@@ -252,18 +252,18 @@ class obs:
 
     def __len__(self):
         return len(self.value)
-        
+
     def __getitem__(self, l):
         return obs(time=self.time[l], x=self.x[l], y=self.y[l],
                             z=self.z[l],lon=self.lon[l],lat=self.lat[l],
                             depth=self.depth[l],value=self.value[l],
                             error=self.error[l],type=self.type[l],
                             provenance=self.provenance[l],meta=self.meta[l])
-                            
+
     def __setitem__(self, l, new_obs):
         if not isinstance(new_obs,seapy.roms.obs.obs):
             raise TypeError("Trying to assign obs to a non-obs type.")
-            
+
         self.time[l] = new_obs.time
         self.x[l] = new_obs.x
         self.y[l] = new_obs.y
@@ -277,10 +277,10 @@ class obs:
         self.provenance[l] = new_obs.provenance
         self.meta[l] = new_obs.meta
         self._consistent()
-        
+
     def __repr__(self):
         return self.__str__()
-        
+
     def __str__(self):
         return "\n".join([ \
   "{:.2f}, [{:s}<{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
@@ -289,20 +289,20 @@ class obs:
                     self.lon[n], self.lat[n], self.depth[n],
                     self.value[n], self.error[n] ) \
             for n,t in enumerate(self.time) ])
-        
+
     def add(self, new_obs):
         """
         Add another class of obs into this one
-        
+
         Parameters
         ----------
         new_obs : obs,
             Class of obs to append to the existing
-        
+
         Returns
         -------
         None
-        
+
         Examples
         --------
         Load a list from netcdf, then append a new set of values
@@ -329,16 +329,16 @@ class obs:
     def delete(self, obj):
         """
         delete observations from the record.
-        
+
         Parameters
         ----------
         obj : slice, int or array of ints
             Indicate which sub-arrays to remove.
-            
+
         Returns
         -------
         Nothing: updates the class arrays
-        
+
         Examples
         --------
         Delete every other observation
@@ -356,7 +356,7 @@ class obs:
         self.type = np.delete(self.type, obj)
         self.provenance = np.delete(self.provenance, obj)
         self.meta = np.delete(self.meta, obj)
-        
+
     def create_survey(self):
         """
         Build the survey structure from the observations
@@ -368,11 +368,11 @@ class obs:
         times, counts = np.unique(self.time[self.sort], return_counts=True)
         self.survey_time=times
         self.nobs=counts
-        
+
     def to_netcdf(self, filename):
         """
         Write out the observations into the specified netcdf file
-        
+
         Parameters
         ----------
         filename : string,
@@ -381,13 +381,13 @@ class obs:
         # Save out the observations by survey
         self._consistent()
         self.create_survey()
-        nc = seapy.roms.ncgen.create_da_obs(filename, 
-                survey=len(self.survey_time), provenance=obs_provenance, 
+        nc = seapy.roms.ncgen.create_da_obs(filename,
+                survey=len(self.survey_time), provenance=obs_provenance,
                 title=self.title)
         nc.variables["spherical"][:] = 1
         nc.variables["Nobs"][:] = self.nobs
         nc.variables["survey_time"][:] = self.survey_time
-        nc.variables["obs_variance"][:] = np.ones(max(obs_types))*0.1
+        nc.variables["obs_variance"][:] = np.ones(max(7,np.max(self.type)))*0.1
         nc.variables["obs_time"][:] = self.time[self.sort]
         nc.variables["obs_Xgrid"][:] = self.x[self.sort]
         nc.variables["obs_Ygrid"][:] = self.y[self.sort]
@@ -401,14 +401,14 @@ class obs:
         nc.variables["obs_provenance"][:] = self.provenance[self.sort]
         nc.variables["obs_meta"][:] = self.meta[self.sort]
         nc.close()
-        
+
 
 def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
             threads=2):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.
-    
+
     Parameters
     ----------
     grid : seapy.model.grid or filename string,
@@ -419,15 +419,15 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
             "lat"  : list of floats [degrees]
             "lon"  : list of floats [degrees]
             "depth": list of floats [m]
-        Any other keys are considered data and compared against the 
+        Any other keys are considered data and compared against the
         obs_types dictionary.
     dx : float, optional,
-        half-width of the x-dimension box to consider from the 
-        center of each grid cell in km (e.g., dx=4 would result in an 
+        half-width of the x-dimension box to consider from the
+        center of each grid cell in km (e.g., dx=4 would result in an
         8km width)
-    dy : float, optional, 
-        half-width of the y-dimension box to consider from the 
-        center of each grid cell in km (e.g., dy=4 would result in an 
+    dy : float, optional,
+        half-width of the y-dimension box to consider from the
+        center of each grid cell in km (e.g., dy=4 would result in an
         8km width)
     dz : list of floats, optional,
         The bins of vertical depths to consider for in situ observations.
@@ -436,14 +436,14 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
         The bin size of time for observations to be considered at the
         same time in units of days.
     nx : int, optional,
-        stride value of grid cells to consider in the x-direction (e.g., 
+        stride value of grid cells to consider in the x-direction (e.g.,
         1 is every point, 2 is every other point)
     ny : int, optional,
-        stride value of grid cells to consider in the y-direction (e.g., 
+        stride value of grid cells to consider in the y-direction (e.g.,
         1 is every point, 2 is every other point)
     threads : int, optional,
         number of threads to run to grid the data
-    
+
     Returns
     -------
     y : obs class
@@ -475,33 +475,33 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
     dx  = dx * np.cos(grid.angle[rng][ocean]);
     dyx = dy * np.sin(grid.angle[rng][ocean]);
     dy  = dy * np.cos(grid.angle[rng][ocean]);
-    xv = np.vstack(((lon+dx-dyx).ravel(), 
+    xv = np.vstack(((lon+dx-dyx).ravel(),
                     (lon+dx+dyx).ravel(),
                     (lon-dx+dyx).ravel(),
                     (lon-dx-dyx).ravel(),
                     (lon+dx-dyx).ravel())).T
-    yv = np.vstack(((lat+dy+dxy).ravel(), 
+    yv = np.vstack(((lat+dy+dxy).ravel(),
                     (lat-dy+dxy).ravel(),
                     (lat-dy-dxy).ravel(),
                     (lat+dy-dxy).ravel(),
                     (lat+dy+dxy).ravel())).T
     l=np.where(xv>180)
     xv[l]=xv[l]-360
-    
+
     # Limit the data and grid boxes to those that are overlapping
     # First, eliminate raw data that are outside of our grid boxes
     region=np.where(np.logical_and( \
-                    np.logical_and(raw["lon"] <= np.max(xv), 
+                    np.logical_and(raw["lon"] <= np.max(xv),
                                    raw["lon"] >= np.min(xv)),
                     np.logical_and(raw["lat"] <= np.max(yv),
                                    raw["lat"] >= np.min(yv))))
     for key in raw:
         if key is not "depth":
-            raw[key]=raw[key][region] 
+            raw[key]=raw[key][region]
 
     # Next, eliminate grid boxes that are outside of the raw data
     search=np.where(np.logical_and( \
-                    np.logical_and(xv[:,0] <= np.max(raw["lon"]), 
+                    np.logical_and(xv[:,0] <= np.max(raw["lon"]),
                                    xv[:,2] >= np.min(raw["lon"])),
                     np.logical_and(yv[:,0] <= np.max(raw["lat"]),
                                    yv[:,2] >= np.min(raw["lat"]))))
@@ -517,7 +517,7 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
         times[i+1]=times[i]
         times=np.unique(times)
         d=np.diff(times)<dt
-        
+
     # Create an internal function for gridding the data
     def __gridder_thread(xv, yv, raw, pts, dt):
         # Find the points inside the current grid point
@@ -536,15 +536,15 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
                 var=np.nanvar(raw[v][inside])
             pu.db
         return
-        
+
     # Loop over the data, calling the internal gridder
     for i in range(xv.shape[0]):
         # pu.db
         __gridder_thread(xv[i,:],yv[i,:],raw,pts,dt)
-        
+
     # Put the results together
     pass
- 
+
  # ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
 #                   (delayed(__interp2_thread) (
 #    getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -553,4 +553,4 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
 #    pmap["pmap"+grd], weight,
 #    nx, ny, getattr(child_grid,"mask_"+grd))
 #  for i in records), copy=False)
-#   
+#

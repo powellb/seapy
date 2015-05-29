@@ -39,6 +39,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     """
     internal routine: 2D interpolation thread for parallel interpolation
     """
+    data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
     # Convolve the water over the land
     ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
@@ -64,7 +65,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     """
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
-    data = np.ma.masked_invalid(data, copy=False)
+    data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
 
     # To avoid extrapolation, add a new top and bottom layer that replicates
     # the data of the existing current and top. 1) Determine which way the
