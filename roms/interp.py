@@ -19,10 +19,10 @@ from joblib import Parallel, delayed
 from warnings import warn
 import pudb
 
-_up_scaling={"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
-_down_scaling={"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
-_ksize_range=(7,15)
-
+_up_scaling = {"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
+_down_scaling = {"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
+_ksize_range = (7,15)
+_max_memory = 750*1024*1024    # Limit arrays to 750MB in size
 def __mask_z_grid(z_data, src_depth, z_depth):
     """
     When interpolating to z-grid, we need to apply depth dependent masking
@@ -242,73 +242,81 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             continue
         grd = seapy.roms.fields[k]["grid"]
         if seapy.roms.fields[k]["dims"]==2:
-            ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
-                             (delayed(__interp2_thread) (
-              getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
-              ncsrc.variables[k][i,:,:],
-              getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
-              pmap["pmap"+grd], weight,
-              nx, ny, getattr(child_grid,"mask_"+grd))
-            for i in records), copy=False)
+            # Compute the max number of hold in memory
+            maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes)
+            for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+                ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
+                                 (delayed(__interp2_thread) (
+                  getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
+                  ncsrc.variables[k][i,:,:],
+                  getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
+                  pmap["pmap"+grd], weight,
+                  nx, ny, getattr(child_grid,"mask_"+grd))
+                for i in recs), copy=False)
+                ncout.variables[vmap[k]][rn*maxrecs:,:,:] = ndata
         else:
-            ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
-                             (delayed(__interp3_thread)(
-              getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
-              getattr(src_grid,"depth_"+grd),
-              ncsrc.variables[k][i,:,:,:],
-              getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
-              getattr(child_grid,"depth_"+grd),
-              pmap["pmap"+grd], weight,
-              nx, ny, getattr(child_grid,"mask_"+grd),
-              up_factor=_up_scaling.get(k,1.0),
-              down_factor=_down_scaling.get(k,1.0))
-            for i in records), copy=False)
-            if z_mask:
-                __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
-        ncout.variables[vmap[k]][:] = ndata
+            maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes*child_grid.n)
+            for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+                ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
+                                 (delayed(__interp3_thread)(
+                  getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
+                  getattr(src_grid,"depth_"+grd),
+                  ncsrc.variables[k][i,:,:,:],
+                  getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
+                  getattr(child_grid,"depth_"+grd),
+                  pmap["pmap"+grd], weight,
+                  nx, ny, getattr(child_grid,"mask_"+grd),
+                  up_factor=_up_scaling.get(k,1.0),
+                  down_factor=_down_scaling.get(k,1.0))
+                for i in recs), copy=False)
+                if z_mask:
+                    __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
+                ncout.variables[vmap[k]][rn*maxrecs:,:,:,:] = ndata
 
     # Rotate and Interpolate the vector fields
     if ( ( "u" in vmap ) and ( vmap["u"] in ncout.variables ) ) and \
        ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
         srcangle = src_grid.angle if src_grid.cgrid else None
         dstangle = child_grid.angle if child_grid.cgrid else None
-        vel = Parallel(n_jobs=threads, verbose=2) \
-                 (delayed(__interp3_vel_thread)( \
-            src_grid.lon_rho, src_grid.lat_rho, \
-            src_grid.depth_rho, srcangle, \
-            ncsrc.variables["u"][i,:,:,:], \
-            ncsrc.variables["v"][i,:,:,:], \
-            child_grid.lon_rho, child_grid.lat_rho, \
-            child_grid.depth_rho, dstangle, \
-            pmap["pmaprho"], weight, nx, ny,  \
-            child_grid.mask_rho) for i in records)
+        maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes*child_grid.n*2)
+        for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
+            vel = Parallel(n_jobs=threads, verbose=2) \
+                     (delayed(__interp3_vel_thread)( \
+                src_grid.lon_rho, src_grid.lat_rho, \
+                src_grid.depth_rho, srcangle, \
+                ncsrc.variables["u"][i,:,:,:], \
+                ncsrc.variables["v"][i,:,:,:], \
+                child_grid.lon_rho, child_grid.lat_rho, \
+                child_grid.depth_rho, dstangle, \
+                pmap["pmaprho"], weight, nx, ny,  \
+                child_grid.mask_rho) for i in recs)
 
-        for j in np.arange(0,len(vel)):
-            vel_u = np.ma.array(vel[j][0],copy=False)
-            vel_v = np.ma.array(vel[j][1],copy=False)
-            if z_mask:
-                __mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
-                __mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
+            for j in np.arange(0,len(vel)):
+                vel_u = np.ma.array(vel[j][0],copy=False)
+                vel_v = np.ma.array(vel[j][1],copy=False)
+                if z_mask:
+                    __mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
+                    __mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
 
-            if child_grid.cgrid:
-                vel_u = seapy.model.rho2u(vel_u)
-                vel_v = seapy.model.rho2v(vel_v)
+                if child_grid.cgrid:
+                    vel_u = seapy.model.rho2u(vel_u)
+                    vel_v = seapy.model.rho2v(vel_v)
 
-            ncout.variables[vmap["u"]][j,:] = vel_u
-            ncout.variables[vmap["v"]][j,:] = vel_v
+                ncout.variables[vmap["u"]][nr*maxrecs+j,:] = vel_u
+                ncout.variables[vmap["v"]][nr*maxrecs+j,:] = vel_v
 
-            if ( "ubar" in vmap ) and ( vmap["ubar"] in ncout.variables ):
-                # Create ubar and vbar
-                # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
-                ncout.variables[vmap["ubar"]][j,:] = \
-                    np.sum(vel_u * child_grid.depth_u, axis=0) /  \
-                    np.sum(child_grid.depth_u, axis=0)
+                if ( "ubar" in vmap ) and ( vmap["ubar"] in ncout.variables ):
+                    # Create ubar and vbar
+                    # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
+                    ncout.variables[vmap["ubar"]][nr*maxrecs+j,:] = \
+                        np.sum(vel_u * child_grid.depth_u, axis=0) /  \
+                        np.sum(child_grid.depth_u, axis=0)
 
-            if ( "vbar" in vmap ) and ( vmap["vbar"] in ncout.variables ):
-                # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
-                ncout.variables[vmap["vbar"]][j,:] = \
-                    np.sum(vel_v * child_grid.depth_v, axis=0) /  \
-                    np.sum(child_grid.depth_v, axis=0)
+                if ( "vbar" in vmap ) and ( vmap["vbar"] in ncout.variables ):
+                    # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
+                    ncout.variables[vmap["vbar"]][nr*maxrecs+j,:] = \
+                        np.sum(vel_v * child_grid.depth_v, axis=0) /  \
+                        np.sum(child_grid.depth_v, axis=0)
 
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,

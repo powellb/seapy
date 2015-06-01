@@ -349,4 +349,33 @@ def unique_rows(x):
 
     return vals, idx
 
+def chunker(seq, size):
+    """
+    Iterate over an iterable in 'chunks' of a given size
+
+    Parameters
+    ----------
+    seq : iterable,
+        The sequence to iterate over
+    size : int,
+        The number of items to be returned in each 'chunk'
+
+    Returns
+    -------
+    chunk : seq,
+        The items of the chunk to be iterated
+
+    **Example**
+
+    >>> x = [0,3,4,7,9,10,12,14]
+    >>> for i in chunker(x, 3):
+    >>>     print(i)
+
+    [0, 3, 4]
+    [7, 9, 10]
+    [12, 14]
+
+    """
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
 pass
