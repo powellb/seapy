@@ -22,7 +22,8 @@ import pudb
 _up_scaling = {"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
 _down_scaling = {"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
 _ksize_range = (7,15)
-_max_memory = 750*1024*1024    # Limit arrays to 750MB in size
+_max_memory = 512*1024*1024    # Limit arrays to 512MB in size [bytes]
+
 def __mask_z_grid(z_data, src_depth, z_depth):
     """
     When interpolating to z-grid, we need to apply depth dependent masking
@@ -243,8 +244,9 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         grd = seapy.roms.fields[k]["grid"]
         if seapy.roms.fields[k]["dims"]==2:
             # Compute the max number of hold in memory
-            maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes)
+            maxrecs = np.int(_max_memory/(child_grid.lon_rho.nbytes+src_grid.lon_rho.nbytes))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+                outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
                 ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
                                  (delayed(__interp2_thread) (
                   getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -253,10 +255,13 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                   pmap["pmap"+grd], weight,
                   nx, ny, getattr(child_grid,"mask_"+grd))
                 for i in recs), copy=False)
-                ncout.variables[vmap[k]][rn*maxrecs:,:,:] = ndata
+                ncout.variables[vmap[k]][outr,:,:] = ndata
+                ncout.sync()
         else:
-            maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes*child_grid.n)
+            maxrecs = np.int(_max_memory/
+                (child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+                outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
                 ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
                                  (delayed(__interp3_thread)(
                   getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -271,14 +276,16 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 for i in recs), copy=False)
                 if z_mask:
                     __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
-                ncout.variables[vmap[k]][rn*maxrecs:,:,:,:] = ndata
+                ncout.variables[vmap[k]][outr,:,:,:] = ndata
+                ncout.sync()
 
     # Rotate and Interpolate the vector fields
     if ( ( "u" in vmap ) and ( vmap["u"] in ncout.variables ) ) and \
        ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
         srcangle = src_grid.angle if src_grid.cgrid else None
         dstangle = child_grid.angle if child_grid.cgrid else None
-        maxrecs = np.int(_max_memory/child_grid.lon_rho.nbytes*child_grid.n*2)
+        maxrecs = np.int(_max_memory/
+            (2*(child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n)))
         for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
             vel = Parallel(n_jobs=threads, verbose=2) \
                      (delayed(__interp3_vel_thread)( \
@@ -317,6 +324,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                     ncout.variables[vmap["vbar"]][nr*maxrecs+j,:] = \
                         np.sum(vel_v * child_grid.depth_v, axis=0) /  \
                         np.sum(child_grid.depth_v, axis=0)
+
+                ncout.sync()
 
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
