@@ -236,14 +236,14 @@ def gen_stations(filename, grid=None):
     POS =  GRID  FLAG      X-POS       Y-POS     COMMENT
     """
     with open(filename, "w") as text_file:
-        print(" BOUNDARY STATIONS FOR GRID: {}".format(grid.filename),
+        print("! BOUNDARY STATIONS FOR GRID: {}".format(grid.filename),
               file=text_file)
         print(textwrap.dedent(header), file=text_file)
         print("        NSTATION ==  {}".format(Npts), file=text_file)
         print(textwrap.dedent(stations), file=text_file)
         for i in range(Npts):
             print("        1     1    {0:10.6f}   {1:10.6f}   BRY".format( \
-                lon[i],lat[i]), file=text_file)
+                lon[i], lat[i]), file=text_file)
 
     pass
 
