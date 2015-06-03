@@ -16,7 +16,7 @@ import netCDF4
 import netcdftime
 import textwrap
 from scipy import interpolate
-import pudb
+
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     Given a ROMS history, average, or climatology file, generate
@@ -353,7 +353,6 @@ def from_stations(station_file, bry_file, grid=None):
         sta_u[:,[i],:] = sta_u[:,index,:]
         sta_v[:,[i],:] = sta_v[:,index,:]
 
-
     # Construct the boundaries: a dictionary of boundary side and two element
     # array whether the u[0] or v[1] dimensions need to be averaged
     sides={"north":[True,False], "south":[True,False],
@@ -362,6 +361,24 @@ def from_stations(station_file, bry_file, grid=None):
     sta_ubar, sta_vbar = seapy.rotate(sta_ubar, sta_vbar, delta_angle)
     sta_u, sta_v = seapy.rotate(sta_u, sta_v, np.tile(delta_angle,
                                                       (sta_u.shape[-1],1)).T)
+
+    # Set up the parameters for depth-interpolated
+    wght = 5
+    nx = 3
+    ny = 9
+
+    # Build a non-extrapolating field to interpolate. Generate the
+    # position and depth
+    def __expand_field(x):
+        shp = x.shape
+        y = np.zeros((shp[0]+2,shp[1]+2))
+        y[1:-1,1:-1] = x
+        y[1:-1,0] = x[:,0]
+        y[1:-1,-1] = x[:,-1]
+        y[0,:] = y[1,:]
+        y[-1,:] = y[-2,:]
+        return y
+
     for side in sides.keys():
         print(side)
 
@@ -399,46 +416,53 @@ def from_stations(station_file, bry_file, grid=None):
                                      grid_lat[bry[side][1:]]))
         sta_x = seapy.adddim(x,len(sta_s_rho))
         x = seapy.adddim(x,len(grid.s_rho))
+
         for n,t in seapy.progress(enumerate(ncstation.variables[time][:]),
                                   len(ncstation.variables[time][:])):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                             sta_s_rho, sta_cs_r, sta_zeta[n,bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
                         grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n,bry[side]])
+
+            in_x = __expand_field(sta_x[:,sta_ocean])
+            in_x[:,0] = in_x[:,0] - 3600
+            in_x[:,-1] = in_x[:,-1] + 3600
+            in_depth = __expand_field(sta_depth[:,sta_ocean])
+            in_depth[0,:] = in_depth[0,:] - 1000
+            in_depth[-1,:] = in_depth[-1,:] + 10
+
             # 4) Temp
+            in_data = __expand_field(np.transpose(sta_temp[n,bry[side],:][sta_ocean,:]))
             ncbry.variables["temp_"+side][n,:]=0.0
-            ncbry.variables["temp_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
-                np.transpose(sta_temp[n,bry[side],:][sta_ocean,:]), \
-                x[:,ocean], depth[:,ocean],nx=0, ny=2, weight=2)
+            ncbry.variables["temp_"+side][n,:,ocean],pmap = seapy.oa.oasurf(
+                in_x, in_depth, in_data,
+                x[:,ocean], depth[:,ocean], nx=nx, ny=ny, weight=wght)
 
             # 5) Salt
+            in_data = __expand_field(np.transpose(sta_salt[n,bry[side],:][sta_ocean,:]))
             ncbry.variables["salt_"+side][n,:]=0.0
-            ncbry.variables["salt_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
-                np.transpose(sta_salt[n,bry[side],:][sta_ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
+            ncbry.variables["salt_"+side][n,:,ocean],pmap = seapy.oa.oasurf(
+                in_x, in_depth, in_data,
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
 
             # 6) U
+            in_data = __expand_field(np.transpose(sta_u[n,bry[side],:][sta_ocean,:]))
             data = np.zeros(x.shape)
-            data[:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
-                np.transpose(sta_u[n,bry[side],:][sta_ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
+            data[:,ocean],pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
             if sides[side][0]:
-                ncbry.variables["u_"+side][n,:] = 0.5 * ( \
+                ncbry.variables["u_"+side][n,:] = 0.5 * (
                     data[:,0:-1]+data[:,1:])
             else:
                 ncbry.variables["u_"+side][n,:] = data
 
             # 7) V
+            in_data = __expand_field(np.transpose(sta_v[n,bry[side],:][sta_ocean,:]))
             data = data * 0
-            data[:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
-                np.transpose(sta_v[n,bry[side],:][sta_ocean,:]), \
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
+            data[:,ocean],pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
+                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
             if sides[side][1]:
-                ncbry.variables["v_"+side][n,:] = 0.5 * ( \
+                ncbry.variables["v_"+side][n,:] = 0.5 * (
                     data[:,0:-1]+data[:,1:])
             else:
                 ncbry.variables["v_"+side][n,:] = data
