@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-    ASCII Progress Bar that work in IPython notebooks. 
-  
+    ASCII Progress Bar that work in IPython notebooks.
+
     Code take from examples shown at:
-  
+
   <http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb>
-  
-    Modified to include a timer and added an iterator that displays a 
+
+    Modified to include a timer and added an iterator that displays a
     progressbar as it iterates.
-    
+
     **Examples**
-    
+
     >>> for i in progressbar.progress(range(10)):
     >>>     frobnicate(i)
-    
-    
+
+
 """
 from __future__ import print_function
 import sys, time
@@ -70,10 +70,24 @@ class ProgressBar:
 
 class progress:
     """
-    Iterator with progress bar. 
+    Draw a progess bar while going through the given iterator.
+
+    NOTE: If the iterator does not support the len() method, you should
+    supply the maxlen parameter.
+
+    >>> for i in progress(range(10)):
+    >>>    frobnicate(i)
+
+    or
+
+    >>> for n,i in progressbar(enumerate(range(10)),10)
+    >>>    frobnicate(n, i)
     """
-    def __init__(self, iterable):
-        self.size = len(iterable)
+    def __init__(self, iterable, maxlen=100):
+        try:
+            self.size = len(iterable)
+        except TypeError:
+            self.size = maxlen
         self.pbar = ProgressBar(self.size+1)
         self.iterator = iter(iterable)
         self.count = 0

@@ -16,7 +16,7 @@ import netCDF4
 import netcdftime
 import textwrap
 from scipy import interpolate
-
+import pudb
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     Given a ROMS history, average, or climatology file, generate
@@ -345,13 +345,13 @@ def from_stations(station_file, bry_file, grid=None):
         sta_angle[i] = sta_angle[index]
         sta_lon[i] = sta_lon[index]
         sta_lat[i] = sta_lat[index]
-        sta_zeta[:,i] = sta_zeta[:,index]
-        sta_ubar[:,i] = sta_ubar[:,index]
-        sta_vbar[:,i] = sta_vbar[:,index]
-        sta_temp[:,i,:] = sta_temp[:,index,:]
-        sta_salt[:,i,:] = sta_salt[:,index,:]
-        sta_u[:,i,:] = sta_u[:,index,:]
-        sta_v[:,i,:] = sta_v[:,index,:]
+        sta_zeta[:,[i]] = sta_zeta[:,index]
+        sta_ubar[:,[i]] = sta_ubar[:,index]
+        sta_vbar[:,[i]] = sta_vbar[:,index]
+        sta_temp[:,[i],:] = sta_temp[:,index,:]
+        sta_salt[:,[i],:] = sta_salt[:,index,:]
+        sta_u[:,[i],:] = sta_u[:,index,:]
+        sta_v[:,[i],:] = sta_v[:,index,:]
 
 
     # Construct the boundaries: a dictionary of boundary side and two element
@@ -359,62 +359,71 @@ def from_stations(station_file, bry_file, grid=None):
     sides={"north":[True,False], "south":[True,False],
            "east":[False,True], "west":[False,True]}
     delta_angle = sta_angle-grid_angle
-    sta_ubar, sta_vbar = seapy.rotate(sta_ubar,sta_vbar,delta_angle)
-    sta_u, sta_v = seapy.rotate(sta_u,sta_v,delta_angle.T)
+    sta_ubar, sta_vbar = seapy.rotate(sta_ubar, sta_vbar, delta_angle)
+    sta_u, sta_v = seapy.rotate(sta_u, sta_v, np.tile(delta_angle,
+                                                      (sta_u.shape[-1],1)).T)
     for side in sides.keys():
         print(side)
+
+        # Masks
+        sta_ocean = np.where(sta_mask[bry[side]] == 1)[0]
+        ocean = np.where(grid_mask[bry[side]] == 1)[0]
+
+        # If we have a masked boundary, skip it
+        if len(ocean) == 0:
+            continue
+
         # 1) Zeta
-        ncbry.variables["zeta_"+side][:] = sta_zeta[:,bry[side]]
+        ncbry.variables["zeta_"+side][:,ocean] = sta_zeta[:, bry[side]][:,ocean]
 
         # 2) Ubar
         if sides[side][0]:
-            ncbry.variables["ubar_"+side][:] = 0.5 * ( \
-                sta_ubar[:,bry[side][0:-1]]+sta_ubar[:,bry[side][1:]])
+            ncbry.variables["ubar_"+side][:] = 0.5 * (
+                sta_ubar[:, bry[side][0:-1]]+sta_ubar[:, bry[side][1:]])
         else:
-            ncbry.variables["ubar_"+side][:] = sta_ubar[:,bry[side]]
+            ncbry.variables["ubar_"+side][:] = sta_ubar[:, bry[side]]
 
         # 3) Vbar
         if sides[side][1]:
             ncbry.variables["vbar_"+side][:] = 0.5 * ( \
-                sta_vbar[:,bry[side][0:-1]]+sta_vbar[:,bry[side][1:]])
+                sta_vbar[:,bry[side][0:-1]]+sta_vbar[:, bry[side][1:]])
         else:
-            ncbry.variables["vbar_"+side][:] = sta_vbar[:,bry[side]]
+            ncbry.variables["vbar_"+side][:] = sta_vbar[:, bry[side]]
 
         # For 3D variables, we need to loop through time and interpolate
         # onto the child grid. Construct the distances
-        x = bry[side]*0
+        x = np.zeros(len(bry[side]))
         x[1:] = np.cumsum(seapy.earth_distance(grid_lon[bry[side][0:-1]],
                                      grid_lat[bry[side][0:-1]],
                                      grid_lon[bry[side][1:]],
                                      grid_lat[bry[side][1:]]))
         sta_x = seapy.adddim(x,len(sta_s_rho))
         x = seapy.adddim(x,len(grid.s_rho))
-        for n,t in seapy.progress(enumerate(ncstation.variables[time][:])):
+        for n,t in seapy.progress(enumerate(ncstation.variables[time][:]),
+                                  len(ncstation.variables[time][:])):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                             sta_s_rho, sta_cs_r, sta_zeta[n,bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
                         grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n,bry[side]])
-            sta_ocean = np.where(sta_mask[bry[side]]==1)[0]
-            ocean = np.where(grid_mask[bry[side]]==1)[0]
             # 4) Temp
             ncbry.variables["temp_"+side][n,:]=0.0
             ncbry.variables["temp_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,ocean], sta_depth[:,ocean],
-                np.transpose(sta_temp[n,bry[side],:][ocean,:]), \
+                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
+                np.transpose(sta_temp[n,bry[side],:][sta_ocean,:]), \
                 x[:,ocean], depth[:,ocean],nx=0, ny=2, weight=2)
 
             # 5) Salt
             ncbry.variables["salt_"+side][n,:]=0.0
             ncbry.variables["salt_"+side][n,:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,ocean], sta_depth[:,ocean],
-                np.transpose(sta_salt[n,bry[side],:][ocean,:]), \
+                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
+                np.transpose(sta_salt[n,bry[side],:][sta_ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
 
             # 6) U
             data = np.zeros(x.shape)
             data[:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,ocean], sta_depth[:,ocean],
-                np.transpose(sta_u[n,bry[side],:][ocean,:]), \
+                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
+                np.transpose(sta_u[n,bry[side],:][sta_ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
             if sides[side][0]:
                 ncbry.variables["u_"+side][n,:] = 0.5 * ( \
@@ -425,8 +434,8 @@ def from_stations(station_file, bry_file, grid=None):
             # 7) V
             data = data * 0
             data[:,ocean],pmap = seapy.oa.oasurf( \
-                sta_x[:,ocean], sta_depth[:,ocean],
-                np.transpose(sta_v[n,bry[side],:][ocean,:]), \
+                sta_x[:,sta_ocean], sta_depth[:,sta_ocean],
+                np.transpose(sta_v[n,bry[side],:][sta_ocean,:]), \
                 x[:,ocean], depth[:,ocean], pmap=pmap, nx=0, ny=2, weight=2)
             if sides[side][1]:
                 ncbry.variables["v_"+side][n,:] = 0.5 * ( \
