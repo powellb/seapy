@@ -244,7 +244,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         grd = seapy.roms.fields[k]["grid"]
         if seapy.roms.fields[k]["dims"]==2:
             # Compute the max number of hold in memory
-            maxrecs = np.int(_max_memory/(child_grid.lon_rho.nbytes+src_grid.lon_rho.nbytes))
+            maxrecs = np.minimum(len(records),
+                np.int(_max_memory/(child_grid.lon_rho.nbytes+src_grid.lon_rho.nbytes)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
                 ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
@@ -258,8 +259,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[vmap[k]][outr,:,:] = ndata
                 ncout.sync()
         else:
-            maxrecs = np.int(_max_memory/
-                (child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n))
+            maxrecs = np.minimum(len(records),np.int(_max_memory/
+                (child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
                 ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
@@ -276,6 +277,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 for i in recs), copy=False)
                 if z_mask:
                     __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
+                # pu.db
                 ncout.variables[vmap[k]][outr,:,:,:] = ndata
                 ncout.sync()
 
@@ -284,8 +286,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
        ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
         srcangle = src_grid.angle if src_grid.cgrid else None
         dstangle = child_grid.angle if child_grid.cgrid else None
-        maxrecs = np.int(_max_memory/
-            (2*(child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n)))
+        maxrecs = np.minimum(len(records), np.int(_max_memory/
+            (2*(child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n))))
         for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
             vel = Parallel(n_jobs=threads, verbose=2) \
                      (delayed(__interp3_vel_thread)( \
@@ -443,7 +445,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         ncout.close()
 
 def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
-            weight=10, vmap=None, pmap=None):
+            nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
     new ROMS history file using the given ROMS destination grid and
@@ -462,6 +464,10 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
         Record indices to interpolate
     threads : int, optional:
         number of processing threads
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data)
     weight : int, optional:
         number of points to use in weighting matrix
     vmap : dictionary, optional
@@ -503,7 +509,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
     # Call the interpolation
     try:
         __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  weight=weight, vmap=vmap, pmap=pmap)
+                  nx=nx, ny=ny, weight=weight, vmap=vmap, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
         # Delete the output file
