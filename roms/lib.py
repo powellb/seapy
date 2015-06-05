@@ -21,26 +21,6 @@ fields={   "zeta":{"grid":"rho","dims":2},
 
 default_epoch = "days since 2000-01-01 00:00:00"
 
-def get_timevar(nc):
-    """
-    get_timevar(nc)
-
-    Find the appropriate time variable from a given netcdf file
-
-    Parameters
-    ----------
-    nc : netCDF4.Dataset netcdf input file
-
-    Returns
-    -------
-    time: string
-
-    """
-    for time in ("ocean_time", "time", "zeta_time", "bry_time"):
-        if time in nc.variables:
-            return time
-    return None
-
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
                w_grid=False):
@@ -205,25 +185,47 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     z_w = depth(vtransform,h,hc,scoord,stretching,zeta,True)
     return z_w[1:,:,:]-z_w[0:-1,:,:]
 
-def get_timebase(time):
+def get_timevar(nc):
     """
-    Given a netCDF4 time record from a ROMS file, compute the timebase
-    for the file
+    get_timevar(nc)
+
+    Find the appropriate time variable from a given netcdf file
 
     Parameters
     ----------
-    time : netCDF4 variable
-        Input time variable
+    nc : netCDF4.Dataset netcdf input file
+
+    Returns
+    -------
+    time: string
+
+    """
+    for time in ("ocean_time", "time", "zeta_time", "bry_time"):
+        if time in nc.variables:
+            return time
+    return None
+
+def get_timebase(nc):
+    """
+    Given a ROMS netCDF4 file, compute the timebase for the file
+
+    Parameters
+    ----------
+    nc : netCDF4 dataset
+        Input ROMS file
 
     Returns
     -------
     timebase : netcdftime.utime
         object for converting to/from dates
+    time : string
+        name of variable used to generate the base (None if default)
     """
-    if hasattr(time,"units"):
-        return netcdftime.utime(time.units)
-    else:
-        return netcdftime.utime(seapy.roms.default_epoch)
+    try:
+        time = seapy.roms.get_timevar(nc)
+        return netcdftime.utime(nc.variables[time].units), time
+    except AttributeError:
+        return netcdftime.utime(seapy.roms.default_epoch), None
 
 pass
 

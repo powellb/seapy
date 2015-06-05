@@ -234,7 +234,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                     child_grid.lon_rho, child_grid.lat_rho, pmap["pmaprho"],
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
-    records = np.arange(0, len(ncsrc.variables[time][:])) \
+    records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
     for k in vmap:
         # Only interpolate the fields we want in the destination
@@ -373,9 +373,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     """
     roms_grid = seapy.model.grid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
-    time = seapy.roms.get_timevar(ncroms)
-    src_time = seapy.roms.get_timebase(ncroms.variables[time])
-    records = np.arange(0, len(ncroms.variables[time][:])) \
+    src_time, time = seapy.roms.get_timebase(ncroms)
+    records = np.arange(0, ncroms.variables[time].shape[0]) \
         if records is None else np.atleast_1d(records)
 
     # Load the grid
@@ -480,10 +479,9 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
         if not os.path.isfile(dest_file):
             ncsrc = netCDF4.Dataset(src_file)
-            time = seapy.roms.get_timevar(ncsrc)
-            records = np.arange(0, len(ncsrc.variables[time][:])) \
+            src_time, time = seapy.roms.get_timebase(ncsrc)
+            records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
-            src_time = seapy.roms.get_timebase(ncsrc.variables[time])
             ncout=seapy.roms.ncgen.create_ini(dest_file,
                      eta_rho=destg.eta_rho,xi_rho=destg.xi_rho,s_rho=destg.n,
                      timebase=src_time.origin,title="interpolated from "+src_file)
@@ -549,10 +547,9 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         destg = seapy.model.asgrid(dest_grid)
         src_grid = seapy.model.grid(src_file)
         ncsrc = netCDF4.Dataset(src_file)
-        time = seapy.roms.get_timevar(ncsrc)
-        records = np.arange(0, len(ncsrc.variables[time][:])) \
+        src_time, time = seapy.roms.get_timebase(ncsrc)
+        records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
-        src_time = seapy.roms.get_timebase(ncsrc.variables[time])
         ncout=seapy.roms.ncgen.create_clim(dest_file,
                  eta_rho=destg.ln,xi_rho=destg.lm,s_rho=destg.n,ntimes=records.size,
                  timebase=src_time.origin,title="interpolated from "+src_file)
