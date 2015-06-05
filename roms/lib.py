@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
   lib.py
-  
+
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
@@ -24,29 +24,29 @@ default_epoch = "days since 2000-01-01 00:00:00"
 def get_timevar(nc):
     """
     get_timevar(nc)
-    
+
     Find the appropriate time variable from a given netcdf file
-    
+
     Parameters
     ----------
     nc : netCDF4.Dataset netcdf input file
-    
+
     Returns
     -------
     time: string
-    
+
     """
     for time in ("ocean_time", "time", "zeta_time", "bry_time"):
         if time in nc.variables:
             return time
     return None
-    
+
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
                w_grid=False):
     """
     Compute the stretching function for ROMS
-    
+
     Parameters
     ----------
     vstretching : int, optional
@@ -61,11 +61,11 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
         number of s-levels
     w_grid: bool, optional
         solve stretching on the w-grid
-    
+
     Returns
     -------
     s, cs: array
-    
+
     """
     ds=1.0/s_rho
     if w_grid:
@@ -73,7 +73,7 @@ def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
     else:
         lev=np.arange(1,s_rho+1)-0.5
     s=(lev-s_rho)*ds
-    
+
     if vstretching == 1:
         if theta_s > 0:
             ptheta=np.sinh(theta_s*s)/np.sinh(theta_s)
@@ -157,7 +157,7 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
         sea surface height to add to bottom
     w_grid: bool, optional
         solve stretching on the w-grid
-    
+
     Returns
     -------
     s, cs: array
@@ -204,7 +204,7 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     # We need the w-coordinate depths
     z_w = depth(vtransform,h,hc,scoord,stretching,zeta,True)
     return z_w[1:,:,:]-z_w[0:-1,:,:]
-    
+
 def get_timebase(time):
     """
     Given a netCDF4 time record from a ROMS file, compute the timebase
@@ -217,12 +217,13 @@ def get_timebase(time):
 
     Returns
     -------
-    netcdftime.utime origin : scalar
+    timebase : netcdftime.utime
+        object for converting to/from dates
     """
     if hasattr(time,"units"):
-        return netcdftime.utime(time.units).origin
+        return netcdftime.utime(time.units)
     else:
         return netcdftime.utime(seapy.roms.default_epoch)
-        
+
 pass
 

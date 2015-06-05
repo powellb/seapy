@@ -17,7 +17,6 @@ import seapy
 from seapy.timeout import timeout,TimeoutError
 from joblib import Parallel, delayed
 from warnings import warn
-import pudb
 
 _up_scaling = {"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
 _down_scaling = {"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
@@ -277,7 +276,6 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 for i in recs), copy=False)
                 if z_mask:
                     __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
-                # pu.db
                 ncout.variables[vmap[k]][outr,:,:,:] = ndata
                 ncout.sync()
 
@@ -376,10 +374,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     roms_grid = seapy.model.grid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
     time = seapy.roms.get_timevar(ncroms)
-    try:
-        src_time=netcdftime.utime(ncroms.variables[time].units)
-    except AttributeError:
-        src_time=netcdftime.utime(seapy.roms.default_epoch)
+    src_time = seapy.roms.get_timebase(ncroms.variables[time])
     records = np.arange(0, len(ncroms.variables[time][:])) \
         if records is None else np.atleast_1d(records)
 
@@ -488,10 +483,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
             time = seapy.roms.get_timevar(ncsrc)
             records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.atleast_1d(records)
-            try:
-                src_time=netcdftime.utime(ncsrc.variables[time].units)
-            except AttributeError:
-                src_time=netcdftime.utime(seapy.roms.default_epoch)
+            src_time = seapy.roms.get_timebase(ncsrc.variables[time])
             ncout=seapy.roms.ncgen.create_ini(dest_file,
                      eta_rho=destg.eta_rho,xi_rho=destg.xi_rho,s_rho=destg.n,
                      timebase=src_time.origin,title="interpolated from "+src_file)
@@ -560,10 +552,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         time = seapy.roms.get_timevar(ncsrc)
         records = np.arange(0, len(ncsrc.variables[time][:])) \
                  if records is None else np.atleast_1d(records)
-        try:
-            src_time=netcdftime.utime(ncsrc.variables[time].units)
-        except AttributeError:
-            src_time=netcdftime.utime(seapy.roms.default_epoch)
+        src_time = seapy.roms.get_timebase(ncsrc.variables[time])
         ncout=seapy.roms.ncgen.create_clim(dest_file,
                  eta_rho=destg.ln,xi_rho=destg.lm,s_rho=destg.n,ntimes=records.size,
                  timebase=src_time.origin,title="interpolated from "+src_file)
