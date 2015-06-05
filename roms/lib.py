@@ -222,10 +222,10 @@ def get_timebase(nc):
         name of variable used to generate the base (None if default)
     """
     try:
-        time = seapy.roms.get_timevar(nc)
+        time = get_timevar(nc)
         return netcdftime.utime(nc.variables[time].units), time
     except AttributeError:
-        return netcdftime.utime(seapy.roms.default_epoch), None
+        return netcdftime.utime(default_epoch), None
 
 pass
 
