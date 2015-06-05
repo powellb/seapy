@@ -17,6 +17,7 @@ import re
 import seapy
 import numpy as np
 from scipy.interpolate import griddata
+import scipy.spatial
 import matplotlib.path
 
 def asgrid(grid):
@@ -433,6 +434,35 @@ class grid:
         for var in nc.variables:
             if hasattr(self,var.lower()):
                 nc.variables[var][:]=getattr(self,var.lower())
+
+    def nearest(self, lon, lat, grid="rho"):
+        """
+        Find the indices nearest to each point in the given list of
+        longitudes and latitudes.
+
+        Parameters
+        ----------
+        lon : ndarray,
+            longitude of points to find
+        lat : ndarray
+            latitude of points to find
+        grid : string, optional,
+            "rho", "u", or "v" grid to search
+
+        Returns
+        -------
+        indices : tuple of ndarray
+            The indices for each dimension of the grid that are closest
+            to the lon/lat points specified
+        """
+
+        glat = getattr(self,"lat_"+grid)
+        glon = getattr(self,"lon_"+grid)
+        xy = np.dstack([glat.ravel(), glon.ravel()])[0]
+        pts = np.dstack([np.atleast_1d(lat), np.atleast_1d(lon)])[0]
+        grid_tree = scipy.spatial.cKDTree(xy)
+        dist, idx = grid_tree.query(pts)
+        return np.unravel_index(idx,glat.shape)
 
     def ij(self, points, asint=False):
         """
