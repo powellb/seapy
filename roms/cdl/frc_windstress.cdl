@@ -1,0 +1,27 @@
+netcdf frc_uvstress {
+
+dimensions:
+	xi_rho = 386 ;
+	xi_u = 385 ;
+	xi_v = 386 ;
+	eta_rho = 130 ;
+	eta_u = 130 ;
+	eta_v = 129 ;
+	sms_time = UNLIMITED ; // (0 currently)
+
+variables:
+	float sms_time(sms_time) ;
+		sms_time:long_name = "surface momentum stress time" ;
+		sms_time:units = "days since 1992-01-01 00:00:00" ;
+	float sustr(sms_time, eta_u, xi_u) ;
+		sustr:long_name = "surface u-momentum stress" ;
+		sustr:units = "Newton meter-2" ;
+		sustr:time = "sms_time" ;
+	float svstr(sms_time, eta_v, xi_v) ;
+		svstr:long_name = "surface v-momentum stress" ;
+		svstr:units = "Newton meter-2 * 1000" ;
+		svstr:time = "sms_time" ;
+
+// global attributes:
+		:type = "ROMS FORCING file" ;
+}

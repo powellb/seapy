@@ -1,0 +1,48 @@
+netcdf ini_hydro {
+
+dimensions:
+  xi_rho = 130 ;
+  xi_u = 129 ;
+  xi_v = 130 ;
+  eta_rho = 130 ;
+  eta_u = 130 ;
+  eta_v = 129 ;
+  s_rho = 20 ;
+  s_w = 21 ;
+  ocean_time = UNLIMITED ; // (0 currently)
+
+variables:
+  double ocean_time(ocean_time) ;
+    ocean_time:long_name = "time since initialization" ;
+    ocean_time:units = "seconds since 0000-01-01 00:00:00" ;
+  double zeta(ocean_time, eta_rho, xi_rho) ;
+    zeta:long_name = "free-surface" ;
+    zeta:units = "meter" ;
+    zeta:coordinates = "lon_rho lat_rho ocean_time" ;
+  double ubar(ocean_time, eta_u, xi_u) ;
+    ubar:long_name = "vertically integrated u-momentum component" ;
+    ubar:units = "meter second-1" ;
+    ubar:coordinates = "lon_u lat_u ocean_time" ;
+  double vbar(ocean_time, eta_v, xi_v) ;
+    vbar:long_name = "vertically integrated v-momentum component" ;
+    vbar:units = "meter second-1" ;
+    vbar:coordinates = "lon_v lat_v ocean_time" ;
+  double u(ocean_time, s_rho, eta_u, xi_u) ;
+    u:long_name = "u-momentum component" ;
+    u:units = "meter second-1" ;
+    u:coordinates = "lon_u lat_u s_rho ocean_time" ;
+  double v(ocean_time, s_rho, eta_v, xi_v) ;
+    v:long_name = "v-momentum component" ;
+    v:units = "meter second-1" ;
+    v:coordinates = "lon_v lat_v s_rho ocean_time" ;
+  double temp(ocean_time, s_rho, eta_rho, xi_rho) ;
+    temp:long_name = "potential temperature" ;
+    temp:units = "Celsius" ;
+    temp:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  double salt(ocean_time, s_rho, eta_rho, xi_rho) ;
+    salt:long_name = "salinity" ;
+    salt:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+
+// global attributes:
+    :type = "ROMS/TOMS 4DVAR model error covariance standard deviation" ;
+}

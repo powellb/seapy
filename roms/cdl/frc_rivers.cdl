@@ -1,0 +1,50 @@
+netcdf test {
+dimensions:
+	river_time = UNLIMITED ; // (0 currently)
+	s_rho = 5 ;
+	river = 1 ;
+variables:
+	float river(river) ;
+		river:units = "nondimensional" ;
+		river:long_name = "river_runoff identification number" ;
+		river:field = "num_rivers, scalar" ;
+	float river_time(river_time) ;
+		river_time:units = "days since 2000-01-01 00:00:00" ;
+		river_time:long_name = "river runoff time" ;
+		river_time:field = "river_time, scalar, series" ;
+	float river_Xposition(river) ;
+		river_Xposition:units = "scalar" ;
+		river_Xposition:long_name = "river runoff  XI-positions at RHO-points" ;
+		river_Xposition:field = "river runoff XI position, scalar, series" ;
+	float river_Eposition(river) ;
+		river_Eposition:units = "scalar" ;
+		river_Eposition:long_name = "river runoff ETA-positions at RHO-points" ;
+		river_Eposition:field = "river runoff ETA position, scalar, series" ;
+	float river_direction(river) ;
+		river_direction:units = "scalar" ;
+		river_direction:long_name = "river runoff direction, XI=0, ETA>0" ;
+		river_direction:field = "river runoff direction, scalar, series" ;
+	float river_Vshape(s_rho, river) ;
+		river_Vshape:units = "scalar" ;
+		river_Vshape:long_name = "river runoff mass transport vertical profile" ;
+		river_Vshape:field = "river runoff vertical profile, scalar, series" ;
+	float river_transport(river_time, river) ;
+		river_transport:units = "meter^3/s" ;
+		river_transport:long_name = "river runoff mass transport" ;
+		river_transport:field = "river runoff mass transport, scalar, series" ;
+	float river_flag(river) ;
+		river_flag:units = "nondimensional" ;
+		river_flag:long_name = "river flag, 1=temp, 2=salt, 3=temp+salt, 4=temp+salt+sed, 5=temp+salt+sed+bio" ;
+		river_flag:field = "river flag, scalar, series" ;
+	float river_temp(river_time, s_rho, river) ;
+		river_temp:units = "Celsius" ;
+		river_temp:long_name = "river runoff temperature" ;
+		river_temp:field = "river temperature, scalar, series" ;
+	float river_salt(river_time, s_rho, river) ;
+		river_salt:units = "PSU" ;
+		river_salt:long_name = "river runoff salinity" ;
+		river_salt:field = "river salinity, scalar, series" ;
+    
+// global attributes:
+    :type = "ROMS RIVER FORCING file" ;
+}

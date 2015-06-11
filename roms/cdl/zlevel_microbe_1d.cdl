@@ -1,0 +1,47 @@
+netcdf zlevel {
+dimensions:
+	lat = 192 ;
+	lon = 382 ;
+	depth = 40 ;
+	time = UNLIMITED ; // (0 currently)
+variables:
+	float lat(lat) ;
+		lat:long_name = "Latitude" ;
+	float lon(lon) ;
+		lon:long_name = "Longitude" ;
+	float depth(depth) ;
+		depth:long_name = "Z-Level Depth" ;
+    depth:units = "meter" ;
+    depth:positive = "down" ;
+  short mask(lat, lon) ;
+    mask:long_name = "field mask" ;
+    mask:value = "0-land, 1-water" ;
+	float time(time) ;
+		time:long_name = "time since initialization" ;
+		time:units = "hours since 1940-01-01 00:00:00" ;
+	float zeta(time, lat, lon) ;
+		zeta:long_name = "free-surface" ;
+		zeta:units = "meter" ;
+    zeta:missing_value = 9.99E10 ;
+	float u(time, depth, lat, lon) ;
+		u:long_name = "u-momentum component" ;
+		u:units = "meter second-1" ;
+    u:missing_value = 9.99E10 ;
+	float v(time, depth, lat, lon) ;
+		v:long_name = "v-momentum component" ;
+		v:units = "meter second-1" ;
+    v:missing_value = 9.99E10 ;
+	float temp(time, depth, lat, lon) ;
+		temp:long_name = "potential temperature" ;
+		temp:units = "Celsius" ;
+    temp:missing_value = 9.99E10 ;
+  float salt(time, depth, lat, lon) ;
+    salt:long_name = "salinity" ;
+    salt:missing_value = 9.99E10 ;
+  float turbidity(time, depth, lat, lon) ;
+    turbidity:long_name = "turbidity" ;
+    turbidity:missing_value = 9.99E10 ;
+
+// global attributes:
+		:title = "Z Grid File" ;
+}
