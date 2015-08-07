@@ -315,9 +315,9 @@ def godelnumber(x):
     -------
     godel : ndarray
     """
-    x=np.atleast_2d(x)
+    x=np.atleast_2d(x.astype(int))
     if x.ndim>1:
-        primevals=primes(x.shape[1]*10)[:x.shape[1]]
+        primevals=primes(x.shape[1]*10)[:x.shape[1]].astype(float)
         return(np.prod(primevals**x,axis=1))
     else:
         return 2.0**x
@@ -345,7 +345,7 @@ def unique_rows(x):
         x=np.vstack(x).T
     else:
         x=np.atleast_1d(x)
-    vals, idx = np.unique(godelnumber(x.astype(int)),return_index=True)
+    vals, idx = np.unique(godelnumber(x),return_index=True)
 
     return vals, idx
 

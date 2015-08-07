@@ -43,7 +43,10 @@ def oasurf(x,y,d,xx,yy,pmap=None,weight=10,nx=2,ny=2,verbose=False):
 
     Returns
     -------
-    new_data, pmap: array
+    new_data: ndarray
+        data interpolated onto the new grid
+    pmap: ndarray
+        weighting map used in the interpolation
 
     """
     # Do some error checking
@@ -99,7 +102,10 @@ def oavol(x,y,z,v,xx,yy,zz,pmap=None,weight=10,nx=2,ny=2,verbose=False):
 
     Returns
     -------
-    new_data, pmap: array
+    new_data: ndarray
+        data interpolated onto the new grid
+    pmap: ndarray
+        weighting map used in the interpolation
 
     """
     # Do some error checking

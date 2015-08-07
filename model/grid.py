@@ -16,7 +16,7 @@ import os
 import re
 import seapy
 import numpy as np
-from scipy.interpolate import griddata
+from scipy.interpolate import griddata, interp1d
 import scipy.spatial
 import matplotlib.path
 
@@ -464,39 +464,128 @@ class grid:
         dist, idx = grid_tree.query(pts)
         return np.unravel_index(idx,glat.shape)
 
-    def ij(self, points, asint=False):
+    def ij(self, points):
         """
         Compute the fractional i,j indices of the grid from a
-        set of lat, lon points.
+        set of lon, lat points.
 
         Parameters
         ----------
         points : list of tuples
-            longitude, latitude points to compute i,j indicies
-        asint : bool, optional,
-            if True, return the integer index rather than fractional
+            longitude, latitude points to compute i, j indicies
 
         Returns
         -------
-        out : tuple of ndarray (with netcdf-type indexing),
-            list of i,j indices for the given lat/lon points
+        out : tuple of numpy masked array (with netcdf-type indexing),
+            list of j,i indices for the given lon, lat points. NOTE: values
+            that lie on the mask_rho are masked; however, if you wish to
+            ignore masking, you can use the data field (i.data) directly.
+            Values that do not lie within the grid are masked and stored as
+            np.nan.
 
         Examples
         --------
-        >>> a = [(-158, 20), (-160.5, 22.443)]
+        >>> a = ([-158, -160.5, -155.5], [20, 22.443, 19.5])
         >>> idx = g.ij(a)
         """
 
         # Interpolate the lat/lons onto the I, J
-        xgrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
-                         self.I.ravel(),points,method="linear")
-        ygrid = griddata((self.lon_rho.ravel(),self.lat_rho.ravel()),
-                         self.J.ravel(),points,method="linear")
+        xgrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
+                        self.lat_rho.ravel()),
+                        self.I.ravel(), points, method="linear"))
+        ygrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
+                        self.lat_rho.ravel()),
+                        self.J.ravel(), points, method="linear"))
+        mask = self.mask_rho[(ygrid.filled(0).astype(int),
+                              xgrid.filled(0).astype(int))]
+        xgrid[mask==0] = np.ma.masked
+        ygrid[mask==0] = np.ma.masked
+        return (ygrid,xgrid)
 
-        if asint:
-            return (np.floor(ygrid).astype(int), np.floor(xgrid).astype(int))
-        else:
-            return (ygrid,xgrid)
+    def ijk(self, points, depth_adjust=False):
+        """
+        Compute the fractional i, j, k indices of the grid from a
+        set of lon, lat, depth points.
+
+        Parameters
+        ----------
+        points : list of tuples,
+            longitude, latitude, depth points to compute i, j, k indicies.
+            NOTE: depth is in meters (defaults to negative)
+        depth_adjust : bool,
+            If True, depths that are deeper than the grid are set to the
+            bottom layer, 0. If False, a nan value is used for values
+            beyond the grid depth. Default is False.
+
+        Returns
+        -------
+        out : tuple of numpy.maskedarray (with netcdf-type indexing),
+            list of k, j, i indices for the given lon, lat, depth points
+
+        Examples
+        --------
+        >>> a = ([-158, -160.5, -155.5], [20, 22.443, 19.5], [-10 -200 0])
+        >>> idx = g.ijk(a)
+        """
+        # NOTE: Attempted to use a 3D griddata, but it took over 2 minutes
+        # for each call, resulting in a 6minute runtime for this method
+        # Reverted to 2D i,j indices, then looping a 1-D interpolation
+        # to get depths for increased-speed (though this method is still slow)
+
+        # Get the i,j points
+        (j,i) = self.ij((points[0],points[1]))
+        k = j * np.ma.masked
+        grid_k = np.arange(0,self.n)
+        depth = np.asanyarray(points[2])
+        l = np.where(depth>0)
+        depth[l] = -depth[l]
+
+        # Determine the unique points
+        good = np.where(j.mask==False)[0]
+        rows, idx = seapy.unique_rows((j.data[good], i.data[good]))
+        fill_value = 0 if depth_adjust else np.nan
+        for n in idx:
+            pts = np.where(np.logical_and(j==j[good[n]], i==i[good[n]]))
+            fi = interp1d(self.depth_rho[:,j[good[n]],i[good[n]]], grid_k,
+                          bounds_error=False, fill_value=fill_value)
+            k[pts] = fi(depth[pts])
+
+        # Mask bad points
+        l = np.isnan(k.data)
+        i[l] = np.ma.masked
+        j[l] = np.ma.masked
+        k[l] = np.ma.masked
+
+        return (k,j,i)
+
+    def latlon(self, indices):
+        """
+        Compute the latitude and longitude from the given (i,j) indices
+        of the grid
+
+        Parameters
+        ----------
+        indices : list of tuples
+            i, j points to compute latitude and longitude
+
+        Returns
+        -------
+        out : tuple of ndarray
+            list of lat,lon points from the given i,j indices
+
+        Examples
+        --------
+        >>> a = [(23.4, 16.5), (3.66, 22.43)]
+        >>> idx = g.latlon(a)
+        """
+
+        # Interpolate the I,J onto the lat/lon
+        lat = griddata((self.I.ravel(), self.J.ravel()),
+                       self.lat_rho.ravel(), indices, method="linear")
+        lon = griddata((self.I.ravel(), self.J.ravel()),
+                       self.lon_rho.ravel(), indices, method="linear")
+
+        return (lat, lon)
 
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """
