@@ -388,7 +388,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         if z_grid is None:
             lat=roms_grid.lat_rho.shape[0]
             lon=roms_grid.lat_rho.shape[1]
-            if depth==None:
+            if depth is None:
                 raise ValueError("depth must be specified")
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
                                    src_time.origin,"ROMS z-level",

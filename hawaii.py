@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
   hawaii.py
-  
+
   State Estimation and Analysis for PYthon
 
   Utilities for dealing with data around Hawaii
 
     Examples
     --------
-    
+
     Assume you have longitude, latitude, and sst values:
-    
+
     >>> m=seapy.hawaii()
     >>> m.pcolor(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
     >>> m.land()
@@ -25,7 +25,7 @@
 """
 from __future__ import print_function
 
-from .map import map
+from .mapping import map
 from matplotlib.patches import Polygon
 from matplotlib.collections import PolyCollection
 import os
@@ -36,7 +36,7 @@ class hawaii(map):
     def __init__(self, figsize=(8.,6.), llcrnrlon=-164.5, llcrnrlat=16.6,
                    urcrnrlon=-152.0, urcrnrlat=24.2, dlat=1, dlon=2):
         super().__init__( llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
-                   urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize, 
+                   urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize,
                    dlat=dlat, dlon=dlon)
 
     def land(self, color="black"):
@@ -49,13 +49,13 @@ class hawaii(map):
         ----------
         color: string, optional
             Color to draw the land mask with
-        
+
         Returns
         -------
         None
-        
+
         """
-        
+
         if  hasattr(self.basemap,"coast") == False or hasattr(self, "landpoly"):
             self.basemap.readshapefile(_shape_file, "coast")
             vert=[]
