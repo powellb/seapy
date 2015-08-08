@@ -327,6 +327,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
 
                 ncout.sync()
 
+    # Return the pmap that was used
+    return pmap
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
              threads=-2, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
