@@ -13,7 +13,7 @@
 
     Assume you have longitude, latitude, and sst values:
 
-    >>> m=seapy.map(llcrnrlon=lon[0,0],llcrnrlat=lat[0,0],
+    >>> m=seapy.mapping.map(llcrnrlon=lon[0,0],llcrnrlat=lat[0,0],
     >>>     urcrnrlon=lon[-1,-1],urcrnrlat=lat[-1,-1],dlat=2,dlon=2)
     >>> m.pcolor(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
     >>> m.land()
@@ -33,6 +33,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import seapy
+
+def gen_coastline(lon, lat, bathy):
+    """
+    Given lon, lat, and bathymetry, generate vectors of line segments
+    of the coastline. This can be exported to matlab (via savemat) to be
+    used with the 'editmask' routine for creating grid masks.
+
+    Input
+    -----
+    lon : array,
+        longitudes of bathymetry locations
+    lat : array,
+        latitudes of bathymetry locations
+    bathy : array,
+        bathymetry (negative for ocean, positive for land) values
+
+    Returns
+    -------
+    lon : ndarray,
+        vector of coastlines, separated by nan (matlab-style)
+    lat : ndarray,
+        vector of coastlines, separated by nan (matlab-style)
+    """
+    CS = plt.contour(lon, lat, bathy, [-0.25,0.25])
+    lon = list()
+    lat = list()
+    for col in CS.collections:
+        for path in col.get_paths():
+            lon.append(path.vertices[:,0])
+            lon.append(np.nan)
+            lat.append(path.vertices[:,1])
+            lat.append(np.nan)
+    return (np.hstack(lon), np.hstack(lat))
 
 class map(object):
     def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,

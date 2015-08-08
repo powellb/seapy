@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-  soda.py
+  hycom.py
 
-  Functions for dealing with the SODA model for importation into ROMS
+  Functions for dealing with the HYCOM model for importation into ROMS
 
   Written by Brian Powell on 07/24/15
   Copyright (c)2015 University of Hawaii under the BSD-License.
@@ -16,7 +16,8 @@ import seapy
 import sys
 import pudb
 
-_url="http://apdrc.soest.hawaii.edu:80/dods/public_data/SODA/soda_pop2.2.4";
+# _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"
+_url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"
 _maxrecs = 5
 
 
@@ -26,16 +27,16 @@ def load_history(filename,
                  grid=None,
                  epoch=datetime(2000, 1, 1), url=_url, load_data=True):
     """
-    Download soda data and save into local file
+    Download HYCOM data and save into local file
 
     Parameters
     ----------
     filename: string
         name of output file
     start_time: datetime
-        starting date to load soda data
+        starting date to load HYCOM data
     end_time: datetime
-        ending date for loading soda data
+        ending date for loading HYCOM data
     grid: seapy.model.grid, optional
         if specified, only load SODA data that covers the grid
     epoch: datetime, optional
@@ -53,15 +54,15 @@ def load_history(filename,
     # Load the grid
     grid = seapy.model.asgrid(grid)
 
-    # Open the soda data
-    soda = netCDF4.Dataset(url)
+    # Open the HYCOM data
+    hycom = netCDF4.Dataset(url)
 
     # Figure out the time records that are required
-    soda_time = netCDF4.num2date(soda.variables["time"][:],
-                                  soda.variables["time"].units)
+    hycom_time = netCDF4.num2date(hycom.variables["time"][:],
+                                  hycom.variables["time"].units)
 
-    time_list = np.where(np.logical_and(soda_time >= start_time,
-                                        soda_time <= end_time))
+    time_list = np.where(np.logical_and(hycom_time >= start_time,
+                                        hycom_time <= end_time))
     if not time_list:
         raise Exception("Cannot find valid times")
 
@@ -70,58 +71,57 @@ def load_history(filename,
     maxlat = np.max(grid.lat_rho)+0.5
     minlon = np.min(grid.lon_rho)-0.5
     maxlon = np.max(grid.lon_rho)+0.5
-    soda_lon = soda.variables["lon"][:]
-    soda_lat = soda.variables["lat"][:]
+    hycom_lon = hycom.variables["lon"][:]
+    hycom_lat = hycom.variables["lat"][:]
 
-    latlist = np.where(np.logical_and(soda_lat >= minlat,
-                                      soda_lat <= maxlat))
-    lonlist = np.where(np.logical_and(soda_lon >= minlon,
-                                      soda_lon <= maxlon))
+    latlist = np.where(np.logical_and(hycom_lat >= minlat,
+                                      hycom_lat <= maxlat))
+    lonlist = np.where(np.logical_and(hycom_lon >= minlon,
+                                      hycom_lon <= maxlon))
     if not latlist or not lonlist:
         raise Exception("Bounds not found")
 
     # Build the history file
     his = seapy.roms.ncgen.create_zlevel(filename, len(latlist[0]),
                 len(lonlist[0]),
-                len(soda.variables["depth"][:]), epoch,
-                "soda history from "+url, dims=1)
+                len(hycom.variables["depth"][:]), epoch,
+                "HYCOM history from "+url, dims=1)
 
     # pu.db
     # Write out the data
-    his.variables["lat"][:] = soda_lat[latlist]
-    his.variables["lon"][:] = soda_lon[lonlist]
-    his.variables["depth"][:] = soda.variables["depth"]
-    his.variables["time"][:] = netCDF4.date2num(soda_time[time_list],
+    his.variables["lat"][:] = hycom_lat[latlist]
+    his.variables["lon"][:] = hycom_lon[lonlist]
+    his.variables["depth"][:] = hycom.variables["depth"]
+    his.variables["time"][:] = netCDF4.date2num(hycom_time[time_list],
                                              his.variables["time"].units)
     # Loop over the variables
-    sodavars = {"surf_el": 3, "water_u": 4, "water_v": 4, "water_temp": 4,
+    hycomvars = {"surf_el": 3, "water_u": 4, "water_v": 4, "water_temp": 4,
                  "salinity": 4}
     hisvars = {"surf_el": "zeta", "water_u": "u", "water_v": "v",
                "water_temp": "temp", "salinity": "salt"}
 
     if not load_data:
         print("-v {:s} -d time,{:d},{:d} -d lat,{:d},{:d} -d lon,{:d},{:d} {:s}".format(
-                ",".join(sodavars.keys()),
+                ",".join(hycomvars.keys()),
                 time_list[0][0], time_list[0][-1], latlist[0][0],
                 latlist[0][-1], lonlist[0][0], lonlist[0][-1], _url))
     else:
         for rn, recs in enumerate(seapy.chunker(time_list[0], _maxrecs)):
-            print("{:s}-{:s}: ".format(soda_time[recs[0]].strftime("%m/%d/%Y"),
-                                     soda_time[recs[-1]].strftime("%m/%d/%Y")),
+            print("{:s}-{:s}: ".format(hycom_time[recs[0]].strftime("%m/%d/%Y"),
+                                     hycom_time[recs[-1]].strftime("%m/%d/%Y")),
                   end='',flush=True)
-            for var in sodavars:
+            for var in hycomvars:
                 print("{:s} ".format(var), end='',flush=True)
                 # pu.db
                 hisrange = np.arange(rn*_maxrecs, (rn*_maxrecs)+len(recs))
-                if sodavars[var] == 3:
+                if hycomvars[var] == 3:
                     his.variables[hisvars[var]][hisrange, :, :] = \
-                      soda.variables[var][recs, latlist[0], lonlist[0]].filled(
+                      hycom.variables[var][recs, latlist[0], lonlist[0]].filled(
                                                     fill_value=9.99E10)
                 else:
                     his.variables[hisvars[var]][hisrange, :, :, :] = \
-                        soda.variables[var][recs, :, latlist[0],
+                        hycom.variables[var][recs, :, latlist[0],
                                              lonlist[0]].filled(fill_value=9.99E10)
             his.sync()
             print("", flush=True)
-
 

@@ -158,7 +158,7 @@ def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
     return u, v
 
 def __interp_grids(src_grid, child_grid, ncout, records=None,
-            threads=1, nx=0, ny=0, weight=10, vmap=None, z_mask=False,
+            threads=-2, nx=0, ny=0, weight=10, vmap=None, z_mask=False,
             pmap=None):
     """
     internal method:  Given a model file (average, history, etc.),
@@ -327,9 +327,11 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
 
                 ncout.sync()
 
+    # Return the pmap that was used
+    return pmap
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
-             threads=1, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
+             threads=-2, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
              pmap=None):
     """
     Given an existing ROMS history or average file, create (if does not exit)
@@ -368,7 +370,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     Returns
     -------
-    None
+    pmap : ndarray
+        the weighting matrix computed during the interpolation
 
     """
     roms_grid = seapy.model.grid(roms_file)
@@ -387,7 +390,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         if z_grid is None:
             lat=roms_grid.lat_rho.shape[0]
             lon=roms_grid.lat_rho.shape[1]
-            if depth==None:
+            if depth is None:
                 raise ValueError("depth must be specified")
             ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
                                    src_time.origin,"ROMS z-level",
@@ -427,7 +430,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     # Call the interpolation
     try:
-        __interp_grids(roms_grid, z_grid, ncout, records=records,
+        pmap = __interp_grids(roms_grid, z_grid, ncout, records=records,
                   threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
                   z_mask=True, pmap=pmap)
     except TimeoutError:
@@ -438,7 +441,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         # Clean up
         ncout.close()
 
-def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
+    return pmap
+
+def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=-2,
             nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
@@ -471,7 +476,8 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     Returns
     -------
-    None
+    pmap : ndarray
+        the weighting matrix computed during the interpolation
     """
     src_grid = seapy.model.grid(src_file)
     if dest_grid is not None:
@@ -498,7 +504,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     try:
-        __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+        pmap = __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   nx=nx, ny=ny, weight=weight, vmap=vmap, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
@@ -508,7 +514,9 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=1,
         # Clean up
         ncout.close()
 
-def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
+    return pmap
+
+def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=-2,
             nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an model output file, create (if does not exit) a
@@ -541,7 +549,8 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     Returns
     -------
-    None
+    pmap : ndarray
+        the weighting matrix computed during the interpolation
     """
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
@@ -570,7 +579,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
 
     # Call the interpolation
     try:
-        __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
+        pmap = __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   nx=nx, ny=ny, vmap=vmap, weight=weight, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
@@ -580,4 +589,5 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=1,
         # Clean up
         ncout.close()
 
+    return pmap
 pass

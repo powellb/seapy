@@ -14,8 +14,12 @@ from __future__ import print_function
 import numpy as np
 import netCDF4
 import seapy
-from joblib import Parallel, delayed
 import matplotlib.path
+from collections import namedtuple
+from warnings import warn
+
+# Define a named tuple to store raw data for the gridder
+raw_data = namedtuple('raw_data', 'type provenance min_error values')
 
 # Define the observation type
 obs_types = {
@@ -48,6 +52,7 @@ obs_provenance = {
     330:"SST_MODIS_AQUA",
     331:"SST_MODIS_TERRA",
     400:"SSH",
+    410:"SSH_AVISO_MAP",
     411:"SSH_AVISO_ENVISAT",
     412:"SSH_AVISO_JASON1",
     413:"SSH_AVISO_JASON2",
@@ -87,19 +92,67 @@ obs_provenance = {
 }
 
 def _type_from_string(s):
-    # Search the dictionary for the key of the given the value
-    return list(obs_types.keys())[ \
+    """
+    PRIVATE method: Search the type dictionary for the key of the
+    given the value. If the key isn't a string or properly resolves, try to
+    return the value as such
+    """
+    try:
+        return list(obs_types.keys())[ \
                 list(obs_types.values()).index(s.upper())]
+    except AttributeError:
+        return int(s)
 
 def _provenance_from_string(s):
-    # Search the dictionary for the key of the given the value
-    return list(obs_provenance.keys())[ \
+    """
+    PRIVATE method: Search the provenance dictionary for the key of the
+    given the value. If the key isn't a string or properly resolves, try to
+    return the value as such
+    """
+    try:
+        return list(obs_provenance.keys())[ \
                 list(obs_provenance.values()).index(s.upper())]
+    except AttributeError:
+        return int(s)
+
+def astype(otype):
+    """
+    Return the integer type of the given observation array.
+
+    Input
+    -----
+    otype: ndarray,
+        List of types to put into integer form
+
+    Output
+    ------
+    types: array,
+        List of integer types
+    """
+    otype = np.atleast_1d(otype)
+    return np.array([_type_from_string(s) for s in otype])
+
+def asprovenance(prov):
+    """
+    Return the integer provenance of the given provenance array.
+
+    Input
+    -----
+    prov: array,
+        List of provenances to put into integer form
+
+    Output
+    ------
+    provs: ndarray,
+        List of integer provenances
+    """
+    prov = np.atleast_1d(prov)
+    return np.array([_provenance_from_string(s) for s in prov])
 
 class obs:
     def __init__(self, filename=None, time=None, x=None, y=None, z=None,
                  lat=None, lon=None, depth=None, value=None, error=None,
-                 type=None, provenance=None, meta=None,
+                 otype=None, provenance=None, meta=None,
                  title="ROMS Observations"):
         """
         Class to deal with ROMS observations for data assimilation
@@ -126,7 +179,7 @@ class obs:
           obs value [units]
         error : ndarray, optional,
           obs error [units**2]
-        type : ndarray, optional,
+        otype : ndarray, optional,
           obs type [1-zeta, 2-ubar, 3-vbar, 4-u, 5-v, 6-temp, 7-salt]
         provenance : ndarray, optional,
           obs provenance
@@ -147,7 +200,7 @@ class obs:
             self.depth = nc.variables["obs_depth"][:]
             self.value = nc.variables["obs_value"][:]
             self.error = nc.variables["obs_error"][:]
-            self.type = nc.variables["obs_type"][:].astype(np.int)
+            self.otype = nc.variables["obs_type"][:].astype(np.int)
             self.provenance = nc.variables["obs_provenance"][:].astype(np.int)
             if "obs_meta" in nc.variables:
                 self.meta = nc.variables["obs_meta"][:]
@@ -155,51 +208,24 @@ class obs:
                 self.meta = self.value.copy() * 0
             nc.close()
         else:
-            if time: self.time = np.atleast_1d(time)
-            if x: self.x = np.atleast_1d(x)
-            if y: self.y = np.atleast_1d(y)
-            if z: self.z = np.atleast_1d(z)
-            if lat: self.lat = np.atleast_1d(lat)
-            if lon: self.lon = np.atleast_1d(lon)
-            if depth: self.depth = np.atleast_1d(depth)
-            if value: self.value = np.atleast_1d(value)
-            if error: self.error = np.atleast_1d(error)
-            if type: self._astype(type)
-            if provenance: self._asprovenance(provenance)
-            if meta: self.meta = np.atleast_1d(meta)
+            if time is not None: self.time = np.atleast_1d(time)
+            if x is not None: self.x = np.atleast_1d(x)
+            if y is not None: self.y = np.atleast_1d(y)
+            if z is not None: self.z = np.atleast_1d(z)
+            if lat is not None: self.lat = np.atleast_1d(lat)
+            if lon is not None: self.lon = np.atleast_1d(lon)
+            if depth is not None: self.depth = np.atleast_1d(depth)
+            if value is not None: self.value = np.atleast_1d(value)
+            if error is not None: self.error = np.atleast_1d(error)
+            if otype is not None: self.otype = astype(otype)
+            if provenance is not None:
+                self.provenance = asprovenance(provenance)
+            else:
+                self.provenance = 0
+            if meta is not None: self.meta = np.atleast_1d(meta)
 
         # ensure everything is good
         self._consistent()
-
-    def _astype(self, type):
-        """
-        PRIVATE method: build the type array from either string or values
-        """
-        if type is None:
-            raise ValueError("you must provide a valid observation type")
-
-        type=np.atleast_1d(type)
-        # If the type given is a string, convert to ID
-        if type.dtype.char is np.dtype(np.str).char:
-            self.type = np.array([_type_from_string(s) for s in type])
-        else:
-            self.type = type.astype(np.int)
-
-    def _asprovenance(self, prov):
-        """
-        PRIVATE method: build the provenance array from either string or values
-        """
-        if prov is None:
-            prov=np.zeros(1)
-        else:
-            prov=np.atleast_1d(prov)
-
-        # if the provenance given is a string, convert to ID
-        if prov.dtype.char is np.dtype(np.str).char:
-            self.provenance = np.array([_provenance_from_string(s) \
-                                         for s in prov])
-        else:
-            self.provenance = prov.astype(np.int)
 
     def _consistent(self):
         """
@@ -212,34 +238,27 @@ class obs:
         self.y = self.y.ravel()
         self.value = self.value.ravel()
         self.error = self.error.ravel()
-        self._astype(np.asanyarray(self.type).ravel())
+        self.otype = astype(self.otype.ravel())
 
         lt=len(self.time)
         if not lt==len(self.x)==len(self.y)==\
-               len(self.value)==len(self.error)==len(self.type):
+               len(self.value)==len(self.error)==len(self.otype):
             # If these lengths are not equal, then there is a serious issue
             raise ValueError("Lengths of observation attributes are not equal.")
         else:
             # For the others, we can pad the information to ensure
             # consistency
             def _resizearr(arr,n):
-                if not hasattr(self,arr):
+                try:
+                    return np.resize(getattr(self,arr),n)
+                except:
                     return np.zeros(n)
-                else:
-                    arr=np.asanyarray(getattr(self,arr)).ravel()
-                    la=len(arr)
-                    if la==n:
-                        return arr
-                    elif la<n:
-                        return np.pad(arr, (0,n-la), 'edge')
-                    else:
-                        return arr[:n]
 
             self.z = _resizearr("z", lt)
             self.lat = _resizearr("lat", lt)
             self.lon = _resizearr("lon", lt)
             self.depth = _resizearr("depth", lt)
-            self._asprovenance(_resizearr("provenance", lt))
+            self.provenance = asprovenance(_resizearr("provenance", lt))
             self.meta = _resizearr("meta", lt)
 
         # Eliminate bad values
@@ -257,7 +276,7 @@ class obs:
         return obs(time=self.time[l], x=self.x[l], y=self.y[l],
                             z=self.z[l],lon=self.lon[l],lat=self.lat[l],
                             depth=self.depth[l],value=self.value[l],
-                            error=self.error[l],type=self.type[l],
+                            error=self.error[l],type=self.otype[l],
                             provenance=self.provenance[l],meta=self.meta[l])
 
     def __setitem__(self, l, new_obs):
@@ -273,7 +292,7 @@ class obs:
         self.depth[l] = new_obs.depth
         self.value[l] = new_obs.value
         self.error[l] = new_obs.error
-        self.type[l] = new_obs.type
+        self.otype[l] = new_obs.type
         self.provenance[l] = new_obs.provenance
         self.meta[l] = new_obs.meta
         self._consistent()
@@ -283,8 +302,8 @@ class obs:
 
     def __str__(self):
         return "\n".join([ \
-  "{:.2f}, [{:s}<{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
-                    t, obs_types[self.type[n]],
+  "{:.2f}, [{:s}:{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
+                    t, obs_types[self.otype[n]],
                     obs_provenance[self.provenance[n]],
                     self.lon[n], self.lat[n], self.depth[n],
                     self.value[n], self.error[n] ) \
@@ -322,7 +341,7 @@ class obs:
         self.depth = np.append(self.depth, new_obs.depth)
         self.value = np.append(self.value, new_obs.value)
         self.error = np.append(self.error, new_obs.error)
-        self.type = np.append(self.type, new_obs.type)
+        self.otype = np.append(self.otype, new_obs.type)
         self.provenance = np.append(self.provenance, new_obs.provenance)
         self.meta = np.append(self.meta, new_obs.meta)
 
@@ -353,7 +372,7 @@ class obs:
         self.depth = np.delete(self.depth, obj)
         self.value = np.delete(self.value, obj)
         self.error = np.delete(self.error, obj)
-        self.type = np.delete(self.type, obj)
+        self.otype = np.delete(self.otype, obj)
         self.provenance = np.delete(self.provenance, obj)
         self.meta = np.delete(self.meta, obj)
 
@@ -387,7 +406,8 @@ class obs:
         nc.variables["spherical"][:] = 1
         nc.variables["Nobs"][:] = self.nobs
         nc.variables["survey_time"][:] = self.survey_time
-        nc.variables["obs_variance"][:] = np.ones(max(7,np.max(self.type)))*0.1
+        nc.variables["obs_variance"][:] = \
+                    np.ones(np.max(7,np.max(self.otype)))*0.1
         nc.variables["obs_time"][:] = self.time[self.sort]
         nc.variables["obs_Xgrid"][:] = self.x[self.sort]
         nc.variables["obs_Ygrid"][:] = self.y[self.sort]
@@ -397,14 +417,14 @@ class obs:
         nc.variables["obs_depth"][:] = self.depth[self.sort]
         nc.variables["obs_value"][:] = self.value[self.sort]
         nc.variables["obs_error"][:] = self.error[self.sort]
-        nc.variables["obs_type"][:] = self.type[self.sort]
+        nc.variables["obs_type"][:] = self.otype[self.sort]
         nc.variables["obs_provenance"][:] = self.provenance[self.sort]
         nc.variables["obs_meta"][:] = self.meta[self.sort]
         nc.close()
 
 
 def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
-            threads=2):
+            threads=-2):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.

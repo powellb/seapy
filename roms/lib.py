@@ -19,7 +19,7 @@ fields={   "zeta":{"grid":"rho","dims":2},
            "temp":{"grid":"rho","dims":3},
            "salt":{"grid":"rho","dims":3}}
 
-default_epoch = "days since 2000-01-01 00:00:00"
+_default_epoch = "days since 2000-01-01 00:00:00"
 
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
@@ -205,7 +205,7 @@ def get_timevar(nc):
             return time
     return None
 
-def get_timebase(nc):
+def get_timebase(nc, default_epoch=_default_epoch):
     """
     Given a ROMS netCDF4 file, compute the timebase for the file
 
@@ -213,6 +213,8 @@ def get_timebase(nc):
     ----------
     nc : netCDF4 dataset
         Input ROMS file
+    default_epoch : string, optional
+        If lacking units, use this string as the units
 
     Returns
     -------
