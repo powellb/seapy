@@ -19,7 +19,7 @@ from collections import namedtuple
 from warnings import warn
 
 # Define a named tuple to store raw data for the gridder
-raw_data = namedtuple('raw_data', 'type provenance min_error values')
+raw_data = namedtuple('raw_data', 'type provenance values error min_error')
 
 # Define the observation type
 obs_types = {
@@ -115,13 +115,13 @@ def _provenance_from_string(s):
     except AttributeError:
         return int(s)
 
-def astype(otype):
+def astype(type):
     """
     Return the integer type of the given observation array.
 
     Input
     -----
-    otype: ndarray,
+    type: ndarray,
         List of types to put into integer form
 
     Output
@@ -129,8 +129,8 @@ def astype(otype):
     types: array,
         List of integer types
     """
-    otype = np.atleast_1d(otype)
-    return np.array([_type_from_string(s) for s in otype])
+    type = np.atleast_1d(type)
+    return np.array([_type_from_string(s) for s in type])
 
 def asprovenance(prov):
     """
@@ -152,7 +152,7 @@ def asprovenance(prov):
 class obs:
     def __init__(self, filename=None, time=None, x=None, y=None, z=None,
                  lat=None, lon=None, depth=None, value=None, error=None,
-                 otype=None, provenance=None, meta=None,
+                 type=None, provenance=None, meta=None,
                  title="ROMS Observations"):
         """
         Class to deal with ROMS observations for data assimilation
@@ -179,7 +179,7 @@ class obs:
           obs value [units]
         error : ndarray, optional,
           obs error [units**2]
-        otype : ndarray, optional,
+        type : ndarray, optional,
           obs type [1-zeta, 2-ubar, 3-vbar, 4-u, 5-v, 6-temp, 7-salt]
         provenance : ndarray, optional,
           obs provenance
@@ -200,7 +200,7 @@ class obs:
             self.depth = nc.variables["obs_depth"][:]
             self.value = nc.variables["obs_value"][:]
             self.error = nc.variables["obs_error"][:]
-            self.otype = nc.variables["obs_type"][:].astype(np.int)
+            self.type = nc.variables["obs_type"][:].astype(np.int)
             self.provenance = nc.variables["obs_provenance"][:].astype(np.int)
             if "obs_meta" in nc.variables:
                 self.meta = nc.variables["obs_meta"][:]
@@ -217,7 +217,7 @@ class obs:
             if depth is not None: self.depth = np.atleast_1d(depth)
             if value is not None: self.value = np.atleast_1d(value)
             if error is not None: self.error = np.atleast_1d(error)
-            if otype is not None: self.otype = astype(otype)
+            if type is not None: self.type = astype(type)
             if provenance is not None:
                 self.provenance = asprovenance(provenance)
             else:
@@ -238,11 +238,11 @@ class obs:
         self.y = self.y.ravel()
         self.value = self.value.ravel()
         self.error = self.error.ravel()
-        self.otype = astype(self.otype.ravel())
+        self.type = astype(self.type.ravel())
 
         lt=len(self.time)
         if not lt==len(self.x)==len(self.y)==\
-               len(self.value)==len(self.error)==len(self.otype):
+               len(self.value)==len(self.error)==len(self.type):
             # If these lengths are not equal, then there is a serious issue
             raise ValueError("Lengths of observation attributes are not equal.")
         else:
@@ -269,14 +269,18 @@ class obs:
         if np.any(~good_vals):
             self.delete(np.where(good_vals==False))
 
+        # Set the shape parameter
+        self.shape = self.value.shape
+
     def __len__(self):
+        self.shape = self.value.shape
         return len(self.value)
 
     def __getitem__(self, l):
         return obs(time=self.time[l], x=self.x[l], y=self.y[l],
                             z=self.z[l],lon=self.lon[l],lat=self.lat[l],
                             depth=self.depth[l],value=self.value[l],
-                            error=self.error[l],type=self.otype[l],
+                            error=self.error[l],type=self.type[l],
                             provenance=self.provenance[l],meta=self.meta[l])
 
     def __setitem__(self, l, new_obs):
@@ -292,7 +296,7 @@ class obs:
         self.depth[l] = new_obs.depth
         self.value[l] = new_obs.value
         self.error[l] = new_obs.error
-        self.otype[l] = new_obs.type
+        self.type[l] = new_obs.type
         self.provenance[l] = new_obs.provenance
         self.meta[l] = new_obs.meta
         self._consistent()
@@ -303,7 +307,7 @@ class obs:
     def __str__(self):
         return "\n".join([ \
   "{:.2f}, [{:s}:{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
-                    t, obs_types[self.otype[n]],
+                    t, obs_types[self.type[n]],
                     obs_provenance[self.provenance[n]],
                     self.lon[n], self.lat[n], self.depth[n],
                     self.value[n], self.error[n] ) \
@@ -341,7 +345,7 @@ class obs:
         self.depth = np.append(self.depth, new_obs.depth)
         self.value = np.append(self.value, new_obs.value)
         self.error = np.append(self.error, new_obs.error)
-        self.otype = np.append(self.otype, new_obs.type)
+        self.type = np.append(self.type, new_obs.type)
         self.provenance = np.append(self.provenance, new_obs.provenance)
         self.meta = np.append(self.meta, new_obs.meta)
 
@@ -372,7 +376,7 @@ class obs:
         self.depth = np.delete(self.depth, obj)
         self.value = np.delete(self.value, obj)
         self.error = np.delete(self.error, obj)
-        self.otype = np.delete(self.otype, obj)
+        self.type = np.delete(self.type, obj)
         self.provenance = np.delete(self.provenance, obj)
         self.meta = np.delete(self.meta, obj)
 
@@ -400,14 +404,15 @@ class obs:
         # Save out the observations by survey
         self._consistent()
         self.create_survey()
+        state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
-                survey=len(self.survey_time), provenance=obs_provenance,
-                title=self.title)
+                survey=len(self.survey_time), state_variable=state_vars,
+                provenance=obs_provenance,
+                clobber=True, title=self.title)
         nc.variables["spherical"][:] = 1
         nc.variables["Nobs"][:] = self.nobs
         nc.variables["survey_time"][:] = self.survey_time
-        nc.variables["obs_variance"][:] = \
-                    np.ones(np.max(7,np.max(self.otype)))*0.1
+        nc.variables["obs_variance"][:] = np.ones(state_vars)*0.1
         nc.variables["obs_time"][:] = self.time[self.sort]
         nc.variables["obs_Xgrid"][:] = self.x[self.sort]
         nc.variables["obs_Ygrid"][:] = self.y[self.sort]
@@ -417,7 +422,7 @@ class obs:
         nc.variables["obs_depth"][:] = self.depth[self.sort]
         nc.variables["obs_value"][:] = self.value[self.sort]
         nc.variables["obs_error"][:] = self.error[self.sort]
-        nc.variables["obs_type"][:] = self.otype[self.sort]
+        nc.variables["obs_type"][:] = self.type[self.sort]
         nc.variables["obs_provenance"][:] = self.provenance[self.sort]
         nc.variables["obs_meta"][:] = self.meta[self.sort]
         nc.close()
