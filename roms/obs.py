@@ -36,12 +36,18 @@ obs_types = {
 obs_provenance = {
     0:"UNKNOWN",
     100:"GLIDER",
+    114:"GLIDER_SG022",
+    114:"GLIDER_SG023",
     114:"GLIDER_SG114",
     139:"GLIDER_SG139",
     146:"GLIDER_SG146",
     147:"GLIDER_SG147",
     148:"GLIDER_SG148",
     150:"GLIDER_SG500",
+    151:"GLIDER_SG511",
+    152:"GLIDER_SG512",
+    153:"GLIDER_SG513",
+    154:"GLIDER_SG523",
     200:"CTD",
     210:"CTD_HOT",
     220:"CTD_ARGO",
@@ -58,6 +64,7 @@ obs_provenance = {
     413:"SSH_AVISO_JASON2",
     414:"SSH_AVISO_GFO",
     415:"SSH_HYCOM",
+    460:"SSS_AQUARIUS",
     500:"DRIFTERS",
     600:"RADAR",
     610:"RADAR_KOKOHEAD",
@@ -308,7 +315,7 @@ class obs:
         return "\n".join([ \
   "{:.2f}, [{:s}:{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
                     t, obs_types[self.type[n]],
-                    obs_provenance[self.provenance[n]],
+                    obs_provenance.get(self.provenance[n],"UNKNOWN"),
                     self.lon[n], self.lat[n], self.depth[n],
                     self.value[n], self.error[n] ) \
             for n,t in enumerate(self.time) ])
@@ -407,7 +414,8 @@ class obs:
         state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
                 survey=len(self.survey_time), state_variable=state_vars,
-                provenance=obs_provenance,
+                provenance=','.join((':'.join((obs_provenance[v],str(v)))
+                                     for v in np.unique(self.provenance))),
                 clobber=True, title=self.title)
         nc.variables["spherical"][:] = 1
         nc.variables["Nobs"][:] = self.nobs
@@ -428,8 +436,7 @@ class obs:
         nc.close()
 
 
-def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
-            threads=-2):
+def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.
@@ -438,144 +445,210 @@ def gridder(grid, raw, dx=1, dy=1, dz=np.arange(0,5000,100), dt=1, nx=1, ny=1,
     ----------
     grid : seapy.model.grid or filename string,
         Grid to place the raw observations onto
-    raw : dict,
-        dictionary of the raw observations. Dict must have keys:
-            "time" : list of floats [days since epoch]
-            "lat"  : list of floats [degrees]
-            "lon"  : list of floats [degrees]
-            "depth": list of floats [m]
-        Any other keys are considered data and compared against the
-        obs_types dictionary.
-    dx : float, optional,
-        half-width of the x-dimension box to consider from the
-        center of each grid cell in km (e.g., dx=4 would result in an
-        8km width)
-    dy : float, optional,
-        half-width of the y-dimension box to consider from the
-        center of each grid cell in km (e.g., dy=4 would result in an
-        8km width)
-    dz : list of floats, optional,
-        The bins of vertical depths to consider for in situ observations.
-        Positive values are down and in units of m.
-    dt : float, optional,
+    time : ndarray,
+        Time of the observations. This can be a scalar and all values
+        will be assigned to the single time; otherwise, there must be a
+        corresponding time to each value in the data.
+    lon : ndarray,
+        longitude of the observations. This can be a scalar and all values
+        will be assigned to the single location; otherwise, there must be a
+        corresponding longitude to each value in the data.
+    lat : ndarray,
+        latitude of the observations. This can be a scalar and all values
+        will be assigned to the single location; otherwise, there must be a
+        corresponding latitude to each value in the data.
+    depth : ndarray or None,
+        depth of the observations. If None, then all values are placed on
+        the surface; otherwise, must be a corresponding depth for each
+        value in the data.
+    data : list of named tuples of seapy.roms.obs.raw_data,
+        This list is comprised of each set of observation data types that
+        are to be gridded together. If there is only one type (e.g.,
+        SSH observations, there is only one item). An Argo float would have
+        two items in the list (temperature and salinity observations).
+        The list is comprised of named tuples of the raw observations
+        with the following fields:
+            "type" : string (or integer) of the type from
+                     seapy.roms.obs.obs_types
+             "provenance"  : string (or integer) of the type from
+                             seapy.roms.obs.obs_provenance
+            "values" : ndarray of actual observed values in units
+                       for type
+            "error" : ndarray (or None) of individual observational
+                      uncertainty (same units of values). If not known,
+                      use None
+            "min_error" : float of the minimum error that should be
+                          prescribed to the observations (typically,
+                          the instrument error) in the same units of
+                          values.
+    dt : float
         The bin size of time for observations to be considered at the
-        same time in units of days.
-    nx : int, optional,
-        stride value of grid cells to consider in the x-direction (e.g.,
-        1 is every point, 2 is every other point)
-    ny : int, optional,
-        stride value of grid cells to consider in the y-direction (e.g.,
-        1 is every point, 2 is every other point)
-    threads : int, optional,
-        number of threads to run to grid the data
+        same time. The units must be the same as the provided time.
+    title : string, optional,
+        Title to assign the observations structure for output
 
     Returns
     -------
-    y : obs class
+    obs : seapy.obs class
         Resulting observations from the raw data as placed onto grid.
+
+    **Examples**
+
+    A profile of temp and salt observations at a given lat/lon:
+    >>> obs = seapy.obs.gridder(grid, times, lon, lat,
+            [ seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp, None, 0.1),
+              seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt, None, 0.05)],
+            dt = 1/24, title="Argo")
+
+    Satellite Data from a number of lat/lons at a single time
+    >>> obs = seapy.obs.gridder(grid, time, lon, lat,
+            seapy.roms.obs.raw_data("ZETA", "SSH_AVISO", sla, sla_err, 0.05),
+            dt = 2/24, title="SSH")
+
     """
-    # Make sure everything is in proper form.
-    grid=seapy.model.asgrid(grid)
-    raw_vars=[]
-    for key in raw:
-        raw[key] = np.asanyarray(raw[key]).ravel()
-        if key.upper() in list(obs_types.values()):
-            raw_vars.append(key)
-    if not raw_vars:
-        raise AttributeError("The raw data must contain a valid obs data type")
+    from numpy_groupies import aggregate
 
-    l=np.where(raw["lon"]>180)
-    raw["lon"][l]=raw["lon"][l]-360
-    if "depth" in raw:
-        raw["depth"]=np.sort(-np.abs(raw["depth"]))[::-1]
+    # Make sure the input is of the proper form
+    grid = seapy.model.asgrid(grid)
+    time = np.atleast_1d(time)
+    lon = np.atleast_1d(lon)
+    lat = np.atleast_1d(lat)
 
-    # Construct the grid boxes to search for data
-    rng=np.s_[::ny,::nx]
-    ocean=np.where(grid.mask_rho[rng]==1)
-    lon=grid.lon_rho[rng][ocean]
-    lat=grid.lat_rho[rng][ocean]
-    dx = dx*1000 / seapy.earth_distance(lon, lat, lon+1, lat)
-    dy = dy*1000 / seapy.earth_distance(lon, lat, lon, lat+1)
-    dxy = dx * np.sin(grid.angle[rng][ocean]);
-    dx  = dx * np.cos(grid.angle[rng][ocean]);
-    dyx = dy * np.sin(grid.angle[rng][ocean]);
-    dy  = dy * np.cos(grid.angle[rng][ocean]);
-    xv = np.vstack(((lon+dx-dyx).ravel(),
-                    (lon+dx+dyx).ravel(),
-                    (lon-dx+dyx).ravel(),
-                    (lon-dx-dyx).ravel(),
-                    (lon+dx-dyx).ravel())).T
-    yv = np.vstack(((lat+dy+dxy).ravel(),
-                    (lat-dy+dxy).ravel(),
-                    (lat-dy-dxy).ravel(),
-                    (lat+dy-dxy).ravel(),
-                    (lat+dy+dxy).ravel())).T
-    l=np.where(xv>180)
-    xv[l]=xv[l]-360
+    # First, before relying on gridding, extract only the data that are
+    # encompassed by the grid
+    region_list = np.where(np.logical_and.reduce((
+                lat>=np.min(grid.lat_rho), lat<=np.max(grid.lat_rho),
+                lon>=np.min(grid.lon_rho), lon<=np.max(grid.lon_rho))))
+    if len(region_list[0]) == 0:
+        warn("No observations were located within grid region_list")
+        return None
+    lat = lat[region_list]
+    lon = lon[region_list]
 
-    # Limit the data and grid boxes to those that are overlapping
-    # First, eliminate raw data that are outside of our grid boxes
-    region=np.where(np.logical_and( \
-                    np.logical_and(raw["lon"] <= np.max(xv),
-                                   raw["lon"] >= np.min(xv)),
-                    np.logical_and(raw["lat"] <= np.max(yv),
-                                   raw["lat"] >= np.min(yv))))
-    for key in raw:
-        if key is not "depth":
-            raw[key]=raw[key][region]
+    # Get the appropriate k-dimension depending on whether the data
+    # are 2-D or 3-D
+    if depth is None:
+        # Get the grid locations from the data locations
+        subsurface_values = False
+        (j,i) = grid.ij((lon,lat))
+        depth = np.zeros(len(i))
+        k = np.ma.array(np.resize(grid.n, len(i)))
+    else:
+        # Get the grid locations from the data locations
+        subsurface_values = True
+        depth=np.atleast_1d(depth)[region_list]
+        (k,j,i) = grid.ijk((lon,lat,depth))
 
-    # Next, eliminate grid boxes that are outside of the raw data
-    search=np.where(np.logical_and( \
-                    np.logical_and(xv[:,0] <= np.max(raw["lon"]),
-                                   xv[:,2] >= np.min(raw["lon"])),
-                    np.logical_and(yv[:,0] <= np.max(raw["lat"]),
-                                   yv[:,2] >= np.min(raw["lat"]))))
-    xv=xv[search[0],:]
-    yv=yv[search[0],:]
+    # Sub-select only the points that lie on our grid
+    valid_list = np.where((~i.mask * ~j.mask * ~k.mask) == True)
+    i = i.compressed()
+    j = j.compressed()
+    k = k[valid_list]
+    depth = depth[valid_list]
 
-    # Build arrays that will be used many times
-    pts=np.vstack((raw["lon"],raw["lat"])).T
-    times=np.unique(raw["time"])
-    d=np.diff(times)<dt
-    while d.any():
-        i=np.min(np.where(d))
-        times[i+1]=times[i]
-        times=np.unique(times)
-        d=np.diff(times)<dt
+    # Make sure the times are consistent and in dt-space
+    if len(time) == 1:
+        time = np.resize(time, len(valid_list[0]))
+    else:
+        time = time[region_list][valid_list]
+    dtime = np.floor(time/dt)
 
-    # Create an internal function for gridding the data
-    def __gridder_thread(xv, yv, raw, pts, dt):
-        # Find the points inside the current grid point
-        poly=matplotlib.path.Path(list(zip(xv,yv)))
-        inside=poly.contains_points(pts)
-        if inside.any():
-            pu.db
-            # Loop over the available times
-            time=np.mean(raw["time"][inside])
-            lat=np.mean(raw["lat"][inside])
-            lon=np.mean(raw["lon"][inside])
-            num=np.count_nonzero(inside)
-            z=1
-            for v in raw_vars:
-                data=np.nanmean(raw[v][inside])
-                var=np.nanvar(raw[v][inside])
-            pu.db
-        return
+    # Loop over all time intervals putting everything together. NOTE: The
+    # preference is to use aggregate over the time-dimension just as we do
+    # in the spatial-dimension; however, this led to crashing.
+    ot = list()
+    ox = list()
+    oy = list()
+    oz = list()
+    odep = list()
+    olon = list()
+    olat = list()
+    oval = list()
+    oerr = list()
+    oprov = list()
+    otype = list()
+    for t in seapy.progressbar.progress(np.unique(dtime)):
+        time_list = np.where(dtime == t)
+        mtime = np.nanmean(time[time_list])
 
-    # Loop over the data, calling the internal gridder
-    for i in range(xv.shape[0]):
-        # pu.db
-        __gridder_thread(xv[i,:],yv[i,:],raw,pts,dt)
+        for v in data:
+            valid_data = np.s_[:]
+            if isinstance(v.values, np.ma.core.MaskedArray):
+                valid_data = ~np.ma.getmaskarray(
+                                v.values[region_list][valid_list][time_list])
 
-    # Put the results together
-    pass
+            # Put together the indices based on the type of data we have
+            if subsurface_values:
+                idx = (k[time_list][valid_data],
+                       j[time_list][valid_data],
+                       i[time_list][valid_data])
+            else:
+                idx = (j[time_list][valid_data],
+                       i[time_list][valid_data])
+            indices = np.floor(idx).astype(int)
 
- # ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
-#                   (delayed(__interp2_thread) (
-#    getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
-#    ncsrc.variables[k][i,:,:],
-#    getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
-#    pmap["pmap"+grd], weight,
-#    nx, ny, getattr(child_grid,"mask_"+grd))
-#  for i in records), copy=False)
-#
+            # Grid the data onto our grid and compute the mean and variance
+            ii = aggregate(indices, i[time_list][valid_data], func='mean')
+            jj = aggregate(indices, j[time_list][valid_data], func='mean')
+            binned = np.where(ii * jj > 0)
+            ii = ii[binned].ravel()
+            jj = jj[binned].ravel()
+            (latl, lonl) = grid.latlon((ii,jj))
+            Nd = len(ii)
+
+            # Put the co-located values together
+            nvalues = aggregate(indices,
+                    v.values[region_list][valid_list][time_list][valid_data],
+                    func='mean')
+            # Get their variance
+            vari = aggregate(indices,
+                    v.values[region_list][valid_list][time_list][valid_data],
+                    func='var')
+            # Put together the known observation values
+            if v.error is not None:
+                errs = aggregate(indices,
+                    v.error[region_list][valid_list][time_list][valid_data]**2,
+                    func='mean')
+                errs = errs[binned].flatten()
+            else:
+                errs = 0.0
+
+            # Build the depth vectors
+            if subsurface_values:
+                dd = aggregate(indices, depth[time_list], func='mean')
+                kk = aggregate(indices, k[time_list], func='mean')
+                dd = dd[binned].ravel()
+                kk = kk[binned].ravel()
+            else:
+                kk = np.resize(grid.n, Nd)
+                dd = np.zeros(ii.shape)
+
+            # Put all of the data from this time into our lists
+            ot.append(np.resize(mtime, Nd))
+            ox.append(ii)
+            oy.append(jj)
+            oz.append(kk)
+            odep.append(dd)
+            olon.append(lonl)
+            olat.append(latl)
+            oval.append(nvalues[binned].flatten())
+            otype.append(np.resize(seapy.roms.obs.astype(v.type), Nd))
+            oprov.append(np.resize(
+                            seapy.roms.obs.asprovenance(v.provenance), Nd))
+            oerr.append(np.maximum(v.min_error**2,
+                            np.maximum(vari[binned].flatten(),
+                                       errs)))
+
+    # Put everything together and create an observation class
+    return seapy.roms.obs.obs(time=np.hstack(ot).ravel(),
+                             x=np.hstack(ox).ravel(),
+                             y=np.hstack(oy).ravel(),
+                             z=np.hstack(odep).ravel(),
+                             lat=np.hstack(olat).ravel(),
+                             lon=np.hstack(olon).ravel(),
+                             depth=np.hstack(oz).ravel(),
+                             value=np.hstack(oval).ravel(),
+                             error=np.hstack(oerr).ravel(),
+                             type=np.hstack(otype).ravel(),
+                             provenance=np.hstack(oprov).ravel(),
+                             title=title)

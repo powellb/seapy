@@ -7,6 +7,11 @@
 
   Written by Brian Powell on 10/09/13
   Copyright (c)2013 University of Hawaii under the BSD-License.
+
+  **Examples**
+
+  >>> grid = seapy.model.grid("grid_file.nc")
+
 """
 from __future__ import print_function
 
@@ -541,14 +546,16 @@ class grid:
         depth[l] = -depth[l]
 
         # Determine the unique points
-        good = np.where(j.mask==False)[0]
-        rows, idx = seapy.unique_rows((j.data[good], i.data[good]))
+        good = ~j.mask * ~i.mask
+        ii = np.floor(i[good])
+        jj = np.floor(j[good])
+        rows, idx = seapy.unique_rows((jj, ii))
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
-            pts = np.where(np.logical_and(j==j[good[n]], i==i[good[n]]))
-            fi = interp1d(self.depth_rho[:,j[good[n]],i[good[n]]], grid_k,
+            pts = np.where(np.logical_and(jj==jj[n], ii==ii[n]))
+            fi = interp1d(self.depth_rho[:,jj[n],ii[n]], grid_k,
                           bounds_error=False, fill_value=fill_value)
-            k[pts] = fi(depth[pts])
+            k[good[pts]] = fi(depth[good][pts])
 
         # Mask bad points
         l = np.isnan(k.data)

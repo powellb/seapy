@@ -42,3 +42,4 @@ from .mapping import *
 from .hawaii import hawaii
 from . import plot
 from .progressbar import *
+from . import seawater
