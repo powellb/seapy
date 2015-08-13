@@ -244,9 +244,10 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         if seapy.roms.fields[k]["dims"]==2:
             # Compute the max number of hold in memory
             maxrecs = np.minimum(len(records),
-                np.int(_max_memory/(child_grid.lon_rho.nbytes+src_grid.lon_rho.nbytes)))
+                np.int(_max_memory/(child_grid.lon_rho.nbytes +
+                                    src_grid.lon_rho.nbytes)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
-                outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
+                outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
                 ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
                                  (delayed(__interp2_thread) (
                   getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -258,10 +259,11 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[vmap[k]][outr,:,:] = ndata
                 ncout.sync()
         else:
-            maxrecs = np.minimum(len(records),np.int(_max_memory/
-                (child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n)))
+            maxrecs = np.minimum(len(records),np.int(_max_memory /
+                (child_grid.lon_rho.nbytes*child_grid.n +
+                 src_grid.lon_rho.nbytes*src_grid.n)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
-                outr = np.s_[rn*maxrecs:rn*maxrecs+maxrecs]
+                outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
                 ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
                                  (delayed(__interp3_thread)(
                   getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
@@ -288,14 +290,14 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             (2*(child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n))))
         for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
             vel = Parallel(n_jobs=threads, verbose=2) \
-                     (delayed(__interp3_vel_thread)( \
-                src_grid.lon_rho, src_grid.lat_rho, \
-                src_grid.depth_rho, srcangle, \
-                ncsrc.variables["u"][i,:,:,:], \
-                ncsrc.variables["v"][i,:,:,:], \
-                child_grid.lon_rho, child_grid.lat_rho, \
-                child_grid.depth_rho, dstangle, \
-                pmap["pmaprho"], weight, nx, ny,  \
+                     (delayed(__interp3_vel_thread)(
+                src_grid.lon_rho, src_grid.lat_rho,
+                src_grid.depth_rho, srcangle,
+                ncsrc.variables["u"][i,:,:,:],
+                ncsrc.variables["v"][i,:,:,:],
+                child_grid.lon_rho, child_grid.lat_rho,
+                child_grid.depth_rho, dstangle,
+                pmap["pmaprho"], weight, nx, ny,
                 child_grid.mask_rho) for i in recs)
 
             for j in np.arange(0,len(vel)):
@@ -312,14 +314,14 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[vmap["u"]][nr*maxrecs+j,:] = vel_u
                 ncout.variables[vmap["v"]][nr*maxrecs+j,:] = vel_v
 
-                if ( "ubar" in vmap ) and ( vmap["ubar"] in ncout.variables ):
+                if ("ubar" in vmap) and (vmap["ubar"] in ncout.variables):
                     # Create ubar and vbar
                     # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
                     ncout.variables[vmap["ubar"]][nr*maxrecs+j,:] = \
                         np.sum(vel_u * child_grid.depth_u, axis=0) /  \
                         np.sum(child_grid.depth_u, axis=0)
 
-                if ( "vbar" in vmap ) and ( vmap["vbar"] in ncout.variables ):
+                if ("vbar" in vmap) and (vmap["vbar"] in ncout.variables):
                     # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
                     ncout.variables[vmap["vbar"]][nr*maxrecs+j,:] = \
                         np.sum(vel_v * child_grid.depth_v, axis=0) /  \
