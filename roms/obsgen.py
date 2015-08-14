@@ -67,19 +67,19 @@ class obsgen(object):
         """
         pass
 
-    def batch_files(self, files_in, files_out):
+    def batch_files(self, in_files, out_files):
         """
         Given a list of input files, process each one and save each result
         into the given output file.
 
         Parameters
         ----------
-        files_in : list of strings,
+        in_files : list of strings,
             filenames of the files to process
-        files_out : list of strings,
+        out_files : list of strings,
             filenames of the files to create for each of the input filenames.
             If a single string is given, the character '#' will be replaced
-            by the starting time of the observation (e.g. files_out="out_#.nc"
+            by the starting time of the observation (e.g. out_files="out_#.nc"
             will become out_03234.nc)
 
         Returns
@@ -89,19 +89,19 @@ class obsgen(object):
         import re
 
         outtime = False
-        if isinstance(files_out, str):
+        if isinstance(out_files, str):
             outtime = True
             time = re.compile('\#')
 
-        for n,file in enumerate(files_in):
+        for n,file in enumerate(in_files):
             try:
                 print(file)
                 obs = self.convert_file(file)
-                day = "{:05d}".format(int(obs.time[0]))
                 if outtime:
-                    obs.to_netcdf(time.sub(day,files_out))
+                    obs.to_netcdf(time.sub("{:05d}".format(int(obs.time[0])),
+                                           out_files))
                 else:
-                    obs.to_netcdf(files_out[n])
+                    obs.to_netcdf(out_files[n])
             except:
                 warn("WARNING: "+file+" cannot be processed.")
         pass
