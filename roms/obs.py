@@ -309,16 +309,17 @@ class obs:
         self._consistent()
 
     def __repr__(self):
-        return self.__str__()
+        return "< {:d} obs: {:.1f} to {:.1f} >".format(len(self.value),
+                   np.min(self.time), np.max(self.time))
 
     def __str__(self):
-        return "\n".join([ \
-  "{:.2f}, [{:s}:{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
+        return "\n".join([repr(self), "\n".join(
+  "{:.3f}, [{:s}:{:s}] ({:.2f},{:.2f},{:.2f}) = {:.4f} +/- {:.4f}".format( \
                     t, obs_types[self.type[n]],
                     obs_provenance.get(self.provenance[n],"UNKNOWN"),
                     self.lon[n], self.lat[n], self.depth[n],
                     self.value[n], self.error[n] ) \
-            for n,t in enumerate(self.time) ])
+            for n,t in enumerate(self.time)) ])
 
     def add(self, new_obs):
         """
@@ -355,6 +356,18 @@ class obs:
         self.type = np.append(self.type, new_obs.type)
         self.provenance = np.append(self.provenance, new_obs.provenance)
         self.meta = np.append(self.meta, new_obs.meta)
+
+    def copy(self):
+        """
+        deep copy this class and return the new copy.
+
+        Returns
+        -------
+        obs : obs,
+            deep copy of the class
+        """
+        import copy
+        return copy.deepcopy(self)
 
     def delete(self, obj):
         """
@@ -652,3 +665,71 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
                              type=np.hstack(otype).ravel(),
                              provenance=np.hstack(oprov).ravel(),
                              title=title)
+
+
+def merge_files(obs_files, out_files, days):
+    """
+    merge together a group of observation files into combined new files
+    with observations that lie only within the corresponding dates
+
+    Parameters
+    ----------
+    obs_files : list,
+        List of files to merge together (a single file will work, it will
+        just be filtered by the dates)
+    out_files : list or string,
+        list of the filenames to create for each of the output periods.
+        If a single string is given, the character '#' will be replaced
+        by the starting time of the observation (e.g. out_files="out_#.nc"
+        will become out_03234.nc)
+    days : list,
+        List of day numbers to filter the observations by. A list of
+        three values, [a1 a2 a3] will produce two files with observations
+        between a1 <= t1 <= a2 and a2<= t2 <= a3.
+
+    Returns
+    -------
+    None
+
+    **Examples**
+
+    >> merge_files(["obs_1.nc", "obs_2.nc", "obs_3.nc"], "new_#.nc",
+                   np.arange(10,21,2))
+    Put together three files into 5 separate files in two day intervals from
+    day 10 through day 20.
+    """
+    import re
+
+    obs_files = np.atleast_1d(obs_files)
+    outtime = False
+    if isinstance(out_files, str):
+        outtime = True
+        time = re.compile('\#')
+
+    # We have a choice: (i) fast, lots of memory; or
+    # (ii), slow, little memory. For (i), we could load all of the obs_files
+    # into memory and work from there; however, we run the risk of too much
+    # data if working with hundreds of files.
+    myobs = list()
+    for file in obs_files:
+        o = obs(file)
+        l = np.where(np.logical_or(o.time <= days[0],o.time >= days[-1]))
+        o.delete(l)
+        if len(o): myobs.append(o)
+
+    # Loop over the dates in pairs
+    for n,t in seapy.progressbar.progress(list(enumerate(zip(days[:-1],days[1:])))):
+        # Create new observations for this time period
+        l = np.where(np.logical_and(myobs[0].time >= t[0],
+                                   myobs[0].time <= t[1]))
+        nobs = myobs[0][l].copy()
+        for o in myobs[1:]:
+            l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
+            nobs.add(o[l].copy())
+        # Save out the new observations
+        if outtime:
+            nobs.to_netcdf(time.sub("{:05d}".format(t[0]), out_files))
+        else:
+            nobs.to_netcdf(out_files[n])
+
+
