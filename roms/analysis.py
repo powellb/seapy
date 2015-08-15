@@ -10,14 +10,14 @@
 from __future__ import print_function
 import numpy as np
 from joblib import Parallel, delayed
-import seapy
-import pudb
+from seapy import oavol, oasurf, adddim
+from seapy.model import asgrid
 
 # Create a function to do the multiprocessing vertical interpolation.
 # This function is used because we don't want to construct an array of
 # tuples from the oa routine.
 def __dinterp(x,y,z,dat,fz,pmap):
-    ndat, pm = seapy.oavol(x, y, z, dat, x, y, fz, pmap, 5, 1, 1)
+    ndat, pm = oavol(x, y, z, dat, x, y, fz, pmap, 5, 1, 1)
     ndat = np.squeeze(ndat)
     return np.ma.masked_where(np.abs(ndat)>9e10, ndat, copy=False)
 
@@ -47,18 +47,18 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
     """
 
     # Make sure our inputs are all valid
-    grid = seapy.model.asgrid(grid)
+    grid = asgrid(grid)
     if np.ndim(field)==3:
-        field = seapy.adddim(field)
+        field = adddim(field)
     if zeta is not None and np.ndim(zeta==2):
-        zeta = seapy.adddim(zeta)
+        zeta = adddim(zeta)
     depth = depth if depth < 0 else -depth
 
     # Set up some arrays
     x, y = np.meshgrid(np.arange(field.shape[-1]),np.arange(field.shape[-2]))
-    fz, pmap = seapy.oasurf(x,y,x,x,y,None,5,1,1)
+    fz, pmap = oasurf(x,y,x,x,y,None,5,1,1)
     # pu.db
-    fz = seapy.adddim(np.ones(x.shape))*depth
+    fz = adddim(np.ones(x.shape))*depth
     # Loop over all times, generate new field at depth
     nfield = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
                   (delayed(__dinterp)(x,y,grid.depth_rho,

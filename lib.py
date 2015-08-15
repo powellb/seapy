@@ -20,7 +20,8 @@ import datetime
 import itertools
 
 secs2day = 1.0/86400.0
-
+default_epoch = datetime.datetime(2000,1,1)
+_default_timeref = "days since "+default_epoch.strftime("%Y-%m-%m %H:%M:%S")
 
 def adddim(fld, size=1):
     """
@@ -218,7 +219,7 @@ def list_files(path=".", regex=".*"):
             files.append(file)
     return files
 
-def day2date(day=0,epoch=datetime.datetime(2000,1,1)):
+def day2date(day=0, epoch=default_epoch):
     """
     Return a datetime object from the number of days since the epoch
 
@@ -235,7 +236,7 @@ def day2date(day=0,epoch=datetime.datetime(2000,1,1)):
     """
     return epoch + datetime.timedelta(days=day)
 
-def date2day(date=datetime.datetime(2000,1,1),epoch=datetime.datetime(2000,1,1)):
+def date2day(date=default_epoch, epoch=default_epoch):
     """
     Compute the fractional number of days elapsed since the epoch to the date
     given.
@@ -253,7 +254,7 @@ def date2day(date=datetime.datetime(2000,1,1),epoch=datetime.datetime(2000,1,1))
     """
     return (date-epoch).total_seconds() * secs2day
 
-def today2day(epoch=datetime.datetime(2000,1,1)):
+def today2day(epoch=default_epoch):
     """
     Return the day number of today (UTC time) since the epoch.
 
@@ -266,7 +267,7 @@ def today2day(epoch=datetime.datetime(2000,1,1)):
     -------
     numdays : scalar
     """
-    return date2day(datetime.datetime.utcnow(),epoch)
+    return date2day(datetime.datetime.utcnow(), epoch)
 
 def primes(number):
     """

@@ -32,7 +32,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-import seapy
+from seapy.model import asgrid
 
 def gen_coastline(lon, lat, bathy):
     """
@@ -108,7 +108,7 @@ class map(object):
 
         """
         if grid is not None:
-            grid = seapy.model.asgrid(grid)
+            grid = asgrid(grid)
             llcrnrlat = np.min(grid.lat_rho)
             urcrnrlat = np.max(grid.lat_rho)
             llcrnrlon = np.min(grid.lon_rho)

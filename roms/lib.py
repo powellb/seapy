@@ -9,17 +9,20 @@
 """
 from __future__ import print_function
 import numpy as np
-import netcdftime
+from seapy.lib import default_epoch
 
-fields={   "zeta":{"grid":"rho","dims":2},
-           "ubar":{"grid":"u","dims":2,"rotate":"vbar"},
-           "vbar":{"grid":"v","dims":2,"rotate":"ubar"},
-           "u":{"grid":"u","dims":3,"rotate":"v"},
-           "v":{"grid":"v","dims":3,"rotate":"u"},
-           "temp":{"grid":"rho","dims":3},
-           "salt":{"grid":"rho","dims":3}}
+fields = {"zeta":{"grid":"rho", "dims":2},
+          "ubar":{"grid":"u", "dims":2, "rotate":"vbar"},
+          "vbar":{"grid":"v", "dims":2, "rotate":"ubar"},
+          "u":{"grid":"u", "dims":3, "rotate":"v"},
+          "v":{"grid":"v", "dims":3, "rotate":"u"},
+          "temp":{"grid":"rho", "dims":3},
+          "salt":{"grid":"rho", "dims":3}}
 
-_default_epoch = "days since 2000-01-01 00:00:00"
+sides = {"north":(-1, np.s_[:]),
+         "south":(0, np.s_[:]),
+         "east":(np.s_[:], -1),
+         "west":(np.s_[:], 0)}
 
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
@@ -187,9 +190,8 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
 
 def get_timevar(nc):
     """
-    get_timevar(nc)
-
-    Find the appropriate time variable from a given netcdf file
+    Find the appropriate time variable (bry_time, ocean_time, etc.) from a
+    given netcdf file
 
     Parameters
     ----------
@@ -205,29 +207,33 @@ def get_timevar(nc):
             return time
     return None
 
-def get_timebase(nc, default_epoch=_default_epoch):
+def get_reftime(nc, epoch=default_epoch):
     """
-    Given a ROMS netCDF4 file, compute the timebase for the file
+    Given a ROMS netCDF4 file, return the reference time for the file. This
+    is the timebase of the record dimension in the format:
+    "<units> since <reftime>"
 
     Parameters
     ----------
     nc : netCDF4 dataset
         Input ROMS file
-    default_epoch : string, optional
+    epoch_str : string, optional
         If lacking units, use this string as the units
 
     Returns
     -------
-    timebase : netcdftime.utime
-        object for converting to/from dates
+    timebase : datetime
+        datetime of the origin for the file
     time : string
         name of variable used to generate the base (None if default)
     """
+    import netCDF4
+
     try:
         time = get_timevar(nc)
-        return netcdftime.utime(nc.variables[time].units), time
+        return netCDF4.num2date(0, nc.variables[time].units), time
     except AttributeError:
-        return netcdftime.utime(default_epoch), None
+        return epoch, None
 
 pass
 

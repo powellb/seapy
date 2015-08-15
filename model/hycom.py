@@ -12,8 +12,10 @@ from __future__ import print_function
 import numpy as np
 from datetime import datetime
 import netCDF4
-import seapy
-import sys
+from seapy.lib import default_epoch, chunker
+from seapy.model.grid import asgrid
+from seapy.roms import ncgen
+
 import pudb
 
 # _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"
@@ -25,7 +27,7 @@ def load_history(filename,
                  start_time=datetime(1, 1, 1),
                  end_time=datetime(1, 1, 1),
                  grid=None,
-                 epoch=datetime(2000, 1, 1), url=_url, load_data=True):
+                 epoch=default_epoch, url=_url, load_data=False):
     """
     Download HYCOM data and save into local file
 
@@ -40,7 +42,7 @@ def load_history(filename,
     grid: seapy.model.grid, optional
         if specified, only load SODA data that covers the grid
     epoch: datetime, optional
-        timebase for new file
+        reference time for new file
     url: string, optional
         URL to load SODA data from
     load_data: bool, optional
@@ -52,7 +54,7 @@ def load_history(filename,
     None
     """
     # Load the grid
-    grid = seapy.model.asgrid(grid)
+    grid = asgrid(grid)
 
     # Open the HYCOM data
     hycom = netCDF4.Dataset(url)
@@ -74,6 +76,10 @@ def load_history(filename,
     hycom_lon = hycom.variables["lon"][:]
     hycom_lat = hycom.variables["lat"][:]
 
+    # Ensure same convention
+    if np.min(grid.lon_rho) < 0:
+        hycom_lon[hycom_lon > 180] -= 360
+
     latlist = np.where(np.logical_and(hycom_lat >= minlat,
                                       hycom_lat <= maxlat))
     lonlist = np.where(np.logical_and(hycom_lon >= minlon,
@@ -82,18 +88,18 @@ def load_history(filename,
         raise Exception("Bounds not found")
 
     # Build the history file
-    his = seapy.roms.ncgen.create_zlevel(filename, len(latlist[0]),
-                len(lonlist[0]),
-                len(hycom.variables["depth"][:]), epoch,
-                "HYCOM history from "+url, dims=1)
+    if load_data:
+        his = ncgen.create_zlevel(filename, len(latlist[0]),
+                    len(lonlist[0]),
+                    len(hycom.variables["depth"][:]), epoch,
+                    "HYCOM history from "+url, dims=1)
 
-    # pu.db
-    # Write out the data
-    his.variables["lat"][:] = hycom_lat[latlist]
-    his.variables["lon"][:] = hycom_lon[lonlist]
-    his.variables["depth"][:] = hycom.variables["depth"]
-    his.variables["time"][:] = netCDF4.date2num(hycom_time[time_list],
-                                             his.variables["time"].units)
+        # Write out the data
+        his.variables["lat"][:] = hycom_lat[latlist]
+        his.variables["lon"][:] = hycom_lon[lonlist]
+        his.variables["depth"][:] = hycom.variables["depth"]
+        his.variables["time"][:] = netCDF4.date2num(hycom_time[time_list],
+                                                 his.variables["time"].units)
     # Loop over the variables
     hycomvars = {"surf_el": 3, "water_u": 4, "water_v": 4, "water_temp": 4,
                  "salinity": 4}
@@ -101,12 +107,12 @@ def load_history(filename,
                "water_temp": "temp", "salinity": "salt"}
 
     if not load_data:
-        print("-v {:s} -d time,{:d},{:d} -d lat,{:d},{:d} -d lon,{:d},{:d} {:s}".format(
+        print("ncks -v {:s} -d time,{:d},{:d} -d lat,{:d},{:d} -d lon,{:d},{:d} {:s} {:s}".format(
                 ",".join(hycomvars.keys()),
                 time_list[0][0], time_list[0][-1], latlist[0][0],
-                latlist[0][-1], lonlist[0][0], lonlist[0][-1], _url))
+                latlist[0][-1], lonlist[0][0], lonlist[0][-1], _url, filename))
     else:
-        for rn, recs in enumerate(seapy.chunker(time_list[0], _maxrecs)):
+        for rn, recs in enumerate(chunker(time_list[0], _maxrecs)):
             print("{:s}-{:s}: ".format(hycom_time[recs[0]].strftime("%m/%d/%Y"),
                                      hycom_time[recs[-1]].strftime("%m/%d/%Y")),
                   end='',flush=True)
@@ -124,4 +130,5 @@ def load_history(filename,
                                              lonlist[0]].filled(fill_value=9.99E10)
             his.sync()
             print("", flush=True)
+    pass
 

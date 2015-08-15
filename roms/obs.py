@@ -291,7 +291,7 @@ class obs:
                             provenance=self.provenance[l],meta=self.meta[l])
 
     def __setitem__(self, l, new_obs):
-        if not isinstance(new_obs,seapy.roms.obs.obs):
+        if not isinstance(new_obs, seapy.roms.obs.obs):
             raise TypeError("Trying to assign obs to a non-obs type.")
 
         self.time[l] = new_obs.time

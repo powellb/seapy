@@ -44,7 +44,7 @@ def asgrid(grid):
     """
     if grid is None:
         raise AttributeError("No grid was specified")
-    if isinstance(grid,seapy.model.grid):
+    if isinstance(grid, seapy.model.grid):
         return grid
     else:
         return seapy.model.grid(filename=grid)
