@@ -62,7 +62,7 @@ def load_history(filename,
 
     time_list = np.where(np.logical_and(soda_time >= start_time,
                                         soda_time <= end_time))
-    if not time_list:
+    if not any(time_list):
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
@@ -74,27 +74,27 @@ def load_history(filename,
     soda_lat = soda.variables["lat"][:]
 
     # Ensure same convention
-    if np.min(grid.lon_rho) < 0:
+    if not grid.east():
         soda_lon[soda_lon > 180] -= 360
 
     latlist = np.where(np.logical_and(soda_lat >= minlat,
                                       soda_lat <= maxlat))
     lonlist = np.where(np.logical_and(soda_lon >= minlon,
                                       soda_lon <= maxlon))
-    if not latlist or not lonlist:
+    if not np.any(latlist) or not np.any(lonlist):
         raise Exception("Bounds not found")
 
     # Build the history file
     if load_data:
         his = ncgen.create_zlevel(filename, len(latlist[0]),
                     len(lonlist[0]),
-                    len(soda.variables["depth"][:]), epoch,
+                    len(soda.variables["lev"][:]), epoch,
                     "soda history from "+url, dims=1)
 
         # Write out the data
         his.variables["lat"][:] = soda_lat[latlist]
         his.variables["lon"][:] = soda_lon[lonlist]
-        his.variables["depth"][:] = soda.variables["depth"]
+        his.variables["depth"][:] = soda.variables["lev"]
         his.variables["time"][:] = netCDF4.date2num(soda_time[time_list],
                                                  his.variables["time"].units)
     # Loop over the variables
@@ -114,16 +114,16 @@ def load_history(filename,
                   end='',flush=True)
             for var in sodavars:
                 print("{:s} ".format(var), end='',flush=True)
-                # pu.db
                 hisrange = np.arange(rn*_maxrecs, (rn*_maxrecs)+len(recs))
                 if sodavars[var] == 3:
                     his.variables[hisvars[var]][hisrange, :, :] = \
-                      soda.variables[var][recs, latlist[0], lonlist[0]].filled(
-                                                    fill_value=9.99E10)
+                      np.ma.array( \
+                        soda.variables[var][recs, latlist[0], lonlist[0]]). \
+                            filled(fill_value=9.99E10)
                 else:
                     his.variables[hisvars[var]][hisrange, :, :, :] = \
                         soda.variables[var][recs, :, latlist[0],
-                                             lonlist[0]].filled(fill_value=9.99E10)
+                                        lonlist[0]].filled(fill_value=9.99E10)
             his.sync()
             print("", flush=True)
     pass

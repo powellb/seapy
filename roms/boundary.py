@@ -345,7 +345,7 @@ def from_stations(station_file, bry_file, grid=None):
     sta_lon=ncstation.variables["lon_rho"][:]
     sta_lat=ncstation.variables["lat_rho"][:]
     sta_mask=np.ones(sta_lat.shape)
-    sta_mask[np.where(sta_lon*sta_lat>1e10)[0]]=0
+    sta_mask[sta_lon*sta_lat > 1e10]=0
 
     # Load the station data as we need to manipulate it
     sta_zeta=np.ma.masked_greater(ncstation.variables["zeta"][:],100)
@@ -373,13 +373,13 @@ def from_stations(station_file, bry_file, grid=None):
     # Unfortunately, ROMS will give points that are not at the locations
     # you specify if those points conflict with the mask. So, these points
     # are simply replaced with the nearest.
-    dist = np.sqrt( (sta_lon-grid_lon)**2 + (sta_lat-grid_lat)**2 )
-    bad_pts = np.where( np.logical_and(dist > 0.001, grid_mask == 1) )[0]
-    good_pts = np.where( np.logical_and(dist < 0.001, grid_mask == 1) )[0]
+    dist = np.sqrt((sta_lon-grid_lon)**2 + (sta_lat-grid_lat)**2 )
+    bad_pts = np.where(np.logical_and(dist > 0.001, grid_mask == 1))[0]
+    good_pts = np.where(np.logical_and(dist < 0.001, grid_mask == 1))[0]
     for i in bad_pts:
         dist = np.sqrt( (sta_lon[i]-sta_lon[good_pts])**2 +
                         (sta_lat[i]-sta_lat[good_pts])**2 )
-        index = good_pts[ np.where(dist==np.min(dist))[0] ]
+        index = good_pts[dist == np.min(dist)]
         sta_h[i] = sta_h[index]
         sta_angle[i] = sta_angle[index]
         sta_lon[i] = sta_lon[index]
@@ -426,7 +426,7 @@ def from_stations(station_file, bry_file, grid=None):
         ocean = np.where(grid_mask[bry[side]] == 1)[0]
 
         # If we have a masked boundary, skip it
-        if len(ocean) == 0:
+        if not np.any(ocean):
             continue
 
         # 1) Zeta

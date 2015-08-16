@@ -57,7 +57,6 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
     # Set up some arrays
     x, y = np.meshgrid(np.arange(field.shape[-1]),np.arange(field.shape[-2]))
     fz, pmap = oasurf(x,y,x,x,y,None,5,1,1)
-    # pu.db
     fz = adddim(np.ones(x.shape))*depth
     # Loop over all times, generate new field at depth
     nfield = np.ma.array(Parallel(n_jobs=threads,verbose=2)\

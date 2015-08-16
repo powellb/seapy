@@ -141,7 +141,7 @@ class aquarius_sss(obsgen):
                self.epoch).days
         lat = lat.flatten()
         lon = lon.flatten()
-        if np.min(self.grid.lon_rho > 0):
+        if self.grid.east():
             lon[lon<0] += 360
 
         salt = np.ma.masked_outside(salt.flatten(), self.salt_limits[0],
@@ -173,7 +173,7 @@ class argo_ctd(obsgen):
         lat = nc.variables["LATITUDE"][:]
         pro_q = nc.variables["POSITION_QC"][:].astype(int)
         # Find the profiles that are in our area with known locations quality
-        if np.min(self.grid.lon_rho < 0):
+        if not self.grid.east():
             lon[lon>180] -= 360
         profile_list = np.where(np.logical_and.reduce((
                     lat>=np.min(self.grid.lat_rho),
@@ -253,7 +253,7 @@ class aviso_sla_map(obsgen):
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
         lon = lon.flatten()
-        if np.min(self.grid.lon_rho < 0):
+        if not self.grid.east():
             lon[lon>180] -= 360
         data = [seapy.roms.obs.raw_data("ZETA", "SSH_AVISO_MAP",
                                         dat.flatten(), err.flatten(), 0.05)]
@@ -294,7 +294,7 @@ class ostia_sst_map(obsgen):
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
         lon = lon.flatten()
-        if np.min(self.grid.lon_rho < 0):
+        if not self.grid.east():
             lon[lon>180] -= 360
         data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.flatten(),
                                         err.flatten(), 0.4)]
@@ -354,7 +354,7 @@ class seaglider_profile(obsgen):
             raise ValueError("date format incorrect in file: "+file)
 
         # Make sure that the GPS fix isn't screwy
-        if np.min(self.grid.lon_rho > 0):
+        if self.grid.east():
             pro["lon"][pro["lon"]<0] += 360
         dist = seapy.earth_distance(pro["lon"][0], pro["lat"][0],
                                     pro["lon"][-1], pro["lat"][-1])

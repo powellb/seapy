@@ -1,14 +1,20 @@
-======================
-:mod:`seapy`
-======================
+SEAPY Documentation
+===================
+
+
+
+:mod:`seapy` -- General tools for working with ocean fields
+***********************************************************
 
 
 .. automodule:: seapy.__init__
    :members:
+   :undoc-members:
    :show-inheritance:
-   
+
 .. automodule:: seapy.lib
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -16,6 +22,7 @@
 ----------------------------------
 .. automodule:: seapy.cdl_parser
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -24,6 +31,7 @@
 ------------------------------
 .. autoclass:: seapy.environ
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -32,6 +40,7 @@
 ----------------------------------
 .. autoclass:: seapy.hawaii
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -39,6 +48,7 @@
 ----------------------------------
 .. autoclass:: seapy.map
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -46,6 +56,7 @@
 ----------------------------------
 .. automodule:: seapy.oa
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -53,6 +64,7 @@
 ----------------------------------
 .. automodule:: seapy.plot
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -60,6 +72,7 @@
 ----------------------------------
 .. autoclass:: seapy.progressbar
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -67,14 +80,17 @@
 ----------------------------------
 .. autoclass:: seapy.qserver.task
    :members:
+   :undoc-members:
    :show-inheritance:
 
 .. autoclass:: seapy.qserver.os_task
    :members:
+   :undoc-members:
    :show-inheritance:
 
 .. automodule:: seapy.qserver
    :members:
+   :undoc-members:
    :show-inheritance:
 
 
@@ -82,6 +98,7 @@
 ----------------------------------
 .. automodule:: seapy.timeout
    :members:
+   :undoc-members:
    :show-inheritance:
 
 

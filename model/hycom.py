@@ -16,8 +16,6 @@ from seapy.lib import default_epoch, chunker
 from seapy.model.grid import asgrid
 from seapy.roms import ncgen
 
-import pudb
-
 # _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"
 _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"
 _maxrecs = 5
@@ -65,7 +63,7 @@ def load_history(filename,
 
     time_list = np.where(np.logical_and(hycom_time >= start_time,
                                         hycom_time <= end_time))
-    if not time_list:
+    if not np.any(time_list):
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
@@ -77,14 +75,14 @@ def load_history(filename,
     hycom_lat = hycom.variables["lat"][:]
 
     # Ensure same convention
-    if np.min(grid.lon_rho) < 0:
+    if not grid.east():
         hycom_lon[hycom_lon > 180] -= 360
 
     latlist = np.where(np.logical_and(hycom_lat >= minlat,
                                       hycom_lat <= maxlat))
     lonlist = np.where(np.logical_and(hycom_lon >= minlon,
                                       hycom_lon <= maxlon))
-    if not latlist or not lonlist:
+    if not np.any(latlist) or not np.any(lonlist):
         raise Exception("Bounds not found")
 
     # Build the history file
@@ -118,7 +116,6 @@ def load_history(filename,
                   end='',flush=True)
             for var in hycomvars:
                 print("{:s} ".format(var), end='',flush=True)
-                # pu.db
                 hisrange = np.arange(rn*_maxrecs, (rn*_maxrecs)+len(recs))
                 if hycomvars[var] == 3:
                     his.variables[hisvars[var]][hisrange, :, :] = \
