@@ -11,7 +11,6 @@ from __future__ import print_function
 
 import numpy as np
 import netCDF4
-import netcdftime
 import os
 import seapy
 from seapy.timeout import timeout,TimeoutError
@@ -49,7 +48,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     elif ksize > _ksize_range[1]:
         warn("nx or ny values are too large for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[1]
-    data=seapy.convolve_mask(data, ksize=ksize, copy=False)
+    data = seapy.convolve_mask(data, ksize=ksize, copy=False)
 
     # Interpolate the field and return the result
     with timeout(minutes=30):
@@ -105,7 +104,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     elif ksize > _ksize_range[1]:
         warn("nx or ny values are too large for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[1]
-    data=seapy.convolve_mask(data, ksize=ksize, copy=False)
+    data = seapy.convolve_mask(data, ksize=ksize, copy=False)
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
@@ -158,7 +157,7 @@ def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
     return u, v
 
 def __interp_grids(src_grid, child_grid, ncout, records=None,
-            threads=-2, nx=0, ny=0, weight=10, vmap=None, z_mask=False,
+            threads=2, nx=0, ny=0, weight=10, vmap=None, z_mask=False,
             pmap=None):
     """
     internal method:  Given a model file (average, history, etc.),
@@ -185,13 +184,14 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     # If we don't have a variable map, then do a one-to-one mapping
     if vmap is None:
         vmap=dict()
-        for k in seapy.roms.fields.keys():
+        for k in seapy.roms.fields:
             vmap[k]=k
 
     # Generate a file to store the pmap information
-    sname = src_grid.name
-    cname = child_grid.name
-    pmap_file = sname + "_" + cname + "_pmap.npz"
+    sname = getattr(src_grid, 'name', None)
+    cname = getattr(child_grid, 'name', None)
+    pmap_file = None if any(v is None for v in (sname,cname)) else \
+        sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
     if nx==0:
@@ -206,7 +206,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             ny = 5
 
     if pmap is None:
-        if os.path.isfile(pmap_file):
+        if pmap_file is not None and os.path.isfile(pmap_file):
             pmap = np.load(pmap_file)
         else:
             tmp = np.ones(src_grid.lat_rho.shape,order="F")
@@ -221,7 +221,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             tmp, pmapv = seapy.oasurf(src_grid.lon_v, src_grid.lat_v, \
                                 tmp, child_grid.lon_rho, child_grid.lat_rho, \
                                 weight=weight, nx=nx, ny=ny)
-            np.savez(pmap_file, pmaprho=pmaprho, pmapu=pmapu, pmapv=pmapv)
+            if pmap_file is not None:
+                np.savez(pmap_file, pmaprho=pmaprho, pmapu=pmapu, pmapv=pmapv)
             pmap = {"pmaprho":pmaprho, "pmapu":pmapu, "pmapv":pmapv}
 
     # Get the time field
@@ -236,104 +237,113 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     # Interpolate the scalar fields
     records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
-    for k in vmap:
+    for src in vmap:
+        dest = vmap[src]
         # Only interpolate the fields we want in the destination
-        if ( vmap[k] not in ncout.variables ) or ( "rotate" in seapy.roms.fields[k]):
-            continue
-        grd = seapy.roms.fields[k]["grid"]
-        if seapy.roms.fields[k]["dims"]==2:
+        if (dest not in ncout.variables ) or \
+           ("rotate" in seapy.roms.fields[dest]):
+                continue
+        if seapy.roms.fields[dest]["dims"]==2:
             # Compute the max number of hold in memory
             maxrecs = np.minimum(len(records),
                 np.int(_max_memory/(child_grid.lon_rho.nbytes +
                                     src_grid.lon_rho.nbytes)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2) \
                                  (delayed(__interp2_thread) (
-                  getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
-                  ncsrc.variables[k][i,:,:],
-                  getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
-                  pmap["pmap"+grd], weight,
-                  nx, ny, getattr(child_grid,"mask_"+grd))
-                for i in recs), copy=False)
-                ncout.variables[vmap[k]][outr,:,:] = ndata
+                                        src_grid.lon_rho, src_grid.lat_rho,
+                                        ncsrc.variables[src][i, :, :],
+                                        child_grid.lon_rho, child_grid.lat_rho,
+                                        pmap["pmaprho"], weight,
+                                        nx, ny, child_grid.mask_rho)
+                            for i in recs), copy=False)
+                ncout.variables[dest][outr, :, :] = ndata
                 ncout.sync()
         else:
-            maxrecs = np.minimum(len(records),np.int(_max_memory /
-                (child_grid.lon_rho.nbytes*child_grid.n +
-                 src_grid.lon_rho.nbytes*src_grid.n)))
+            maxrecs = np.minimum(len(records), np.int(_max_memory /
+                (child_grid.lon_rho.nbytes * child_grid.n +
+                 src_grid.lon_rho.nbytes * src_grid.n)))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
-                ndata = np.ma.array( Parallel(n_jobs=threads,verbose=2)
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
                                  (delayed(__interp3_thread)(
-                  getattr(src_grid,"lon_"+grd), getattr(src_grid,"lat_"+grd),
-                  getattr(src_grid,"depth_"+grd),
-                  ncsrc.variables[k][i,:,:,:],
-                  getattr(child_grid,"lon_"+grd), getattr(child_grid,"lat_"+grd),
-                  getattr(child_grid,"depth_"+grd),
-                  pmap["pmap"+grd], weight,
-                  nx, ny, getattr(child_grid,"mask_"+grd),
-                  up_factor=_up_scaling.get(k,1.0),
-                  down_factor=_down_scaling.get(k,1.0))
-                for i in recs), copy=False)
+                                    src_grid.lon_rho, src_grid.lat_rho,
+                                    src_grid.depth_rho,
+                                    ncsrc.variables[src][i, :, :, :],
+                                    child_grid.lon_rho, child_grid.lat_rho,
+                                    child_grid.depth_rho,
+                                    pmap["pmaprho"], weight,
+                                    nx, ny, child_grid.mask_rho,
+                                    up_factor=_up_scaling.get(dest, 1.0),
+                                    down_factor=_down_scaling.get(dest, 1.0))
+                            for i in recs), copy=False)
                 if z_mask:
-                    __mask_z_grid(ndata,dst_depth,child_grid.depth_rho)
-                ncout.variables[vmap[k]][outr,:,:,:] = ndata
+                    __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
+                ncout.variables[dest][outr, :, :, :] = ndata
                 ncout.sync()
 
-    # Rotate and Interpolate the vector fields
-    if ( ( "u" in vmap ) and ( vmap["u"] in ncout.variables ) ) and \
-       ( ( "v" in vmap ) and ( vmap["v"] in ncout.variables ) ):
-        srcangle = src_grid.angle if src_grid.cgrid else None
-        dstangle = child_grid.angle if child_grid.cgrid else None
-        maxrecs = np.minimum(len(records), np.int(_max_memory/
-            (2*(child_grid.lon_rho.nbytes*child_grid.n + src_grid.lon_rho.nbytes*src_grid.n))))
-        for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
-            vel = Parallel(n_jobs=threads, verbose=2) \
-                     (delayed(__interp3_vel_thread)(
-                src_grid.lon_rho, src_grid.lat_rho,
-                src_grid.depth_rho, srcangle,
-                ncsrc.variables["u"][i,:,:,:],
-                ncsrc.variables["v"][i,:,:,:],
-                child_grid.lon_rho, child_grid.lat_rho,
-                child_grid.depth_rho, dstangle,
-                pmap["pmaprho"], weight, nx, ny,
-                child_grid.mask_rho) for i in recs)
+    # Rotate and Interpolate the vector fields. First, determine which
+    # are the "u" and the "v" vmap fields
+    try:
+        velmap = {
+            "u": list(vmap.keys())[list(vmap.values()).index("u")],
+            "v": list(vmap.keys())[list(vmap.values()).index("v")]}
+    except:
+        warn("velocity not present in source file")
+        return
 
-            for j in np.arange(0,len(vel)):
-                vel_u = np.ma.array(vel[j][0],copy=False)
-                vel_v = np.ma.array(vel[j][1],copy=False)
-                if z_mask:
-                    __mask_z_grid(vel_u,dst_depth,child_grid.depth_rho)
-                    __mask_z_grid(vel_v,dst_depth,child_grid.depth_rho)
+    srcangle = src_grid.angle if src_grid.cgrid else None
+    dstangle = child_grid.angle if child_grid.cgrid else None
+    maxrecs = np.minimum(len(records), np.int(_max_memory/
+        (2 * (child_grid.lon_rho.nbytes * child_grid.n +
+            src_grid.lon_rho.nbytes*src_grid.n))))
+    for nr,recs in enumerate(seapy.chunker(records, maxrecs)):
+        vel = Parallel(n_jobs=threads, verbose=2) \
+                 (delayed(__interp3_vel_thread)(
+                    src_grid.lon_rho, src_grid.lat_rho,
+                    src_grid.depth_rho, srcangle,
+                    ncsrc.variables[velmap["u"]][i, :, :, :],
+                    ncsrc.variables[velmap["v"]][i, :, :, :],
+                    child_grid.lon_rho, child_grid.lat_rho,
+                    child_grid.depth_rho, dstangle,
+                    pmap["pmaprho"], weight, nx, ny,
+                    child_grid.mask_rho) for i in recs)
 
-                if child_grid.cgrid:
-                    vel_u = seapy.model.rho2u(vel_u)
-                    vel_v = seapy.model.rho2v(vel_v)
+        for j in range(len(vel)):
+            vel_u = np.ma.array(vel[j][0], copy=False)
+            vel_v = np.ma.array(vel[j][1], copy=False)
+            if z_mask:
+                __mask_z_grid(vel_u, dst_depth, child_grid.depth_rho)
+                __mask_z_grid(vel_v, dst_depth, child_grid.depth_rho)
 
-                ncout.variables[vmap["u"]][nr*maxrecs+j,:] = vel_u
-                ncout.variables[vmap["v"]][nr*maxrecs+j,:] = vel_v
+            if child_grid.cgrid:
+                vel_u = seapy.model.rho2u(vel_u)
+                vel_v = seapy.model.rho2v(vel_v)
 
-                if ("ubar" in vmap) and (vmap["ubar"] in ncout.variables):
-                    # Create ubar and vbar
-                    # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
-                    ncout.variables[vmap["ubar"]][nr*maxrecs+j,:] = \
-                        np.sum(vel_u * child_grid.depth_u, axis=0) /  \
-                        np.sum(child_grid.depth_u, axis=0)
+            ncout.variables["u"][nr*maxrecs+j, :] = vel_u
+            ncout.variables["v"][nr*maxrecs+j, :] = vel_v
 
-                if ("vbar" in vmap) and (vmap["vbar"] in ncout.variables):
-                    # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
-                    ncout.variables[vmap["vbar"]][nr*maxrecs+j,:] = \
-                        np.sum(vel_v * child_grid.depth_v, axis=0) /  \
-                        np.sum(child_grid.depth_v, axis=0)
+            if "ubar" in ncout.variables:
+                # Create ubar and vbar
+                # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
+                ncout.variables["ubar"][nr*maxrecs+j, :] = \
+                    np.sum(vel_u * child_grid.depth_u, axis=0) /  \
+                    np.sum(child_grid.depth_u, axis=0)
 
-                ncout.sync()
+            if "vbar" in ncout.variables:
+                # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
+                ncout.variables["vbar"][nr*maxrecs+j, :] = \
+                    np.sum(vel_v * child_grid.depth_v, axis=0) /  \
+                    np.sum(child_grid.depth_v, axis=0)
+
+            ncout.sync()
 
     # Return the pmap that was used
     return pmap
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
-             threads=-2, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
+             threads=2, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
              pmap=None):
     """
     Given an existing ROMS history or average file, create (if does not exit)
@@ -376,9 +386,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         the weighting matrix computed during the interpolation
 
     """
-    roms_grid = seapy.model.grid(roms_file)
+    roms_grid = seapy.model.asgrid(roms_file)
     ncroms = netCDF4.Dataset(roms_file)
-    src_time, time = seapy.roms.get_timebase(ncroms)
+    src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, ncroms.variables[time].shape[0]) \
         if records is None else np.atleast_1d(records)
 
@@ -390,48 +400,50 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     if not os.path.isfile(z_file):
         if z_grid is None:
-            lat=roms_grid.lat_rho.shape[0]
-            lon=roms_grid.lat_rho.shape[1]
+            lat = roms_grid.lat_rho.shape[0]
+            lon = roms_grid.lat_rho.shape[1]
             if depth is None:
                 raise ValueError("depth must be specified")
-            ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(depth),
-                                   src_time.origin,"ROMS z-level",
-                                   cdlfile=cdlfile, dims=dims)
+            ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
+                                    len(depth), src_ref, "ROMS z-level",
+                                    cdlfile=cdlfile, dims=dims)
             if dims==1:
-                ncout.variables["lat"][:]=roms_grid.lat_rho[:,0]
-                ncout.variables["lon"][:]=roms_grid.lon_rho[0,:]
+                ncout.variables["lat"][:] = roms_grid.lat_rho[:, 0]
+                ncout.variables["lon"][:] = roms_grid.lon_rho[0, :]
             else:
-                ncout.variables["lat"][:]=roms_grid.lat_rho
-                ncout.variables["lon"][:]=roms_grid.lon_rho
-            ncout.variables["depth"][:]=depth
-            ncout.variables["mask"][:]=roms_grid.mask_rho
+                ncout.variables["lat"][:] = roms_grid.lat_rho
+                ncout.variables["lon"][:] = roms_grid.lon_rho
+            ncout.variables["depth"][:] = depth
+            ncout.variables["mask"][:] = roms_grid.mask_rho
             ncout.sync()
             z_grid = seapy.model.grid(z_file)
         else:
-            lat=z_grid.lat_rho.shape[0]
-            lon=z_grid.lat_rho.shape[1]
-            dims=z_grid.spatial_dims
-            ncout=seapy.roms.ncgen.create_zlevel(z_file,lat,lon,len(z_grid.z),
-                               src_time.origin,"ROMS z-level",
-                               cdlfile=cdlfile, dims=dims)
+            lat = z_grid.lat_rho.shape[0]
+            lon = z_grid.lat_rho.shape[1]
+            dims = z_grid.spatial_dims
+            ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
+                                len(z_grid.z), src_ref, "ROMS z-level",
+                                cdlfile=cdlfile, dims=dims)
             if dims==1:
-                ncout.variables["lat"][:]=z_grid.lat_rho[:,0]
-                ncout.variables["lon"][:]=z_grid.lon_rho[0,:]
+                ncout.variables["lat"][:] = z_grid.lat_rho[:, 0]
+                ncout.variables["lon"][:] = z_grid.lon_rho[0, :]
             else:
-                ncout.variables["lat"][:]=z_grid.lat_rho
-                ncout.variables["lon"][:]=z_grid.lon_rho
-            ncout.variables["depth"][:]=z_grid.z
-            ncout.variables["mask"][:]=z_grid.mask_rho
+                ncout.variables["lat"][:] = z_grid.lat_rho
+                ncout.variables["lon"][:] = z_grid.lon_rho
+            ncout.variables["depth"][:] = z_grid.z
+            ncout.variables["mask"][:] = z_grid.mask_rho
     else:
         ncout = netCDF4.Dataset(z_file, "a")
 
-    ncout_time = netcdftime.utime(ncout.variables["time"].units)
-    ncout.variables["time"][:]=\
-      ncout_time.date2num(src_time.num2date(ncroms.variables[time][records]))
+    ncout.variables["time"][:] = netCDF4.date2num(
+            netCDF4.num2date(ncroms.variables[time][records],
+                             ncroms.variables[time].units),
+            ncout.variables["time"].units)
     ncroms.close()
 
     # Call the interpolation
     try:
+        roms_grid.set_east(z_grid.east())
         pmap = __interp_grids(roms_grid, z_grid, ncout, records=records,
                   threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
                   z_mask=True, pmap=pmap)
@@ -445,7 +457,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     return pmap
 
-def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=-2,
+def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
             nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
@@ -481,33 +493,36 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=-2,
     pmap : ndarray
         the weighting matrix computed during the interpolation
     """
-    src_grid = seapy.model.grid(src_file)
+    src_grid = seapy.model.asgrid(src_file)
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
 
         if not os.path.isfile(dest_file):
             ncsrc = netCDF4.Dataset(src_file)
-            src_time, time = seapy.roms.get_timebase(ncsrc)
+            src_ref, time = seapy.roms.get_reftime(ncsrc)
             records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
-            ncout=seapy.roms.ncgen.create_ini(dest_file,
-                     eta_rho=destg.eta_rho,xi_rho=destg.xi_rho,s_rho=destg.n,
-                     timebase=src_time.origin,title="interpolated from "+src_file)
+            ncout = seapy.roms.ncgen.create_ini(dest_file,
+                     eta_rho=destg.eta_rho, xi_rho=destg.xi_rho, s_rho=destg.n,
+                     reftime=src_ref, title="interpolated from "+src_file)
             destg.to_netcdf(ncout)
-            dest_time = netcdftime.utime(ncout.variables["ocean_time"].units)
-            ncout.variables["ocean_time"][:]=dest_time.date2num(
-                src_time.num2date(ncsrc.variables[time][records]))
+            ncout.variables["ocean_time"][:] = netCDF4.date2num(
+                    netCDF4.num2date(ncsrc.variables[time][records],
+                                     ncsrc.variables[time].units),
+                    ncout.variables["ocean_time"].units)
             ncsrc.close()
 
     if os.path.isfile(dest_file):
         ncout = netCDF4.Dataset(dest_file,"a")
         if dest_grid is None:
-            destg = seapy.model.grid(dest_file)
+            destg = seapy.model.asgrid(dest_file)
 
     # Call the interpolation
     try:
-        pmap = __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
-                  nx=nx, ny=ny, weight=weight, vmap=vmap, pmap=pmap)
+        src_grid.set_east(destg.east())
+        pmap = __interp_grids(src_grid, destg, ncout, records=records,
+                              threads=threads, nx=nx, ny=ny, weight=weight,
+                              vmap=vmap, pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
         # Delete the output file
@@ -518,7 +533,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=-2,
 
     return pmap
 
-def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=-2,
+def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
             nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an model output file, create (if does not exit) a
@@ -556,31 +571,27 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=-2,
     """
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
-        src_grid = seapy.model.grid(src_file)
+        src_grid = seapy.model.asgrid(src_file)
         ncsrc = netCDF4.Dataset(src_file)
-        src_time, time = seapy.roms.get_timebase(ncsrc)
+        src_ref, time = seapy.roms.get_reftime(ncsrc)
         records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
         ncout=seapy.roms.ncgen.create_clim(dest_file,
-                 eta_rho=destg.ln,xi_rho=destg.lm,s_rho=destg.n,ntimes=records.size,
-                 timebase=src_time.origin,title="interpolated from "+src_file)
-        dest_time = netcdftime.utime(ncout.variables["zeta_time"].units)
-        ncout.variables["zeta_time"][:] = dest_time.date2num(
-                 src_time.num2date(ncsrc.variables[time][records]))
-        ncout.variables["v2d_time"][:] = dest_time.date2num(
-                 src_time.num2date(ncsrc.variables[time][records]))
-        ncout.variables["v3d_time"][:] = dest_time.date2num(
-                 src_time.num2date(ncsrc.variables[time][records]))
-        ncout.variables["temp_time"][:] = dest_time.date2num(
-                 src_time.num2date(ncsrc.variables[time][records]))
-        ncout.variables["salt_time"][:] = dest_time.date2num(
-                 src_time.num2date(ncsrc.variables[time][records]))
+                 eta_rho=destg.ln, xi_rho=destg.lm, s_rho=destg.n,
+                 ntimes=records.size, reftime=src_ref,
+                 title="interpolated from "+src_file)
+        src_time = netCDF4.num2date(ncsrc.variables[time][records],
+                                    ncsrc.variables[time].units)
+        for dtime in ("zeta", "v2d", "v3d", "temp", "salt"):
+            ncout.variables[dtime + "_time"][:] = netCDF4.date2num(src_time,
+                                       ncout.variables[dtime + "_time"].units)
         ncsrc.close()
     else:
         raise AttributeError("you must supply a destination file or a grid to make the file")
 
     # Call the interpolation
     try:
+        src_grid.set_east(destg.east())
         pmap = __interp_grids(src_grid, destg, ncout, records=records, threads=threads,
                   nx=nx, ny=ny, vmap=vmap, weight=weight, pmap=pmap)
     except TimeoutError:
@@ -590,6 +601,5 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=-2,
     finally:
         # Clean up
         ncout.close()
-
     return pmap
 pass

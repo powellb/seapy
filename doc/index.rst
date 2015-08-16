@@ -6,6 +6,10 @@
 Welcome to SEAPY's documentation!
 =================================
 
+Tools for working with ocean models and data.
+
+SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
+
 Contents:
 
 .. toctree::
@@ -13,6 +17,7 @@ Contents:
 
    Module Descriptions <desc>
    modules/index
+   Examples <examples>
 
 
 Indices and tables

@@ -291,7 +291,7 @@ class obs:
                             provenance=self.provenance[l],meta=self.meta[l])
 
     def __setitem__(self, l, new_obs):
-        if not isinstance(new_obs,seapy.roms.obs.obs):
+        if not isinstance(new_obs, seapy.roms.obs.obs):
             raise TypeError("Trying to assign obs to a non-obs type.")
 
         self.time[l] = new_obs.time
@@ -508,16 +508,19 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     **Examples**
 
     A profile of temp and salt observations at a given lat/lon:
+
     >>> obs = seapy.obs.gridder(grid, times, lon, lat,
             [ seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp, None, 0.1),
               seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt, None, 0.05)],
             dt = 1/24, title="Argo")
 
     Satellite Data from a number of lat/lons at a single time
+
     >>> obs = seapy.obs.gridder(grid, time, lon, lat,
             seapy.roms.obs.raw_data("ZETA", "SSH_AVISO", sla, sla_err, 0.05),
             dt = 2/24, title="SSH")
 
+    These will generate new observation structures from the raw data.
     """
     from numpy_groupies import aggregate
 
@@ -532,7 +535,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     region_list = np.where(np.logical_and.reduce((
                 lat>=np.min(grid.lat_rho), lat<=np.max(grid.lat_rho),
                 lon>=np.min(grid.lon_rho), lon<=np.max(grid.lon_rho))))
-    if len(region_list[0]) == 0:
+    if not np.any(region_list):
         warn("No observations were located within grid region_list")
         return None
     lat = lat[region_list]
@@ -693,10 +696,12 @@ def merge_files(obs_files, out_files, days):
 
     **Examples**
 
-    >> merge_files(["obs_1.nc", "obs_2.nc", "obs_3.nc"], "new_#.nc",
-                   np.arange(10,21,2))
     Put together three files into 5 separate files in two day intervals from
-    day 10 through day 20.
+    day 10 through day 20:
+
+    >>> merge_files(["obs_1.nc", "obs_2.nc", "obs_3.nc"], "new_#.nc",
+                   np.arange(10,21,2))
+
     """
     import re
 

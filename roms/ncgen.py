@@ -8,11 +8,12 @@
 from __future__ import print_function
 
 import os
+import re
 import netCDF4
 from datetime import datetime
+from seapy.lib import default_epoch
+from seapy.cdl_parser import cdl_parser
 from seapy.roms import lib
-import seapy.cdl_parser as cdl_parser
-import netcdftime
 from warnings import warn
 
 """
@@ -37,7 +38,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
     if not os.path.isfile(filename) or clobber:
         _nc=netCDF4.Dataset(filename, "w", format=_format)
         # Loop over the dimensions and add them
-        for dim in dims.keys():
+        for dim in dims:
             _nc.createDimension(dim, dims[dim])
         # Loop over the variables and add them
         for var in vars:
@@ -85,7 +86,7 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho):
 
     return dims
 
-def _set_time_ref(vars, timevar, timebase, cycle=None):
+def _set_time_ref(vars, timevar, reftime, cycle=None):
     """
         internal method: Set time reference
     """
@@ -95,26 +96,28 @@ def _set_time_ref(vars, timevar, timebase, cycle=None):
         for nvar in vars:
             if nvar["name"] == tvar:
                 if "units" in nvar["attr"]:
-                    t = netcdftime.utime(nvar["attr"]["units"])
-                    nvar["attr"]["units"] = "%s since %s" % ( t.units, timebase )
+                    t = re.findall('(\w+) since .*',nvar["attr"]["units"])
+                    nvar["attr"]["units"] = \
+                        "{:s} since {:s}".format(t[0], str(reftime))
                 else:
-                    nvar["attr"]["units"] = "days since %s" % ( timebase )
+                    nvar["attr"]["units"] = \
+                        "days since {:s}".format(str(reftime))
                 if cycle is not None:
                     nvar["attr"]["cycle_length"] = cycle
     return vars
 
 def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
-                         timebase=None, clobber=False, title="ROMS"):
+                         reftime=None, clobber=False, title="ROMS"):
     """
         internal method: Generic file creator that uses ocean_time
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + cdl)
+    dims, vars, attr = cdl_parser(_cdl_dir + cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    if timebase is not None:
-        vars = _set_time_ref(vars, "ocean_time", timebase)
+    if reftime is not None:
+        vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -124,7 +127,7 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
     return _nc
 
 def create_river(filename, nriver=1, s_rho=5,
-                timebase=datetime(2000,1,1), clobber=False, title="My River"):
+                reftime=default_epoch, clobber=False, title="My River"):
     """
     Create a new, blank river file
 
@@ -136,7 +139,7 @@ def create_river(filename, nriver=1, s_rho=5,
         number of rivers to put in file
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -150,12 +153,12 @@ def create_river(filename, nriver=1, s_rho=5,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_rivers.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_rivers.cdl")
 
     # Fill in the appropriate river values
     dims["river"]=nriver
     dims["s_rho"]=s_rho
-    vars = _set_time_ref(vars, "river_time", timebase)
+    vars = _set_time_ref(vars, "river_time", reftime)
 
     # Create the river file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -192,7 +195,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "roms_grid.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "roms_grid.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -205,7 +208,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     return _nc
 
 def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 timebase=datetime(2000,1,1), clobber=False, title="My Adsen"):
+                 reftime=default_epoch, clobber=False, title="My Adsen"):
     """
     Create a new adjoint sensitivity file
 
@@ -219,7 +222,7 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -234,10 +237,10 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Create the general file
     return _create_generic_file(filename, "adsen.cdl", eta_rho, xi_rho, s_rho,
-                                timebase, clobber, title)
+                                reftime, clobber, title)
 
 def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 timebase=datetime(2000,1,1), clobber=False, title="My BRY"):
+                 reftime=default_epoch, clobber=False, title="My BRY"):
     """
     Create a bry forcing file
 
@@ -251,7 +254,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -265,11 +268,11 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "bry_unlimit.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "bry_unlimit.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "bry_time", timebase)
+    vars = _set_time_ref(vars, "bry_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -279,7 +282,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
-                 timebase=datetime(2000,1,1), clobber=False, title="My CLIM"):
+                 reftime=default_epoch, clobber=False, title="My CLIM"):
     """
     Create a climatology forcing file
 
@@ -296,7 +299,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     ntimes: int, optional
         number of time records (climatology files do not have unlimited
         dimension)
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -310,14 +313,14 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "clm_ts.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "clm_ts.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     times=("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
     for n in times:
         dims[n] = ntimes
-    vars = _set_time_ref(vars, times, timebase)
+    vars = _set_time_ref(vars, times, reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -327,7 +330,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     return _nc
 
 def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 timebase=datetime(2000,1,1), clobber=False,
+                 reftime=default_epoch, clobber=False,
                  title="My Forcing"):
     """
     Create a bulk flux forcing file
@@ -342,7 +345,7 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -356,11 +359,11 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_bulk.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_bulk.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "time", timebase)
+    vars = _set_time_ref(vars, "time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -370,7 +373,7 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
-                    cycle=None, timebase=datetime(2000,1,1), clobber=False,
+                    cycle=None, reftime=default_epoch, clobber=False,
                     title="My Flux"):
     """
     Create a surface flux forcing file
@@ -390,7 +393,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
         dimension)
     cycle: int or None, optional
         The number of days before cycling the forcing records
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -404,14 +407,14 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_fluxclm.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_fluxclm.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     times=("srf_time", "shf_time", "swf_time", "sss_time")
     for n in times:
         dims[n] = ntimes
-    vars = _set_time_ref(vars, times, timebase)
+    vars = _set_time_ref(vars, times, reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -421,7 +424,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     return _nc
 
 def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                 timebase=datetime(2000,1,1), clobber=False,
+                 reftime=default_epoch, clobber=False,
                  title="My Qcorrection"):
     """
     Create a Q Correction forcing file
@@ -438,7 +441,7 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
         number of s-levels
     cycle: int or None, optional
         The number of days before cycling the forcing records
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -452,11 +455,11 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_qcorr.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_qcorr.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "sst_time", timebase, cycle)
+    vars = _set_time_ref(vars, "sst_time", reftime, cycle)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -466,7 +469,7 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     return _nc
 
 def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                 timebase=datetime(2000,1,1), clobber=False,
+                 reftime=default_epoch, clobber=False,
                  title="My Winds"):
     """
     Create a surface wind stress forcing file
@@ -483,7 +486,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
         number of s-levels
     cycle: int or None, optional
         The number of days before cycling the forcing records
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -497,11 +500,11 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_windstress.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_windstress.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "sms_time", timebase, cycle)
+    vars = _set_time_ref(vars, "sms_time", reftime, cycle)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -511,7 +514,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     return _nc
 
 def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
-                 timebase=datetime(2000,1,1), clobber=False,
+                 reftime=default_epoch, clobber=False,
                  title="My Tides"):
     """
     Create a barotropic tide forcing file
@@ -528,7 +531,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
         number of s-levels
     ntides: int, optional
         number of tidal frequencies to force with
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -542,7 +545,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "frc_tides.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_tides.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -556,7 +559,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
     return _nc
 
 def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 timebase=datetime(2000,1,1), clobber=False, title="My Ini"):
+                 reftime=default_epoch, clobber=False, title="My Ini"):
     """
     Create an initial condition file
 
@@ -570,7 +573,7 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -584,11 +587,11 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "ini_hydro.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "ini_hydro.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "ocean_time", timebase)
+    vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -612,7 +615,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
         number of state variables in the observations
     provenance: string, optional
         Description of the provenance values
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -628,7 +631,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     """
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_obs.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_obs.cdl")
 
     # Fill in the appropriate dimension values
     dims["survey"] = survey
@@ -646,7 +649,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     return _nc
 
 def create_da_ray_obs(filename, ray_datum=1, provenance="None",
-                 timebase=datetime(2000,1,1), clobber=False,
+                 reftime=default_epoch, clobber=False,
                  title="My Observations"):
     """
     Create an acoustic ray assimilation observations file
@@ -659,7 +662,7 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
         Number of rays to assimilate
     provenance: string, optional
         Description of the provenance values
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -674,11 +677,11 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     """
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_obs_ray.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_obs_ray.cdl")
 
     # Fill in the appropriate dimension values
     dims["ray_datum"] = ray_datum
-    vars = _set_time_ref(vars, "obs_time", timebase)
+    vars = _set_time_ref(vars, "obs_time", reftime)
 
     # Set the provenance values in the global attributes
     attr["obs_provenance"] = provenance
@@ -691,7 +694,7 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     return _nc
 
 def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
-                  timebase=datetime(2000,1,1), clobber=False,
+                  reftime=default_epoch, clobber=False,
                   title="My BRY STD"):
     """
     Create a boundaries standard deviation file
@@ -708,7 +711,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
         number of s-levels
     bry: int, optional
         number of open boundaries to specify
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -722,13 +725,13 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_b.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_b.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     dims["IorJ"] = max(eta_rho,xi_rho)
     dims["boundary"] = bry
-    vars = _set_time_ref(vars, "ocean_time", timebase)
+    vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -738,7 +741,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
     return _nc
 
 def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  timebase=datetime(2000,1,1), clobber=False,
+                  reftime=default_epoch, clobber=False,
                   title="My FRC STD"):
     """
     Create a forcing standard deviation file
@@ -753,7 +756,7 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -767,11 +770,11 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_f.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_f.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "ocean_time", timebase)
+    vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -781,7 +784,7 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  timebase=datetime(2000,1,1), clobber=False,
+                  reftime=default_epoch, clobber=False,
                   title="My INI STD"):
     """
     Create an initialization standard deviation file
@@ -796,7 +799,7 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -810,11 +813,11 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_i.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_i.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "ocean_time", timebase)
+    vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -824,7 +827,7 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  timebase=datetime(2000,1,1), clobber=False,
+                  reftime=default_epoch, clobber=False,
                   title="My Model STD"):
     """
     Create an time varying model standard deviation file
@@ -839,7 +842,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -853,11 +856,11 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + "s4dvar_std_m.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_m.cdl")
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "ocean_time", timebase)
+    vars = _set_time_ref(vars, "ocean_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -867,7 +870,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 def create_zlevel(filename, lat=10, lon=10, depth=1,
-                  timebase=datetime(2000,1,1),
+                  reftime=default_epoch,
                   clobber=False,
                   title="Zlevel Model Data",cdlfile=None,dims=2):
     """
@@ -883,7 +886,7 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
         number of longitudinal columns
     depth: int, optional
         number of z-levels
-    timebase: datetime, optional
+    reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
@@ -907,13 +910,13 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
             cdlfile = "zlevel_2d.cdl"
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser.cdl_parser(_cdl_dir + cdlfile)
+    dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
 
     # Fill in the appropriate dimension values
     dims["lat"]=lat
     dims["lon"]=lon
     dims["depth"]=depth
-    vars = _set_time_ref(vars, "time", timebase)
+    vars = _set_time_ref(vars, "time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,

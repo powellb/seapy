@@ -9,4 +9,5 @@ SEAPY modules
    seapy
    model/index
    roms/index
-   
+   seawater/index
+

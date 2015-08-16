@@ -19,4 +19,8 @@ All packages should be imported starting with "seapy"
           + Nest grids
           + Generate Initial and Boundary Conditions
           + Create ROMS NetCDF files
-          
+
+**seawater** (``seapy.seawater``)
+
+     * Utilities for computing oceanic properties
+

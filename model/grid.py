@@ -44,7 +44,7 @@ def asgrid(grid):
     """
     if grid is None:
         raise AttributeError("No grid was specified")
-    if isinstance(grid,seapy.model.grid):
+    if isinstance(grid, seapy.model.grid):
         return grid
     else:
         return seapy.model.grid(filename=grid)
@@ -177,7 +177,8 @@ class grid:
         self.shape = (self.ln, self.lm)
 
     def __repr__(self):
-        return str(self)
+        return "{:s}: {:d}x{:d}x{:d}".format("C-Grid" if self.cgrid
+                                else "A-Grid", self.n,self.ln,self.lm)
 
     def __str__(self):
         return "\n".join((self.filename if self.filename else "Constructed",
@@ -185,6 +186,53 @@ class grid:
                 "C-Grid" if self.cgrid else "A-Grid",
                 "S-level" if self._isroms else "Z-Level"),
             "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
+
+    def east(self):
+        """
+        Test the longitude convention of the grid. If there are negative
+        values, then east is False. If there are only positive values then
+        assume that east is True.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        east : bool,
+            True - The convention is all positive values to the east
+            False - The convention is positive values east and negative west
+        """
+        return np.min(self.lon_rho > 0)
+
+    def set_east(self, east=False):
+        """
+        When working with various other grids, we may want the longitudes
+        to be consistent. This can be changed by setting the east to be
+        either True or False. If False, then longitudes will be positive east
+        and negative west. If True, only positive east.
+
+        Parameters
+        ----------
+        east : bool,
+            True - all longitudes are positive
+            False - longitudes are positive east and negative west
+
+        Returns
+        -------
+        None : sets attributes in grid
+        """
+        try:
+            if east:
+                self.lon_rho[self.lon_rho < 0] += 360.0
+                self.lon_u[self.lon_rho < 0] += 360.0
+                self.lon_v[self.lon_rho < 0] += 360.0
+            else:
+                self.lon_rho[self.lon_rho > 180] -= 360.0
+                self.lon_u[self.lon_rho > 180] -= 360.0
+                self.lon_v[self.lon_rho > 180] -= 360.0
+        except:
+            pass
 
     def set_dims(self):
         """
@@ -542,8 +590,7 @@ class grid:
         k = j * np.ma.masked
         grid_k = np.arange(0,self.n)
         depth = np.asanyarray(points[2])
-        l = np.where(depth>0)
-        depth[l] = -depth[l]
+        depth[depth>0] *= -1
 
         # Determine the unique points
         good = ~j.mask * ~i.mask

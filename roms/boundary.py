@@ -10,12 +10,9 @@
 from __future__ import print_function
 
 import seapy
-import os
 import numpy as np
 import netCDF4
-import netcdftime
 import textwrap
-from scipy import interpolate
 
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
@@ -30,7 +27,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
         output boundary file
     grid : seapy.model.grid or string, optional,
         ROMS grid for boundaries
-    [records] : array, optional
+    records : array, optional
         record indices to put into the boundary
 
     Returns
@@ -38,49 +35,96 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     None
 
     """
-    grid = seapy.model.asgrid(grid)
+    if grid is None:
+        grid = seapy.model.asgrid(roms_file)
+    else:
+        grid = seapy.model.asgrid(grid)
     ncroms = netCDF4.Dataset(roms_file)
-    time = seapy.roms.get_timevar(ncroms)
+    src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-             if records is None else records
-    try:
-        src_time=netcdftime.utime(ncroms.variables[time].units)
-    except AttributeError:
-        src_time=netcdftime.utime(seapy.roms.default_epoch)
+                if records is None else records
 
     # Create the boundary file and fill up the descriptive data
-    if os.path.isfile(bry_file):
-        ncbry=netCDF4.Dataset(bry_file,"a")
-    else:
-        ncbry=seapy.roms.ncgen.create_bry(bry_file,
-             eta_rho=grid.eta_rho,xi_rho=grid.xi_rho,s_rho=grid.n,
-             timebase=src_time.origin,title="generated from "+roms_file)
+    ncbry = seapy.roms.ncgen.create_bry(bry_file,
+                eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
+                reftime=src_ref, title="generated from "+roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
-    bry_time=netcdftime.utime(ncbry.variables[brytime].units)
     grid.to_netcdf(ncbry)
-    ncbry.variables["bry_time"][:]=bry_time.date2num(
-        src_time.num2date(ncroms.variables[time][records]))
+    ncbry.variables["bry_time"][:] = netCDF4.date2num(
+        netCDF4.num2date(ncroms.variables[time][records],
+                         ncroms.variables[time].units),
+        ncbry.variables[brytime].units)
 
-    # Go over the variables for each side
-    sides={"north":[-2,"-1"], "south":[-2,"0"], "east":[-1,"-1"], "west":[-1,"0"]}
-    index=["records",":",":",":"]
-    for var in seapy.roms.fields.keys():
+    for var in seapy.roms.fields:
         if var in ncroms.variables:
-            for side in sides:
-                outvar=var+"_"+side
-                ndim=seapy.roms.fields[var]["dims"]
-                if ndim==3:
-                    myindex=list(index)
-                elif ndim==2:
-                    myindex=list(index[:-1])
-                myindex[sides[side][0]]=sides[side][1]
-                indexstr=",".join(myindex)
-                ncbry.variables[outvar][:]=eval("ncroms.variables[var]["+indexstr+"]")
+            for side in seapy.roms.sides:
+                # outvar=var+"_"+side
+                ndim = seapy.roms.fields[var]["dims"]
+                if ndim == 3:
+                    ncbry.variables["_".join((var, side))][:] = \
+                        ncroms.variables[var][records,:,
+                                              seapy.roms.sides[side][0],
+                                              seapy.roms.sides[side][1]]
+                elif ndim == 2:
+                    ncbry.variables["_".join((var, side))][:] = \
+                          ncroms.variables[var][records,
+                                                seapy.roms.sides[side][0],
+                                                seapy.roms.sides[side][1]]
     ncbry.close()
+    pass
+
+def from_zgrid(parent_file, bry_file, grid, records=None, vmap=None,
+               epoch=seapy.default_epoch):
+    """
+    Create boundary conditions from a parent z-grid model by only
+    interpolating along each boundary to avoid interpolating the entire grids.
+
+    Parameters
+    ----------
+    parent_file : string,
+        ROMS source (history, average, climatology file)
+    bry_file : string,
+        output boundary file
+    grid : seapy.model.grid or string, optional,
+        ROMS grid for boundaries
+    records : array, optional
+        record indices to put into the boundary
+    vmap : dictionary, optional
+        mapping source and destination variables
+
+    Returns
+    -------
+    None
+    """
+    import uuid
+
+    grid = seapy.model.asgrid(grid)
+    ncparent = netCDF4.Dataset(parent_file)
+    parent_ref, time = seapy.roms.get_reftime(ncparent)
+    records = np.arange(0, len(ncroms.variables[time][:])) \
+             if records is None else records
+
+    # Create a unique temporary file name for saving each side results
+    tmp_file = "/tmp/" + str(uuid.uuid1())
+
+    # Get the information about the parent
+    parent = seapy.model.asgrid(parent_file)
+
+    # Create the boundary file
+
+    # Loop over each side of the grid and interpolate from the parent
+    for side in seapy.roms.sides:
+        # Construct a pseudo-grid of this side
+        pass
+        # Interpolate the parent onto this pseudo-grid
+
+        # Take the information from the temporary file and put it into
+        # the new boundary file
 
     pass
 
-def gen_stations(filename, grid=None):
+
+def gen_stations(filename, grid):
     """
     Generate a station file with stations at every boundary location for use in
     nesting one grid within another.
@@ -101,10 +145,10 @@ def gen_stations(filename, grid=None):
     grid = seapy.model.asgrid(grid)
 
     # Put together the boundaries
-    lon=np.concatenate([ grid.lon_rho[0,:], grid.lon_rho[-1,:],
-                         grid.lon_rho[:,0], grid.lon_rho[:,-1]])
-    lat=np.concatenate([ grid.lat_rho[0,:], grid.lat_rho[-1,:],
-                         grid.lat_rho[:,0], grid.lat_rho[:,-1]])
+    lon=np.concatenate([grid.lon_rho[0,:], grid.lon_rho[-1,:],
+                        grid.lon_rho[:,0], grid.lon_rho[:,-1]])
+    lat=np.concatenate([grid.lat_rho[0,:], grid.lat_rho[-1,:],
+                        grid.lat_rho[:,0], grid.lat_rho[:,-1]])
     Npts = len(lon)
 
     header = """\
@@ -269,24 +313,19 @@ def from_stations(station_file, bry_file, grid=None):
     """
     grid = seapy.model.asgrid(grid)
     ncstation = netCDF4.Dataset(station_file)
-    time = seapy.roms.get_timevar(ncstation)
-    try:
-        src_time=netcdftime.utime(ncstation.variables[time].units)
-    except AttributeError:
-        src_time=netcdftime.utime(seapy.roms.default_epoch)
+    src_ref, time = seapy.roms.get_reftime(ncstation)
 
     # Create the boundary file and fill up the descriptive data
-    if os.path.isfile(bry_file):
-        ncbry=netCDF4.Dataset(bry_file,"a")
-    else:
-        ncbry=seapy.roms.ncgen.create_bry(bry_file,
-             eta_rho=grid.eta_rho,xi_rho=grid.xi_rho,s_rho=grid.n,
-             timebase=src_time.origin,title="generated from "+station_file)
+    ncbry = seapy.roms.ncgen.create_bry(bry_file,
+                eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
+                reftime=src_ref, clobber=False,
+                title="generated from "+station_file)
     brytime = seapy.roms.get_timevar(ncbry)
-    bry_time=netcdftime.utime(ncbry.variables[brytime].units)
     grid.to_netcdf(ncbry)
-    ncbry.variables["bry_time"][:]=bry_time.date2num(
-        src_time.num2date(ncstation.variables[time][:]))
+    ncbry.variables["bry_time"][:] = netCDF4.date2num(
+        netCDF4.num2date(ncstation.variables[time][:],
+                         ncstation.variables[time].units),
+                        ncbry.variables[brytime].units)
 
     # Set up the indices
     bry = {
@@ -306,7 +345,7 @@ def from_stations(station_file, bry_file, grid=None):
     sta_lon=ncstation.variables["lon_rho"][:]
     sta_lat=ncstation.variables["lat_rho"][:]
     sta_mask=np.ones(sta_lat.shape)
-    sta_mask[np.where(sta_lon*sta_lat>1e10)[0]]=0
+    sta_mask[sta_lon*sta_lat > 1e10]=0
 
     # Load the station data as we need to manipulate it
     sta_zeta=np.ma.masked_greater(ncstation.variables["zeta"][:],100)
@@ -334,13 +373,13 @@ def from_stations(station_file, bry_file, grid=None):
     # Unfortunately, ROMS will give points that are not at the locations
     # you specify if those points conflict with the mask. So, these points
     # are simply replaced with the nearest.
-    dist = np.sqrt( (sta_lon-grid_lon)**2 + (sta_lat-grid_lat)**2 )
-    bad_pts = np.where( np.logical_and(dist > 0.001, grid_mask == 1) )[0]
-    good_pts = np.where( np.logical_and(dist < 0.001, grid_mask == 1) )[0]
+    dist = np.sqrt((sta_lon-grid_lon)**2 + (sta_lat-grid_lat)**2 )
+    bad_pts = np.where(np.logical_and(dist > 0.001, grid_mask == 1))[0]
+    good_pts = np.where(np.logical_and(dist < 0.001, grid_mask == 1))[0]
     for i in bad_pts:
         dist = np.sqrt( (sta_lon[i]-sta_lon[good_pts])**2 +
                         (sta_lat[i]-sta_lat[good_pts])**2 )
-        index = good_pts[ np.where(dist==np.min(dist))[0] ]
+        index = good_pts[dist == np.min(dist)]
         sta_h[i] = sta_h[index]
         sta_angle[i] = sta_angle[index]
         sta_lon[i] = sta_lon[index]
@@ -379,7 +418,7 @@ def from_stations(station_file, bry_file, grid=None):
         y[-1,:] = y[-2,:]
         return y
 
-    for side in sides.keys():
+    for side in sides:
         print(side)
 
         # Masks
@@ -387,7 +426,7 @@ def from_stations(station_file, bry_file, grid=None):
         ocean = np.where(grid_mask[bry[side]] == 1)[0]
 
         # If we have a masked boundary, skip it
-        if len(ocean) == 0:
+        if not np.any(ocean):
             continue
 
         # 1) Zeta
@@ -467,3 +506,4 @@ def from_stations(station_file, bry_file, grid=None):
             else:
                 ncbry.variables["v_"+side][n,:] = data
 
+    pass
