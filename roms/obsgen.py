@@ -45,7 +45,7 @@ class obsgen(object):
         """
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
-        self.epoch = datetime.datetime(2000,1,1) if epoch is None else epoch
+        self.epoch = seapy.default_epoch if epoch is None else epoch
 
     def convert_file(self, file, title=None):
         """

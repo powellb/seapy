@@ -427,8 +427,9 @@ class obs:
         state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
                 survey=len(self.survey_time), state_variable=state_vars,
-                provenance=','.join((':'.join((obs_provenance[v],str(v)))
-                                     for v in np.unique(self.provenance))),
+                provenance=','.join((':'.join( \
+                    (obs_provenance.get(v,"UNKNOWN"),str(v)))
+                            for v in np.unique(self.provenance))),
                 clobber=True, title=self.title)
         nc.variables["spherical"][:] = 1
         nc.variables["Nobs"][:] = self.nobs
