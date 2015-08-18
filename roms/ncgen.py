@@ -24,7 +24,7 @@ _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
 _format="NETCDF4_CLASSIC"
 
 def ncgen(filename, dims=None, vars=None, attr=None, title=None,
-          clobber=False):
+          clobber=False, format=_format):
     """
         internal method: Create a new netcdf file
     """
@@ -36,7 +36,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
         attr={}
     # Create the file
     if not os.path.isfile(filename) or clobber:
-        _nc=netCDF4.Dataset(filename, "w", format=_format)
+        _nc=netCDF4.Dataset(filename, "w", format=format)
         # Loop over the dimensions and add them
         for dim in dims:
             _nc.createDimension(dim, dims[dim])
@@ -643,7 +643,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
-                title=title)
+                title=title, format="NETCDF3_64BIT")
 
     # Return the new file
     return _nc

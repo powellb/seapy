@@ -632,8 +632,10 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
 
             # Build the depth vectors
             if subsurface_values:
-                dd = aggregate(indices, depth[time_list], func='mean')
-                kk = aggregate(indices, k[time_list], func='mean')
+                dd = aggregate(indices, depth[time_list][valid_data],
+                               func='mean')
+                kk = aggregate(indices, k[time_list][valid_data],
+                               func='mean')
                 dd = dd[binned].ravel()
                 kk = kk[binned].ravel()
             else:
