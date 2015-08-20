@@ -19,11 +19,6 @@ fields = {"zeta":{"grid":"rho", "dims":2},
           "temp":{"grid":"rho", "dims":3},
           "salt":{"grid":"rho", "dims":3}}
 
-sides = {"north":(-1, np.s_[:]),
-         "south":(0, np.s_[:]),
-         "east":(np.s_[:], -1),
-         "west":(np.s_[:], 0)}
-
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
                w_grid=False):

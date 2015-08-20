@@ -14,6 +14,12 @@ import numpy as np
 import netCDF4
 import textwrap
 
+# Define the sides of ROMS boundaries along with the DA ordering
+sides = {"west":{"indices":(np.s_[:], 0), "order":1},
+         "south":{"indices":(0, np.s_[:]), "order":2},
+         "east":{"indices":(np.s_[:], -1), "order":3},
+         "north":{"indices":(-1, np.s_[:]), "order":4}}
+
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
     Given a ROMS history, average, or climatology file, generate
@@ -57,72 +63,186 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
 
     for var in seapy.roms.fields:
         if var in ncroms.variables:
-            for side in seapy.roms.sides:
-                # outvar=var+"_"+side
+            for bry in sides:
                 ndim = seapy.roms.fields[var]["dims"]
                 if ndim == 3:
-                    ncbry.variables["_".join((var, side))][:] = \
+                    ncbry.variables["_".join((var, bry))][:] = \
                         ncroms.variables[var][records,:,
-                                              seapy.roms.sides[side][0],
-                                              seapy.roms.sides[side][1]]
+                                                sides[bry]["indices"][0],
+                                                sides[bry]["indices"][1]]
                 elif ndim == 2:
-                    ncbry.variables["_".join((var, side))][:] = \
+                    ncbry.variables["_".join((var, bry))][:] = \
                           ncroms.variables[var][records,
-                                                seapy.roms.sides[side][0],
-                                                seapy.roms.sides[side][1]]
+                                                sides[bry]["indices"][0],
+                                                sides[bry]["indices"][1]]
     ncbry.close()
     pass
 
-def from_zgrid(parent_file, bry_file, grid, records=None, vmap=None,
-               epoch=seapy.default_epoch):
+def gen_ncks(parent_file, grid, sponge=0, pad=3):
     """
-    Create boundary conditions from a parent z-grid model by only
-    interpolating along each boundary to avoid interpolating the entire grids.
+    Create the ncks commands for extracting a section of a global model
+    that encompasses each of the boundaries of the given grid. The reason
+    for this is that often we end up with massive global files, and we do
+    not want to interpolate the entirety onto our regional grids (if our
+    regional grid is large also), but only the boundary and nudge/sponge
+    region.
+
+    This script simply does the computation and outputs the necessary `ncks`
+    commands that the user needs to produce global boundary region and
+    boundary "grid" for the regional grid to then use in the interpolation
+    (e.g., seapy.interp.to_clim). This is purely to save disk and cpu
+    expense, and it is non-trivial to use.
 
     Parameters
     ----------
-    parent_file : string,
-        ROMS source (history, average, climatology file)
-    bry_file : string,
-        output boundary file
+    parent_file : seapy.model.grid or string,
+        Parent file (HYCOM, etc.)
     grid : seapy.model.grid or string, optional,
         ROMS grid for boundaries
-    records : array, optional
-        record indices to put into the boundary
-    vmap : dictionary, optional
-        mapping source and destination variables
+    sponge : int,
+        Width to extract along each boundary. If 0, only the boundary itself
+        will be extracted.
+    pad : int,
+        Additional rows/columns to extract from parent around the region
 
     Returns
     -------
     None
     """
-    import uuid
+    import re
 
-    grid = seapy.model.asgrid(grid)
-    ncparent = netCDF4.Dataset(parent_file)
-    parent_ref, time = seapy.roms.get_reftime(ncparent)
-    records = np.arange(0, len(ncroms.variables[time][:])) \
-             if records is None else records
+    parent_grid = seapy.model.asgrid(parent_file)
+    child_grid = seapy.model.asgrid(grid)
+    fre = re.compile('.nc')
+    # Make sure we are on the same coordinates
+    if parent_grid.east() != child_grid.east():
+        if child_grid.east():
+            parent_grid.lon_rho[parent_grid.lon_rho<0] += 360
+        else:
+            parent_grid.lon_rho[parent_grid.lon_rho>180] -= 360
 
-    # Create a unique temporary file name for saving each side results
-    tmp_file = "/tmp/" + str(uuid.uuid1())
+    # Loop over each side of the grid and determine the indices from the
+    # parent and child
+    for side in sides:
+        # Figure out which dimension this side is on and determine all
+        # of the indices needed
+        idx = sides[side]["indices"]
+        if isinstance(idx[0],int):
+            pdim = parent_grid.key["lat_rho"]
+            cdim = "eta"
+            if idx[0] == -1:
+                idx = np.s_[-(sponge+2):,:]
+                # pdidx = "{:d},".format(parent_grid.lat_rho.shape[0]-sponge-2)
+                cdidx = "{:d},".format(child_grid.eta_rho-sponge-2)
+                pass
+            else:
+                idx = np.s_[:sponge+1,:]
+                cdidx = ",{:d}".format(sponge+1)
+            l = np.where(np.logical_and(
+                parent_grid.lat_rho >= np.min(child_grid.lat_rho[idx]),
+                parent_grid.lat_rho <= np.max(child_grid.lat_rho[idx])))
+            i = np.maximum(0,np.min(l[0])-pad)
+            j = np.minimum(parent_grid.lat_rho.shape[0], np.max(l[0])+pad)
+        else:
+            pdim = parent_grid.key["lon_rho"]
+            cdim = "xi"
+            if idx[1] == -1:
+                idx = np.s_[:,-(sponge+2):]
+                cdidx = "{:d},".format(child_grid.xi_rho-sponge-2)
+            else:
+                idx = np.s_[:,:sponge+1]
+                cdidx = ",{:d}".format(sponge+1)
+            l = np.where(np.logical_and(
+                parent_grid.lon_rho >= np.min(child_grid.lon_rho[idx]),
+                parent_grid.lon_rho <= np.max(child_grid.lon_rho[idx])))
+            i = np.maximum(0,np.min(l[1])-pad)
+            j = np.minimum(parent_grid.lon_rho.shape[1], np.max(l[1])+pad)
 
-    # Get the information about the parent
-    parent = seapy.model.asgrid(parent_file)
+        # Put the indices together into strings for extracting out new files
+        pdidx = "{:d},{:d}".format(i,j)
 
-    # Create the boundary file
+        # Display the commands:
+        cmd = "ncks"
+        pfiles = "{:s} {:s}".format(parent_grid.filename,
+                    fre.sub("_{:s}.nc".format(side), parent_grid.filename))
+        cfiles = "{:s} {:s}".format(child_grid.filename,
+                    fre.sub("_{:s}.nc".format(side), child_grid.filename))
 
-    # Loop over each side of the grid and interpolate from the parent
-    for side in seapy.roms.sides:
-        # Construct a pseudo-grid of this side
-        pass
-        # Interpolate the parent onto this pseudo-grid
+        grids = ('rho', 'u', 'v', 'psi')
+        if parent_grid.cgrid:
+            pdim = ' -d'.join(["{:s}_{:s},{:s}".format(pdim, k, pdidx) \
+                                for k in grids])
+        else:
+            pdim = "{:s},{:s}".format(pdim, pdidx)
 
-        # Take the information from the temporary file and put it into
-        # the new boundary file
+        if child_grid.cgrid:
+            cdim = ' -d'.join(["{:s}_{:s},{:s}".format(cdim, k, cdidx) \
+                                for k in grids])
+        else:
+            cdim = "{:s},{:s}".format(cdim, cdidx)
+
+        print("-"*40 + "\n" + side + "\n" + "-"*40)
+        print("{:s} -O -d{:s} {:s}".format(cmd, pdim, pfiles))
+        print("{:s} -O -d{:s} {:s}".format(cmd, cdim, cfiles))
 
     pass
 
+def from_std(std_filename, bry_std_file, fields=None):
+    """
+    Generate the boundary standard deviations file for 4DVAR from the
+    standard deviation of a boundary file. Best to use nco:
+
+    $ ncwa -a bry_time roms_bry_file tmp.nc
+    $ ncbo -O -y sub roms_bry_file tmp.nc tmp.nc
+    $ ncra -y rmssdn tmp.nc roms_bry_std.nc
+
+    to generate the standard deviations. This method simply takes the
+    standard deviations of the boundaries and puts them into the
+    proper format for ROMS 4DVAR.
+
+    Parameters
+    ----------
+    std_filename : string,
+        Filename of the boundary standard deviation file
+    bry_std_file : string,
+        Filename of the boundary standard deviations file to create
+    fields : list, optional,
+        ROMS fields to generate boundaries for. The default are the
+        standard fields as defined in seapy.roms.fields
+
+    Returns
+    -------
+    None
+    """
+    ncstd = netCDF4.Dataset(std_filename)
+    eta_rho = len(ncstd.dimensions["eta_rho"])
+    xi_rho = len(ncstd.dimensions["xi_rho"])
+    s_rho = len(ncstd.dimensions["s_rho"])
+    ncout = seapy.roms.ncgen.create_da_bry_std(bry_std_file,
+                                eta_rho=eta_rho, xi_rho=xi_rho, s_rho=s_rho,
+                                title='STD from '+std_filename)
+    ncout.variables["ocean_time"][:] = ncstd.variables["bry_time"][0]
+
+    if fields is None:
+        fields = seapy.roms.fields
+
+    # Go over every side for every field and put it together
+    for var in fields:
+        vname = var + "_obc"
+        if vname not in ncout.variables:
+            ncout.createVariable(vname, np.float32,
+                                 ('ocean_time', "boundary", "s_rho", "IorJ"))
+        ndat = np.zeros(ncout.variables[vname].shape)
+        for bry in sides:
+            order = sides[bry]["order"]-1
+            dat = ncstd.variables[var + "_" + bry][0,:]
+            if dat.ndim == 1:
+                ndat[0, order, :len(dat)] = dat
+            else:
+                ndat[0, order, :, :dat.shape[1]] = dat
+        ncout.variables[vname][:] = ndat
+        ncout.sync()
+    pass
 
 def gen_stations(filename, grid):
     """
@@ -134,8 +254,8 @@ def gen_stations(filename, grid):
     filename: string
         Input name of station file to create
     grid: string or seapy.model.grid
-        Input grid to generate station file from. If string, it will open the grid file.
-        If grid, it will use the grid information
+        Input grid to generate station file from. If string, it will open
+        the grid file. If grid, it will use the grid information
 
     Returns
     -------
