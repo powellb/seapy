@@ -142,9 +142,11 @@ class grid:
         self._nc = netCDF4.Dataset(self.filename,"r")
         self.name = re.search("[^\.]*",
                               os.path.basename(self.filename)).group();
+        self.key = {}
         for var in gvars:
             for inp in gvars[var]:
                 if inp in self._nc.variables:
+                    self.key[var] = inp
                     self.__dict__[var] = self._nc.variables[inp][:]
 
     def _verify_shape(self):
@@ -296,28 +298,28 @@ class grid:
             self.dm = 1.0/self.pm
         else:
             self.dm = np.ones(self.lon_rho.shape,dtype=np.float32)
-            self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:,1:],
-                                      self.lat_rho[:,1:],
-                                      self.lon_rho[:,0:-1],
+            self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:, 1:],
+                                      self.lat_rho[:, 1:],
+                                      self.lon_rho[:, 0:-1],
                                       self.lat_rho[:,0:-1]).astype(np.float32)
             self.dm[:,-1] = self.dm[:,-2]
         if "pn" in self.__dict__:
             self.dn = 1.0/self.pn
         else:
             self.dn = np.ones(self.lat_rho.shape,dtype=np.float32)
-            self.dn[0:-1,:] = seapy.earth_distance( self.lon_rho[1:,:],
-                                      self.lat_rho[1:,:],
-                                      self.lon_rho[0:-1,:],
+            self.dn[0:-1, :] = seapy.earth_distance( self.lon_rho[1:, :],
+                                      self.lat_rho[1:, :],
+                                      self.lon_rho[0:-1, :],
                                       self.lat_rho[0:-1,:] ).astype(np.float32)
-            self.dn[-1,:] = self.dn[-2,:]
+            self.dn[-1, :] = self.dn[-2, :]
 
         # Compute the Coriolis
         if "f" not in self.__dict__:
-            omega=2*np.pi/86400;
-            self.f=2*omega*np.sin(np.radians(self.lat_rho))
+            omega = 2*np.pi*seapy.secs2day
+            self.f = 2*omega*np.sin(np.radians(self.lat_rho))
 
         # Set the grid index coordinates
-        self.I, self.J=np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
+        self.I, self.J = np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
 
     def set_mask_h(self, fld=None):
         """

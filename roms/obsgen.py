@@ -112,8 +112,10 @@ class aquarius_sss(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, salt_limits=(10,36)):
+    def __init__(self, grid, dt, epoch=None, salt_limits=(10,36),
+                 salt_error=0.1):
         self.salt_limits = salt_limits
+        self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="AQUARIUS Obs"):
@@ -147,7 +149,7 @@ class aquarius_sss(obsgen):
         salt = np.ma.masked_outside(salt.flatten(), self.salt_limits[0],
                                     self.salt_limits[1])
         data = [seapy.roms.obs.raw_data("SALT", "SSS_AQUARIUS",
-                                        salt, None, 0.1)]
+                                        salt, None, self.salt_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                       data, self.dt, title)
@@ -159,7 +161,10 @@ class argo_ctd(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None):
+    def __init__(self, grid, dt, epoch=None, temp_error=0.25,
+                 salt_error=0.1):
+        self.temp_error = temp_error
+        self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="AVISO Obs"):
@@ -176,11 +181,11 @@ class argo_ctd(obsgen):
         if not self.grid.east():
             lon[lon>180] -= 360
         profile_list = np.where(np.logical_and.reduce((
-                    lat>=np.min(self.grid.lat_rho),
-                    lat<=np.max(self.grid.lat_rho),
-                    lon>=np.min(self.grid.lon_rho),
-                    lon<=np.max(self.grid.lon_rho),
-                    pro_q==1)))[0]
+                    lat >= np.min(self.grid.lat_rho),
+                    lat <= np.max(self.grid.lat_rho),
+                    lon >= np.min(self.grid.lon_rho),
+                    lon <= np.max(self.grid.lon_rho),
+                    pro_q == 1)))[0]
 
         # Check which are good profiles
         profile_qc = nc.variables["PROFILE_PRES_QC"][profile_list].astype('<U1')
@@ -194,6 +199,18 @@ class argo_ctd(obsgen):
         julian_day = nc.variables["JULD_LOCATION"][profile_list]
         argo_epoch = datetime.datetime.strptime(''.join( \
             nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')),'%Y%m%d%H%M%S')
+        time_delta = (self.epoch - argo_epoch).days
+        file_stamp = datetime.datetime.strptime(''.join( \
+            nc.variables["DATE_CREATION"][:].astype('<U1')),'%Y%m%d%H%M%S')
+
+        # Grab data over the previous day
+        file_time = np.minimum((file_stamp - argo_epoch).days,
+                               int(np.max(julian_day)))
+        time_list = np.where(julian_day >= file_time - 1)
+        profile_list = profile_list[time_list]
+        julian_day = julian_day[time_list]
+
+        # Load the data in our region and time
         temp = nc.variables["TEMP"][profile_list,:]
         temp_qc = nc.variables["TEMP_QC"][profile_list,:]
         salt = nc.variables["PSAL"][profile_list,:]
@@ -204,11 +221,10 @@ class argo_ctd(obsgen):
 
         # Combine the QC codes
         qc = np.mean(np.vstack((temp_qc.compressed(), salt_qc.compressed(),
-                                pres_qc.compressed())).astype(int),axis=0)
-        good_data = np.where(qc==1)
+                                pres_qc.compressed())).astype(int), axis=0)
+        good_data = np.where(qc == 1)
 
         # Put everything together into individual observations
-        time_delta = (self.epoch - argo_epoch).days
         time = np.resize(julian_day-time_delta,
                          pres.shape[::-1]).T[~temp.mask][good_data]
         lat = np.resize(lat, pres.shape[::-1]).T[~temp.mask][good_data]
@@ -217,8 +233,10 @@ class argo_ctd(obsgen):
         temp = np.ma.masked_outside(temp.compressed()[good_data], 2, 30)
         salt = np.ma.masked_outside(salt.compressed()[good_data], 10, 36)
 
-        data = [ seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp, None, 0.25),
-                 seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt, None, 0.1)]
+        data = [ seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp,
+                                         None, self.temp_error),
+                 seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt,
+                                         None, self.salt_error)]
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
@@ -229,11 +247,12 @@ class aviso_sla_map(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, sshmean=None):
-        if sshmean is not None:
-            self.sshmean = seapy.convolve_mask(sshmean, ksize=5, copy=True)
+    def __init__(self, grid, dt, epoch=None, ssh_mean=None, ssh_error=0.05):
+        if ssh_mean is not None:
+            self.ssh_mean = seapy.convolve_mask(ssh_mean, ksize=5, copy=True)
         else:
-            self.sshmean = None
+            self.ssh_mean = None
+        self.ssh_error = ssh_error
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="AVISO Obs"):
@@ -248,7 +267,7 @@ class aviso_sla_map(obsgen):
         err = np.squeeze(nc.variables["err"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
-        time = time.total_seconds()/86400
+        time = time.total_seconds() * seapy.secs2day
         nc.close()
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
@@ -256,14 +275,14 @@ class aviso_sla_map(obsgen):
         if not self.grid.east():
             lon[lon>180] -= 360
         data = [seapy.roms.obs.raw_data("ZETA", "SSH_AVISO_MAP",
-                                        dat.flatten(), err.flatten(), 0.05)]
+                                dat.flatten(), err.flatten(), self.ssh_error)]
         # Grid it
         obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                      data, self.dt, title)
 
         # Apply the model mean ssh to the sla data
-        if self.sshmean is not None:
-            m,p = seapy.oasurf(self.grid.I, self.grid.J, self.sshmean,
+        if self.ssh_mean is not None:
+            m,p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
                                obs.x, obs.y, nx=1, ny=1, weight=7)
             obs.value += m
         return obs
@@ -274,7 +293,8 @@ class ostia_sst_map(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None):
+    def __init__(self, grid, dt, epoch=None, temp_error=0.4):
+        self.temp_error = temp_error
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="OSTIA SST Obs"):
@@ -289,7 +309,7 @@ class ostia_sst_map(obsgen):
         err = np.squeeze(nc.variables["analysis_error"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
-        time = time.total_seconds()/86400
+        time = time.total_seconds() * seapy.secs2day
         nc.close()
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
@@ -297,7 +317,7 @@ class ostia_sst_map(obsgen):
         if not self.grid.east():
             lon[lon>180] -= 360
         data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.flatten(),
-                                        err.flatten(), 0.4)]
+                                        err.flatten(), self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                      data, self.dt, title)
@@ -309,10 +329,13 @@ class seaglider_profile(obsgen):
     the loading of the data.
     """
     def __init__(self, grid, dt, epoch=None, temp_limits=(5,30),
-                 salt_limits=(33,35.5), depth_limit=-15):
+                 salt_limits=(33,35.5), depth_limit=-15, temp_error=0.2,
+                 salt_error=0.05):
         self.temp_limits = temp_limits
         self.salt_limits = salt_limits
         self.depth_limit = depth_limit
+        self.temp_error = temp_error
+        self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="SeaGlider Obs"):
@@ -367,14 +390,14 @@ class seaglider_profile(obsgen):
         temp = np.ma.masked_outside(pro["temp"], self.temp_limits[0],
                                     self.temp_limits[1])
         salt = np.ma.masked_outside(pro["salt"], self.salt_limits[0],
-                                    salt.temp_limits[1])
+                                    self.salt_limits[1])
         depth = np.ma.masked_greater(-pro["depth"], self.depth_limit)
 
         # Grid it
         data = [ seapy.roms.obs.raw_data("TEMP", provenance, temp,
-                                         None, 0.2),
+                                         None, self.temp_error),
                  seapy.roms.obs.raw_data("SALT", provenance, salt,
-                                         None, 0.05)]
+                                         None, self.salt_error)]
         return seapy.roms.obs.gridder(self.grid, pro["time"]/86400+dtime,
                                       pro["lon"], pro["lat"], depth,
                                       data, self.dt, title)

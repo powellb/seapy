@@ -31,6 +31,13 @@ SEAPY ROMS Package Documentation
    :undoc-members:
    :show-inheritance:
 
+:mod:`clim` -- Working with Climatology Conditions
+-------------------------------------------------
+.. automodule:: seapy.roms.clim
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 :mod:`initial` -- Generating Initial Conditions
 -----------------------------------------------
