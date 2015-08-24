@@ -239,11 +239,14 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                  if records is None else np.atleast_1d(records)
     for src in vmap:
         dest = vmap[src]
+
+        # Extra fields will probably be user tracers (biogeochemical)
+        fld = seapy.roms.fields.get(dest,{"dims":3})
+
         # Only interpolate the fields we want in the destination
-        if (dest not in ncout.variables ) or \
-           ("rotate" in seapy.roms.fields.get(dest,{})):
+        if (dest not in ncout.variables) or ("rotate" in fld):
                 continue
-        if seapy.roms.fields[dest]["dims"]==2:
+        if fld["dims"]==2:
             # Compute the max number of hold in memory
             maxrecs = np.minimum(len(records),
                 np.int(_max_memory/(child_grid.lon_rho.nbytes +
