@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from seapy.model import asgrid
 
-def gen_coastline(lon, lat, bathy):
+def gen_coastline(lon, lat, bathy, depth=0):
     """
     Given lon, lat, and bathymetry, generate vectors of line segments
     of the coastline. This can be exported to matlab (via savemat) to be
@@ -48,6 +48,8 @@ def gen_coastline(lon, lat, bathy):
         latitudes of bathymetry locations
     bathy : array,
         bathymetry (negative for ocean, positive for land) values
+    depth : float,
+        depth to use as the definition of the coast
 
     Returns
     -------
@@ -56,7 +58,7 @@ def gen_coastline(lon, lat, bathy):
     lat : ndarray,
         vector of coastlines, separated by nan (matlab-style)
     """
-    CS = plt.contour(lon, lat, bathy, [-0.25,0.25])
+    CS = plt.contour(lon, lat, bathy, [depth-0.25,depth+0.25])
     lon = list()
     lat = list()
     for col in CS.collections:

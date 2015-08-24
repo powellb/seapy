@@ -241,7 +241,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         dest = vmap[src]
         # Only interpolate the fields we want in the destination
         if (dest not in ncout.variables ) or \
-           ("rotate" in seapy.roms.fields[dest]):
+           ("rotate" in seapy.roms.fields.get(dest,{})):
                 continue
         if seapy.roms.fields[dest]["dims"]==2:
             # Compute the max number of hold in memory
