@@ -79,7 +79,7 @@ def gen_bry_clim(clim_file, grid, bry):
         ncin.close()
     ncout.close()
 
-def nc_concat(clim_files, out_file):
+def nc_concat(clim_files, out_file, maxrecs=20):
     """
     Since climatology files have multiple non-record dimensions, they are
     difficult to work with using standard netcdf operations. This routine
@@ -92,13 +92,14 @@ def nc_concat(clim_files, out_file):
         List of climatology files to concatenate
     out_file: string,
         Name of output file
+    maxrecs: int,
+        For large records, we can only deal with so many at each chunk.
+        Define how many to grab in one pass.
 
     Returns
     -------
     None
     """
-    import pudb
-
     # Assume that zeta_time is consistent with all times
     clim_time=[]
     for f in clim_files:
@@ -134,22 +135,26 @@ def nc_concat(clim_files, out_file):
         for t in clim_times:
             try:
                 ncout.variables[t][:] = out_t
-            except:
+            except KeyError:
                 pass
 
         # Go over all files and concatenate the appropriate records
         for n,f in enumerate(seapy.progressbar.progress(clim_files)):
             nc = netCDF4.Dataset(f)
             for fld in seapy.roms.fields:
-                out = np.where(filenum==n)
+                out = np.where(filenum==n)[0]
                 try:
-                    # Unfortunately, the netCDF4 package does not like
-                    # when we index an array of times (possibly nonsequential)
-                    # for assignment, so, must loop over doing one at a time.
-                    for j in out:
-                        ncout.variables[fld][j,:] = nc.variables[fld][recs[j],:]
+                    # These can be very large, so we need to chunk through
+                    # the 3D variables
+                    if seapy.roms.fields[fld]['dims'] == 3:
+                        for j in seapy.chunker(out, maxrecs):
+                            ncout.variables[fld][j,:] = \
+                                    nc.variables[fld][recs[j],:]
+                    else:
+                        ncout.variables[fld][out,:] = \
+                                    nc.variables[fld][recs[out],:]
                     ncout.sync()
-                except:
+                except KeyError:
                     pass
             nc.close()
     finally:
