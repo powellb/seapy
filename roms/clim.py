@@ -13,7 +13,9 @@ import seapy
 import numpy as np
 import netCDF4
 
-def gen_bry_clim(clm_file, grid, bry):
+clim_times = ('zeta_time', 'v2d_time', 'v3d_time', 'temp_time', 'salt_time')
+
+def gen_bry_clim(clim_file, grid, bry):
     """
     Taking the results of gen_ncks and interpolation, stitch together
     climatology files that were interpolated using only the boundary regions
@@ -22,7 +24,7 @@ def gen_bry_clim(clm_file, grid, bry):
 
     Parameters
     ----------
-    clm_file: str,
+    clim_file: str,
         The name of the output climate file
     grid: seapy.model.grid or str,
         The output ROMS grid
@@ -45,7 +47,7 @@ def gen_bry_clim(clm_file, grid, bry):
     nc.close()
 
     # Create the new climatology file
-    ncout=seapy.roms.ncgen.create_clim(clm_file,
+    ncout=seapy.roms.ncgen.create_clim(clim_file,
              eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
              ntimes=len(times), reftime=reftime,
              title="stitched from boundary interpolation")
@@ -64,10 +66,10 @@ def gen_bry_clim(clm_file, grid, bry):
                 idx[-1] = np.s_[:shp[-1]]
                 pass
             elif side == "east":
-                idx[-1] = np.s_[-shp[-1]-1:]
+                idx[-1] = np.s_[-shp[-1]:]
                 pass
             elif side == "north":
-                idx[-2] = np.s_[-shp[-2]-1:]
+                idx[-2] = np.s_[-shp[-2]:]
                 pass
             elif side == "south":
                 idx[-2] = np.s_[:shp[-2]]
@@ -77,3 +79,79 @@ def gen_bry_clim(clm_file, grid, bry):
         ncin.close()
     ncout.close()
 
+def nc_concat(clim_files, out_file):
+    """
+    Since climatology files have multiple non-record dimensions, they are
+    difficult to work with using standard netcdf operations. This routine
+    takes a list of climatology files and creates a new one with the list
+    concatenated together.
+
+    Parameters
+    ----------
+    clim_files: list,
+        List of climatology files to concatenate
+    out_file: string,
+        Name of output file
+
+    Returns
+    -------
+    None
+    """
+    import pudb
+
+    # Assume that zeta_time is consistent with all times
+    clim_time=[]
+    for f in clim_files:
+        nc = netCDF4.Dataset(f)
+        t = nc.variables["zeta_time"][:]
+        units = nc.variables["zeta_time"].units
+        eta_rho = len(nc.dimensions["eta_rho"])
+        xi_rho = len(nc.dimensions["xi_rho"])
+        s_rho = len(nc.dimensions["s_rho"])
+        nc.close()
+        clim_time.append(t)
+    reftime = netCDF4.num2date(0, units)
+
+    # Figure out the unique records to use from each file so we
+    # don't have overlap
+    recs = [list(range(len(i))) for i in clim_time]
+    filenum = [np.ones(len(i))*n for n, i in enumerate(clim_time)]
+    final_t, idx = np.unique(np.hstack(clim_time), return_index=True)
+    recs = np.hstack(recs)[idx]
+    filenum = np.hstack(filenum)[idx]
+
+    # Create the output file
+    ncout = seapy.roms.ncgen.create_clim(out_file, eta_rho=eta_rho,
+                    xi_rho=xi_rho, s_rho=s_rho, ntimes=len(final_t),
+                    reftime=reftime, clobber=True,
+                    title='concatenated: '+', '.join(clim_files))
+
+    try:
+        # Add all of the times (if it isn't in the file, don't
+        # let it be fatal)
+        out_t = netCDF4.date2num(netCDF4.num2date(final_t, units),
+                                 ncout.variables["zeta_time"].units)
+        for t in clim_times:
+            try:
+                ncout.variables[t][:] = out_t
+            except:
+                pass
+
+        # Go over all files and concatenate the appropriate records
+        for n,f in enumerate(seapy.progressbar.progress(clim_files)):
+            nc = netCDF4.Dataset(f)
+            for fld in seapy.roms.fields:
+                out = np.where(filenum==n)
+                try:
+                    # Unfortunately, the netCDF4 package does not like
+                    # when we index an array of times (possibly nonsequential)
+                    # for assignment, so, must loop over doing one at a time.
+                    for j in out:
+                        ncout.variables[fld][j,:] = nc.variables[fld][recs[j],:]
+                    ncout.sync()
+                except:
+                    pass
+            nc.close()
+    finally:
+        ncout.close()
+    pass

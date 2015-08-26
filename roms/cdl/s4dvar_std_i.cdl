@@ -8,7 +8,6 @@ dimensions:
   eta_u = 130 ;
   eta_v = 129 ;
   s_rho = 20 ;
-  s_w = 21 ;
   ocean_time = UNLIMITED ; // (0 currently)
 
 variables:
