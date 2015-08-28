@@ -212,11 +212,13 @@ def list_files(path=".", regex=".*"):
     files : array
 
     """
+    if path[-1] != '/':
+        path += '/'
     files=[]
     prog=re.compile(regex)
     for file in os.listdir(path):
         if prog.search(file) is not None:
-            files.append(file)
+            files.append(path+file)
     return files
 
 def day2date(day=0, epoch=default_epoch):
