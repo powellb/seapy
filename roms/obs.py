@@ -247,9 +247,9 @@ class obs:
         self.error = self.error.ravel()
         self.type = astype(self.type.ravel())
 
-        lt=len(self.time)
-        if not lt==len(self.x)==len(self.y)==\
-               len(self.value)==len(self.error)==len(self.type):
+        lt=self.time.size
+        if not lt == self.x.size == self.y.size == \
+               self.value.size == self.error.size == self.type.size:
             # If these lengths are not equal, then there is a serious issue
             raise ValueError("Lengths of observation attributes are not equal.")
         else:
@@ -281,7 +281,7 @@ class obs:
 
     def __len__(self):
         self.shape = self.value.shape
-        return len(self.value)
+        return self.value.size
 
     def __getitem__(self, l):
         return obs(time=self.time[l], x=self.x[l], y=self.y[l],
@@ -309,7 +309,7 @@ class obs:
         self._consistent()
 
     def __repr__(self):
-        return "< {:d} obs: {:.1f} to {:.1f} >".format(len(self.value),
+        return "< {:d} obs: {:.1f} to {:.1f} >".format(self.value.size,
                    np.min(self.time), np.max(self.time))
 
     def __str__(self):
@@ -426,7 +426,7 @@ class obs:
         self.create_survey()
         state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
-                survey=len(self.survey_time), state_variable=state_vars,
+                survey=self.survey_time.size, state_variable=state_vars,
                 provenance=','.join((':'.join( \
                     (obs_provenance.get(v,"UNKNOWN"),str(v)))
                             for v in np.unique(self.provenance))),
@@ -548,8 +548,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         # Get the grid locations from the data locations
         subsurface_values = False
         (j,i) = grid.ij((lon,lat))
-        depth = np.zeros(len(i))
-        k = np.ma.array(np.resize(grid.n, len(i)))
+        depth = np.zeros(i.size)
+        k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
         subsurface_values = True
@@ -564,8 +564,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     depth = depth[valid_list]
 
     # Make sure the times are consistent and in dt-space
-    if len(time) == 1:
-        time = np.resize(time, len(valid_list[0]))
+    if time.size == 1:
+        time = np.resize(time, valid_list[0].size)
     else:
         time = time[region_list][valid_list]
     dtime = np.floor(time/dt)
@@ -611,7 +611,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
             ii = ii[binned].ravel()
             jj = jj[binned].ravel()
             (latl, lonl) = grid.latlon((ii,jj))
-            Nd = len(ii)
+            Nd = ii.size
 
             # Put the co-located values together
             nvalues = aggregate(indices,
@@ -657,6 +657,10 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
             oerr.append(np.maximum(v.min_error**2,
                             np.maximum(vari[binned].flatten(),
                                        errs)))
+
+    # Make sure that we have something relevant
+    if not oval:
+        return None
 
     # Put everything together and create an observation class
     return seapy.roms.obs.obs(time=np.hstack(ot).ravel(),

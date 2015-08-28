@@ -39,6 +39,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     internal routine: 2D interpolation thread for parallel interpolation
     """
     data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
+
     # Convolve the water over the land
     ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
@@ -54,7 +55,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     with timeout(minutes=30):
         res, pm = seapy.oasurf(rx, ry, data, zx, zy, pmap, weight, nx, ny)
 
-    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e10), res,
+    return np.ma.masked_where(np.logical_or(mask==0, np.abs(res) > 9e10), res,
                        copy=False)
 
 def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
@@ -66,65 +67,77 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     mask = seapy.adddim(mask, zz.shape[0])
     data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
 
-    # To avoid extrapolation, add a new top and bottom layer that replicates
-    # the data of the existing current and top. 1) Determine which way the
-    # depth goes and add/subtract new layers, and 2) fill in masked values
+    # To avoid extrapolation, we are going to convolve ocean over the land
+    # and add a new top and bottom layer that replicates the data of the
+    # existing current and top. 1) iteratively convolve until we have
+    # filled most of the points, 2) Determine which way the
+    # depth goes and add/subtract new layers, and 3) fill in masked values
     # from the layer above/below.
-    gradsrc = (rz[0,1,1]-rz[-1,1,1]) > 0
-    graddest = (zz[0,1,1]-zz[-1,1,1]) > 0
-    nrz = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
-    nrz[1:-1,:,:]=rz
-    if not gradsrc:
-        # The first level is the bottom
-        nrz[0,:,:]=rz[0,:,:]-500
-        nrz[-1,:,:]=np.minimum(rz[-1,:,:]+50,0)
-        factor=down_factor
-        # Fill in missing values where we have them from above (level above)
-        for k in np.arange(data.shape[0]-2,-1,-1):
-            idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k+1,:,:]))
-            data.mask[k,idx[0],idx[1]]=data.mask[k+1,idx[0],idx[1]]
-            data[k,idx[0],idx[1]]=data[k+1,idx[0],idx[1]]*factor
-    else:
-        # The first level is the top
-        nrz[0,:,:]=np.minimum(rz[0,:,:]+50,0)
-        nrz[-1,:,:]=rz[-1,:,:]-500
-        factor=up_factor
-        # Fill in missing values where we have them from below (level below)
-        for k in np.arange(1,data.shape[0]):
-            idx=np.nonzero(np.logical_xor(data.mask[k,:,:],data.mask[k-1,:,:]))
-            data.mask[k,idx[0],idx[1]]=data.mask[k-1,idx[0],idx[1]]
-            data[k,idx[0],idx[1]]=data[k-1,idx[0],idx[1]]*factor
+    gradsrc = (rz[0, 1, 1] - rz[-1, 1, 1]) > 0
 
     # Convolve the water over the land
     ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
     if ksize < _ksize_range[0]:
         warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
-        ksize=_ksize_range[0]
+        ksize = _ksize_range[0]
     elif ksize > _ksize_range[1]:
         warn("nx or ny values are too large for stable OA, {:f}".format(ksize))
-        ksize=_ksize_range[1]
-    data = seapy.convolve_mask(data, ksize=ksize, copy=False)
+        ksize = _ksize_range[1]
+
+    # Iterate at most 5 times, but we will hopefully break out before that by
+    # checking if we have filled at least 40% of the bottom to be like
+    # the surface
+    bot = -1 if gradsrc else 0
+    top = 0 if gradsrc else -1
+    topmask = np.ma.count_masked(data[top, :, :])
+    for iter in range(5):
+        # Check if we have most everything by checking the bottom
+        data = seapy.convolve_mask(data, ksize=ksize+iter, copy=False)
+        if topmask / np.ma.count_masked(data[bot, :, :]) > 0.4:
+            break
+
+    # Now fill vertically
+    nrz = np.zeros((data.shape[0]+2, data.shape[1], data.shape[2]))
+    nrz[1:-1, :, :]=rz
+    nrz[bot, :, :] = rz[bot, :, :]-500
+    nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
+    if not gradsrc:
+        # The first level is the bottom
+        factor = down_factor
+        # # Fill in missing values where we have them from above (level above)
+        for k in np.arange(data.shape[0]-2, -1, -1):
+            idx=np.nonzero(np.logical_xor(data.mask[k, :, :],
+                                          data.mask[k+1, :, :]))
+            data.mask[k, idx[0], idx[1]] = data.mask[k+1, idx[0], idx[1]]
+            data[k, idx[0], idx[1]] = data[k+1, idx[0], idx[1]] * factor
+    else:
+        # The first level is the top
+        factor = up_factor
+        # # Fill in missing values where we have them from below (level below)
+        for k in np.arange(1, data.shape[0]):
+            idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
+                                            data.mask[k-1, :, :]))
+            data.mask[k, idx[0], idx[1]] = data.mask[k-1, idx[0], idx[1]]
+            data[k, idx[0], idx[1]] = data[k-1, idx[0], idx[1]] * factor
+
 
     # Add upper and lower boundaries
-    ndat = np.zeros((data.shape[0]+2,data.shape[1],data.shape[2]))
-    ndat[0,:,:]=data[0,:,:].filled(np.nan)*factor
-    ndat[1:-1,:,:]=data.filled(np.nan)
-    ndat[-1,:,:]=data[-1,:,:].filled(np.nan)*factor
+    ndat = np.zeros((data.shape[0]+2, data.shape[1], data.shape[2]))
+    ndat[0, :, :] = data[0, :, :].filled(np.nan)*factor
+    ndat[1:-1, :, :] = data.filled(np.nan)
+    ndat[-1, :, :] = data[-1, :, :].filled(np.nan)*factor
 
     # Interpolate the field and return the result
     with timeout(minutes=30):
         if gradsrc:
-            res, pm = seapy.oavol(rx, ry, \
-                        nrz[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                        ndat[np.arange(nrz.shape[0]-1,-1,-1),:,:], \
-                        zx, zy, zz, pmap, \
-                        weight, nx, ny)
+            res, pm = seapy.oavol(rx, ry, nrz[::-1, :, :], ndat[::-1, :, :],
+                        zx, zy, zz, pmap, weight, nx, ny)
         else:
-            res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz, \
+            res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz,
                                 pmap, weight, nx, ny)
 
-    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res)>9e5), res,
+    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res) > 9e5), res,
                        copy=False)
 
 def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
