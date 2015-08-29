@@ -74,8 +74,9 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     Parameters
     ----------
-    roms_file: string,
-        The ROMS (history or average) file from which to compute the std
+    roms_file: string or list of strings,
+        The ROMS (history or average) file from which to compute the std. If
+        it is a list of strings, a netCDF4.MFDataset is opened instead.
     std_file: string,
         The name of the file to store the standard deviations fields
     std_window: int,
@@ -94,25 +95,35 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     -------
         None
     """
+    # Create the fields to process
     if fields is None:
-        fields = list(seapy.roms.fields.keys())
+        fields = set(seapy.roms.fields)
 
-    grid = seapy.model.asgrid(roms_file)
-    nc = netCDF4.Dataset(roms_file)
-    time_var = seapy.roms.gettimevar(nc)
+    # Open the ROMS info
+    if isinstance(roms_file, list):
+        grid = seapy.model.asgrid(roms_file[0])
+        nc = netCDF4.MFDataset(roms_file)
+    else:
+        grid = seapy.model.asgrid(roms_file)
+        nc = netCDF4.Dataset(roms_file)
+
+    # Filter the fields for the ones in the ROMS file
+    fields = set(nc.variables).intersection(fields)
+
+    # Build the output file
+    time_var = seapy.roms.get_timevar(nc)
     epoch = netCDF4.num2date(0, nc.variables[time_var].units)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_ini_std(std_file,
                       eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                      reftime=epoch, title="std from " + roms_file)
-    grid.to_netcdf(nc)
+                      reftime=epoch, title="std from " + str(roms_file))
+    grid.to_netcdf(ncout)
 
-    # If there are any fields that are not part of the standard, add them
-    # to the output file
-    for f in fields:
-        if f not in seapy.roms.fields:
-            ncout.createVariable(f, np.float32,
-                                 ('ocean_time', "s_rho", "eta_rho", "xi_rho"))
+    # If there are any fields that are not in the standard output file,
+    # add them to the output file
+    for f in fields.difference(ncout.variables):
+        ncout.createVariable(f, np.float32,
+                             ('ocean_time', "s_rho", "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
@@ -135,8 +146,9 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     Parameters
     ----------
-    roms_file: string,
-        The ROMS (history or average) file from which to compute the std
+    roms_file: string or list of strings,
+        The ROMS (history or average) file from which to compute the std. If
+        it is a list of strings, a netCDF4.MFDataset is opened instead.
     std_file: string,
         The name of the file to store the standard deviations fields
     std_window: int,
@@ -155,23 +167,33 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     -------
         None
     """
+    # Create the fields to process
     if fields is None:
-        fields = ["sustr", "svstr", "shflux", "ssflux"]
+        fields = set(["sustr", "svstr", "shflux", "ssflux"])
 
-    grid = seapy.model.asgrid(roms_file)
-    nc = netCDF4.Dataset(roms_file)
-    time_var = seapy.roms.gettimevar(nc)
+    # Open the ROMS info
+    if isinstance(roms_file, list):
+        grid = seapy.model.asgrid(roms_file[0])
+        nc = netCDF4.MFDataset(roms_file)
+    else:
+        grid = seapy.model.asgrid(roms_file)
+        nc = netCDF4.Dataset(roms_file)
+
+    # Filter the fields for the ones in the ROMS file
+    fields = set(nc.variables).intersection(fields)
+
+    # Build the output file
+    time_var = seapy.roms.get_timevar(nc)
     epoch = netCDF4.num2date(0, nc.variables[time_var].units)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_frc_std(std_file,
                       eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                      reftime=epoch, title="std from " + roms_file)
-    grid.to_netcdf(nc)
+                      reftime=epoch, title="std from " + str(roms_file))
+    grid.to_netcdf(ncout)
 
     # If there are any fields that are not part of the standard, add them
     # to the output file
-    for f in fields:
-        if f not in seapy.roms.fields:
+    for f in fields.difference(ncout.variables):
             ncout.createVariable(f, np.float32,
                                  ('ocean_time', "eta_rho", "xi_rho"))
 

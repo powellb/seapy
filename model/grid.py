@@ -263,6 +263,9 @@ class grid:
                 self.n = int(self.s_rho.size)
             elif "z" in self.__dict__:
                 self.n = int(self.z.size)
+            else:
+                self.n = 1
+                self.z = np.zeros(self.lat_rho.shape)
         else:
             self.n = int(self.n)
 
@@ -341,7 +344,7 @@ class grid:
                 self._nc = netCDF4.Dataset(self.filename)
 
             # Try to load a field from the file
-            for f in ["temp","temperature"]:
+            for f in ["temp", "temperature", "water_temp"]:
                 if f in self._nc.variables:
                     fld = self._nc.variables[f][0,:,:,:]
                     fld = np.ma.array(fld, mask=np.isnan(fld))
@@ -358,8 +361,8 @@ class grid:
         # Next, we go over the field to examine the depths and mask
         self.h = np.zeros(self.lat_rho.shape)
         self.mask_rho = np.zeros(self.lat_rho.shape)
-        for k in range(0,self.z.size):
-            water = np.nonzero( np.logical_not(fld.mask[k,:,:]) )
+        for k in range(self.z.size):
+            water = np.nonzero( np.logical_not(fld.mask[k, :, :]) )
             self.h[water] = self.z[k]
             if k==0:
                 self.mask_rho[water] = 1.0
@@ -385,20 +388,23 @@ class grid:
                     self.hc, self.n)
             self.depth_rho = seapy.roms.depth(
                 self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
-            self.depth_u=seapy.model.rho2u(self.depth_rho)
-            self.depth_v=seapy.model.rho2v(self.depth_rho)
+            self.depth_u = seapy.model.rho2u(self.depth_rho)
+            self.depth_v = seapy.model.rho2v(self.depth_rho)
         else:
             d = self.z.copy()
             l = np.nonzero(d>0)
             d[l]=-d[l]
-            self.depth_rho = np.kron( np.kron(
+            if self.n > 1:
+                self.depth_rho = np.kron( np.kron(
                                     d, np.ones(self.lon_rho.shape[1])),
                                     np.ones(self.lon_rho.shape[0])).reshape(
                                     [self.z.size,self.lon_rho.shape[0],
                                      self.lon_rho.shape[1]])
+            else:
+                self.depth_rho = self.z
             if self.cgrid:
-                self.depth_u=seapy.model.rho2u(self.depth_rho)
-                self.depth_v=seapy.model.rho2v(self.depth_rho)
+                self.depth_u = seapy.model.rho2u(self.depth_rho)
+                self.depth_v = seapy.model.rho2v(self.depth_rho)
             else:
                 self.depth_u = self.depth_rho
                 self.depth_v = self.depth_rho
@@ -417,6 +423,8 @@ class grid:
         """
         if "n" not in self.__dict__:
             self.set_dims()
+        if self.n == 1:
+            return
         if self._isroms:
             s_w, cs_w = seapy.roms.stretching(
                 self.vstretching, self.theta_s, self.theta_b, self.hc,
