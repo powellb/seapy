@@ -127,7 +127,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                                len(time) - pad, std_window))):
+                                len(time) - std_window + pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:
@@ -199,7 +199,7 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                                len(time) - pad, std_window))):
+                                len(time) - std_window + pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:
