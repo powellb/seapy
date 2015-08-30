@@ -97,6 +97,8 @@ class obsgen(object):
             try:
                 print(file)
                 obs = self.convert_file(file)
+                if obs is None:
+                    continue
                 if outtime:
                     obs.to_netcdf(time.sub("{:05d}".format(int(obs.time[0])),
                                            out_files))
@@ -112,9 +114,12 @@ class aquarius_sss(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, salt_limits=(10,36),
+    def __init__(self, grid, dt, epoch=None, salt_limits=None,
                  salt_error=0.1):
-        self.salt_limits = salt_limits
+        if salt_limits is None:
+            self.salt_limits = (10, 36)
+        else:
+            self.salt_limits = salt_limits
         self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
 
@@ -190,7 +195,7 @@ class argo_ctd(obsgen):
         # Check which are good profiles
         profile_qc = nc.variables["PROFILE_PRES_QC"][profile_list].astype('<U1')
         profile_list = profile_list[profile_qc == 'A']
-        if not len(profile_list):
+        if not profile_list.size:
             return None
 
         # Load only the data from those in our area
@@ -233,10 +238,10 @@ class argo_ctd(obsgen):
         temp = np.ma.masked_outside(temp.compressed()[good_data], 2, 30)
         salt = np.ma.masked_outside(salt.compressed()[good_data], 10, 36)
 
-        data = [ seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp,
-                                         None, self.temp_error),
-                 seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt,
-                                         None, self.salt_error)]
+        data = [seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp,
+                                        None, self.temp_error),
+                seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt,
+                                        None, self.salt_error)]
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
@@ -328,11 +333,17 @@ class seaglider_profile(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_limits=(5,30),
-                 salt_limits=(33,35.5), depth_limit=-15, temp_error=0.2,
+    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+                 salt_limits=None, depth_limit=-15, temp_error=0.2,
                  salt_error=0.05):
-        self.temp_limits = temp_limits
-        self.salt_limits = salt_limits
+        if temp_limits is None:
+            self.temp_limits = (5, 30)
+        else:
+            self.temp_limits = temp_limits
+        if salt_limits is None:
+            self.salt_limits = (31, 35.5)
+        else:
+            self.salt_limits = salt_limits
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error
@@ -401,4 +412,102 @@ class seaglider_profile(obsgen):
         return seapy.roms.obs.gridder(self.grid, pro["time"]/86400+dtime,
                                       pro["lon"], pro["lat"], depth,
                                       data, self.dt, title)
+
+
+class tao_profile(obsgen):
+    """
+    class to process TAO files into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+                 salt_limits=None, u_limits=None, v_limits=None,
+                 depth_limit=0, temp_error=0.25, salt_error=0.08,
+                 u_error=0.08, v_error=0.08):
+        if temp_limits is None:
+            self.temp_limits = (5, 30)
+        else:
+            self.temp_limits = temp_limits
+        if salt_limits is None:
+            self.salt_limits = (31, 35.5)
+        else:
+            self.salt_limits = salt_limits
+        if u_limits is None:
+            self.u_limits = (-3, 3)
+        else:
+            self.u_limits = u_limits
+        if v_limits is None:
+            self.v_limits = (-3, 3)
+        else:
+            self.v_limits = v_limits
+        self.depth_limit = depth_limit
+        self.temp_error = temp_error
+        self.salt_error = salt_error
+        self.u_error = u_error
+        self.v_error = v_error
+        super().__init__(grid, dt, epoch)
+
+    def convert_file(self, file, title="TAO Obs"):
+        """
+        Load a TAO netcdf file and convert into an obs structure
+        """
+        import pudb
+        vals = {"temp": ["T_20", "QT_5020"],
+                "salt": ["S_41", "QS_5041"],
+                "u": ["U_320", "QS_5300"],
+                "v": ["V_321", "QS_5300"]}
+        nc = netCDF4.Dataset(file)
+        lat = nc.variables["lat"][:]
+        lon = nc.variables["lon"][:]
+        if not self.grid.east():
+            lon[lon>180] -= 360
+        lat, lon = np.meshgrid(lat, lon)
+        time = netCDF4.num2date(nc.variables["time"][:],
+                                nc.variables["time"].units) - self.epoch
+        time = list(map(lambda x: x.total_seconds()*seapy.secs2day, time))
+        depth = -nc.variables["depth"][:]
+        profile_list = np.where(np.logical_and.reduce((
+                    lon >= np.min(self.grid.lon_rho),
+                    lon <= np.max(self.grid.lon_rho),
+                    lat >= np.min(self.grid.lat_rho),
+                    lat <= np.max(self.grid.lat_rho))))
+
+        # If nothing is in the area, return nothing
+        if not profile_list[0].size:
+            return None
+
+        profile_list = (np.array(profile_list[0][4:6]),np.array(profile_list[1][4:6]))
+
+        # Process each of the variables that are present
+        obsdata = []
+        for field in vals:
+            limit = getattr(self, field+'_limits')
+            if vals[field][0] in nc.variables:
+                data = nc.variables[vals[field][0]][:]
+                data = np.ma.masked_outside( \
+                         data[profile_list[0], profile_list[1], :, :],
+                         limit[0], limit[1], copy=False)
+                qc = nc.variables[vals[field][1]][:]
+                qc = qc[profile_list[0], profile_list[1], :, :]
+                bad = np.where(np.logical_and(qc != 1, qc != 2))
+                data[bad] = np.ma.masked
+                obsdata.append(seapy.roms.obs.raw_data(field, "TAO_ARRAY",
+                               data.compressed(), None,
+                               getattr(self, field+'_error')))
+        nc.close()
+
+
+        # Build the time, lon, lat, and depth arrays of appropriate size
+        npts = profile_list[0].size
+        ndep = depth.size
+        nt = len(time)
+        lat = np.resize(lat[profile_list], (nt, ndep, npts))
+        lat = np.squeeze(np.transpose(lat, (2, 1, 0)))[~data.mask]
+        lon = np.resize(lon[profile_list], (nt, ndep, npts))
+        lon = np.squeeze(np.transpose(lon, (2, 1, 0)))[~data.mask]
+        depth = np.resize(depth, (npts, nt, ndep))
+        depth = np.squeeze(np.transpose(depth, (0, 2, 1)))[~data.mask]
+        time = np.squeeze(np.resize(time, (npts, ndep, nt)))[~data.mask]
+        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+                                      obsdata, self.dt, title)
 

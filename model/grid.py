@@ -603,7 +603,7 @@ class grid:
         depth[depth>0] *= -1
 
         # Determine the unique points
-        good = ~j.mask * ~i.mask
+        good = np.where(~np.logical_or(i.mask, j.mask))[0]
         ii = np.floor(i[good])
         jj = np.floor(j[good])
         rows, idx = seapy.unique_rows((jj, ii))

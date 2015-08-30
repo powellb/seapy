@@ -71,31 +71,8 @@ obs_provenance = {
     620:"RADAR_KAKAAKO",
     630:"RADAR_KALAELOA",
     700:"ADCP",
-    711:"ADCP_KILOMOANA_os38nb",
-    712:"ADCP_KILOMOANA_os38bb",
-    713:"ADCP_KILOMOANA_os75nb",
-    714:"ADCP_KILOMOANA_os75bb",
-    715:"ADCP_KILOMOANA_wh300",
-    721:"ADCP_WECOMA_os38nb",
-    722:"ADCP_WECOMA_os38bb",
-    723:"ADCP_WECOMA_os75nb",
-    724:"ADCP_WECOMA_os75bb",
-    725:"ADCP_WECOMA_wh300",
-    731:"ADCP_KOK_os38nb",
-    732:"ADCP_KOK_os38bb",
-    733:"ADCP_KOK_os75nb",
-    734:"ADCP_KOK_os75bb",
-    735:"ADCP_KOK_wh300",
-    741:"ADCP_HIIALAKAI_os38nb",
-    742:"ADCP_HIIALAKAI_os38bb",
-    743:"ADCP_HIIALAKAI_os75nb",
-    744:"ADCP_HIIALAKAI_os75bb",
-    745:"ADCP_HIIALAKAI_wh300",
-    751:"ADCP_THOMPSON_os38nb",
-    752:"ADCP_THOMPSON_os38bb",
-    753:"ADCP_THOMPSON_os75nb",
-    754:"ADCP_THOMPSON_os75bb",
-    755:"ADCP_THOMPSON_wh300"
+    800:"MOORING",
+    810:"TAO_ARRAY"
 }
 
 def _type_from_string(s):
@@ -591,8 +568,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         for v in data:
             valid_data = np.s_[:]
             if isinstance(v.values, np.ma.core.MaskedArray):
-                valid_data = ~np.ma.getmaskarray(
-                                v.values[region_list][valid_list][time_list])
+                valid_data = np.where(~np.ma.getmaskarray(
+                                v.values[region_list][valid_list][time_list]))
 
             # Put together the indices based on the type of data we have
             if subsurface_values:
@@ -677,7 +654,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
                              title=title)
 
 
-def merge_files(obs_files, out_files, days):
+def merge_files(obs_files, out_files, days, limits=None):
     """
     merge together a group of observation files into combined new files
     with observations that lie only within the corresponding dates
@@ -696,6 +673,11 @@ def merge_files(obs_files, out_files, days):
         List of day numbers to filter the observations by. A list of
         three values, [a1 a2 a3] will produce two files with observations
         between a1 <= t1 <= a2 and a2<= t2 <= a3.
+    limits : dict,
+        Set the limits of the grid points that observations are allowed
+        within, {'north':i, 'south':i, 'east':i, 'west':i }. As obs near
+        the boundaries are not advisable, this allows you to specify the
+        valid grid range to accept obs within.
 
     Returns
     -------
@@ -727,16 +709,32 @@ def merge_files(obs_files, out_files, days):
         o = obs(file)
         l = np.where(np.logical_or(o.time <= days[0],o.time >= days[-1]))
         o.delete(l)
+        if limits is not None:
+            l = np.where(np.logical_or.reduce((
+                    o.x < limits['west'],
+                    o.x > limits['east'],
+                    o.y < limits['south'],
+                    o.y > limits['north'])))
+            o.delete(l)
         if len(o): myobs.append(o)
 
     # Loop over the dates in pairs
     for n,t in seapy.progressbar.progress(list(enumerate(zip(days[:-1],days[1:])))):
         # Create new observations for this time period
         l = np.where(np.logical_and(myobs[0].time >= t[0],
-                                   myobs[0].time <= t[1]))
+                                    myobs[0].time <= t[1]))
         nobs = myobs[0][l].copy()
         for o in myobs[1:]:
-            l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
+            if limits is not None:
+                l = np.where(np.logical_and.reduce((
+                    o.time >= t[0],
+                    o.time <= t[1],
+                    o.x > limits['west'],
+                    o.x < limits['east'],
+                    o.y > limits['south'],
+                    o.y < limits['north'])))
+            else:
+                l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
             nobs.add(o[l].copy())
         # Save out the new observations
         if outtime:
