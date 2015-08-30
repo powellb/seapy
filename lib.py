@@ -381,4 +381,25 @@ def chunker(seq, size):
     """
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
+def netcdf4(file):
+    """
+    Wrapper around netCDF4 to open a file as either a Dataset or an
+    MFDataset.
+
+    Parameters
+    ----------
+    file : string or list,
+        Filename(s) to open. If the string has wildcards or is a list,
+        this attempts to open an MFDataset
+
+    Returns
+    -------
+    netCDF4 Dataset or MFDataset
+    """
+    import netCDF4
+    try:
+        nc = netCDF4.Dataset(file)
+    except:
+        nc = netCDF4.MFDataset(file)
+    return nc
 pass

@@ -239,7 +239,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             pmap = {"pmaprho":pmaprho, "pmapu":pmapu, "pmapv":pmapv}
 
     # Get the time field
-    ncsrc = netCDF4.Dataset(src_grid.filename)
+    ncsrc = seapy.netcdf4(src_grid.filename)
     time = seapy.roms.get_timevar(ncsrc)
 
     # Interpolate the depths from the source to final grid
@@ -403,7 +403,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     """
     roms_grid = seapy.model.asgrid(roms_file)
-    ncroms = netCDF4.Dataset(roms_file)
+    ncroms = seapy.netcdf4(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, ncroms.variables[time].shape[0]) \
         if records is None else np.atleast_1d(records)
@@ -514,7 +514,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
         destg = seapy.model.asgrid(dest_grid)
 
         if not os.path.isfile(dest_file):
-            ncsrc = netCDF4.Dataset(src_file)
+            ncsrc = seapy.netcdf4(src_file)
             src_ref, time = seapy.roms.get_reftime(ncsrc)
             records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
@@ -588,7 +588,7 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
         src_grid = seapy.model.asgrid(src_file)
-        ncsrc = netCDF4.Dataset(src_file)
+        ncsrc = seapy.netcdf4(src_file)
         src_ref, time = seapy.roms.get_reftime(ncsrc)
         records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)

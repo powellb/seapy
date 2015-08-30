@@ -33,7 +33,7 @@ def asgrid(grid):
 
     Parameters
     ----------
-    grid: string or model.seapy.grid
+    grid: string, list, or model.seapy.grid
         Input variable to cast. If it is already a grid, it will return it;
         otherwise, it attempts to construct a new grid.
 
@@ -60,16 +60,22 @@ class grid:
 
             Parameters
             ----------
-            filename : filename to load to build data structure [optional]
+            filename: filename or list,
+              name to load to build data structure [optional]
                 or
-            lat     : latitude values of grid
-            lon     : longitude values of grid
-            z       : z-level depths of grid
+            lat: ndarray,
+                latitude values of grid
+            lon: ndarray,
+                longitude values of grid
+            z : ndarray,
+                z-level depths of grid
 
             Options
             -------
-            depths  : Set the depths of the grid [True]
-            cgrid   : Whether the grid is an Arakawa C-Grid [False]
+            depths: ndarray,
+                Set the depths of the grid [True]
+            cgrid: bool,
+                Whether the grid is an Arakawa C-Grid [False]
         """
         self.filename = filename
         self.cgrid = cgrid
@@ -139,7 +145,7 @@ class grid:
                 }
 
         # Open the file
-        self._nc = netCDF4.Dataset(self.filename,"r")
+        self._nc = seapy.netcdf4(self.filename)
         self.name = re.search("[^\.]*",
                               os.path.basename(self.filename)).group();
         self.key = {}
@@ -341,7 +347,7 @@ class grid:
         """
         if fld is None and self.filename is not None:
             if self._nc is None:
-                self._nc = netCDF4.Dataset(self.filename)
+                self._nc = seapy.netcdf4(self.filename)
 
             # Try to load a field from the file
             for f in ["temp", "temperature", "water_temp"]:

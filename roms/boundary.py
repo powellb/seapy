@@ -27,7 +27,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
 
     Parameters
     ----------
-    roms_file : string,
+    roms_file : string or list,
         ROMS source (history, average, climatology file)
     bry_file : string,
         output boundary file
@@ -45,7 +45,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
         grid = seapy.model.asgrid(roms_file)
     else:
         grid = seapy.model.asgrid(grid)
-    ncroms = netCDF4.Dataset(roms_file)
+    ncroms = seapy.netcdf4(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
                 if records is None else records
@@ -202,7 +202,7 @@ def from_std(std_filename, bry_std_file, fields=None):
 
     Parameters
     ----------
-    std_filename : string,
+    std_filename : string or list,
         Filename of the boundary standard deviation file
     bry_std_file : string,
         Filename of the boundary standard deviations file to create
@@ -214,7 +214,7 @@ def from_std(std_filename, bry_std_file, fields=None):
     -------
     None
     """
-    ncstd = netCDF4.Dataset(std_filename)
+    ncstd = seapy.netcdf4(std_filename)
     eta_rho = len(ncstd.dimensions["eta_rho"])
     xi_rho = len(ncstd.dimensions["xi_rho"])
     s_rho = len(ncstd.dimensions["s_rho"])

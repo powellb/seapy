@@ -30,7 +30,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
     field : ndarray,
         ROMS 3-D field to interpolate onto a constant depth level. Can be
         two- or three-dimensional array (first dimension assumed to be time).
-    grid : seapy.model.grid or string,
+    grid : seapy.model.grid or string or list,
         Grid that defines the depths and stretching for the field given
     depth : float,
         Depth (in meters) to find all values
@@ -100,12 +100,8 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         fields = set(seapy.roms.fields)
 
     # Open the ROMS info
-    if isinstance(roms_file, list):
-        grid = seapy.model.asgrid(roms_file[0])
-        nc = netCDF4.MFDataset(roms_file)
-    else:
-        grid = seapy.model.asgrid(roms_file)
-        nc = netCDF4.Dataset(roms_file)
+    grid = seapy.model.asgrid(roms_file)
+    nc = seapy.netcdf4(roms_file)
 
     # Filter the fields for the ones in the ROMS file
     fields = set(nc.variables).intersection(fields)
@@ -172,12 +168,8 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         fields = set(["sustr", "svstr", "shflux", "ssflux"])
 
     # Open the ROMS info
-    if isinstance(roms_file, list):
-        grid = seapy.model.asgrid(roms_file[0])
-        nc = netCDF4.MFDataset(roms_file)
-    else:
-        grid = seapy.model.asgrid(roms_file)
-        nc = netCDF4.Dataset(roms_file)
+    grid = seapy.model.asgrid(roms_file)
+    nc = seapy.netcdf4(roms_file)
 
     # Filter the fields for the ones in the ROMS file
     fields = set(nc.variables).intersection(fields)
@@ -209,3 +201,130 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         ncout.sync()
     ncout.close()
     nc.close()
+
+def plot_obs_surface(obs, type='zeta', prov=None, time=None,
+                     gridcoord=False, **kwargs):
+    """
+    Create a surface plot of the observations.
+
+    Parameters
+    ----------
+    obs: filename, list, or observation class
+        The observations to use for plotting
+    type: string or int,
+        The type of observation to plot ('zeta', 'temp', 'salt', etc.)
+    prov: string or int,
+        The provenance of the observations to plot
+    time: ndarray,
+        The times of the observations to plot
+    gridcoord: bool,
+        If True, plot on grid coordinates. If False [default] plot on lat/lon
+    **kwargs: keywords
+        Passed to matplotlib.pyplot.scatter
+
+    Returns
+    -------
+    None
+    """
+    import matplotlib.pyplot as plt
+
+    obs = seapy.roms.obs.asobs(obs)
+    otype = seapy.roms.obs.astype(type)
+    if prov is not None:
+        prov = seapy.roms.obs.asprov(prov)
+    if time is not None:
+        time = np.atleast_1d(time)
+
+    # Search the obs for the user
+    if prov is not None:
+        idx = np.where(np.logical_and.reduce(
+                        obs.type == otype,
+                        obs.provenance == prov,
+                        np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+
+    else:
+        idx = np.where(np.logical_and(
+                        obs.type == otype,
+                        np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+
+    # If there is a time specific condition, find the sets
+    if time is not None:
+        idx = idx[np.in1d(obs.time[idx], time)]
+
+    # If we don't have anything to plot, return
+    if not idx.any():
+        return
+
+    # Plot it up
+    if not kwargs:
+        kwargs = {'s':30, 'alpha':0.8, 'linewidths':(0, 0)}
+    if gridcoord:
+        plt.scatter(obs.x[idx], obs.y[idx], c=obs.value[idx], **kwargs)
+    else:
+        plt.scatter(obs.lon[idx], obs.lat[idx], c=obs.value[idx], **kwargs)
+    plt.colorbar()
+
+
+def plot_obs_profile(obs, type='temp', prov=None, time=None,
+                     gridcoord=False, **kwargs):
+    """
+    Create a sub-surface profile plot of the observations.
+
+    Parameters
+    ----------
+    obs: filename, list, or observation class
+        The observations to use for plotting
+    type: string or int,
+        The type of observation to plot ('zeta', 'temp', 'salt', etc.)
+    prov: string or int,
+        The provenance of the observations to plot
+    time: ndarray,
+        The times of the observations to plot
+    gridcoord: bool,
+        If True, plot on grid coordinates. If False [default] plot on lat/lon
+    **kwargs: keywords
+        Passed to matplotlib.pyplot.scatter
+
+    Returns
+    -------
+    None
+    """
+    import matplotlib.pyplot as plt
+    import pudb
+
+    obs = seapy.roms.obs.asobs(obs)
+    otype = seapy.roms.obs.astype(type)
+    if prov is not None:
+        prov = seapy.roms.obs.asprov(prov)
+    if time is not None:
+        time = np.atleast_1d(time)
+
+    # Search the obs for the user
+    if prov is not None:
+        idx = np.where(np.logical_and.reduce(
+                        obs.type == otype,
+                        obs.provenance == prov,
+                        np.logical_or(obs.z < 0, obs.depth < 0)))[0]
+
+    else:
+        idx = np.where(np.logical_and(
+                        obs.type == otype,
+                        np.logical_or(obs.z < 0, obs.depth < 0)))[0]
+
+    # If there is a time specific condition, find the sets
+    if time is not None:
+        idx = idx[np.in1d(obs.time[idx], time)]
+
+    # If we don't have anything to plot, return
+    if not idx.any():
+        return
+
+    # Plot it up
+    if gridcoord:
+        dep = obs.z[idx] if np.mean(obs.z[idx]>0) else obs.depth[idx]
+    else:
+        dep = obs.z[idx] if np.mean(obs.z[idx]<0) else obs.depth[idx]
+    plt.plot(obs.value[idx], dep, 'k+', **kwargs)
+
+
+

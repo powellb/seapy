@@ -99,6 +99,28 @@ def _provenance_from_string(s):
     except AttributeError:
         return int(s)
 
+def asobs(obs):
+    """
+    Return the input as an observation array if possible. If the parameter
+    is already an observation, just return; otherwise, create a new class.
+
+    Parameters
+    ----------
+    obs: obs class, string, or list
+        what to cast as observation
+
+    Output
+    ------
+    obs: seapy.roms.obs.obs
+    """
+    if obs is None:
+        raise AttributeError("No obs were specified")
+    if isinstance(obs, seapy.roms.obs.obs):
+        return obs
+    else:
+        return seapy.roms.obs.obs(filename=obs)
+
+
 def astype(type):
     """
     Return the integer type of the given observation array.
@@ -143,7 +165,7 @@ class obs:
 
         Parameters
         ----------
-        filename : string, optional,
+        filename : string or list, optional,
             if filename is given, the data are loaded from a netcdf file
         time : ndarray, optional,
           time of observation in days
@@ -172,7 +194,7 @@ class obs:
         """
         self.title=title
         if filename is not None:
-            nc=netCDF4.Dataset(filename)
+            nc = seapy.netcdf4(filename)
             # Construct an array from the data in the file. If obs_meta
             # exists in the file, then load it; otherwise, fill with zeros
             self.time = nc.variables["obs_time"][:]
