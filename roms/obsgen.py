@@ -414,7 +414,7 @@ class seaglider_profile(obsgen):
                                       data, self.dt, title)
 
 
-class tao_profile(obsgen):
+class tao_mooring(obsgen):
     """
     class to process TAO files into ROMS observation
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
