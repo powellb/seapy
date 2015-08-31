@@ -406,31 +406,26 @@ class obs:
         Build the survey structure from the observations
         """
         # Generate the sort list
-        self.sort = np.argsort(self.time,kind='mergesort')
+        self.sort = np.argsort(self.time, kind='mergesort')
 
         # Build the survey structure
         times, counts = np.unique(self.time[self.sort], return_counts=True)
 
         # Make sure everything is within dt
-        delta = np.diff(times)
-        while np.any(delta < dt):
-            idx = np.argmin(delta)
-            self.time[self.time == times[idx+1]] = times[idx]
-            times[idx+1] = times[idx]
-            times = np.unique(times)
-            delta = np.diff(times)
-
-        # Re-sort the surveys
         if dt:
+            delta = np.diff(times)
+            while np.any(delta < dt):
+                idx = np.argmin(delta)
+                self.time[self.time == times[idx+1]] = times[idx]
+                times[idx+1] = times[idx]
+                times = np.unique(times)
+                delta = np.diff(times)
+
+            # Re-sort the surveys
             times, counts = np.unique(self.time[self.sort], return_counts=True)
 
-        delta = np.diff(times)
-        while np.any(delta <= dt):
-            for t in np.where(delta <= dt)[0]:
-                pass
-
-        self.survey_time=times
-        self.nobs=counts
+        self.survey_time = times
+        self.nobs = counts
 
     def to_netcdf(self, filename, dt=0):
         """
