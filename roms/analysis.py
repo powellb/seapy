@@ -203,7 +203,7 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     nc.close()
 
 def plot_obs_surface(obs, type='zeta', prov=None, time=None,
-                     gridcoord=False, **kwargs):
+                     gridcoord=False, error=False, **kwargs):
     """
     Create a surface plot of the observations.
 
@@ -219,6 +219,8 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
         The times of the observations to plot
     gridcoord: bool,
         If True, plot on grid coordinates. If False [default] plot on lat/lon
+    error: bool,
+        If True plot the errors rather than values. Default is False.
     **kwargs: keywords
         Passed to matplotlib.pyplot.scatter
 
@@ -259,14 +261,18 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
     if not kwargs:
         kwargs = {'s':30, 'alpha':0.8, 'linewidths':(0, 0)}
     if gridcoord:
-        plt.scatter(obs.x[idx], obs.y[idx], c=obs.value[idx], **kwargs)
+        x = obs.x
+        y = obs.y
     else:
-        plt.scatter(obs.lon[idx], obs.lat[idx], c=obs.value[idx], **kwargs)
+        x = obs.lon
+        y = obs.lat
+    val = obs.value if not error else obs.error
+    plt.scatter(x[idx], y[idx], c=val[idx], **kwargs)
     plt.colorbar()
 
 
 def plot_obs_profile(obs, type='temp', prov=None, time=None,
-                     gridcoord=False, **kwargs):
+                     gridcoord=False, error=False, **kwargs):
     """
     Create a sub-surface profile plot of the observations.
 
@@ -282,6 +288,8 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
         The times of the observations to plot
     gridcoord: bool,
         If True, plot on grid coordinates. If False [default] plot on lat/lon
+    error: bool,
+        If True plot the errors rather than values. Default is False.
     **kwargs: keywords
         Passed to matplotlib.pyplot.scatter
 
@@ -321,10 +329,11 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
 
     # Plot it up
     if gridcoord:
-        dep = obs.z[idx] if np.mean(obs.z[idx]>0) else obs.depth[idx]
+        dep = obs.z if np.mean(obs.z[idx]>0) else obs.depth
     else:
-        dep = obs.z[idx] if np.mean(obs.z[idx]<0) else obs.depth[idx]
-    plt.plot(obs.value[idx], dep, 'k+', **kwargs)
+        dep = obs.z if np.mean(obs.z[idx]<0) else obs.depth
+    val = obs.value if not error else obs.error
+    plt.plot(val[idx], dep[idx], 'k+', **kwargs)
 
 
 

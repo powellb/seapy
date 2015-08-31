@@ -172,7 +172,7 @@ class argo_ctd(obsgen):
         self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
 
-    def convert_file(self, file, title="AVISO Obs"):
+    def convert_file(self, file, title="Argo Obs"):
         """
         Load an Argo file and convert into an obs structure
         """

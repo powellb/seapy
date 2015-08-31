@@ -43,6 +43,33 @@ def adddim(fld, size=1):
     s[0]=size
     return np.tile(fld,s)
 
+def chunker(seq, size):
+    """
+    Iterate over an iterable in 'chunks' of a given size
+
+    Parameters
+    ----------
+    seq : iterable,
+        The sequence to iterate over
+    size : int,
+        The number of items to be returned in each 'chunk'
+
+    Returns
+    -------
+    chunk : seq,
+        The items of the chunk to be iterated
+
+    Examples
+    --------
+    >>> x = [0,3,4,7,9,10,12,14]
+    >>> for i in chunker(x, 3):
+    >>>     print(i)
+    [0, 3, 4]
+    [7, 9, 10]
+    [12, 14]
+
+    """
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
@@ -97,6 +124,41 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     fld[lst] = nfld[lst] / count[lst]
     return fld
 
+def date2day(date=default_epoch, epoch=default_epoch):
+    """
+    Compute the fractional number of days elapsed since the epoch to the date
+    given.
+
+    Parameters
+    ----------
+    date : datetime
+        Input date
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    numdays : scalar
+    """
+    return (date-epoch).total_seconds() * secs2day
+
+def day2date(day=0, epoch=default_epoch):
+    """
+    Return a datetime object from the number of days since the epoch
+
+    Parameters
+    ----------
+    day : scalar
+        Input day number
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    date : datetime
+    """
+    return epoch + datetime.timedelta(days=day)
+
 def earth_distance(lon1, lat1, lon2, lat2):
     """
     Compute the distance between lat/lon points
@@ -138,62 +200,49 @@ def earth_distance(lon1, lat1, lon2, lat2):
     return radius*np.sqrt(2.0*(1.0-cos_lat*cos_latj* \
                   np.cos(d2r*(lon1-lon2))-sin_lat*sin_latj))
 
-def rotate(u, v, angle):
+def flatten(l, ltypes=(list, tuple, set)):
     """
-    Rotate a vector field by the given angle
-
+    Flatten a list or tuple that contains additional lists or tuples. Like
+    the numpy flatten, but for python types.
     Parameters
     ----------
-    u : array like
-        Input u component
-    v : array like
-        Input v component
-    angle : array like
-        Input angle of rotation
+    l: tuple or list,
+        The data that is to be flattened
+    ltypes: tuple,
+        Data types to attempt to flatten
 
     Returns
     -------
-    rotated_u, rotated_v : array
+    list
+
+    See Also
+    --------
+    numpy.flatten()
+
+    Notes
+    -----
+    This code was taken from:
+    <http://rightfootin.blogspot.com.au/2006/09/more-on-python-flatten.html>
+
+    Examples
+    --------
+    >>> a=[[1,3,4,1], ('test', 'this'), [5,2]]
+    >>> flatten(a)
+    [1, 3, 4, 1, 'test', 'this', 5, 2]
     """
-    u=np.asanyarray(u)
-    v=np.asanyarray(v)
-    angle=np.asanyarray(angle)
-    sa=np.sin(angle)
-    ca=np.cos(angle)
-
-    return u*ca - v*sa, u*sa + v*ca
-
-def vecfind(a, b, tolerance=0):
-    """
-    Find all occurences of b in a within the given tolerance and return
-    the indices into a and b that correspond.
-
-    Parameters
-    ----------
-    a : array
-        Input vector
-    b : array
-        Input vector
-    tolerance : float, optional
-        Input tolerance for how close a==b
-
-    Returns
-    -------
-    index_a, index_b : arrays of indices for each vector where values are equal,
-            such that a[index_a] == b[index_b]
-
-    """
-    a=np.asanyarray(a)
-    b=np.asanyarray(b)
-    index_a=[]
-    index_b=[]
-    for i,c in enumerate(b):
-        d=np.abs(a-c)
-        x=np.nonzero(d<tolerance)[0]
-        if x:
-            index_a.append(np.where(d==np.min(d))[0][0])
-            index_b.append(i)
-    return index_a, index_b
+    ltype = type(l)
+    l = list(l)
+    i = 0
+    while i < len(l):
+        while isinstance(l[i], ltypes):
+            if not l[i]:
+                l.pop(i)
+                i -= 1
+                break
+            else:
+                l[i:i + 1] = l[i]
+        i += 1
+    return ltype(l)
 
 def list_files(path=".", regex=".*"):
     """
@@ -221,63 +270,31 @@ def list_files(path=".", regex=".*"):
             files.append(path+file)
     return files
 
-def day2date(day=0, epoch=default_epoch):
+def netcdf4(file):
     """
-    Return a datetime object from the number of days since the epoch
+    Wrapper around netCDF4 to open a file as either a Dataset or an
+    MFDataset.
 
     Parameters
     ----------
-    day : scalar
-        Input day number
-    epoch : datetime
-        Date of epoch
+    file : string or list,
+        Filename(s) to open. If the string has wildcards or is a list,
+        this attempts to open an MFDataset
 
     Returns
     -------
-    date : datetime
+    netCDF4 Dataset or MFDataset
     """
-    return epoch + datetime.timedelta(days=day)
-
-def date2day(date=default_epoch, epoch=default_epoch):
-    """
-    Compute the fractional number of days elapsed since the epoch to the date
-    given.
-
-    Parameters
-    ----------
-    date : datetime
-        Input date
-    epoch : datetime
-        Date of epoch
-
-    Returns
-    -------
-    numdays : scalar
-    """
-    return (date-epoch).total_seconds() * secs2day
-
-def today2day(epoch=default_epoch):
-    """
-    Return the day number of today (UTC time) since the epoch.
-
-    Parameters
-    ----------
-    epoch : datetime
-        Date of epoch
-
-    Returns
-    -------
-    numdays : scalar
-    """
-    return date2day(datetime.datetime.utcnow(), epoch)
+    import netCDF4
+    try:
+        nc = netCDF4.Dataset(file)
+    except:
+        nc = netCDF4.MFDataset(file)
+    return nc
 
 def primes(number):
     """
     Return a list of primes less than or equal to a given value.
-
-    This code was taken from "Cooking with Python, Part 2" by Martelli, et al.
-
-    <http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last>
 
     Parameters
     ----------
@@ -287,6 +304,13 @@ def primes(number):
     Returns
     -------
     primes : ndarray
+
+    Notes
+    -----
+    This code was taken from "Cooking with Python, Part 2" by Martelli, et al.
+
+    <http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last>
+
     """
     def __erat2( ):
         D = {  }
@@ -304,26 +328,45 @@ def primes(number):
 
     return np.array(list(itertools.takewhile(lambda p: p<number, __erat2())))
 
-def godelnumber(x):
+def rotate(u, v, angle):
     """
-    Convert the columns of x into godel numbers. If x is MxN, return an Mx1
-    vector. The Godel number is prime**x
+    Rotate a vector field by the given angle
 
     Parameters
     ----------
-    x : ndarray,
-        Values to convert into Godel number(s)
+    u : array like
+        Input u component
+    v : array like
+        Input v component
+    angle : array like
+        Input angle of rotation
 
     Returns
     -------
-    godel : ndarray
+    rotated_u, rotated_v : array
     """
-    x=np.atleast_2d(x.astype(int))
-    if x.ndim>1:
-        primevals=primes(x.shape[1]*10)[:x.shape[1]].astype(float)
-        return(np.prod(primevals**x,axis=1))
-    else:
-        return 2.0**x
+    u=np.asanyarray(u)
+    v=np.asanyarray(v)
+    angle=np.asanyarray(angle)
+    sa=np.sin(angle)
+    ca=np.cos(angle)
+
+    return u*ca - v*sa, u*sa + v*ca
+
+def today2day(epoch=default_epoch):
+    """
+    Return the day number of today (UTC time) since the epoch.
+
+    Parameters
+    ----------
+    epoch : datetime
+        Date of epoch
+
+    Returns
+    -------
+    numdays : scalar
+    """
+    return date2day(datetime.datetime.utcnow(), epoch)
 
 def unique_rows(x):
     """
@@ -352,54 +395,66 @@ def unique_rows(x):
 
     return vals, idx
 
-def chunker(seq, size):
+def vecfind(a, b, tolerance=0):
     """
-    Iterate over an iterable in 'chunks' of a given size
+    Find all occurences of b in a within the given tolerance and return
+    the indices into a and b that correspond.
 
     Parameters
     ----------
-    seq : iterable,
-        The sequence to iterate over
-    size : int,
-        The number of items to be returned in each 'chunk'
+    a : array
+        Input vector
+    b : array
+        Input vector
+    tolerance : float, optional
+        Input tolerance for how close a==b
 
     Returns
     -------
-    chunk : seq,
-        The items of the chunk to be iterated
-
-    **Example**
-
-    >>> x = [0,3,4,7,9,10,12,14]
-    >>> for i in chunker(x, 3):
-    >>>     print(i)
-
-    [0, 3, 4]
-    [7, 9, 10]
-    [12, 14]
+    index_a, index_b : arrays of indices for each vector where values are equal,
+            such that a[index_a] == b[index_b]
 
     """
-    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    a=np.asanyarray(a)
+    b=np.asanyarray(b)
 
-def netcdf4(file):
+    # If the tolerance is zero, we can use built-in methods
+    if tolerance == 0:
+        index_a = np.in1d(a, b)
+        index_b = np.in1d(b, a)
+    # Otherwise, slow method
+    else:
+        index_a=[]
+        index_b=[]
+        for i,c in enumerate(b):
+            d=np.abs(a-c)
+            x=np.nonzero(d<tolerance)[0]
+            if x:
+                index_a.append(np.where(d==np.min(d))[0][0])
+                index_b.append(i)
+    return index_a, index_b
+
+
+def godelnumber(x):
     """
-    Wrapper around netCDF4 to open a file as either a Dataset or an
-    MFDataset.
+    Convert the columns of x into godel numbers. If x is MxN, return an Mx1
+    vector. The Godel number is prime**x
 
     Parameters
     ----------
-    file : string or list,
-        Filename(s) to open. If the string has wildcards or is a list,
-        this attempts to open an MFDataset
+    x : ndarray,
+        Values to convert into Godel number(s)
 
     Returns
     -------
-    netCDF4 Dataset or MFDataset
+    godel : ndarray
     """
-    import netCDF4
-    try:
-        nc = netCDF4.Dataset(file)
-    except:
-        nc = netCDF4.MFDataset(file)
-    return nc
+    x=np.atleast_2d(x.astype(int))
+    if x.ndim>1:
+        primevals=primes(x.shape[1]*10)[:x.shape[1]].astype(float)
+        return(np.prod(primevals**x,axis=1))
+    else:
+        return 2.0**x
+
+
 pass

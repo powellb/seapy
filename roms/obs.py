@@ -18,6 +18,8 @@ import matplotlib.path
 from collections import namedtuple
 from warnings import warn
 
+import pudb
+
 # Define a named tuple to store raw data for the gridder
 raw_data = namedtuple('raw_data', 'type provenance values error min_error')
 
@@ -246,7 +248,7 @@ class obs:
         self.error = self.error.ravel()
         self.type = astype(self.type.ravel())
 
-        lt=self.time.size
+        lt = self.time.size
         if not lt == self.x.size == self.y.size == \
                self.value.size == self.error.size == self.type.size:
             # If these lengths are not equal, then there is a serious issue
@@ -268,10 +270,12 @@ class obs:
             self.meta = _resizearr("meta", lt)
 
         # Eliminate bad values
-        good_vals=np.logical_and(np.isfinite(self.value), np.isfinite(self.x))
-        good_vals=np.logical_and(good_vals,np.isfinite(self.y))
-        good_vals=np.logical_and(good_vals,np.isfinite(self.error))
-        good_vals=np.logical_and(good_vals,np.isfinite(self.time))
+        good_vals = np.logical_and.reduce((
+                                np.isfinite(self.value),
+                                np.isfinite(self.x),
+                                np.isfinite(self.y),
+                                np.isfinite(self.error),
+                                np.isfinite(self.time)))
         if np.any(~good_vals):
             self.delete(np.where(good_vals==False))
 
@@ -399,7 +403,7 @@ class obs:
         self.provenance = np.delete(self.provenance, obj)
         self.meta = np.delete(self.meta, obj)
 
-    def create_survey(self):
+    def create_survey(self, dt=0):
         """
         Build the survey structure from the observations
         """
@@ -408,10 +412,29 @@ class obs:
 
         # Build the survey structure
         times, counts = np.unique(self.time[self.sort], return_counts=True)
+
+        # Make sure everything is within dt
+        delta = np.diff(times)
+        while np.any(delta < dt):
+            idx = np.argmin(delta)
+            self.time[self.time == times[idx+1]] = times[idx]
+            times[idx+1] = times[idx]
+            times = np.unique(times)
+            delta = np.diff(times)
+
+        # Re-sort the surveys
+        if dt:
+            times, counts = np.unique(self.time[self.sort], return_counts=True)
+
+        delta = np.diff(times)
+        while np.any(delta <= dt):
+            for t in np.where(delta <= dt)[0]:
+                pass
+
         self.survey_time=times
         self.nobs=counts
 
-    def to_netcdf(self, filename):
+    def to_netcdf(self, filename, dt=0):
         """
         Write out the observations into the specified netcdf file
 
@@ -419,10 +442,13 @@ class obs:
         ----------
         filename : string,
             name of file to save
+        dt : float,
+            ensure data are at least separated in time by dt; otherwise,
+            make as part of same survey
         """
         # Save out the observations by survey
         self._consistent()
-        self.create_survey()
+        self.create_survey(dt)
         state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
                 survey=self.survey_time.size, state_variable=state_vars,
@@ -505,8 +531,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     obs : seapy.obs class
         Resulting observations from the raw data as placed onto grid.
 
-    **Examples**
-
+    Examples
+    --------
     A profile of temp and salt observations at a given lat/lon:
 
     >>> obs = seapy.obs.gridder(grid, times, lon, lat,
@@ -662,21 +688,21 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         return None
 
     # Put everything together and create an observation class
-    return seapy.roms.obs.obs(time=np.hstack(ot).ravel(),
-                             x=np.hstack(ox).ravel(),
-                             y=np.hstack(oy).ravel(),
-                             z=np.hstack(odep).ravel(),
-                             lat=np.hstack(olat).ravel(),
-                             lon=np.hstack(olon).ravel(),
-                             depth=np.hstack(oz).ravel(),
-                             value=np.hstack(oval).ravel(),
-                             error=np.hstack(oerr).ravel(),
-                             type=np.hstack(otype).ravel(),
-                             provenance=np.hstack(oprov).ravel(),
-                             title=title)
+    return seapy.roms.obs.obs(time = np.hstack(ot).ravel(),
+                                x = np.hstack(ox).ravel(),
+                                y = np.hstack(oy).ravel(),
+                                z = np.hstack(odep).ravel(),
+                                lat = np.hstack(olat).ravel(),
+                                lon = np.hstack(olon).ravel(),
+                                depth = np.hstack(oz).ravel(),
+                                value = np.hstack(oval).ravel(),
+                                error = np.hstack(oerr).ravel(),
+                                type = np.hstack(otype).ravel(),
+                                provenance = np.hstack(oprov).ravel(),
+                                title = title)
 
 
-def merge_files(obs_files, out_files, days, limits=None):
+def merge_files(obs_files, out_files, days, dt, limits=None):
     """
     merge together a group of observation files into combined new files
     with observations that lie only within the corresponding dates
@@ -695,6 +721,9 @@ def merge_files(obs_files, out_files, days, limits=None):
         List of day numbers to filter the observations by. A list of
         three values, [a1 a2 a3] will produce two files with observations
         between a1 <= t1 <= a2 and a2<= t2 <= a3.
+    dt : float,
+        Time separation of observations. Observations that are less than
+        dt apart in time will be set to the same time.
     limits : dict,
         Set the limits of the grid points that observations are allowed
         within, {'north':i, 'south':i, 'east':i, 'west':i }. As obs near
@@ -705,7 +734,8 @@ def merge_files(obs_files, out_files, days, limits=None):
     -------
     None
 
-    **Examples**
+    Examples
+    --------
 
     Put together three files into 5 separate files in two day intervals from
     day 10 through day 20:
@@ -716,7 +746,8 @@ def merge_files(obs_files, out_files, days, limits=None):
     """
     import re
 
-    obs_files = np.atleast_1d(obs_files)
+    # Only unique files
+    obs_files = set().union(seapy.flatten(obs_files))
     outtime = False
     if isinstance(out_files, str):
         outtime = True
@@ -729,7 +760,7 @@ def merge_files(obs_files, out_files, days, limits=None):
     myobs = list()
     for file in obs_files:
         o = obs(file)
-        l = np.where(np.logical_or(o.time <= days[0],o.time >= days[-1]))
+        l = np.where(np.logical_or(o.time < days[0],o.time > days[-1]))
         o.delete(l)
         if limits is not None:
             l = np.where(np.logical_or.reduce((
@@ -741,7 +772,7 @@ def merge_files(obs_files, out_files, days, limits=None):
         if len(o): myobs.append(o)
 
     # Loop over the dates in pairs
-    for n,t in seapy.progressbar.progress(list(enumerate(zip(days[:-1],days[1:])))):
+    for n, t in seapy.progressbar.progress(list(enumerate(zip(days[:-1],days[1:])))):
         # Create new observations for this time period
         l = np.where(np.logical_and(myobs[0].time >= t[0],
                                     myobs[0].time <= t[1]))
@@ -760,8 +791,8 @@ def merge_files(obs_files, out_files, days, limits=None):
             nobs.add(o[l].copy())
         # Save out the new observations
         if outtime:
-            nobs.to_netcdf(time.sub("{:05d}".format(t[0]), out_files))
+            nobs.to_netcdf(time.sub("{:05d}".format(t[0]), out_files), dt=dt)
         else:
-            nobs.to_netcdf(out_files[n])
+            nobs.to_netcdf(out_files[n], dt=dt)
 
 
