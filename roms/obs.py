@@ -18,8 +18,6 @@ import matplotlib.path
 from collections import namedtuple
 from warnings import warn
 
-import pudb
-
 # Define a named tuple to store raw data for the gridder
 raw_data = namedtuple('raw_data', 'type provenance values error min_error')
 
@@ -753,46 +751,53 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
         outtime = True
         time = re.compile('\#')
 
-    # We have a choice: (i) fast, lots of memory; or
-    # (ii), slow, little memory. For (i), we could load all of the obs_files
-    # into memory and work from there; however, we run the risk of too much
-    # data if working with hundreds of files.
+    # Go through the files to determine which periods they cover
     myobs = list()
+    sdays = list()
+    edays = list()
     for file in obs_files:
-        o = obs(file)
-        l = np.where(np.logical_or(o.time < days[0],o.time > days[-1]))
-        o.delete(l)
-        if limits is not None:
-            l = np.where(np.logical_or.reduce((
-                    o.x < limits['west'],
-                    o.x > limits['east'],
-                    o.y < limits['south'],
-                    o.y > limits['north'])))
-            o.delete(l)
-        if len(o): myobs.append(o)
+        nc = netCDF4.Dataset(file)
+        fdays = nc.variables['survey_time'][:]
+        nc.close()
+        l = np.where(np.logical_and(fdays >= days[0], fdays <= days[-1]))[0]
+        if not l.size:
+            continue
+        myobs.append(file)
+        sdays.append(fdays[0])
+        edays.append(fdays[-1])
+    sdays = np.asarray(sdays)
+    edays = np.asarray(edays)
 
     # Loop over the dates in pairs
-    for n, t in seapy.progressbar.progress(list(enumerate(zip(days[:-1],days[1:])))):
+    for t in seapy.progressbar.progress(list(zip(days[:-1],days[1:]))):
+        # Find the files that cover the current period
+        fidx = np.where(np.logical_and(sdays <= t[1], edays >= t[0]))[0]
+        if not fidx.size:
+            continue
+
         # Create new observations for this time period
-        l = np.where(np.logical_and(myobs[0].time >= t[0],
-                                    myobs[0].time <= t[1]))
-        nobs = myobs[0][l].copy()
-        for o in myobs[1:]:
-            if limits is not None:
-                l = np.where(np.logical_and.reduce((
-                    o.time >= t[0],
-                    o.time <= t[1],
-                    o.x > limits['west'],
-                    o.x < limits['east'],
-                    o.y > limits['south'],
-                    o.y < limits['north'])))
-            else:
-                l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
+        nobs = obs(myobs[fidx[0]])
+        l = np.where(np.logical_or(nobs.time < t[0], nobs.time > t[1]))
+        nobs.delete(l)
+        for idx in fidx[1:]:
+            o = obs(myobs[idx])
+            l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
             nobs.add(o[l].copy())
+        # Remove any limits
+        if limits is not None:
+            l = np.where(np.logical_or.reduce((
+                    nobs.x < limits['west'],
+                    nobs.x > limits['east'],
+                    nobs.y < limits['south'],
+                    nobs.y > limits['north'])))
+            nobs.delete(l)
+
         # Save out the new observations
         if outtime:
             nobs.to_netcdf(time.sub("{:05d}".format(t[0]), out_files), dt=dt)
         else:
             nobs.to_netcdf(out_files[n], dt=dt)
+
+        pass
 
 
