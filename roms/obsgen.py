@@ -166,8 +166,17 @@ class argo_ctd(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_error=0.25,
+    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+                 salt_limits=None, temp_error=0.25,
                  salt_error=0.1):
+        if temp_limits is None:
+            self.temp_limits = (5, 30)
+        else:
+            self.temp_limits = temp_limits
+        if salt_limits is None:
+            self.salt_limits = (10, 35.5)
+        else:
+            self.salt_limits = salt_limits
         self.temp_error = temp_error
         self.salt_error = salt_error
         super().__init__(grid, dt, epoch)
@@ -214,6 +223,8 @@ class argo_ctd(obsgen):
         time_list = np.where(julian_day >= file_time - 1)
         profile_list = profile_list[time_list]
         julian_day = julian_day[time_list]
+        lon = lon[time_list]
+        lat = lat[time_list]
 
         # Load the data in our region and time
         temp = nc.variables["TEMP"][profile_list,:]
@@ -235,8 +246,12 @@ class argo_ctd(obsgen):
         lat = np.resize(lat, pres.shape[::-1]).T[~temp.mask][good_data]
         lon = np.resize(lon, pres.shape[::-1]).T[~temp.mask][good_data]
         depth = -seapy.seawater.depth(pres.compressed()[good_data], lat)
-        temp = np.ma.masked_outside(temp.compressed()[good_data], 2, 30)
-        salt = np.ma.masked_outside(salt.compressed()[good_data], 10, 36)
+
+        # Apply the limits
+        temp = np.ma.masked_outside(temp.compressed()[good_data],
+                                    self.temp_limits[0], self.temp_limits[1])
+        salt = np.ma.masked_outside(salt.compressed()[good_data],
+                                    self.salt_limits[0], self.salt_limits[1])
 
         data = [seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp,
                                         None, self.temp_error),
@@ -287,7 +302,7 @@ class aviso_sla_map(obsgen):
 
         # Apply the model mean ssh to the sla data
         if self.ssh_mean is not None:
-            m,p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
+            m, p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
                                obs.x, obs.y, nx=1, ny=1, weight=7)
             obs.value += m
         return obs
@@ -298,8 +313,12 @@ class ostia_sst_map(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_error=0.4):
+    def __init__(self, grid, dt, epoch=None, temp_error=0.4, temp_limits=None):
         self.temp_error = temp_error
+        if temp_limits is None:
+            self.temp_limits = (2,35)
+        else:
+            self.temp_limits = temp_limits
         super().__init__(grid, dt, epoch)
 
     def convert_file(self, file, title="OSTIA SST Obs"):
@@ -310,7 +329,9 @@ class ostia_sst_map(obsgen):
         nc = netCDF4.Dataset(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
-        dat = np.squeeze(nc.variables["analysed_sst"][:]) - 273.15
+        dat = np.ma.masked_outside(np.squeeze(
+                    nc.variables["analysed_sst"][:]) - 273.15,
+                    self.temp_limits[0], self.temp_limits[1])
         err = np.squeeze(nc.variables["analysis_error"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
@@ -321,6 +342,7 @@ class ostia_sst_map(obsgen):
         lon = lon.flatten()
         if not self.grid.east():
             lon[lon>180] -= 360
+
         data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.flatten(),
                                         err.flatten(), self.temp_error)]
         # Grid it
@@ -451,7 +473,6 @@ class tao_mooring(obsgen):
         """
         Load a TAO netcdf file and convert into an obs structure
         """
-        import pudb
         vals = {"temp": ["T_20", "QT_5020"],
                 "salt": ["S_41", "QS_5041"],
                 "u": ["U_320", "QS_5300"],

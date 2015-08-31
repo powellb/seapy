@@ -442,6 +442,10 @@ class obs:
         # Save out the observations by survey
         self._consistent()
         self.create_survey(dt)
+        if not len(self):
+            warn("No observations are available to be written")
+            return None
+
         state_vars = np.maximum(7,np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
                 survey=self.survey_time.size, state_variable=state_vars,

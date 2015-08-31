@@ -298,7 +298,6 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
     None
     """
     import matplotlib.pyplot as plt
-    import pudb
 
     obs = seapy.roms.obs.asobs(obs)
     otype = seapy.roms.obs.astype(type)
