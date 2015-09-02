@@ -268,7 +268,8 @@ def list_files(path=".", regex=".*"):
     for file in os.listdir(path):
         if prog.search(file) is not None:
             files.append(path+file)
-    return files.sort()
+    files.sort()
+    return files
 
 def netcdf4(file):
     """
