@@ -359,8 +359,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     return pmap
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
-             threads=2, nx=0, ny=0, weight=10, vmap=None, cdlfile=None, dims=2,
-             pmap=None):
+             threads=2, reftime=None, nx=0, ny=0, weight=10, vmap=None,
+             cdlfile=None, dims=2, pmap=None):
     """
     Given an existing ROMS history or average file, create (if does not exit)
     a new z-grid file. Use the given z_grid or otherwise build one with the
@@ -381,6 +381,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         Record indices to interpolate
     threads : int, optional:
         number of processing threads
+    reftime: datetime, optional:
+        Reference time as the epoch for z-grid file
     nx : float, optional:
         decorrelation length-scale for OA (same units as source data)
     ny : float, optional:
@@ -405,6 +407,8 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     roms_grid = seapy.model.asgrid(roms_file)
     ncroms = seapy.netcdf4(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
+    if reftime is not None:
+        src_ref = reftime
     records = np.arange(0, ncroms.variables[time].shape[0]) \
         if records is None else np.atleast_1d(records)
 
@@ -474,7 +478,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
     return pmap
 
 def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
-            nx=0, ny=0, weight=10, vmap=None, pmap=None):
+            reftime=None, nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
     new ROMS history file using the given ROMS destination grid and
@@ -493,6 +497,8 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
         Record indices to interpolate
     threads : int, optional:
         number of processing threads
+    reftime: datetime, optional:
+        Reference time as the epoch for ROMS file
     nx : float, optional:
         decorrelation length-scale for OA (same units as source data)
     ny : float, optional:
@@ -516,6 +522,8 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
         if not os.path.isfile(dest_file):
             ncsrc = seapy.netcdf4(src_file)
             src_ref, time = seapy.roms.get_reftime(ncsrc)
+            if reftime is not None:
+                src_ref = reftime
             records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
             ncout = seapy.roms.ncgen.create_ini(dest_file,
@@ -550,7 +558,7 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
     return pmap
 
 def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
-            nx=0, ny=0, weight=10, vmap=None, pmap=None):
+            reftime=None, nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an model output file, create (if does not exit) a
     new ROMS climatology file using the given ROMS destination grid and
@@ -569,6 +577,8 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
         Record indices to interpolate
     threads : int, optional:
         number of processing threads
+    reftime: datetime, optional:
+        Reference time as the epoch for climatology file
     nx : float, optional:
         decorrelation length-scale for OA (same units as source data)
     ny : float, optional:
@@ -590,6 +600,8 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
         src_grid = seapy.model.asgrid(src_file)
         ncsrc = seapy.netcdf4(src_file)
         src_ref, time = seapy.roms.get_reftime(ncsrc)
+        if reftime is not None:
+            src_ref = reftime
         records = np.arange(0, ncsrc.variables[time].shape[0]) \
                  if records is None else np.atleast_1d(records)
         ncout=seapy.roms.ncgen.create_clim(dest_file,

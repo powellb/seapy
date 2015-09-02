@@ -443,7 +443,7 @@ class obs:
         self._consistent()
         self.create_survey(dt)
         if not len(self):
-            warn("No observations are available to be written")
+            warn("No observations are available to be written to "+filename)
             return None
 
         state_vars = np.maximum(7,np.max(self.type))

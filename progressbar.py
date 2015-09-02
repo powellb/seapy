@@ -28,7 +28,7 @@ class ProgressBar:
     def __init__(self, iterations):
         self.iterations = iterations
         self.prog_bar = '[]'
-        self.fill_char = '*'
+        self.fill_char = '='
         self.width = 40
         self.__update_amount(0)
         self.start = time.process_time()
