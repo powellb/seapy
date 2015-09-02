@@ -121,7 +121,7 @@ class aquarius_sss(obsgen):
         else:
             self.salt_limits = salt_limits
         self.salt_error = salt_error
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="AQUARIUS Obs"):
         """
@@ -179,7 +179,7 @@ class argo_ctd(obsgen):
             self.salt_limits = salt_limits
         self.temp_error = temp_error
         self.salt_error = salt_error
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="Argo Obs"):
         """
@@ -274,7 +274,7 @@ class aviso_sla_map(obsgen):
         else:
             self.ssh_mean = None
         self.ssh_error = ssh_error
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="AVISO Obs"):
         """
@@ -321,7 +321,7 @@ class ostia_sst_map(obsgen):
             self.temp_limits = (2,35)
         else:
             self.temp_limits = temp_limits
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="OSTIA SST Obs"):
         """
@@ -371,7 +371,7 @@ class seaglider_profile(obsgen):
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="SeaGlider Obs"):
         """
@@ -469,7 +469,7 @@ class tao_mooring(obsgen):
         self.salt_error = salt_error
         self.u_error = u_error
         self.v_error = v_error
-        super().__init__(grid, dt, epoch)
+        super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="TAO Obs"):
         """
