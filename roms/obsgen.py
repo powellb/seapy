@@ -21,7 +21,7 @@ import datetime
 from warnings import warn
 
 class obsgen(object):
-    def __init__(self, grid, dt, epoch=None):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch):
         """
         class for abstracting the processing of raw observation files
         (satellite, in situ, etc.) into ROMS observations files. All
@@ -45,7 +45,7 @@ class obsgen(object):
         """
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
-        self.epoch = seapy.default_epoch if epoch is None else epoch
+        self.epoch = reftime
 
     def convert_file(self, file, title=None):
         """
@@ -114,7 +114,7 @@ class aquarius_sss(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, salt_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, salt_limits=None,
                  salt_error=0.1):
         if salt_limits is None:
             self.salt_limits = (10, 36)
@@ -166,7 +166,7 @@ class argo_ctd(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
                  salt_limits=None, temp_error=0.25,
                  salt_error=0.1):
         if temp_limits is None:
@@ -267,7 +267,8 @@ class aviso_sla_map(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, ssh_mean=None, ssh_error=0.05):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, ssh_mean=None,
+                 ssh_error=0.05):
         if ssh_mean is not None:
             self.ssh_mean = seapy.convolve_mask(ssh_mean, ksize=5, copy=True)
         else:
@@ -313,7 +314,8 @@ class ostia_sst_map(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_error=0.4, temp_limits=None):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
+                 temp_limits=None):
         self.temp_error = temp_error
         if temp_limits is None:
             self.temp_limits = (2,35)
@@ -355,7 +357,7 @@ class seaglider_profile(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
                  salt_limits=None, depth_limit=-15, temp_error=0.2,
                  salt_error=0.05):
         if temp_limits is None:
@@ -442,7 +444,7 @@ class tao_mooring(obsgen):
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
-    def __init__(self, grid, dt, epoch=None, temp_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
                  salt_limits=None, u_limits=None, v_limits=None,
                  depth_limit=0, temp_error=0.25, salt_error=0.08,
                  u_error=0.08, v_error=0.08):
