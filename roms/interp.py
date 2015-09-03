@@ -20,7 +20,9 @@ from warnings import warn
 _up_scaling = {"zeta":1.0, "u":1.0, "v":1.0, "temp":1.0, "salt":1.0}
 _down_scaling = {"zeta":1.0, "u":0.95, "v":0.95, "temp":0.98, "salt":1.02}
 _ksize_range = (7,15)
-_max_memory = 512*1024*1024    # Limit arrays to 512MB in size [bytes]
+_max_memory = 768*1024*1024    # Limit amount of memory to process in a single
+                               # read. This determines how to divide up the
+                               # time-records in interpolation
 
 def __mask_z_grid(z_data, src_depth, z_depth):
     """
@@ -261,9 +263,9 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 continue
         if fld["dims"]==2:
             # Compute the max number of hold in memory
-            maxrecs = np.minimum(len(records),
+            maxrecs = np.maximum(1, np.minimum(len(records),
                 np.int(_max_memory/(child_grid.lon_rho.nbytes +
-                                    src_grid.lon_rho.nbytes)))
+                                    src_grid.lon_rho.nbytes))))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
                 ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2) \
@@ -277,9 +279,9 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[dest][outr, :, :] = ndata
                 ncout.sync()
         else:
-            maxrecs = np.minimum(len(records), np.int(_max_memory /
-                (child_grid.lon_rho.nbytes * child_grid.n +
-                 src_grid.lon_rho.nbytes * src_grid.n)))
+            maxrecs = np.maximum(1, np.minimum(len(records),
+                np.int(_max_memory/(child_grid.lon_rho.nbytes * child_grid.n +
+                 src_grid.lon_rho.nbytes * src_grid.n))))
             for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[rn*maxrecs:np.minimum((rn+1)*maxrecs,len(records))]
                 ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
