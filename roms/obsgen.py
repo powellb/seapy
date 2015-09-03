@@ -339,12 +339,11 @@ class ostia_sst_map(obsgen):
                                 nc.variables["time"].units) - self.epoch
         time = time.total_seconds() * seapy.secs2day
         nc.close()
+        if self.grid.east():
+            lon[lon<0] += 360
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
         lon = lon.flatten()
-        if not self.grid.east():
-            lon[lon>180] -= 360
-
         data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.flatten(),
                                         err.flatten(), self.temp_error)]
         # Grid it
