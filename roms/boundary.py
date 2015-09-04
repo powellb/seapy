@@ -478,15 +478,15 @@ def from_stations(station_file, bry_file, grid=None):
 
 
     # Create the true positions and mask
-    grid_h=np.concatenate([ grid.h[0,:], grid.h[-1,:],
+    grid_h=np.concatenate([grid.h[0,:], grid.h[-1,:],
                          grid.h[:,0], grid.h[:,-1]])
-    grid_lon=np.concatenate([ grid.lon_rho[0,:], grid.lon_rho[-1,:],
+    grid_lon=np.concatenate([grid.lon_rho[0,:], grid.lon_rho[-1,:],
                          grid.lon_rho[:,0], grid.lon_rho[:,-1]])
-    grid_lat=np.concatenate([ grid.lat_rho[0,:], grid.lat_rho[-1,:],
+    grid_lat=np.concatenate([grid.lat_rho[0,:], grid.lat_rho[-1,:],
                          grid.lat_rho[:,0], grid.lat_rho[:,-1]])
-    grid_mask=np.concatenate([ grid.mask_rho[0,:], grid.mask_rho[-1,:],
+    grid_mask=np.concatenate([grid.mask_rho[0,:], grid.mask_rho[-1,:],
                               grid.mask_rho[:,0], grid.mask_rho[:,-1]])
-    grid_angle=np.concatenate([ grid.angle[0,:], grid.angle[-1,:],
+    grid_angle=np.concatenate([grid.angle[0,:], grid.angle[-1,:],
                               grid.angle[:,0], grid.angle[:,-1]])
 
     # Search for bad stations due to child grid overlaying parent mask.
@@ -497,20 +497,20 @@ def from_stations(station_file, bry_file, grid=None):
     bad_pts = np.where(np.logical_and(dist > 0.001, grid_mask == 1))[0]
     good_pts = np.where(np.logical_and(dist < 0.001, grid_mask == 1))[0]
     for i in bad_pts:
-        dist = np.sqrt( (sta_lon[i]-sta_lon[good_pts])**2 +
-                        (sta_lat[i]-sta_lat[good_pts])**2 )
-        index = good_pts[dist == np.min(dist)]
+        didx = np.sqrt((sta_lon[i]-sta_lon[good_pts])**2 +
+                       (sta_lat[i]-sta_lat[good_pts])**2).argmin()
+        index = good_pts[didx]
         sta_h[i] = sta_h[index]
         sta_angle[i] = sta_angle[index]
         sta_lon[i] = sta_lon[index]
         sta_lat[i] = sta_lat[index]
-        sta_zeta[:,[i]] = sta_zeta[:,index]
-        sta_ubar[:,[i]] = sta_ubar[:,index]
-        sta_vbar[:,[i]] = sta_vbar[:,index]
-        sta_temp[:,[i],:] = sta_temp[:,index,:]
-        sta_salt[:,[i],:] = sta_salt[:,index,:]
-        sta_u[:,[i],:] = sta_u[:,index,:]
-        sta_v[:,[i],:] = sta_v[:,index,:]
+        sta_zeta[:,i] = sta_zeta[:,index]
+        sta_ubar[:,i] = sta_ubar[:,index]
+        sta_vbar[:,i] = sta_vbar[:,index]
+        sta_temp[:,i,:] = sta_temp[:,index,:]
+        sta_salt[:,i,:] = sta_salt[:,index,:]
+        sta_u[:,i,:] = sta_u[:,index,:]
+        sta_v[:,i,:] = sta_v[:,index,:]
 
     # Construct the boundaries: a dictionary of boundary side and two element
     # array whether the u[0] or v[1] dimensions need to be averaged
