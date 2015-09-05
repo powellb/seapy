@@ -14,7 +14,6 @@ from __future__ import print_function
 import numpy as np
 import netCDF4
 import seapy
-import matplotlib.path
 from collections import namedtuple
 from warnings import warn
 
@@ -121,7 +120,7 @@ def asobs(obs):
         return seapy.roms.obs.obs(filename=obs)
 
 
-def astype(type):
+def astype(otype):
     """
     Return the integer type of the given observation array.
 
@@ -135,8 +134,11 @@ def astype(type):
     types: array,
         List of integer types
     """
-    type = np.atleast_1d(type)
-    return np.array([_type_from_string(s) for s in type])
+    otype = np.atleast_1d(otype)
+    if otype.dtype.type == np.str_:
+        return np.array([_type_from_string(s) for s in otype])
+    else:
+        return otype
 
 def asprovenance(prov):
     """
@@ -153,7 +155,10 @@ def asprovenance(prov):
         List of integer provenances
     """
     prov = np.atleast_1d(prov)
-    return np.array([_provenance_from_string(s) for s in prov])
+    if prov.dtype.type == np.str_:
+        return np.array([_provenance_from_string(s) for s in prov])
+    else:
+        return prov
 
 class obs:
     def __init__(self, filename=None, time=None, x=None, y=None, z=None,
@@ -206,12 +211,12 @@ class obs:
             self.depth = nc.variables["obs_depth"][:]
             self.value = nc.variables["obs_value"][:]
             self.error = nc.variables["obs_error"][:]
-            self.type = nc.variables["obs_type"][:].astype(np.int)
-            self.provenance = nc.variables["obs_provenance"][:].astype(np.int)
+            self.type = nc.variables["obs_type"][:]
+            self.provenance = nc.variables["obs_provenance"][:]
             if "obs_meta" in nc.variables:
                 self.meta = nc.variables["obs_meta"][:]
             else:
-                self.meta = self.value.copy() * 0
+                self.meta = np.zeros(self.value.size)
             nc.close()
         else:
             if time is not None: self.time = np.atleast_1d(time)
@@ -229,9 +234,7 @@ class obs:
             else:
                 self.provenance = 0
             if meta is not None: self.meta = np.atleast_1d(meta)
-
-        # ensure everything is good
-        self._consistent()
+            self._consistent()
 
     def _consistent(self):
         """
@@ -255,17 +258,19 @@ class obs:
             # For the others, we can pad the information to ensure
             # consistency
             def _resizearr(arr,n):
+                if arr.size == n:
+                    return arr
                 try:
-                    return np.resize(getattr(self,arr),n)
+                    return np.resize(arr,n)
                 except:
                     return np.zeros(n)
 
-            self.z = _resizearr("z", lt)
-            self.lat = _resizearr("lat", lt)
-            self.lon = _resizearr("lon", lt)
-            self.depth = _resizearr("depth", lt)
-            self.provenance = asprovenance(_resizearr("provenance", lt))
-            self.meta = _resizearr("meta", lt)
+            self.z = _resizearr(self.z, lt)
+            self.lat = _resizearr(self.lat, lt)
+            self.lon = _resizearr(self.lon, lt)
+            self.depth = _resizearr(self.depth, lt)
+            self.provenance = asprovenance(_resizearr(self.provenance, lt))
+            self.meta = _resizearr(self.meta, lt)
 
         # Eliminate bad values
         good_vals = np.logical_and.reduce((
@@ -442,15 +447,15 @@ class obs:
         # Save out the observations by survey
         self._consistent()
         self.create_survey(dt)
-        if not len(self):
+        if not self.value.size:
             warn("No observations are available to be written to "+filename)
             return None
 
-        state_vars = np.maximum(7,np.max(self.type))
+        state_vars = np.maximum(7, np.max(self.type))
         nc = seapy.roms.ncgen.create_da_obs(filename,
                 survey=self.survey_time.size, state_variable=state_vars,
                 provenance=','.join((':'.join( \
-                    (obs_provenance.get(v,"UNKNOWN"),str(v)))
+                    (obs_provenance.get(v, "UNKNOWN"), str(v)))
                             for v in np.unique(self.provenance))),
                 clobber=True, title=self.title)
         nc.variables["spherical"][:] = 1
@@ -768,7 +773,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
     edays = np.asarray(edays)
 
     # Loop over the dates in pairs
-    for t in seapy.progressbar.progress(list(zip(days[:-1],days[1:]))):
+    for t in seapy.progressbar.progress(list(zip(days[:-1], days[1:]))):
         # Find the files that cover the current period
         fidx = np.where(np.logical_and(sdays <= t[1], edays >= t[0]))[0]
         if not fidx.size:
@@ -781,7 +786,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
         for idx in fidx[1:]:
             o = obs(myobs[idx])
             l = np.where(np.logical_and(o.time >= t[0], o.time <= t[1]))
-            nobs.add(o[l].copy())
+            nobs.add(o[l])
         # Remove any limits
         if limits is not None:
             l = np.where(np.logical_or.reduce((
