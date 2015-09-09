@@ -360,6 +360,128 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     # Return the pmap that was used
     return pmap
 
+def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
+            nx=0, ny=0, weight=10, threads=2, pmap=None):
+    """
+    Given a 2D field with time (dimensions [time, lat, lon]), interpolate
+    onto a new grid and return the new field. This is a helper function
+    when needing to interpolate data within files, etc.
+
+    Parameters
+    ----------
+    src_lon: numpy.ndarray
+        longitude that field is on
+    src_lat: numpy.ndarray
+        latitude that field is on
+    src_field: numpy.ndarray
+        field to interpolate
+    dest_lon: numpy.ndarray
+        output longitudes to interpolate to
+    dest_lat: numpy.ndarray
+        output latitudes to interpolate to
+    dest_mask: numpy.ndarray, optional
+        mask to apply to interpolated data
+    reftime: datetime, optional:
+        Reference time as the epoch for z-grid file
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    weight : int, optional:
+        number of points to use in weighting matrix
+    threads : int, optional:
+        number of processing threads
+    pmap : numpy.ndarray, optional:
+        use the specified pmap rather than compute it
+
+    Output
+    ------
+    ndarray:
+        interpolated field on the destination grid
+    """
+    if pmap is None:
+        tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
+                        dest_lon, dest_lat, weight=weight, nx=nx, ny=ny)
+    if dest_mask is None:
+        dest_mask = np.ones(dest_lat.shape)
+    records = np.arange(0,src_field.shape[0])
+    maxrecs = np.maximum(1, np.minimum(records.size,
+        np.int(_max_memory/(dest_lon.nbytes + src_lon.nbytes))))
+    for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+        nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2) \
+                         (delayed(__interp2_thread) (
+                                src_lon, src_lat, src_field[i, :, :],
+                                dest_lon, dest_lat,
+                                pmap, weight,
+                                nx, ny, dest_mask)
+                    for i in recs), copy=False)
+    return nfield
+
+def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
+            dest_depth, dest_mask=None, nx=0, ny=0, weight=10,
+            threads=2, pmap=None):
+    """
+    Given a 3D field with time (dimensions [time, z, lat, lon]), interpolate
+    onto a new grid and return the new field. This is a helper function
+    when needing to interpolate data within files, etc.
+
+    Parameters
+    ----------
+    src_lon: numpy.ndarray
+        longitude that field is on
+    src_lat: numpy.ndarray
+        latitude that field is on
+    srf_depth: numpy.ndarray
+        depths of the field
+    src_field: numpy.ndarray
+        field to interpolate
+    dest_lon: numpy.ndarray
+        output longitudes to interpolate to
+    dest_lat: numpy.ndarray
+        output latitudes to interpolate to
+    dest_depth: numpy.ndarray
+        output depths to interpolate to
+    dest_mask: numpy.ndarray, optional
+        mask to apply to interpolated data
+    reftime: datetime, optional:
+        Reference time as the epoch for z-grid file
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data)
+    weight : int, optional:
+        number of points to use in weighting matrix
+    threads : int, optional:
+        number of processing threads
+    pmap : numpy.ndarray, optional:
+        use the specified pmap rather than compute it
+
+    Output
+    ------
+    ndarray:
+        interpolated field on the destination grid
+    """
+    if pmap is None:
+        tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
+                        dest_lon, dest_lat, weight=weight, nx=nx, ny=ny)
+    if dest_mask is None:
+        dest_mask = np.ones(dest_lat.shape)
+    records = np.arange(0,src_field.shape[0])
+    maxrecs = np.maximum(1, np.minimum(records.size,
+        np.int(_max_memory/(dest_lon.nbytes * dest_depth.shape[0] +
+                            src_lon.nbytes * src_depth.shape[0]))))
+    for rn,recs in enumerate(seapy.chunker(records, maxrecs)):
+        nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                         (delayed(__interp3_thread)(
+                            src_lon, src_lat, src_depth,
+                            src_field[i, :, :],
+                            dest_lon, dest_lat, dest_depth,
+                            pmap, weight, nx, ny, dest_mask,
+                            up_factor=1, down_factor=1)
+                    for i in recs), copy=False)
+
+    return nfield
+
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
              threads=2, reftime=None, nx=0, ny=0, weight=10, vmap=None,
              cdlfile=None, dims=2, pmap=None):

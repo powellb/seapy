@@ -213,11 +213,12 @@ class obs:
             self.error = nc.variables["obs_error"][:]
             self.type = nc.variables["obs_type"][:]
             self.provenance = nc.variables["obs_provenance"][:]
-            if "obs_meta" in nc.variables:
+            try:
                 self.meta = nc.variables["obs_meta"][:]
-            else:
+            except KeyError:
                 self.meta = np.zeros(self.value.size)
-            nc.close()
+            finally:
+                nc.close()
         else:
             if time is not None: self.time = np.atleast_1d(time)
             if x is not None: self.x = np.atleast_1d(x)
@@ -257,20 +258,18 @@ class obs:
         else:
             # For the others, we can pad the information to ensure
             # consistency
-            def _resizearr(arr,n):
+            def _resizearr(key,n):
+                arr = getattr(self, key, np.zeros(n))
                 if arr.size == n:
                     return arr
-                try:
-                    return np.resize(arr,n)
-                except:
-                    return np.zeros(n)
+                return np.resize(arr, n)
 
-            self.z = _resizearr(self.z, lt)
-            self.lat = _resizearr(self.lat, lt)
-            self.lon = _resizearr(self.lon, lt)
-            self.depth = _resizearr(self.depth, lt)
-            self.provenance = asprovenance(_resizearr(self.provenance, lt))
-            self.meta = _resizearr(self.meta, lt)
+            self.z = _resizearr('z', lt)
+            self.lat = _resizearr('lat', lt)
+            self.lon = _resizearr('lon', lt)
+            self.depth = _resizearr('depth', lt)
+            self.provenance = asprovenance(_resizearr('provenance', lt))
+            self.meta = _resizearr('meta', lt)
 
         # Eliminate bad values
         good_vals = np.logical_and.reduce((
