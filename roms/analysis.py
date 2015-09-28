@@ -66,6 +66,60 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
 
     return nfield
 
+def depth_average(field, grid, depth, zeta=None):
+    """
+    Compute the depth-averaged field down to the depth specified. NOTE:
+    This just finds the nearest layer, so at every grid cell, it may not be
+    exactly the specified depth.
+
+    Parameters
+    ----------
+    field : ndarray,
+        ROMS 3-D field to integrate from a depth level. Must be
+        three-dimensional array (single time).
+    grid : seapy.model.grid or string or list,
+        Grid that defines the depths and stretching for the field given
+    depth : float,
+        Depth (in meters) to integrate to
+    zeta : ndarray, optional,
+        ROMS zeta field corresponding to field if you wish to apply the SSH
+        correction to the depth calculations.
+    Returns
+    -------
+    ndarray,
+        Values from depth integrated ROMS field
+    """
+    grid = seapy.model.asgrid(grid)
+    depth = depth if depth < 0 else -depth
+
+    # If we have zeta, we need to compute thickness
+    if zeta is not None:
+        s_w, cs_w = seapy.roms.stretching(grid.vstretching, grid.theta_s,
+                                          grid.theta_b, grid.hc,
+                                          grid.n, w_grid=True)
+        depths = seapy.roms.depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
+                                 grid.cs_r)
+        thickness = seapy.roms.thickness(grid.vtransform, grid.h, grid.hc,
+                                         s_w, cs_w, zeta)
+    else:
+        depths = grid.depth_rho
+        thickness = grid.thick_rho
+
+    # If we are on u- or v-grid, transform
+    if field.shape == grid.thick_u.shape:
+        depths = seapy.model.rho2u(depths)
+        thickness = seapy.model.rho2u(thickness)
+    elif field.shape == grid.thick_v.shape:
+        depths = seapy.model.rho2v(depths)
+        thickness = seapy.model.rho2v(thickness)
+
+    # Figure out the relevant layers
+    thickness[np.where(depths < depth)] = 0
+
+    # Do the integration
+    return np.sum(field * thickness, axis=0)/np.sum(thickness, axis=0)
+
+
 def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     """
     Create a std file for the given ocean fields. This std file can be used
@@ -333,6 +387,5 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
         dep = obs.z if np.mean(obs.z[idx]<0) else obs.depth
     val = obs.value if not error else obs.error
     plt.plot(val[idx], dep[idx], 'k+', **kwargs)
-
 
 

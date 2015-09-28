@@ -92,12 +92,13 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # the surface
     bot = -1 if gradsrc else 0
     top = 0 if gradsrc else -1
-    topmask = np.ma.count_masked(data[top, :, :])
-    for iter in range(5):
-        # Check if we have most everything by checking the bottom
-        data = seapy.convolve_mask(data, ksize=ksize+iter, copy=False)
-        if topmask / np.ma.count_masked(data[bot, :, :]) > 0.4:
-            break
+    topmask = np.max(1,np.ma.count_masked(data[top, :, :]))
+    if np.ma.count_masked(data[bot, :, :])>0:
+        for iter in range(5):
+            # Check if we have most everything by checking the bottom
+            data = seapy.convolve_mask(data, ksize=ksize+iter, copy=False)
+            if topmask / np.max(1,np.ma.count_masked(data[bot, :, :])) > 0.4:
+                break
 
     # Now fill vertically
     nrz = np.zeros((data.shape[0]+2, data.shape[1], data.shape[2]))
@@ -108,7 +109,9 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         # The first level is the bottom
         factor = down_factor
         # # Fill in missing values where we have them from above (level above)
-        for k in np.arange(data.shape[0]-2, -1, -1):
+        for k in range(data.shape[0]-2, -1, -1):
+            if np.ma.count_masked(data[k, :, :])==0:
+                continue
             idx=np.nonzero(np.logical_xor(data.mask[k, :, :],
                                           data.mask[k+1, :, :]))
             data.mask[k, idx[0], idx[1]] = data.mask[k+1, idx[0], idx[1]]
@@ -117,7 +120,9 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         # The first level is the top
         factor = up_factor
         # # Fill in missing values where we have them from below (level below)
-        for k in np.arange(1, data.shape[0]):
+        for k in range(data.shape[0]):
+            if np.ma.count_masked(data[k, :, :])==0:
+                continue
             idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
                                             data.mask[k-1, :, :]))
             data.mask[k, idx[0], idx[1]] = data.mask[k-1, idx[0], idx[1]]
@@ -398,6 +403,8 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     ------
     ndarray:
         interpolated field on the destination grid
+    pmap:
+        the pmap used in the inerpolation
     """
     if pmap is None:
         tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
@@ -415,7 +422,7 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
                                 pmap, weight,
                                 nx, ny, dest_mask)
                     for i in recs), copy=False)
-    return nfield
+    return nfield, pmap
 
 def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
             dest_depth, dest_mask=None, nx=0, ny=0, weight=10,
@@ -460,6 +467,8 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     ------
     ndarray:
         interpolated field on the destination grid
+    pmap:
+        the pmap used in the inerpolation
     """
     if pmap is None:
         tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
@@ -480,7 +489,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
                             up_factor=1, down_factor=1)
                     for i in recs), copy=False)
 
-    return nfield
+    return nfield, pmap
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
              threads=2, reftime=None, nx=0, ny=0, weight=10, vmap=None,

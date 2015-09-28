@@ -1,0 +1,23 @@
+netcdf zlevel {
+dimensions:
+	lat = 192 ;
+	lon = 382 ;
+	depth = 40 ;
+variables:
+	float lat(lat) ;
+		lat:long_name = "Latitude" ;
+    lat:units = "degrees_north";
+	float lon(lon) ;
+		lon:long_name = "Longitude" ;
+    lon:units = "degrees_east";
+	float depth(depth) ;
+		depth:long_name = "Z-Level Depth" ;
+    depth:units = "meter" ;
+    depth:positive = "down" ;
+  short mask(lat, lon) ;
+    mask:long_name = "field mask" ;
+    mask:value = "0-land, 1-water" ;
+
+// global attributes:
+		:title = "Z Grid File" ;
+}

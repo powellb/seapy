@@ -15,8 +15,6 @@
 """
 from __future__ import print_function
 
-import netCDF4
-import datetime
 import os
 import re
 import seapy
@@ -24,6 +22,7 @@ import numpy as np
 from scipy.interpolate import griddata, interp1d
 import scipy.spatial
 import matplotlib.path
+from warnings import warn
 
 def asgrid(grid):
     """
@@ -387,33 +386,37 @@ class grid:
         -------
         None : sets depth attributes in grid
         """
-        if self._isroms:
-            if "s_rho" not in self.__dict__:
-                self.s_rho, self.cs_r = seapy.roms.stretching(
-                    self.vstretching, self.theta_s, self.theta_b,
-                    self.hc, self.n)
-            self.depth_rho = seapy.roms.depth(
-                self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
-            self.depth_u = seapy.model.rho2u(self.depth_rho)
-            self.depth_v = seapy.model.rho2v(self.depth_rho)
-        else:
-            d = self.z.copy()
-            l = np.nonzero(d>0)
-            d[l]=-d[l]
-            if self.n > 1:
-                self.depth_rho = np.kron( np.kron(
-                                    d, np.ones(self.lon_rho.shape[1])),
-                                    np.ones(self.lon_rho.shape[0])).reshape(
-                                    [self.z.size,self.lon_rho.shape[0],
-                                     self.lon_rho.shape[1]])
-            else:
-                self.depth_rho = self.z
-            if self.cgrid:
+        try:
+            if self._isroms:
+                if "s_rho" not in self.__dict__:
+                    self.s_rho, self.cs_r = seapy.roms.stretching(
+                        self.vstretching, self.theta_s, self.theta_b,
+                        self.hc, self.n)
+                self.depth_rho = seapy.roms.depth(
+                    self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
                 self.depth_u = seapy.model.rho2u(self.depth_rho)
                 self.depth_v = seapy.model.rho2v(self.depth_rho)
             else:
-                self.depth_u = self.depth_rho
-                self.depth_v = self.depth_rho
+                d = self.z.copy()
+                l = np.nonzero(d>0)
+                d[l]=-d[l]
+                if self.n > 1:
+                    self.depth_rho = np.kron( np.kron(
+                                        d, np.ones(self.lon_rho.shape[1])),
+                                        np.ones(self.lon_rho.shape[0])).reshape(
+                                        [self.z.size,self.lon_rho.shape[0],
+                                         self.lon_rho.shape[1]])
+                else:
+                    self.depth_rho = self.z
+                if self.cgrid:
+                    self.depth_u = seapy.model.rho2u(self.depth_rho)
+                    self.depth_v = seapy.model.rho2v(self.depth_rho)
+                else:
+                    self.depth_u = self.depth_rho
+                    self.depth_v = self.depth_rho
+        except AttributeError:
+            warn("could not compute grid depths.")
+            pass
 
     def set_thickness(self):
         """
@@ -431,36 +434,40 @@ class grid:
             self.set_dims()
         if self.n == 1:
             return
-        if self._isroms:
-            s_w, cs_w = seapy.roms.stretching(
-                self.vstretching, self.theta_s, self.theta_b, self.hc,
-                self.n, w_grid=True)
-            self.thick_rho = seapy.roms.thickness(
-                self.vtransform, self.h, self.hc, s_w, cs_w)
-            self.thick_u=seapy.model.rho2u(self.thick_rho)
-            self.thick_v=seapy.model.rho2v(self.thick_rho)
-        else:
-            d=np.abs(self.z.copy())
-            w=d*0
-            # Check which way the depths are going
-            if d[0] < d[-1]:
-                w[0]=d[0]
-                w[1:]=d[1:]-d[0:-1]
-            else:
-                w[-1]=d[-1]
-                w[0:-1]=d[0:-1]-d[1:]
-
-            self.thick_rho = np.kron( np.kron( w,
-                                    np.ones(self.lon_rho.shape[1])),
-                                    np.ones(self.lon_rho.shape[0])).reshape(
-                                    [self.z.size,self.lon_rho.shape[0],
-                                     self.lon_rho.shape[1]])
-            if self.cgrid:
+        try:
+            if self._isroms:
+                s_w, cs_w = seapy.roms.stretching(
+                    self.vstretching, self.theta_s, self.theta_b, self.hc,
+                    self.n, w_grid=True)
+                self.thick_rho = seapy.roms.thickness(
+                    self.vtransform, self.h, self.hc, s_w, cs_w)
                 self.thick_u=seapy.model.rho2u(self.thick_rho)
                 self.thick_v=seapy.model.rho2v(self.thick_rho)
             else:
-                self.thick_u = self.thick_rho
-                self.thick_v = self.thick_rho
+                d=np.abs(self.z.copy())
+                w=d*0
+                # Check which way the depths are going
+                if d[0] < d[-1]:
+                    w[0]=d[0]
+                    w[1:]=d[1:]-d[0:-1]
+                else:
+                    w[-1]=d[-1]
+                    w[0:-1]=d[0:-1]-d[1:]
+
+                self.thick_rho = np.kron( np.kron( w,
+                                        np.ones(self.lon_rho.shape[1])),
+                                        np.ones(self.lon_rho.shape[0])).reshape(
+                                        [self.z.size,self.lon_rho.shape[0],
+                                         self.lon_rho.shape[1]])
+                if self.cgrid:
+                    self.thick_u=seapy.model.rho2u(self.thick_rho)
+                    self.thick_v=seapy.model.rho2v(self.thick_rho)
+                else:
+                    self.thick_u = self.thick_rho
+                    self.thick_v = self.thick_rho
+        except AttributeError:
+            warn("could not compute grid thicknesses.")
+            pass
 
 
     def plot_trace(self, basemap, **kwargs):

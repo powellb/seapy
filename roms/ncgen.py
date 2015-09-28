@@ -869,10 +869,62 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
+def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
+                       clobber=False,
+                       title="Zlevel Grid", cdlfile=None, dims=2):
+    """
+    Create z-level grid file
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    lat: int, optional
+        number of latitudinal rows
+    lon: int, optional
+        number of longitudinal columns
+    depth: int, optional
+        number of z-levels
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    title: string, optional
+        netcdf attribute title
+    cdlfile: string, optional
+        name of CDL file to use for construction
+    dims: int, optional
+        number of dimensions to use for lat/lon
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    """
+    if cdlfile==None:
+        if dims==1:
+            cdlfile = "zlevel_1d_grid.cdl"
+        else:
+            cdlfile = "zlevel_2d_grid.cdl"
+
+    # Generate the Structure
+    dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
+
+    # Fill in the appropriate dimension values
+    dims["lat"]=lat
+    dims["lon"]=lon
+    dims["depth"]=depth
+
+    # Create the file
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
+                title=title)
+
+    # Return the new file
+    return _nc
+
 def create_zlevel(filename, lat=10, lon=10, depth=1,
                   reftime=default_epoch,
                   clobber=False,
-                  title="Zlevel Model Data",cdlfile=None,dims=2):
+                  title="Zlevel Model Data", cdlfile=None, dims=2):
     """
     Create an time varying model standard deviation file
 

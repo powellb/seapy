@@ -440,54 +440,65 @@ def from_stations(station_file, bry_file, grid=None):
                 eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
                 reftime=src_ref, clobber=False,
                 title="generated from "+station_file)
-    brytime = seapy.roms.get_timevar(ncbry)
     grid.to_netcdf(ncbry)
+
+    # Load the times: we need to see if the times are duplicated
+    # because if using assimilation, they may be duplicated for every
+    # outer-loop. Currently, it overwrites the first one each time (this
+    # will need to be fixed if ROMS is fixed).
+    statime = ncstation.variables[time][:]
+    dup = np.where(statime[1:]==statime[0])[0]
+    rng = np.s_[:]
+    if dup.size > 0:
+        rng = np.s_[0:np.min(dup)]
+        statime = statime[rng]
+    brytime = seapy.roms.get_timevar(ncbry)
     ncbry.variables["bry_time"][:] = netCDF4.date2num(
-        netCDF4.num2date(ncstation.variables[time][:],
-                         ncstation.variables[time].units),
-                        ncbry.variables[brytime].units)
+        netCDF4.num2date(statime,ncstation.variables[time].units),
+                         ncbry.variables[brytime].units)
 
     # Set up the indices
     bry = {
-        "south":range(0,grid.lm),
-        "north":range(grid.lm,2*grid.lm),
-        "west":range(2*grid.lm,2*grid.lm+grid.ln),
-        "east":range(2*grid.lm+grid.ln,2*(grid.lm+grid.ln))
+        "south":range(0, grid.lm),
+        "north":range(grid.lm, 2*grid.lm),
+        "west":range(2*grid.lm, 2*grid.lm+grid.ln),
+        "east":range(2*grid.lm+grid.ln, 2*(grid.lm+grid.ln))
     }
 
     # Get the information to construct the depths of the station data
-    sta_vt=ncstation.variables["Vtransform"][:]
-    sta_hc=ncstation.variables["hc"][:]
-    sta_s_rho=ncstation.variables["s_rho"][:]
-    sta_cs_r=ncstation.variables["Cs_r"][:]
-    sta_h=ncstation.variables["h"][:]
-    sta_angle=ncstation.variables["angle"][:]
-    sta_lon=ncstation.variables["lon_rho"][:]
-    sta_lat=ncstation.variables["lat_rho"][:]
-    sta_mask=np.ones(sta_lat.shape)
-    sta_mask[sta_lon*sta_lat > 1e10]=0
+    sta_vt = ncstation.variables["Vtransform"][:]
+    sta_hc = ncstation.variables["hc"][:]
+    sta_s_rho = ncstation.variables["s_rho"][:]
+    sta_cs_r = ncstation.variables["Cs_r"][:]
+    sta_h = ncstation.variables["h"][:]
+    sta_angle = ncstation.variables["angle"][:]
+    sta_lon = ncstation.variables["lon_rho"][:]
+    sta_lat = ncstation.variables["lat_rho"][:]
+    sta_mask = np.ones(sta_lat.shape)
+    sta_mask[sta_lon*sta_lat > 1e10] = 0
 
     # Load the station data as we need to manipulate it
-    sta_zeta=np.ma.masked_greater(ncstation.variables["zeta"][:],100)
-    sta_ubar=np.ma.masked_greater(ncstation.variables["ubar"][:],100)
-    sta_vbar=np.ma.masked_greater(ncstation.variables["vbar"][:],100)
-    sta_temp=np.ma.masked_greater(ncstation.variables["temp"][:],100)
-    sta_salt=np.ma.masked_greater(ncstation.variables["salt"][:],100)
-    sta_u=np.ma.masked_greater(ncstation.variables["u"][:],100)
-    sta_v=np.ma.masked_greater(ncstation.variables["v"][:],100)
+    sta_zeta = np.ma.masked_greater(ncstation.variables["zeta"][rng], 100)
+    sta_ubar = np.ma.masked_greater(ncstation.variables["ubar"][rng], 100)
+    sta_vbar = np.ma.masked_greater(ncstation.variables["vbar"][rng], 100)
+    sta_temp = np.ma.masked_greater(ncstation.variables["temp"][rng], 100)
+    sta_salt = np.ma.masked_greater(ncstation.variables["salt"][rng], 100)
+    sta_u = np.ma.masked_greater(ncstation.variables["u"][rng], 100)
+    sta_v = np.ma.masked_greater(ncstation.variables["v"][rng], 100)
+    ncstation.close()
 
 
     # Create the true positions and mask
-    grid_h=np.concatenate([grid.h[0,:], grid.h[-1,:],
-                         grid.h[:,0], grid.h[:,-1]])
-    grid_lon=np.concatenate([grid.lon_rho[0,:], grid.lon_rho[-1,:],
-                         grid.lon_rho[:,0], grid.lon_rho[:,-1]])
-    grid_lat=np.concatenate([grid.lat_rho[0,:], grid.lat_rho[-1,:],
-                         grid.lat_rho[:,0], grid.lat_rho[:,-1]])
-    grid_mask=np.concatenate([grid.mask_rho[0,:], grid.mask_rho[-1,:],
-                              grid.mask_rho[:,0], grid.mask_rho[:,-1]])
-    grid_angle=np.concatenate([grid.angle[0,:], grid.angle[-1,:],
-                              grid.angle[:,0], grid.angle[:,-1]])
+    grid_h = np.concatenate([grid.h[0, :], grid.h[-1, :],
+                         grid.h[:, 0], grid.h[:, -1]])
+    grid_lon = np.concatenate([grid.lon_rho[0, :], grid.lon_rho[-1, :],
+                         grid.lon_rho[:, 0], grid.lon_rho[:, -1]])
+    grid_lat = np.concatenate([grid.lat_rho[0, :], grid.lat_rho[-1, :],
+                         grid.lat_rho[:, 0], grid.lat_rho[:, -1]])
+    grid_mask = np.concatenate([grid.mask_rho[0, :], grid.mask_rho[-1, :],
+                              grid.mask_rho[:, 0], grid.mask_rho[:, -1]])
+    grid_angle = np.concatenate([grid.angle[0, :], grid.angle[-1, :],
+                              grid.angle[:, 0], grid.angle[:, -1]])
 
     # Search for bad stations due to child grid overlaying parent mask.
     # Unfortunately, ROMS will give points that are not at the locations
@@ -514,9 +525,9 @@ def from_stations(station_file, bry_file, grid=None):
 
     # Construct the boundaries: a dictionary of boundary side and two element
     # array whether the u[0] or v[1] dimensions need to be averaged
-    sides={"north":[True,False], "south":[True,False],
-           "east":[False,True], "west":[False,True]}
-    delta_angle = sta_angle-grid_angle
+    sides = {"north":[True, False], "south":[True, False],
+             "east":[False, True], "west":[False, True]}
+    delta_angle = sta_angle - grid_angle
     sta_ubar, sta_vbar = seapy.rotate(sta_ubar, sta_vbar, delta_angle)
     sta_u, sta_v = seapy.rotate(sta_u, sta_v, np.tile(delta_angle,
                                                       (sta_u.shape[-1],1)).T)
@@ -576,8 +587,7 @@ def from_stations(station_file, bry_file, grid=None):
         sta_x = seapy.adddim(x,len(sta_s_rho))
         x = seapy.adddim(x,len(grid.s_rho))
 
-        for n,t in seapy.progress(enumerate(ncstation.variables[time][:]),
-                                  len(ncstation.variables[time][:])):
+        for n,t in seapy.progress(enumerate(statime), statime.size):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                             sta_s_rho, sta_cs_r, sta_zeta[n,bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
@@ -625,5 +635,7 @@ def from_stations(station_file, bry_file, grid=None):
                     data[:,0:-1]+data[:,1:])
             else:
                 ncbry.variables["v_"+side][n,:] = data
+            ncbry.sync()
 
+        ncbry.close()
     pass
