@@ -93,7 +93,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     bot = -1 if gradsrc else 0
     top = 0 if gradsrc else -1
     topmask = np.max(1,np.ma.count_masked(data[top, :, :]))
-    if np.ma.count_masked(data[bot, :, :])>0:
+    if np.ma.count_masked(data[bot, :, :]) > 0:
         for iter in range(5):
             # Check if we have most everything by checking the bottom
             data = seapy.convolve_mask(data, ksize=ksize+iter, copy=False)
@@ -110,7 +110,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         factor = down_factor
         # # Fill in missing values where we have them from above (level above)
         for k in range(data.shape[0]-2, -1, -1):
-            if np.ma.count_masked(data[k, :, :])==0:
+            if np.ma.count_masked(data[k, :, :]) == 0:
                 continue
             idx=np.nonzero(np.logical_xor(data.mask[k, :, :],
                                           data.mask[k+1, :, :]))
@@ -121,7 +121,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         factor = up_factor
         # # Fill in missing values where we have them from below (level below)
         for k in range(data.shape[0]):
-            if np.ma.count_masked(data[k, :, :])==0:
+            if np.ma.count_masked(data[k, :, :]) == 0:
                 continue
             idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
                                             data.mask[k-1, :, :]))
