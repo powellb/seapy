@@ -97,9 +97,7 @@ class grid:
             self.set_dims()
             self.set_depth()
             self.set_thickness()
-        if self._nc is not None:
-            self._nc.close()
-            self._nc = None
+            self.set_mask_h()
 
     def _initfile(self):
         """
@@ -153,6 +151,11 @@ class grid:
                 if inp in self._nc.variables:
                     self.key[var] = inp
                     self.__dict__[var] = self._nc.variables[inp][:]
+
+        # Close the file
+        self._nc.close()
+        self._nc = None
+
 
     def _verify_shape(self):
         """
@@ -232,12 +235,12 @@ class grid:
         try:
             if east:
                 self.lon_rho[self.lon_rho < 0] += 360.0
-                self.lon_u[self.lon_rho < 0] += 360.0
-                self.lon_v[self.lon_rho < 0] += 360.0
+                self.lon_u[self.lon_u < 0] += 360.0
+                self.lon_v[self.lon_v < 0] += 360.0
             else:
                 self.lon_rho[self.lon_rho > 180] -= 360.0
-                self.lon_u[self.lon_rho > 180] -= 360.0
-                self.lon_v[self.lon_rho > 180] -= 360.0
+                self.lon_u[self.lon_u > 180] -= 360.0
+                self.lon_v[self.lon_v > 180] -= 360.0
         except:
             pass
 
@@ -344,6 +347,8 @@ class grid:
         None : sets mask and h attributes in grid
 
         """
+        if hasattr(self, "mask_rho") or self.cgrid:
+            return
         if fld is None and self.filename is not None:
             if self._nc is None:
                 self._nc = seapy.netcdf4(self.filename)
@@ -351,7 +356,7 @@ class grid:
             # Try to load a field from the file
             for f in ["temp", "temperature", "water_temp"]:
                 if f in self._nc.variables:
-                    fld = self._nc.variables[f][0,:,:,:]
+                    fld = self._nc.variables[f][0, :, :, :]
                     fld = np.ma.array(fld, mask=np.isnan(fld))
                     break
 
@@ -361,15 +366,16 @@ class grid:
         # If we don't have a field to examine, then we cannot compute the
         # mask and bathymetry
         if fld is None:
-            raise AttributeError("Missing 3D field to evaluate")
+            warn("Missing 3D field to evaluate.")
+            return
 
         # Next, we go over the field to examine the depths and mask
         self.h = np.zeros(self.lat_rho.shape)
         self.mask_rho = np.zeros(self.lat_rho.shape)
         for k in range(self.z.size):
-            water = np.nonzero( np.logical_not(fld.mask[k, :, :]) )
+            water = np.nonzero( np.logical_not(fld.mask[k, :, :]))
             self.h[water] = self.z[k]
-            if k==0:
+            if k == 0:
                 self.mask_rho[water] = 1.0
         self.mask_u = self.mask_v = self.mask_rho
 
@@ -444,8 +450,8 @@ class grid:
                 self.thick_u=seapy.model.rho2u(self.thick_rho)
                 self.thick_v=seapy.model.rho2v(self.thick_rho)
             else:
-                d=np.abs(self.z.copy())
-                w=d*0
+                d = np.abs(self.z.copy())
+                w = d*0
                 # Check which way the depths are going
                 if d[0] < d[-1]:
                     w[0]=d[0]
@@ -532,8 +538,8 @@ class grid:
             to the lon/lat points specified
         """
 
-        glat = getattr(self,"lat_"+grid)
-        glon = getattr(self,"lon_"+grid)
+        glat = getattr(self, "lat_"+grid)
+        glon = getattr(self, "lon_"+grid)
         xy = np.dstack([glat.ravel(), glon.ravel()])[0]
         pts = np.dstack([np.atleast_1d(lat), np.atleast_1d(lon)])[0]
         grid_tree = scipy.spatial.cKDTree(xy)

@@ -636,6 +636,5 @@ def from_stations(station_file, bry_file, grid=None):
             else:
                 ncbry.variables["v_"+side][n,:] = data
             ncbry.sync()
-
-        ncbry.close()
+    ncbry.close()
     pass

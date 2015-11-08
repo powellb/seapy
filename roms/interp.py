@@ -13,7 +13,7 @@ import numpy as np
 import netCDF4
 import os
 import seapy
-from seapy.timeout import timeout,TimeoutError
+from seapy.timeout import timeout, TimeoutError
 from joblib import Parallel, delayed
 from warnings import warn
 
@@ -29,22 +29,22 @@ def __mask_z_grid(z_data, src_depth, z_depth):
     When interpolating to z-grid, we need to apply depth dependent masking
     based on the original ROMS depths
     """
-    for k in np.arange(0,z_depth.shape[0]):
-        idx=np.nonzero(z_depth[k,:,:]<src_depth)
-        if z_data.ndim==4:
-            z_data.mask[:,k,idx[0],idx[1]]=True
-        elif z_data.ndim==3:
-            z_data.mask[k,idx[0],idx[1]]=True
+    for k in np.arange(0, z_depth.shape[0]):
+        idx=np.nonzero(z_depth[k, :, :] < src_depth)
+        if z_data.ndim == 4:
+            z_data.mask[:, k, idx[0], idx[1]] = True
+        elif z_data.ndim == 3:
+            z_data.mask[k, idx[0], idx[1]] = True
 
 def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     """
     internal routine: 2D interpolation thread for parallel interpolation
     """
-    data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
+    data = np.ma.fix_invalid(data, copy=False)
 
     # Convolve the water over the land
-    ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
-                    (ny/np.median(np.diff(ry.T)))**2))+1
+    ksize = 2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
+                (ny/np.median(np.diff(ry.T)))**2))+1
     if ksize < _ksize_range[0]:
         warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
         ksize=_ksize_range[0]
@@ -57,7 +57,7 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     with timeout(minutes=30):
         res, pm = seapy.oasurf(rx, ry, data, zx, zy, pmap, weight, nx, ny)
 
-    return np.ma.masked_where(np.logical_or(mask==0, np.abs(res) > 9e10), res,
+    return np.ma.masked_where(np.logical_or(mask==0, np.abs(res) > 9e4), res,
                        copy=False)
 
 def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
@@ -67,7 +67,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     """
     # Make the mask 3D
     mask = seapy.adddim(mask, zz.shape[0])
-    data = np.ma.fix_invalid(data, copy=False, fill_value=-999999.0)
+    data = np.ma.fix_invalid(data, copy=False)
 
     # To avoid extrapolation, we are going to convolve ocean over the land
     # and add a new top and bottom layer that replicates the data of the
@@ -78,7 +78,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     gradsrc = (rz[0, 1, 1] - rz[-1, 1, 1]) > 0
 
     # Convolve the water over the land
-    ksize=2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
+    ksize = 2*np.round(np.sqrt((nx/np.median(np.diff(rx)))**2 +
                     (ny/np.median(np.diff(ry.T)))**2))+1
     if ksize < _ksize_range[0]:
         warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
@@ -92,17 +92,17 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # the surface
     bot = -1 if gradsrc else 0
     top = 0 if gradsrc else -1
-    topmask = np.max(1,np.ma.count_masked(data[top, :, :]))
+    topmask = np.maximum(1, np.ma.count_masked(data[top, :, :]))
     if np.ma.count_masked(data[bot, :, :]) > 0:
         for iter in range(5):
             # Check if we have most everything by checking the bottom
             data = seapy.convolve_mask(data, ksize=ksize+iter, copy=False)
-            if topmask / np.max(1,np.ma.count_masked(data[bot, :, :])) > 0.4:
+            if topmask / np.maximum(1, np.ma.count_masked(data[bot, :, :])) > 0.4:
                 break
 
     # Now fill vertically
     nrz = np.zeros((data.shape[0]+2, data.shape[1], data.shape[2]))
-    nrz[1:-1, :, :]=rz
+    nrz[1:-1, :, :] = rz
     nrz[bot, :, :] = rz[bot, :, :]-500
     nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
     if not gradsrc:
@@ -144,7 +144,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
             res, pm = seapy.oavol(rx, ry, nrz, ndat, zx, zy, zz,
                                 pmap, weight, nx, ny)
 
-    return np.ma.masked_where(np.logical_or(mask==0,np.abs(res) > 9e5), res,
+    return np.ma.masked_where(np.logical_or(mask==0, np.abs(res) > 9e4), res,
                        copy=False)
 
 def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
@@ -203,25 +203,25 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     """
     # If we don't have a variable map, then do a one-to-one mapping
     if vmap is None:
-        vmap=dict()
+        vmap = dict()
         for k in seapy.roms.fields:
-            vmap[k]=k
+            vmap[k] = k
 
     # Generate a file to store the pmap information
     sname = getattr(src_grid, 'name', None)
     cname = getattr(child_grid, 'name', None)
-    pmap_file = None if any(v is None for v in (sname,cname)) else \
+    pmap_file = None if any(v is None for v in (sname, cname)) else \
         sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
     if nx==0:
-        if hasattr(src_grid,"dm") and hasattr(child_grid,"dm"):
-            nx = np.ceil( np.mean( src_grid.dm ) / np.mean( child_grid.dm) )
+        if hasattr(src_grid, "dm") and hasattr(child_grid, "dm"):
+            nx = np.ceil(np.mean(src_grid.dm) / np.mean(child_grid.dm))
         else:
             nx = 5
     if ny==0:
-        if hasattr(src_grid,"dn") and hasattr(child_grid,"dn"):
-            ny = np.ceil( np.mean( src_grid.dn ) / np.mean( child_grid.dn) )
+        if hasattr(src_grid, "dn") and hasattr(child_grid, "dn"):
+            ny = np.ceil(np.mean(src_grid.dn) / np.mean(child_grid.dn))
         else:
             ny = 5
 
@@ -229,15 +229,15 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         if pmap_file is not None and os.path.isfile(pmap_file):
             pmap = np.load(pmap_file)
         else:
-            tmp = np.ones(src_grid.lat_rho.shape,order="F")
+            tmp = np.ma.masked_equal(src_grid.mask_rho, 0)
             tmp, pmaprho = seapy.oasurf(src_grid.lon_rho, src_grid.lat_rho, \
                                 tmp, child_grid.lon_rho, child_grid.lat_rho, \
                                 weight=weight, nx=nx, ny=ny)
-            tmp = np.ones(src_grid.lat_u.shape,order="F")
+            tmp = np.ma.masked_equal(src_grid.mask_u, 0)
             tmp, pmapu = seapy.oasurf(src_grid.lon_u, src_grid.lat_u, \
                                 tmp, child_grid.lon_rho, child_grid.lat_rho, \
                                 weight=weight, nx=nx, ny=ny)
-            tmp = np.ones(src_grid.lat_v.shape,order="F")
+            tmp = np.ma.masked_equal(src_grid.mask_v, 0)
             tmp, pmapv = seapy.oasurf(src_grid.lon_v, src_grid.lat_v, \
                                 tmp, child_grid.lon_rho, child_grid.lat_rho, \
                                 weight=weight, nx=nx, ny=ny)
@@ -250,8 +250,8 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
     time = seapy.roms.get_timevar(ncsrc)
 
     # Interpolate the depths from the source to final grid
-    src_depth=np.min(src_grid.depth_rho,0)
-    dst_depth=__interp2_thread(src_grid.lon_rho, src_grid.lat_rho, src_depth,
+    src_depth = np.min(src_grid.depth_rho, 0)
+    dst_depth = __interp2_thread(src_grid.lon_rho, src_grid.lat_rho, src_depth,
                     child_grid.lon_rho, child_grid.lat_rho, pmap["pmaprho"],
                     weight, nx, ny, child_grid.mask_rho)
     # Interpolate the scalar fields
@@ -261,11 +261,12 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
         dest = vmap[src]
 
         # Extra fields will probably be user tracers (biogeochemical)
-        fld = seapy.roms.fields.get(dest,{"dims":3})
+        fld = seapy.roms.fields.get(dest, {"dims": 3})
 
         # Only interpolate the fields we want in the destination
         if (dest not in ncout.variables) or ("rotate" in fld):
                 continue
+
         if fld["dims"]==2:
             # Compute the max number of hold in memory
             maxrecs = np.maximum(1, np.minimum(len(records),

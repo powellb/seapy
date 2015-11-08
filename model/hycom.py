@@ -16,7 +16,7 @@ from seapy.lib import default_epoch, chunker
 from seapy.model.grid import asgrid
 from seapy.roms import ncgen
 
-# _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"
+# _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1/2010"
 _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"
 _maxrecs = 5
 
