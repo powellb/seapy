@@ -560,8 +560,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     # First, before relying on gridding, extract only the data that are
     # encompassed by the grid
     region_list = np.where(np.logical_and.reduce((
-                lat>=np.min(grid.lat_rho), lat<=np.max(grid.lat_rho),
-                lon>=np.min(grid.lon_rho), lon<=np.max(grid.lon_rho))))
+                lat >= np.min(grid.lat_rho), lat <= np.max(grid.lat_rho),
+                lon >= np.min(grid.lon_rho), lon <= np.max(grid.lon_rho))))
     if not np.any(region_list):
         warn("No observations were located within grid region_list")
         return None
@@ -573,7 +573,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     if depth is None:
         # Get the grid locations from the data locations
         subsurface_values = False
-        (j,i) = grid.ij((lon,lat))
+        (j, i) = grid.ij((lon, lat))
         depth = np.zeros(i.size)
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
@@ -617,8 +617,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         for v in data:
             valid_data = np.s_[:]
             if isinstance(v.values, np.ma.core.MaskedArray):
-                valid_data = np.where(~np.ma.getmaskarray(
-                                v.values[region_list][valid_list][time_list]))
+                valid_data = \
+                   (v.values[region_list][valid_list][time_list].nonzero())[0]
 
             # Put together the indices based on the type of data we have
             if subsurface_values:

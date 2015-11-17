@@ -10,6 +10,7 @@ from __future__ import print_function
 import os
 import re
 import netCDF4
+import numpy as np
 from datetime import datetime
 from seapy.lib import default_epoch
 from seapy.cdl_parser import cdl_parser
@@ -26,14 +27,53 @@ _format="NETCDF4_CLASSIC"
 def ncgen(filename, dims=None, vars=None, attr=None, title=None,
           clobber=False, format=_format):
     """
-        internal method: Create a new netcdf file
+    Create a new netcdf file with the given definitions. Need to define
+    the dimensions, the variables, and the attributes.
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    dims : dict
+        dictionary of dimensions with dimension name as keys, and the value
+        as the length of the dimension. NOTE: 0 value means UNLIMITED.
+    vars: list of dictionaries
+        each variable to define is a dictionary that contains three keys:
+            name: string name of variable
+            type: string type (float, double, etc.)
+            dims: comma separated string of dimensions ("ocean_time, eta_rho")
+            attr: dictionary of variable attributes where the key is
+                  the attribute name and the value is the attribute string
+    attr: dict, optional
+        optional dictionary of global attributes for the netcdf file:
+        key is the attribute name and the value is the attribute string
+    title: string, optional
+        netcdf attribute title
+    clobber: bool, optional
+        If True, destroy existing file
+    format: string, optional
+        NetCDF format to use. Default is NETCDF4_CLASSIC
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    Examples
+    --------
+    >>> dims = {"ocean_time":0, "eta_rho":120, "xi_rho":100}
+    >>> vars = [  {"name":"eta_slice", "type":"double",
+                   "dims":"ocean_time, eta_rho",
+                   "attr":{"units":"degrees Celcius"}},
+                  {"name":"xi_slice", "type":"double",
+                   "dims":"ocean_time, xi_rho",
+                   "attr":{"units":"degrees Celcius"}} ]
+    >>> seapy.roms.ncgen("test.nc", dims=dims, vars=vars, title="Test")
     """
+    vars = np.atleast_1d(vars)
     if dims is None:
-        dims={}
-    if vars is None:
-        vars={}
+        dims = {}
     if attr is None:
-        attr={}
+        attr = {}
     # Create the file
     if not os.path.isfile(filename) or clobber:
         _nc=netCDF4.Dataset(filename, "w", format=format)

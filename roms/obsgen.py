@@ -93,7 +93,7 @@ class obsgen(object):
             outtime = True
             time = re.compile('\#')
 
-        for n,file in enumerate(in_files):
+        for n, file in enumerate(in_files):
             try:
                 print(file)
                 obs = self.convert_file(file)
@@ -104,7 +104,7 @@ class obsgen(object):
                                            out_files))
                 else:
                     obs.to_netcdf(out_files[n])
-            except:
+            except RuntimeError:
                 warn("WARNING: "+file+" cannot be processed.")
         pass
 
@@ -170,7 +170,7 @@ class argo_ctd(obsgen):
                  salt_limits=None, temp_error=0.25,
                  salt_error=0.1):
         if temp_limits is None:
-            self.temp_limits = (5, 30)
+            self.temp_limits = (5, 35)
         else:
             self.temp_limits = temp_limits
         if salt_limits is None:
@@ -192,8 +192,8 @@ class argo_ctd(obsgen):
         lat = nc.variables["LATITUDE"][:]
         pro_q = nc.variables["POSITION_QC"][:].astype(int)
         # Find the profiles that are in our area with known locations quality
-        if not self.grid.east():
-            lon[lon>180] -= 360
+        if self.grid.east():
+            lon[lon < 0] += 360
         profile_list = np.where(np.logical_and.reduce((
                     lat >= np.min(self.grid.lat_rho),
                     lat <= np.max(self.grid.lat_rho),
@@ -208,8 +208,6 @@ class argo_ctd(obsgen):
             return None
 
         # Load only the data from those in our area
-        lon = lon[profile_list]
-        lat = lat[profile_list]
         julian_day = nc.variables["JULD_LOCATION"][profile_list]
         argo_epoch = datetime.datetime.strptime(''.join( \
             nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')),'%Y%m%d%H%M%S')
@@ -220,20 +218,29 @@ class argo_ctd(obsgen):
         # Grab data over the previous day
         file_time = np.minimum((file_stamp - argo_epoch).days,
                                int(np.max(julian_day)))
-        time_list = np.where(julian_day >= file_time - 1)
-        profile_list = profile_list[time_list]
+        time_list = np.where(julian_day >= file_time - 1)[0]
         julian_day = julian_day[time_list]
-        lon = lon[time_list]
-        lat = lat[time_list]
+        lon = lon[profile_list[time_list]]
+        lat = lat[profile_list[time_list]]
+        profile_list = profile_list[time_list]
 
         # Load the data in our region and time
-        temp = nc.variables["TEMP"][profile_list,:]
-        temp_qc = nc.variables["TEMP_QC"][profile_list,:]
-        salt = nc.variables["PSAL"][profile_list,:]
-        salt_qc = nc.variables["PSAL_QC"][profile_list,:]
-        pres = nc.variables["PRES"][profile_list,:]
-        pres_qc = nc.variables["PRES_QC"][profile_list,:]
+        temp = nc.variables["TEMP"][profile_list, :]
+        temp_qc = nc.variables["TEMP_QC"][profile_list, :]
+        salt = nc.variables["PSAL"][profile_list, :]
+        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
+        pres = nc.variables["PRES"][profile_list, :]
+        pres_qc = nc.variables["PRES_QC"][profile_list, :]
         nc.close()
+
+        # Ensure consistency
+        full_mask = np.logical_or.reduce((temp.mask, salt.mask, pres.mask))
+        temp[full_mask] = np.ma.masked
+        temp_qc[full_mask] = np.ma.masked
+        salt[full_mask] = np.ma.masked
+        salt_qc[full_mask] = np.ma.masked
+        pres[full_mask] = np.ma.masked
+        pres_qc[full_mask] = np.ma.masked
 
         # Combine the QC codes
         qc = np.mean(np.vstack((temp_qc.compressed(), salt_qc.compressed(),
@@ -334,7 +341,9 @@ class ostia_sst_map(obsgen):
         dat = np.ma.masked_outside(np.squeeze(
                     nc.variables["analysed_sst"][:]) - 273.15,
                     self.temp_limits[0], self.temp_limits[1])
-        err = np.squeeze(nc.variables["analysis_error"][:])
+        err = np.ma.masked_outside(np.squeeze(
+                    nc.variables["analysis_error"][:]), 0.01, 2.0)
+        dat[err.mask] = np.ma.masked
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
         time = time.total_seconds() * seapy.secs2day
@@ -342,10 +351,11 @@ class ostia_sst_map(obsgen):
         if self.grid.east():
             lon[lon<0] += 360
         lon, lat = np.meshgrid(lon, lat)
-        lat = lat.flatten()
-        lon = lon.flatten()
-        data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.flatten(),
-                                        err.flatten(), self.temp_error)]
+        good = dat.nonzero()
+        lat = lat[good]
+        lon = lon[good]
+        data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.compressed(),
+                                        err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                      data, self.dt, title)
@@ -448,7 +458,7 @@ class tao_mooring(obsgen):
                  depth_limit=0, temp_error=0.25, salt_error=0.08,
                  u_error=0.08, v_error=0.08):
         if temp_limits is None:
-            self.temp_limits = (5, 30)
+            self.temp_limits = (5, 35)
         else:
             self.temp_limits = temp_limits
         if salt_limits is None:
@@ -482,7 +492,7 @@ class tao_mooring(obsgen):
         lat = nc.variables["lat"][:]
         lon = nc.variables["lon"][:]
         if not self.grid.east():
-            lon[lon>180] -= 360
+            lon[lon > 180] -= 360
         lat, lon = np.meshgrid(lat, lon)
         time = netCDF4.num2date(nc.variables["time"][:],
                                 nc.variables["time"].units) - self.epoch
@@ -497,8 +507,6 @@ class tao_mooring(obsgen):
         # If nothing is in the area, return nothing
         if not profile_list[0].size:
             return None
-
-        profile_list = (np.array(profile_list[0][4:6]),np.array(profile_list[1][4:6]))
 
         # Process each of the variables that are present
         obsdata = []

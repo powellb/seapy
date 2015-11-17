@@ -8,7 +8,6 @@
 """
 from __future__ import print_function
 
-import datetime
 import re
 
 def cdl_parser(filename):
