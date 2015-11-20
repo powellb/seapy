@@ -67,7 +67,7 @@ class obsgen(object):
         """
         pass
 
-    def batch_files(self, in_files, out_files):
+    def batch_files(self, in_files, out_files, clobber=True):
         """
         Given a list of input files, process each one and save each result
         into the given output file.
@@ -81,6 +81,9 @@ class obsgen(object):
             If a single string is given, the character '#' will be replaced
             by the starting time of the observation (e.g. out_files="out_#.nc"
             will become out_03234.nc)
+        clobber : bool, optional
+            If TRUE, overwrite any existing output files. If False, the
+            file is not processed.
 
         Returns
         -------
@@ -101,11 +104,11 @@ class obsgen(object):
                     continue
                 if outtime:
                     obs.to_netcdf(time.sub("{:05d}".format(int(obs.time[0])),
-                                           out_files))
+                                           out_files), clobber)
                 else:
-                    obs.to_netcdf(out_files[n])
-            except RuntimeError:
-                warn("WARNING: "+file+" cannot be processed.")
+                    obs.to_netcdf(out_files[n], clobber)
+            except BaseException as e:
+                warn("WARNING: {:s} cannot be processed.\nError: {:}".format(file, e.args))
         pass
 
 class aquarius_sss(obsgen):

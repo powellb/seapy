@@ -4,7 +4,19 @@
 
   State Estimation and Analysis for PYthon
 
-  Module to handle the observation structure within ROMS
+  Module to handle the observation structure within ROMS. The ROMS structure
+  defines the obs_provenance, which is a numeric ID for tracking the source
+  of the observations you use. This module defines a dictionary to translate
+  between the numeric and string representations so that either can be used.
+  Standard instruments are predefined; however, for your own applications,
+  you will want to define additional provenances for the observations you use.
+  This is accomplished via:
+
+  >>> import seapy
+  >>> seapy.roms.obs.obs_provenance.update({353:'MY_OBS1', 488:'MY_OBS2'})
+
+  You can make your own module for importing seapy and adding your definitions
+  easily.
 
   Written by Brian Powell on 08/05/14
   Copyright (c)2014 University of Hawaii under the BSD-License.
@@ -35,8 +47,8 @@ obs_types = {
 obs_provenance = {
     0:"UNKNOWN",
     100:"GLIDER",
-    114:"GLIDER_SG022",
-    114:"GLIDER_SG023",
+    102:"GLIDER_SG022",
+    103:"GLIDER_SG023",
     114:"GLIDER_SG114",
     139:"GLIDER_SG139",
     146:"GLIDER_SG146",
@@ -431,7 +443,7 @@ class obs:
         self.survey_time = times
         self.nobs = counts
 
-    def to_netcdf(self, filename, dt=0):
+    def to_netcdf(self, filename, dt=0, clobber=True):
         """
         Write out the observations into the specified netcdf file
 
@@ -442,12 +454,20 @@ class obs:
         dt : float,
             ensure data are at least separated in time by dt; otherwise,
             make as part of same survey
+        clobber : bool, optional
+            if True, any existing file is overwritten
         """
+        import os
+
         # Save out the observations by survey
         self._consistent()
         self.create_survey(dt)
         if not self.value.size:
-            warn("No observations are available to be written to "+filename)
+            warn("No observations are available to be written to {:s}".format(filename))
+            return None
+
+        if not clobber and os.path.exists(filename):
+            warn("{:s} exists with no clobber.".format(filename))
             return None
 
         state_vars = np.maximum(7, np.max(self.type))
@@ -703,7 +723,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
                                 title = title)
 
 
-def merge_files(obs_files, out_files, days, dt, limits=None):
+def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     """
     merge together a group of observation files into combined new files
     with observations that lie only within the corresponding dates
@@ -718,18 +738,20 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
         If a single string is given, the character '#' will be replaced
         by the starting time of the observation (e.g. out_files="out_#.nc"
         will become out_03234.nc)
-    days : list,
-        List of day numbers to filter the observations by. A list of
-        three values, [a1 a2 a3] will produce two files with observations
-        between a1 <= t1 <= a2 and a2<= t2 <= a3.
+    days : list of tuples,
+        List of starting and ending day numbers for each cycle to process.
+        The first value is the start day, the second is the end day. The
+        number of tuples is the number of files to output.
     dt : float,
         Time separation of observations. Observations that are less than
         dt apart in time will be set to the same time.
-    limits : dict,
+    limits : dict, optional
         Set the limits of the grid points that observations are allowed
         within, {'north':i, 'south':i, 'east':i, 'west':i }. As obs near
         the boundaries are not advisable, this allows you to specify the
         valid grid range to accept obs within.
+    clobber: bool, optional
+        If True, output files are overwritten. If False, they are skipped.
 
     Returns
     -------
@@ -742,10 +764,17 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
     day 10 through day 20:
 
     >>> merge_files(["obs_1.nc", "obs_2.nc", "obs_3.nc"], "new_#.nc",
-                   np.arange(10,21,2))
+                   [(i, i+2) for i in range(10, 20, 2)])
+
+    Put together same three files into 3 overlapping separate files in five
+    day intervals with one overlapping day:
+
+    >>> merge_files(["obs_1.nc", "obs_2.nc", "obs_3.nc"], "new_#.nc",
+                   [(i, i+5) for i in range(10, 20, 4)])
 
     """
     import re
+    import os
 
     # Only unique files
     obs_files = set().union(seapy.flatten(obs_files))
@@ -762,7 +791,8 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
         nc = netCDF4.Dataset(file)
         fdays = nc.variables['survey_time'][:]
         nc.close()
-        l = np.where(np.logical_and(fdays >= days[0], fdays <= days[-1]))[0]
+        l = np.where(np.logical_and(fdays >= np.min(days),
+                                    fdays <= np.max(days)))[0]
         if not l.size:
             continue
         myobs.append(file)
@@ -772,7 +802,16 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
     edays = np.asarray(edays)
 
     # Loop over the dates in pairs
-    for t in seapy.progressbar.progress(list(zip(days[:-1], days[1:]))):
+    for n, t in enumerate(seapy.progressbar.progress(days)):
+        # Set output file name
+        if outtime:
+            outfile = time.sub("{:05d}".format(t[0]), out_files)
+        else:
+            outfile = out_files[n]
+
+        if os.path.exists(outfile) and not clobber:
+            continue
+
         # Find the files that cover the current period
         fidx = np.where(np.logical_and(sdays <= t[1], edays >= t[0]))[0]
         if not fidx.size:
@@ -796,10 +835,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None):
             nobs.delete(l)
 
         # Save out the new observations
-        if outtime:
-            nobs.to_netcdf(time.sub("{:05d}".format(t[0]), out_files), dt=dt)
-        else:
-            nobs.to_netcdf(out_files[n], dt=dt)
+        nobs.to_netcdf(outfile, dt=dt)
 
         pass
 

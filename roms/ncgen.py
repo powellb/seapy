@@ -87,9 +87,11 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
                                            var["dims"])
             else:
                 nvar = _nc.createVariable( var["name"], var["type"])
-            if "attr" in var:
+            try:
                 for key in var["attr"]:
                     setattr(nvar, key, var["attr"][key])
+            except KeyError:
+                pass
         # Add global attributes
         for a in attr:
             setattr(_nc, a, attr[a])
@@ -119,10 +121,11 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho):
     dims["N"] = s_rho
 
     # Fill in the appropriate dimension values
-    if "s_rho" in dims:
+    try:
         dims["s_rho"] = s_rho
-    if "s_w" in dims:
         dims["s_w"] = s_rho+1
+    except KeyError:
+        pass
 
     return dims
 
