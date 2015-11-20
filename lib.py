@@ -104,22 +104,22 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         kernel[center,center]=0.0
 
     # Convolve the mask
-    msk=np.ma.getmaskarray(fld)
+    msk = np.ma.getmaskarray(fld)
     if fld.ndim == 2:
-        count=ndimage.convolve((~msk).view(np.int8), kernel,
+        count = ndimage.convolve((~msk).view(np.int8), kernel,
                                mode="constant", cval=0.0)
-        nfld=ndimage.convolve(fld.data*(~msk).view(np.int8), kernel,
+        nfld = ndimage.convolve(fld.data*(~msk).view(np.int8), kernel,
                                mode="constant", cval=0.0)
     else:
-        kernel=np.expand_dims(kernel, axis=3)
-        count=np.transpose( ndimage.convolve(
+        kernel = np.expand_dims(kernel, axis=3)
+        count = np.transpose( ndimage.convolve(
                 (~msk).view(np.int8).transpose(1,2,0), kernel,
                 mode="constant", cval=0.0),(2,0,1))
-        nfld=np.transpose( ndimage.convolve(
+        nfld = np.transpose( ndimage.convolve(
             (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel,
             mode="constant", cval=0.0),(2,0,1))
 
-    lst=np.nonzero(np.logical_and(msk, count>0))
+    lst = np.nonzero(np.logical_and(msk, count>0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]
     return fld
@@ -244,30 +244,46 @@ def flatten(l, ltypes=(list, tuple, set)):
         i += 1
     return ltype(l)
 
-def list_files(path=".", regex=".*"):
+def list_files(path=".", regex=None, full_path=True):
     """
-    list all file names in the given path that conform to the regular
-    expression pattern.
+    list all sorted file names in the given path that conform to the regular
+    expression pattern. This is not a generator function because it sorts
+    the files in alphabetic/numeric order.
 
     Parameters
     ----------
-    path : string, optional
-        Input directory path
+    path : string
+        Search for the given matches
     regex : string, optional
         Input regular expression string to filter filenames
+    full_path : bool, optional
+        If True, return the full path for each found object. If false,
+        return only the filename
 
     Returns
     -------
     files : array
 
+    Example
+    -------
+    >>> files = seapy.list_files('/path/to/dir/test_.*txt')
+    >>> print(files)
+    ['/path/to/dir/test_001.txt', '/path/to/dir/test_002.txt']
     """
+    # If only one parameter is given, parse into its components
+    if regex is None:
+        regex = os.path.basename(path)
+        path = os.path.dirname(path)
     if path[-1] != '/':
         path += '/'
-    files=[]
-    prog=re.compile(regex)
+    files = []
+    prog = re.compile(regex)
     for file in os.listdir(path):
         if prog.search(file) is not None:
-            files.append(path+file)
+            if full_path:
+                files.append(path + file)
+            else:
+                files.append(file)
     files.sort()
     return files
 
@@ -346,11 +362,11 @@ def rotate(u, v, angle):
     -------
     rotated_u, rotated_v : array
     """
-    u=np.asanyarray(u)
-    v=np.asanyarray(v)
-    angle=np.asanyarray(angle)
-    sa=np.sin(angle)
-    ca=np.cos(angle)
+    u = np.asanyarray(u)
+    v = np.asanyarray(v)
+    angle = np.asanyarray(angle)
+    sa = np.sin(angle)
+    ca = np.cos(angle)
 
     return u*ca - v*sa, u*sa + v*ca
 
@@ -388,11 +404,11 @@ def unique_rows(x):
     idx : ndarray,
         Indices of the unique values
     """
-    if isinstance(x,tuple):
-        x=np.vstack(x).T
+    if isinstance(x, tuple):
+        x = np.vstack(x).T
     else:
-        x=np.atleast_1d(x)
-    vals, idx = np.unique(godelnumber(x),return_index=True)
+        x = np.atleast_1d(x)
+    vals, idx = np.unique(godelnumber(x), return_index=True)
 
     return vals, idx
 
@@ -416,8 +432,8 @@ def vecfind(a, b, tolerance=0):
             such that a[index_a] == b[index_b]
 
     """
-    a=np.asanyarray(a)
-    b=np.asanyarray(b)
+    a = np.asanyarray(a)
+    b = np.asanyarray(b)
 
     # If the tolerance is zero, we can use built-in methods
     if tolerance == 0:
@@ -425,13 +441,13 @@ def vecfind(a, b, tolerance=0):
         index_b = np.in1d(b, a)
     # Otherwise, slow method
     else:
-        index_a=[]
-        index_b=[]
+        index_a = []
+        index_b = []
         for i,c in enumerate(b):
-            d=np.abs(a-c)
-            x=np.nonzero(d<tolerance)[0]
+            d = np.abs(a-c)
+            x = np.nonzero(d<tolerance)[0]
             if x:
-                index_a.append(np.where(d==np.min(d))[0][0])
+                index_a.append(np.where(d == np.min(d))[0][0])
                 index_b.append(i)
     return index_a, index_b
 
@@ -450,10 +466,10 @@ def godelnumber(x):
     -------
     godel : ndarray
     """
-    x=np.atleast_2d(x.astype(int))
-    if x.ndim>1:
-        primevals=primes(x.shape[1]*10)[:x.shape[1]].astype(float)
-        return(np.prod(primevals**x,axis=1))
+    x = np.atleast_2d(x.astype(int))
+    if x.ndim > 1:
+        primevals = primes(x.shape[1]*10)[:x.shape[1]].astype(float)
+        return(np.prod(primevals**x, axis=1))
     else:
         return 2.0**x
 
