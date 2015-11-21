@@ -264,17 +264,22 @@ def list_files(path=".", regex=None, full_path=True):
     -------
     files : array
 
-    Example
-    -------
+    Examples
+    --------
     >>> files = seapy.list_files('/path/to/dir/test_.*txt')
     >>> print(files)
     ['/path/to/dir/test_001.txt', '/path/to/dir/test_002.txt']
+
+    NOTE: this is equivalent for separating:
+    >>> files = seapy.list_files('/path/to/dir', 'test_.*txt')
     """
     # If only one parameter is given, parse into its components
     if regex is None:
         regex = os.path.basename(path)
         path = os.path.dirname(path)
-    if path[-1] != '/':
+    if not path:
+        path = './'
+    elif path[-1] != '/':
         path += '/'
     files = []
     prog = re.compile(regex)

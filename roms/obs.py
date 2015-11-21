@@ -495,7 +495,6 @@ class obs:
         nc.variables["obs_meta"][:] = self.meta[self.sort]
         nc.close()
 
-
 def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     """
     Construct an observations set from raw observations by placing them
@@ -683,7 +682,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
                 kk = aggregate(indices, k[time_list][valid_data],
                                func='mean')
                 dd = dd[binned].ravel()
-                kk = kk[binned].ravel()
+                # ROMS counts from 1 for depth layers
+                kk = kk[binned].ravel() + 1
             else:
                 kk = np.resize(grid.n, Nd)
                 dd = np.zeros(ii.shape)

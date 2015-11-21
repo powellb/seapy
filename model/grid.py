@@ -98,6 +98,8 @@ class grid:
             self.set_depth()
             self.set_thickness()
             self.set_mask_h()
+        self.ijinterp = None
+        self.llinterp = None
 
     def _initfile(self):
         """
@@ -661,14 +663,14 @@ class grid:
         >>> a = [(23.4, 16.5), (3.66, 22.43)]
         >>> idx = g.latlon(a)
         """
+        from scipy.interpolate import RegularGridInterpolator
 
-        # Interpolate the I,J onto the lat/lon
-        lat = griddata((self.I.ravel(), self.J.ravel()),
-                       self.lat_rho.ravel(), indices, method="linear")
-        lon = griddata((self.I.ravel(), self.J.ravel()),
-                       self.lon_rho.ravel(), indices, method="linear")
+        lati = RegularGridInterpolator((self.I[0,:], self.J[:,0]),
+                                           self.lat_rho.T)
+        loni = RegularGridInterpolator((self.I[0,:], self.J[:,0]),
+                                           self.lon_rho.T)
 
-        return (lat, lon)
+        return (lati(indices), loni(indices))
 
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """
