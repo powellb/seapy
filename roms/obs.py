@@ -662,10 +662,12 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
             nvalues = aggregate(indices,
                     v.values[region_list][valid_list][time_list][valid_data],
                     func='mean')
+
             # Get their variance
             vari = aggregate(indices,
                     v.values[region_list][valid_list][time_list][valid_data],
                     func='var')
+
             # Put together the known observation values
             if v.error is not None:
                 errs = aggregate(indices,

@@ -24,6 +24,7 @@ import scipy.spatial
 import matplotlib.path
 from warnings import warn
 
+
 def asgrid(grid):
     """
     Return either an existing or new grid object. This decorator will ensure that
@@ -48,7 +49,9 @@ def asgrid(grid):
     else:
         return seapy.model.grid(filename=grid)
 
+
 class grid:
+
     def __init__(self, filename=None, lat=None, lon=None, z=None,
                  depths=True, cgrid=False):
         """
@@ -82,9 +85,9 @@ class grid:
         if self.filename is not None:
             self._initfile()
             self._isroms = True if \
-              (len(list(set(("s_rho","pm","pn","theta_s","theta_b",
-                            "vtransform", "vstretching")).intersection(
-                            set(self.__dict__)))) > 0) else False
+                (len(list(set(("s_rho", "pm", "pn", "theta_s", "theta_b",
+                               "vtransform", "vstretching")).intersection(
+                    set(self.__dict__)))) > 0) else False
             self.cgrid = True if self._isroms else self.cgrid
         else:
             self._nc = None
@@ -140,13 +143,16 @@ class grid:
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
-                 "z": ["z","depth","lev"]
-                }
+                 "z": ["z", "depth", "lev"]
+                 }
 
         # Open the file
         self._nc = seapy.netcdf4(self.filename)
-        self.name = re.search("[^\.]*",
-                              os.path.basename(self.filename)).group();
+        try:
+            self.name = re.search("[^\.]*",
+                                  os.path.basename(self.filename)).group()
+        except:
+            self.name = "untitled"
         self.key = {}
         for var in gvars:
             for inp in gvars[var]:
@@ -157,7 +163,6 @@ class grid:
         # Close the file
         self._nc.close()
         self._nc = None
-
 
     def _verify_shape(self):
         """
@@ -178,8 +183,8 @@ class grid:
                 "grid does not have attribute lat_rho or lon_rho")
 
         # Check that it is formatted into 2-D
-        self.spatial_dims=self.lat_rho.ndim
-        if self.lat_rho.ndim==1 and self.lon_rho.ndim==1:
+        self.spatial_dims = self.lat_rho.ndim
+        if self.lat_rho.ndim == 1 and self.lon_rho.ndim == 1:
             [self.lon_rho, self.lat_rho] = np.meshgrid(self.lon_rho,
                                                        self.lat_rho)
 
@@ -190,14 +195,14 @@ class grid:
 
     def __repr__(self):
         return "{:s}: {:d}x{:d}x{:d}".format("C-Grid" if self.cgrid
-                                else "A-Grid", self.n,self.ln,self.lm)
+                                             else "A-Grid", self.n, self.ln, self.lm)
 
     def __str__(self):
         return "\n".join((self.filename if self.filename else "Constructed",
-            "{:d}x{:d}x{:d}: {:s} with {:s}".format(self.n,self.ln,self.lm,
-                "C-Grid" if self.cgrid else "A-Grid",
-                "S-level" if self._isroms else "Z-Level"),
-            "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
+                          "{:d}x{:d}x{:d}: {:s} with {:s}".format(self.n, self.ln, self.lm,
+                                                                  "C-Grid" if self.cgrid else "A-Grid",
+                                                                  "S-level" if self._isroms else "Z-Level"),
+                          "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
 
     def east(self):
         """
@@ -262,9 +267,9 @@ class grid:
         if self.cgrid:
             self.eta_rho = self.ln
             self.eta_u = self.ln
-            self.eta_v = self.ln-1
+            self.eta_v = self.ln - 1
             self.xi_rho = self.lm
-            self.xi_u = self.lm-1
+            self.xi_u = self.lm - 1
             self.xi_v = self.lm
 
         # Set the number of layers
@@ -282,57 +287,62 @@ class grid:
         # Generate the u- and v-grids
         if ("lat_u" or "lon_u") not in self.__dict__:
             if self.cgrid:
-                self.lat_u = 0.5*(self.lat_rho[:,1:] - self.lat_rho[:,0:-1])
-                self.lon_u = 0.5*(self.lon_rho[:,1:] - self.lon_rho[:,0:-1])
+                self.lat_u = 0.5 * \
+                    (self.lat_rho[:, 1:] - self.lat_rho[:, 0:-1])
+                self.lon_u = 0.5 * \
+                    (self.lon_rho[:, 1:] - self.lon_rho[:, 0:-1])
             else:
                 self.lat_u = self.lat_rho
                 self.lon_u = self.lon_rho
         if ("lat_v" or "lon_v") not in self.__dict__:
             if self.cgrid:
-                self.lat_v = 0.5*(self.lat_rho[1:,:] - self.lat_rho[0:-1,:])
-                self.lon_v = 0.5*(self.lon_rho[1:,:] - self.lon_rho[0:-1,:])
+                self.lat_v = 0.5 * \
+                    (self.lat_rho[1:, :] - self.lat_rho[0:-1, :])
+                self.lon_v = 0.5 * \
+                    (self.lon_rho[1:, :] - self.lon_rho[0:-1, :])
             else:
                 self.lat_v = self.lat_rho
                 self.lon_v = self.lon_rho
         if "mask_rho" in self.__dict__:
             if "mask_u" not in self.__dict__:
                 if self.cgrid:
-                    self.mask_u = self.mask_rho[:,1:] * self.mask_rho[:,0:-1]
+                    self.mask_u = self.mask_rho[:, 1:] * self.mask_rho[:, 0:-1]
                 else:
                     self.mask_u = self.mask_rho
             if "mask_v" not in self.__dict__:
                 if self.cgrid:
-                    self.mask_v = self.mask_rho[1:,:] * self.mask_rho[0:-1,:]
+                    self.mask_v = self.mask_rho[1:, :] * self.mask_rho[0:-1, :]
                 else:
                     self.mask_v = self.mask_rho
 
         # Compute the resolution
         if "pm" in self.__dict__:
-            self.dm = 1.0/self.pm
+            self.dm = 1.0 / self.pm
         else:
-            self.dm = np.ones(self.lon_rho.shape,dtype=np.float32)
-            self.dm[:,0:-1] = seapy.earth_distance( self.lon_rho[:, 1:],
-                                      self.lat_rho[:, 1:],
-                                      self.lon_rho[:, 0:-1],
-                                      self.lat_rho[:,0:-1]).astype(np.float32)
-            self.dm[:,-1] = self.dm[:,-2]
+            self.dm = np.ones(self.lon_rho.shape, dtype=np.float32)
+            self.dm[:, 0:-1] = seapy.earth_distance(self.lon_rho[:, 1:],
+                                                    self.lat_rho[:, 1:],
+                                                    self.lon_rho[:, 0:-1],
+                                                    self.lat_rho[:, 0:-1]).astype(np.float32)
+            self.dm[:, -1] = self.dm[:, -2]
         if "pn" in self.__dict__:
-            self.dn = 1.0/self.pn
+            self.dn = 1.0 / self.pn
         else:
-            self.dn = np.ones(self.lat_rho.shape,dtype=np.float32)
-            self.dn[0:-1, :] = seapy.earth_distance( self.lon_rho[1:, :],
-                                      self.lat_rho[1:, :],
-                                      self.lon_rho[0:-1, :],
-                                      self.lat_rho[0:-1,:] ).astype(np.float32)
+            self.dn = np.ones(self.lat_rho.shape, dtype=np.float32)
+            self.dn[0:-1, :] = seapy.earth_distance(self.lon_rho[1:, :],
+                                                    self.lat_rho[1:, :],
+                                                    self.lon_rho[0:-1, :],
+                                                    self.lat_rho[0:-1, :]).astype(np.float32)
             self.dn[-1, :] = self.dn[-2, :]
 
         # Compute the Coriolis
         if "f" not in self.__dict__:
-            omega = 2*np.pi*seapy.secs2day
-            self.f = 2*omega*np.sin(np.radians(self.lat_rho))
+            omega = 2 * np.pi * seapy.secs2day
+            self.f = 2 * omega * np.sin(np.radians(self.lat_rho))
 
         # Set the grid index coordinates
-        self.I, self.J = np.meshgrid(np.arange(0,self.lm),np.arange(0,self.ln))
+        self.I, self.J = np.meshgrid(
+            np.arange(0, self.lm), np.arange(0, self.ln))
 
     def set_mask_h(self, fld=None):
         """
@@ -375,12 +385,11 @@ class grid:
         self.h = np.zeros(self.lat_rho.shape)
         self.mask_rho = np.zeros(self.lat_rho.shape)
         for k in range(self.z.size):
-            water = np.nonzero( np.logical_not(fld.mask[k, :, :]))
+            water = np.nonzero(np.logical_not(fld.mask[k, :, :]))
             self.h[water] = self.z[k]
             if k == 0:
                 self.mask_rho[water] = 1.0
         self.mask_u = self.mask_v = self.mask_rho
-
 
     def set_depth(self):
         """
@@ -406,14 +415,14 @@ class grid:
                 self.depth_v = seapy.model.rho2v(self.depth_rho)
             else:
                 d = self.z.copy()
-                l = np.nonzero(d>0)
-                d[l]=-d[l]
+                l = np.nonzero(d > 0)
+                d[l] = -d[l]
                 if self.n > 1:
-                    self.depth_rho = np.kron( np.kron(
-                                        d, np.ones(self.lon_rho.shape[1])),
-                                        np.ones(self.lon_rho.shape[0])).reshape(
-                                        [self.z.size,self.lon_rho.shape[0],
-                                         self.lon_rho.shape[1]])
+                    self.depth_rho = np.kron(np.kron(
+                        d, np.ones(self.lon_rho.shape[1])),
+                        np.ones(self.lon_rho.shape[0])).reshape(
+                        [self.z.size, self.lon_rho.shape[0],
+                         self.lon_rho.shape[1]])
                 else:
                     self.depth_rho = self.z
                 if self.cgrid:
@@ -449,34 +458,33 @@ class grid:
                     self.n, w_grid=True)
                 self.thick_rho = seapy.roms.thickness(
                     self.vtransform, self.h, self.hc, s_w, cs_w)
-                self.thick_u=seapy.model.rho2u(self.thick_rho)
-                self.thick_v=seapy.model.rho2v(self.thick_rho)
+                self.thick_u = seapy.model.rho2u(self.thick_rho)
+                self.thick_v = seapy.model.rho2v(self.thick_rho)
             else:
                 d = np.abs(self.z.copy())
-                w = d*0
+                w = d * 0
                 # Check which way the depths are going
                 if d[0] < d[-1]:
-                    w[0]=d[0]
-                    w[1:]=d[1:]-d[0:-1]
+                    w[0] = d[0]
+                    w[1:] = d[1:] - d[0:-1]
                 else:
-                    w[-1]=d[-1]
-                    w[0:-1]=d[0:-1]-d[1:]
+                    w[-1] = d[-1]
+                    w[0:-1] = d[0:-1] - d[1:]
 
-                self.thick_rho = np.kron( np.kron( w,
-                                        np.ones(self.lon_rho.shape[1])),
-                                        np.ones(self.lon_rho.shape[0])).reshape(
-                                        [self.z.size,self.lon_rho.shape[0],
-                                         self.lon_rho.shape[1]])
+                self.thick_rho = np.kron(np.kron(w,
+                                                 np.ones(self.lon_rho.shape[1])),
+                                         np.ones(self.lon_rho.shape[0])).reshape(
+                    [self.z.size, self.lon_rho.shape[0],
+                     self.lon_rho.shape[1]])
                 if self.cgrid:
-                    self.thick_u=seapy.model.rho2u(self.thick_rho)
-                    self.thick_v=seapy.model.rho2v(self.thick_rho)
+                    self.thick_u = seapy.model.rho2u(self.thick_rho)
+                    self.thick_v = seapy.model.rho2v(self.thick_rho)
                 else:
                     self.thick_u = self.thick_rho
                     self.thick_v = self.thick_rho
         except AttributeError:
             warn("could not compute grid thicknesses.")
             pass
-
 
     def plot_trace(self, basemap, **kwargs):
         """
@@ -493,12 +501,12 @@ class grid:
         -------
         None
         """
-        lon=np.concatenate([self.lon_rho[0,:], self.lon_rho[:,-1],
-                            self.lon_rho[-1,::-1], self.lon_rho[::-1,0]])
-        lat=np.concatenate([self.lat_rho[0,:], self.lat_rho[:,-1],
-                            self.lat_rho[-1,::-1], self.lat_rho[::-1,0]])
-        x,y=basemap(lon,lat)
-        basemap.plot(x,y,**kwargs)
+        lon = np.concatenate([self.lon_rho[0, :], self.lon_rho[:, -1],
+                              self.lon_rho[-1, ::-1], self.lon_rho[::-1, 0]])
+        lat = np.concatenate([self.lat_rho[0, :], self.lat_rho[:, -1],
+                              self.lat_rho[-1, ::-1], self.lat_rho[::-1, 0]])
+        x, y = basemap(lon, lat)
+        basemap.plot(x, y, **kwargs)
 
     def to_netcdf(self, nc):
         """
@@ -516,8 +524,8 @@ class grid:
         None
         """
         for var in nc.variables:
-            if hasattr(self,var.lower()):
-                nc.variables[var][:]=getattr(self,var.lower())
+            if hasattr(self, var.lower()):
+                nc.variables[var][:] = getattr(self, var.lower())
 
     def nearest(self, lon, lat, grid="rho"):
         """
@@ -540,13 +548,13 @@ class grid:
             to the lon/lat points specified
         """
 
-        glat = getattr(self, "lat_"+grid)
-        glon = getattr(self, "lon_"+grid)
+        glat = getattr(self, "lat_" + grid)
+        glon = getattr(self, "lon_" + grid)
         xy = np.dstack([glat.ravel(), glon.ravel()])[0]
         pts = np.dstack([np.atleast_1d(lat), np.atleast_1d(lon)])[0]
         grid_tree = scipy.spatial.cKDTree(xy)
         dist, idx = grid_tree.query(pts)
-        return np.unravel_index(idx,glat.shape)
+        return np.unravel_index(idx, glat.shape)
 
     def ij(self, points):
         """
@@ -575,16 +583,16 @@ class grid:
 
         # Interpolate the lat/lons onto the I, J
         xgrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                        self.lat_rho.ravel()),
-                        self.I.ravel(), points, method="linear"))
+                                               self.lat_rho.ravel()),
+                                              self.I.ravel(), points, method="linear"))
         ygrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                        self.lat_rho.ravel()),
-                        self.J.ravel(), points, method="linear"))
+                                               self.lat_rho.ravel()),
+                                              self.J.ravel(), points, method="linear"))
         mask = self.mask_rho[(ygrid.filled(0).astype(int),
                               xgrid.filled(0).astype(int))]
-        xgrid[mask==0] = np.ma.masked
-        ygrid[mask==0] = np.ma.masked
-        return (ygrid,xgrid)
+        xgrid[mask == 0] = np.ma.masked
+        ygrid[mask == 0] = np.ma.masked
+        return (ygrid, xgrid)
 
     def ijk(self, points, depth_adjust=False):
         """
@@ -617,11 +625,11 @@ class grid:
         # to get depths for increased-speed (though this method is still slow)
 
         # Get the i,j points
-        (j,i) = self.ij((points[0],points[1]))
+        (j, i) = self.ij((points[0], points[1]))
         k = j * np.ma.masked
-        grid_k = np.arange(0,self.n)
+        grid_k = np.arange(0, self.n)
         depth = np.asanyarray(points[2])
-        depth[depth>0] *= -1
+        depth[depth > 0] *= -1
 
         # Determine the unique points
         good = np.where(~np.logical_or(i.mask, j.mask))[0]
@@ -630,8 +638,8 @@ class grid:
         rows, idx = seapy.unique_rows((jj, ii))
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
-            pts = np.where(np.logical_and(jj==jj[n], ii==ii[n]))
-            fi = interp1d(self.depth_rho[:,jj[n],ii[n]], grid_k,
+            pts = np.where(np.logical_and(jj == jj[n], ii == ii[n]))
+            fi = interp1d(self.depth_rho[:, jj[n], ii[n]], grid_k,
                           bounds_error=False, fill_value=fill_value)
             k[good[pts]] = fi(depth[good][pts])
 
@@ -641,7 +649,7 @@ class grid:
         j[l] = np.ma.masked
         k[l] = np.ma.masked
 
-        return (k,j,i)
+        return (k, j, i)
 
     def latlon(self, indices):
         """
@@ -665,10 +673,10 @@ class grid:
         """
         from scipy.interpolate import RegularGridInterpolator
 
-        lati = RegularGridInterpolator((self.I[0,:], self.J[:,0]),
-                                           self.lat_rho.T)
-        loni = RegularGridInterpolator((self.I[0,:], self.J[:,0]),
-                                           self.lon_rho.T)
+        lati = RegularGridInterpolator((self.I[0, :], self.J[:, 0]),
+                                       self.lat_rho.T)
+        loni = RegularGridInterpolator((self.I[0, :], self.J[:, 0]),
+                                       self.lon_rho.T)
 
         return (lati(indices), loni(indices))
 
@@ -698,16 +706,13 @@ class grid:
         # If lat/lon vertices are given, we need to put these onto
         # the grid coordinates
         if lat_lon:
-            points = self.ij(vertices,asint=True)
-            vertices = list(zip(points[0],points[1]))
+            points = self.ij(vertices, asint=True)
+            vertices = list(zip(points[0], points[1]))
 
         # Now, with grid coordinates, test the grid against the vertices
-        poly=matplotlib.path.Path(vertices)
-        inside=poly.contains_points(np.vstack((self.J.flatten(),
-                                               self.I.flatten())).T,
-                                    radius=radius)
+        poly = matplotlib.path.Path(vertices)
+        inside = poly.contains_points(np.vstack((self.J.flatten(),
+                                                 self.I.flatten())).T,
+                                      radius=radius)
         return np.ma.masked_where(inside.reshape(self.lat_rho.shape),
                                   np.ones(self.lat_rho.shape))
-
-
-
