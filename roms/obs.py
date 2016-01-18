@@ -638,6 +638,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
             if isinstance(v.values, np.ma.core.MaskedArray):
                 valid_data = \
                    (v.values[region_list][valid_list][time_list].nonzero())[0]
+                if not valid_data.size:
+                    continue
 
             # Put together the indices based on the type of data we have
             if subsurface_values:

@@ -450,16 +450,16 @@ class seaglider_profile(obsgen):
                                       data, self.dt, title)
 
 
-class tao_mooring(obsgen):
+class mooring(obsgen):
     """
-    class to process TAO files into ROMS observation
-    files. This is a subclass of seapy.roms.genobs.genobs, and handles
-    the loading of the data.
+    Class to process generic moorings into ROMS observation files. This
+    handles temp, salt, u, and v.
     """
     def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
                  salt_limits=None, u_limits=None, v_limits=None,
                  depth_limit=0, temp_error=0.25, salt_error=0.08,
-                 u_error=0.08, v_error=0.08):
+                 u_error=0.08, v_error=0.08, lat=None, lon=None,
+                 provenance=None):
         if temp_limits is None:
             self.temp_limits = (5, 35)
         else:
@@ -476,11 +476,94 @@ class tao_mooring(obsgen):
             self.v_limits = (-3, 3)
         else:
             self.v_limits = v_limits
+        if provenance is None:
+            self.provenance = seapy.roms.obs.asprovenance("MOORING")
+        else:
+            self.provenance = provenance
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error
         self.u_error = u_error
         self.v_error = v_error
+        self.lat = np.atleast_1d(lat)
+        self.lon = np.atleast_1d(lon)
+        super().__init__(grid, dt, reftime)
+
+                    
+    def convert_data(self, time, depth, data, error=None, title="Mooring Obs"):
+        """
+        Given a set of data, process into an observation structure
+
+        Parameters
+        ----------
+        time : ndarray
+          time of observations
+        depth : ndarray
+          depth of observations. depth is in rows, time in columns.
+          If depth does not change with time, it will be replicated in time.
+        data : dict
+          data to put into observations. A dictionary using seapy.roms.fields
+          as keys.
+        error : dict, optional
+          error of the observations (same keys and sizes as data)
+        title : string, optional
+          title for obs
+
+        Returns
+        -------
+        obs: seapy.roms.obs.obs
+        """
+        # Check that the lat/lon is in the grid
+        if self.grid.east():
+            self.lon[self.lon<=0] += 360
+        else:
+            self.lon[self.lon>=180] -= 360
+        if not np.logical_and.reduce((
+                self.lon >= np.min(self.grid.lon_rho),
+                self.lon <= np.max(self.grid.lon_rho),
+                self.lat >= np.min(self.grid.lat_rho),
+                self.lat <= np.max(self.grid.lat_rho))):
+            warn("Mooring location is not in grid")
+            return
+        depth = np.atleast_1d(depth)
+        
+        if not error:
+            error = {}
+            
+        if not data:
+            warn("No data is provided")
+            return
+            
+        # Process the data
+        obsdata = []
+        for field in data:
+            limit = getattr(self, field+'_limits')
+            vals = np.ma.masked_outside(data[field], limit[0], limit[1],
+                                        copy=False)
+            obsdata.append(seapy.roms.obs.raw_data(field, self.provenance,
+                                                   vals, getattr(error, field, None),
+                                                   getattr(self, field+'_error')))
+                
+        ndep = depth.size
+        nt = len(time)
+        lat = np.resize(self.lat, (nt, ndep))
+        lon = np.resize(self.lon, (nt, ndep))
+        depth = np.resize(depth, (nt, ndep))
+        time = np.resize(time, (nt, ndep))
+        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+                                      obsdata, self.dt, title)
+
+                            
+class tao_mooring(mooring):
+    """
+    class to process TAO files into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
+                 salt_limits=None, u_limits=None, v_limits=None,
+                 depth_limit=0, temp_error=0.25, salt_error=0.08,
+                 u_error=0.08, v_error=0.08):
         super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="TAO Obs"):
