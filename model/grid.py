@@ -120,12 +120,12 @@ class grid:
         """
         # Define a dictionary to go through and convert netcdf variables
         # to internal class attributes
-        gvars = {"lat_rho": ["lat_rho", "lat", "latitude"],
-                 "lon_rho": ["lon_rho", "lon", "longitude"],
-                 "lat_u": ["lat_u"],
-                 "lon_u": ["lon_u"],
-                 "lat_v": ["lat_v"],
-                 "lon_v": ["lon_v"],
+        gvars = {"lat_rho": ["lat_rho", "lat", "latitude", "y_rho"],
+                 "lon_rho": ["lon_rho", "lon", "longitude", "x_rho"],
+                 "lat_u": ["lat_u", "y_u"],
+                 "lon_u": ["lon_u", "x_u"],
+                 "lat_v": ["lat_v", "y_v"],
+                 "lon_v": ["lon_v", "x_v"],
                  "mask_rho": ["mask_rho", "mask"],
                  "mask_u": ["mask_u"],
                  "mask_v": ["mask_v"],
