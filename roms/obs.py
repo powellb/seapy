@@ -68,6 +68,8 @@ obs_provenance = {
     318:"SST_AVHRR_18",
     330:"SST_MODIS_AQUA",
     331:"SST_MODIS_TERRA",
+    340:"SST_REMSS",
+    341:"SST_AMSRE",
     400:"SSH",
     410:"SSH_AVISO_MAP",
     411:"SSH_AVISO_ENVISAT",

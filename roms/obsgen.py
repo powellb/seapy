@@ -627,3 +627,56 @@ class tao_mooring(mooring):
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       obsdata, self.dt, title)
 
+class remss(obsgen):
+    """
+    class to process REMSS SST netcdf files into ROMS observation
+    files. The files may be AMSRE, TMI, etc. This is a subclass of 
+    seapy.roms.genobs.genobs, and handles the loading of the data.
+    """
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
+                 temp_limits=None, provenance="SST_REMSS"):
+        self.temp_error = temp_error
+        if temp_limits is None:
+            self.temp_limits = (2,35)
+        else:
+            self.temp_limits = temp_limits
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="REMSS SST Obs"):
+        """
+        Load an AMSRE file and convert into an obs structure
+        """
+        # Load AMSRE Data
+        nc = netCDF4.Dataset(file)
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(np.squeeze(
+                    nc.variables["sea_surface_temperature"][:]) - 273.15,
+                    self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.masked_outside(np.squeeze(
+                    nc.variables["sses_standard_deviation"][:]), 0.01, 2.0)
+        dat[err.mask] = np.ma.masked
+
+        # Check the data flags
+        flags = np.ma.masked_not_equal(np.squeeze(nc.variables["l2p_flags"][:]),
+                                       0)
+        dat[flags.mask] = np.ma.masked
+        
+        # Grab the observation time
+        time = netCDF4.num2date(nc.variables["time"][0],
+                                nc.variables["time"].units) - self.epoch
+        dtime = netCDF4.variables["sst_dtime"][:]
+        time = (time.total_seconds() + dtime) * seapy.secs2day
+        nc.close()
+        if self.grid.east():
+            lon[lon<0] += 360
+        lon, lat = np.meshgrid(lon, lat)
+        good = dat.nonzero()
+        lat = lat[good]
+        lon = lon[good]
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
+                                        dat.compressed(),
+                                        err[good], self.temp_error)]
+        # Grid it
+        return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
+                                     data, self.dt, title)
