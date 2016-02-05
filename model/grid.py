@@ -159,6 +159,7 @@ class grid:
                 if inp in self._nc.variables:
                     self.key[var] = inp
                     self.__dict__[var] = self._nc.variables[inp][:]
+                    break
 
         # Close the file
         self._nc.close()
