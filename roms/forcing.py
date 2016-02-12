@@ -95,7 +95,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     2014, then use the standard GFS map definitions (and even
     the built-in GFS archive url):
 
-    >>> seapy.roms.gen_bulk_forcing(seapy.roms.forcing.gfs_url,
+    >>> seapy.roms.forcing.gen_bulk_forcing(seapy.roms.forcing.gfs_url,
             seapy.roms.forcing.gfs_map, 'my_forcing.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2014,1,1))
@@ -105,35 +105,35 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     each variable. We can use the wildcards though to put together
     multiple time period (e.g., 2014 through 2015).
 
-    >>> seapy.roms.gen_bulk_forcing("uwnd.10m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("uwnd.10m.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=True)
-    >>> seapy.roms.gen_bulk_forcing("vwnd.10m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("vwnd.10m.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.gen_bulk_forcing("air.2m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("air.2m.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.gen_bulk_forcing("dlwrf.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("dlwrf.sfc.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.gen_bulk_forcing("dswrf.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("dswrf.sfc.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.gen_bulk_forcing("prate.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("prate.sfc.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.gen_bulk_forcing("rhum.sig995.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("rhum.sig995.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=True)
-    >>> seapy.roms.gen_bulk_forcing("slp.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("slp.*nc", 
             seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
@@ -195,9 +195,12 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
 
     # Loop over the fields and fill out the output file
     for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
-        out.variables[f][:] = \
-            forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
-            fields[f].ratio + fields[f].offset
+        try:
+            out.variables[f][:] = \
+                forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
+                fields[f].ratio + fields[f].offset
+        except:
+            continue
 
     out.close()
 
