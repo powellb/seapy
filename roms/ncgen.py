@@ -22,7 +22,8 @@ from warnings import warn
 """
 _cdl_dir = os.path.dirname(lib.__file__)
 _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
-_format="NETCDF4_CLASSIC"
+_format = "NETCDF4_CLASSIC"
+
 
 def ncgen(filename, dims=None, vars=None, attr=None, title=None,
           clobber=False, format=_format):
@@ -76,17 +77,17 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
         attr = {}
     # Create the file
     if not os.path.isfile(filename) or clobber:
-        _nc=netCDF4.Dataset(filename, "w", format=format)
+        _nc = netCDF4.Dataset(filename, "w", format=format)
         # Loop over the dimensions and add them
         for dim in dims:
             _nc.createDimension(dim, dims[dim])
         # Loop over the variables and add them
         for var in vars:
             if var["dims"][0]:
-                nvar = _nc.createVariable( var["name"], var["type"],
-                                           var["dims"])
+                nvar = _nc.createVariable(var["name"], var["type"],
+                                          var["dims"])
             else:
-                nvar = _nc.createVariable( var["name"], var["type"])
+                nvar = _nc.createVariable(var["name"], var["type"])
             try:
                 for key in var["attr"]:
                     setattr(nvar, key, var["attr"][key])
@@ -96,50 +97,52 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
         for a in attr:
             setattr(_nc, a, attr[a])
         _nc.author = os.getlogin()
-        _nc.history = datetime.now().strftime( \
-                 "Created on %a, %B %d, %Y at %H:%M")
+        _nc.history = datetime.now().strftime(
+            "Created on %a, %B %d, %Y at %H:%M")
         if title is not None:
             _nc.title = title
         _nc.close()
     else:
-        warn(filename+" already exists. Using existing definition")
+        warn(filename + " already exists. Using existing definition")
     return netCDF4.Dataset(filename, "a")
     pass
+
 
 def _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho):
     """
         internal method: Set grid dimensions
     """
     dims["xi_rho"] = xi_rho
-    dims["xi_u"] = xi_rho-1
+    dims["xi_u"] = xi_rho - 1
     dims["xi_v"] = xi_rho
-    dims["xi_psi"] = xi_rho-1
+    dims["xi_psi"] = xi_rho - 1
     dims["eta_rho"] = eta_rho
     dims["eta_u"] = eta_rho
-    dims["eta_v"] = eta_rho-1
-    dims["eta_psi"] = eta_rho-1
+    dims["eta_v"] = eta_rho - 1
+    dims["eta_psi"] = eta_rho - 1
     dims["N"] = s_rho
 
     # Fill in the appropriate dimension values
     try:
         dims["s_rho"] = s_rho
-        dims["s_w"] = s_rho+1
+        dims["s_w"] = s_rho + 1
     except KeyError:
         pass
 
     return dims
 
+
 def _set_time_ref(vars, timevar, reftime, cycle=None):
     """
         internal method: Set time reference
     """
-    if isinstance(timevar,str):
-        timevar=[timevar]
+    if isinstance(timevar, str):
+        timevar = [timevar]
     for tvar in timevar:
         for nvar in vars:
             if nvar["name"] == tvar:
                 if "units" in nvar["attr"]:
-                    t = re.findall('(\w+) since .*',nvar["attr"]["units"])
+                    t = re.findall('(\w+) since .*', nvar["attr"]["units"])
                     nvar["attr"]["units"] = \
                         "{:s} since {:s}".format(t[0], str(reftime))
                 else:
@@ -148,6 +151,7 @@ def _set_time_ref(vars, timevar, reftime, cycle=None):
                 if cycle is not None:
                     nvar["attr"]["cycle_length"] = cycle
     return vars
+
 
 def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
                          reftime=None, clobber=False, title="ROMS"):
@@ -169,8 +173,9 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
     # Return the new file
     return _nc
 
+
 def create_river(filename, nriver=1, s_rho=5,
-                reftime=default_epoch, clobber=False, title="My River"):
+                 reftime=default_epoch, clobber=False, title="My River"):
     """
     Create a new, blank river file
 
@@ -199,8 +204,8 @@ def create_river(filename, nriver=1, s_rho=5,
     dims, vars, attr = cdl_parser(_cdl_dir + "frc_rivers.cdl")
 
     # Fill in the appropriate river values
-    dims["river"]=nriver
-    dims["s_rho"]=s_rho
+    dims["river"] = nriver
+    dims["s_rho"] = s_rho
     vars = _set_time_ref(vars, "river_time", reftime)
 
     # Create the river file
@@ -209,6 +214,7 @@ def create_river(filename, nriver=1, s_rho=5,
 
     # Return the new file
     return _nc
+
 
 def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
                 title="My Grid"):
@@ -250,6 +256,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     # Return the new file
     return _nc
 
+
 def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
                  reftime=default_epoch, clobber=False, title="My Adsen"):
     """
@@ -282,8 +289,9 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _create_generic_file(filename, "adsen.cdl", eta_rho, xi_rho, s_rho,
                                 reftime, clobber, title)
 
+
 def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 reftime=default_epoch, clobber=False, title="My BRY"):
+               reftime=default_epoch, clobber=False, title="My BRY"):
     """
     Create a bry forcing file
 
@@ -324,8 +332,9 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
+
 def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
-                 reftime=default_epoch, clobber=False, title="My CLIM"):
+                reftime=default_epoch, clobber=False, title="My CLIM"):
     """
     Create a climatology forcing file
 
@@ -360,7 +369,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    times=("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
+    times = ("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
     for n in times:
         dims[n] = ntimes
     vars = _set_time_ref(vars, times, reftime)
@@ -372,9 +381,10 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     # Return the new file
     return _nc
 
-def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 reftime=default_epoch, clobber=False,
-                 title="My Forcing"):
+
+def create_frc_bulk(filename, eta_rho=10, xi_rho=10,
+                    reftime=default_epoch, clobber=False,
+                    title="My Forcing"):
     """
     Create a bulk flux forcing file
 
@@ -386,8 +396,6 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
         number of rows in the eta direction
     xi_rho: int, optional
         number of columns in the xi direction
-    s_rho: int, optional
-        number of s-levels
     reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
@@ -405,7 +413,7 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
     dims, vars, attr = cdl_parser(_cdl_dir + "frc_bulk.cdl")
 
     # Fill in the appropriate dimension values
-    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, 1)
     vars = _set_time_ref(vars, "time", reftime)
 
     # Create the file
@@ -415,7 +423,8 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
-def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
+
+def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
                     cycle=None, reftime=default_epoch, clobber=False,
                     title="My Flux"):
     """
@@ -453,8 +462,8 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     dims, vars, attr = cdl_parser(_cdl_dir + "frc_fluxclm.cdl")
 
     # Fill in the appropriate dimension values
-    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    times=("srf_time", "shf_time", "swf_time", "sss_time")
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, 1)
+    times = ("srf_time", "shf_time", "swf_time", "sss_time")
     for n in times:
         dims[n] = ntimes
     vars = _set_time_ref(vars, times, reftime)
@@ -466,9 +475,10 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     # Return the new file
     return _nc
 
+
 def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                 reftime=default_epoch, clobber=False,
-                 title="My Qcorrection"):
+                     reftime=default_epoch, clobber=False,
+                     title="My Qcorrection"):
     """
     Create a Q Correction forcing file
 
@@ -511,9 +521,10 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     # Return the new file
     return _nc
 
+
 def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                 reftime=default_epoch, clobber=False,
-                 title="My Winds"):
+                    reftime=default_epoch, clobber=False,
+                    title="My Winds"):
     """
     Create a surface wind stress forcing file
 
@@ -556,9 +567,10 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     # Return the new file
     return _nc
 
+
 def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
-                 reftime=default_epoch, clobber=False,
-                 title="My Tides"):
+                reftime=default_epoch, clobber=False,
+                title="My Tides"):
     """
     Create a barotropic tide forcing file
 
@@ -601,8 +613,9 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
     # Return the new file
     return _nc
 
+
 def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 reftime=default_epoch, clobber=False, title="My Ini"):
+               reftime=default_epoch, clobber=False, title="My Ini"):
     """
     Create an initial condition file
 
@@ -642,6 +655,7 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     # Return the new file
     return _nc
+
 
 def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
                   clobber=False, title="My Observations"):
@@ -691,9 +705,10 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     # Return the new file
     return _nc
 
+
 def create_da_ray_obs(filename, ray_datum=1, provenance="None",
-                 reftime=default_epoch, clobber=False,
-                 title="My Observations"):
+                      reftime=default_epoch, clobber=False,
+                      title="My Observations"):
     """
     Create an acoustic ray assimilation observations file
 
@@ -736,9 +751,10 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     # Return the new file
     return _nc
 
+
 def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
-                  reftime=default_epoch, clobber=False,
-                  title="My BRY STD"):
+                      reftime=default_epoch, clobber=False,
+                      title="My BRY STD"):
     """
     Create a boundaries standard deviation file
 
@@ -772,7 +788,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    dims["IorJ"] = max(eta_rho,xi_rho)
+    dims["IorJ"] = max(eta_rho, xi_rho)
     dims["boundary"] = bry
     vars = _set_time_ref(vars, "ocean_time", reftime)
 
@@ -783,9 +799,10 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
     # Return the new file
     return _nc
 
+
 def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  reftime=default_epoch, clobber=False,
-                  title="My FRC STD"):
+                      reftime=default_epoch, clobber=False,
+                      title="My FRC STD"):
     """
     Create a forcing standard deviation file
 
@@ -826,9 +843,10 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
+
 def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  reftime=default_epoch, clobber=False,
-                  title="My INI STD"):
+                      reftime=default_epoch, clobber=False,
+                      title="My INI STD"):
     """
     Create an initialization standard deviation file
 
@@ -869,9 +887,10 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
+
 def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                  reftime=default_epoch, clobber=False,
-                  title="My Model STD"):
+                        reftime=default_epoch, clobber=False,
+                        title="My Model STD"):
     """
     Create an time varying model standard deviation file
 
@@ -912,6 +931,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     # Return the new file
     return _nc
 
+
 def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
                        clobber=False,
                        title="Zlevel Grid", cdlfile=None, dims=2):
@@ -943,8 +963,8 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     nc, netCDF4 object
 
     """
-    if cdlfile==None:
-        if dims==1:
+    if cdlfile == None:
+        if dims == 1:
             cdlfile = "zlevel_1d_grid.cdl"
         else:
             cdlfile = "zlevel_2d_grid.cdl"
@@ -953,9 +973,9 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
 
     # Fill in the appropriate dimension values
-    dims["lat"]=lat
-    dims["lon"]=lon
-    dims["depth"]=depth
+    dims["lat"] = lat
+    dims["lon"] = lon
+    dims["depth"] = depth
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
@@ -963,6 +983,7 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
 
     # Return the new file
     return _nc
+
 
 def create_zlevel(filename, lat=10, lon=10, depth=1,
                   reftime=default_epoch,
@@ -998,8 +1019,8 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     nc, netCDF4 object
 
     """
-    if cdlfile==None:
-        if dims==1:
+    if cdlfile == None:
+        if dims == 1:
             cdlfile = "zlevel_1d.cdl"
         else:
             cdlfile = "zlevel_2d.cdl"
@@ -1008,9 +1029,9 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
 
     # Fill in the appropriate dimension values
-    dims["lat"]=lat
-    dims["lon"]=lon
-    dims["depth"]=depth
+    dims["lat"] = lat
+    dims["lon"] = lon
+    dims["depth"] = depth
     vars = _set_time_ref(vars, "time", reftime)
 
     # Create the file

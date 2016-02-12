@@ -108,7 +108,7 @@ def load_history(filename,
         print("ncks -v {:s} -d time,{:d},{:d} -d lat,{:d},{:d} -d lon,{:d},{:d} {:s} {:s}".format(
                 ",".join(hycomvars.keys()),
                 time_list[0][0], time_list[0][-1], latlist[0][0],
-                latlist[0][-1], lonlist[0][0], lonlist[0][-1], _url, filename))
+                latlist[0][-1], lonlist[0][0], lonlist[0][-1], url, filename))
     else:
         for rn, recs in enumerate(chunker(time_list[0], _maxrecs)):
             print("{:s}-{:s}: ".format(hycom_time[recs[0]].strftime("%m/%d/%Y"),

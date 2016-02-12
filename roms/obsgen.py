@@ -658,8 +658,12 @@ class remss(obsgen):
         dat[err.mask] = np.ma.masked
 
         # Check the data flags
-        flags = np.ma.masked_not_equal(np.squeeze(nc.variables["l2p_flags"][:]),
-                                       0)
+        try:
+            flags = np.ma.masked_not_equal(
+                np.squeeze(nc.variables["l2p_flags"][:]), 0)
+        except:
+            flags = np.ma.masked_not_equal(
+                np.squeeze(nc.variables["rejection_flag"][:]), 0)
         dat[flags.mask] = np.ma.masked
         
         # Grab the observation time

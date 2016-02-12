@@ -40,6 +40,7 @@ from . import model
 from . import qserver
 from .mapping import *
 from .hawaii import hawaii
+from . import filter
 from . import plot
 from .progressbar import *
 from . import seawater

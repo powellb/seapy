@@ -1,0 +1,205 @@
+#!/usr/bin/env python
+"""
+  forcing.py
+
+  Functions for generating ROMS forcing files (atmosphere, tides,
+  rivers, etc.)
+
+  Written by Brian Powell on 02/09/16
+  Copyright (c)2016 University of Hawaii under the BSD-License.
+"""
+import numpy as np
+from datetime import datetime
+import netCDF4
+import seapy
+from collections import namedtuple
+
+# Define a named tuple to store raw data for the gridder
+forcing_data = namedtuple('forcing_data', 'field ratio offset')
+
+gfs_url = "http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd"
+
+gfs_map = {
+    "frc_lat": "latitude",
+    "frc_lon": "longitude",
+    "frc_time": "time",
+    "Tair": forcing_data("tmpsfc", 1, -273.15),
+    "Pair": forcing_data("prmslmsl", 0.01, 0),
+    "Qair": forcing_data("rh2m", 1, 0),
+    "rain": forcing_data("pratesfc", 1, 0),
+    "Uwind": forcing_data("ugrd10m", 1, 0),
+    "Vwind": forcing_data("vgrd10m", 1, 0),
+    "lwrad": forcing_data("dlwrfsfc", 1, 0),
+    "swrad": forcing_data("dswrfsfc", 1, 0)
+}
+
+ncep_map = {
+    "frc_lat": "lat",
+    "frc_lon": "lon",
+    "frc_time": "time",
+    "Tair": forcing_data("air", 1, -273.15),
+    "Pair": forcing_data("slp", 0.01, 0),
+    "Qair": forcing_data("rhum", 0.1, 0),
+    "rain": forcing_data("prate", 1, 0),
+    "Uwind": forcing_data("uwnd", 1, 0),
+    "Vwind": forcing_data("vwnd", 1, 0),
+    "lwrad": forcing_data("dlwrf", 1, 0),
+    "swrad": forcing_data("dswrf", 1, 0)
+}
+
+
+def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
+                     epoch=seapy.lib.default_epoch, clobber=False):
+    """
+    Given a source file (or URL), a dictionary that defines the
+    source fields mapped to the ROMS fields, then it will generate
+    a new bulk forcing file for ROMS.
+
+    Parameters
+    ----------
+    infile: string,
+      The source file (or URL) to load the data from
+    fields: dict,
+        A dictionary of the fields to load and process. The dictionary
+        is composed of:
+         "frc_lat":STRING name of latitude field in forcing file
+         "frc_lon":STRING name of longitude field in forcing file
+         "frc_time":STRING name of time field in forcing file
+         keys of ROMS bulk forcing field names (Tair, Pair, Qair,
+         rain, Uwind, Vwind, lwrad, swrad) each with an 
+         array of values of a named tuple (forcing_data) with the 
+         following fields:
+            field: STRING value of the forcing field to use
+            ratio: FLOAT value to multiply with the source data
+            offset: FLOAT value to add to the source data
+    outfile: string,
+        Name of the output file to create
+    grid: seapy.model.grid or string,
+        Grid to use for selecting spatial region
+    start_time: datetime,
+        Starting time of data to process
+    end_time: datetime,
+        Ending time of data to process
+    epoch: datetime,
+        Epoch to use for ROMS times
+    clobber: bool optional,
+        Delete existing file or not, default False
+
+    Returns
+    -------
+    None: Generates an output file of bulk forcings
+
+    Examples
+    --------
+    To generate GFS forcing for the grid "mygrid.nc" for the year
+    2014, then use the standard GFS map definitions (and even
+    the built-in GFS archive url):
+
+    >>> seapy.roms.gen_bulk_forcing(seapy.roms.forcing.gfs_url,
+            seapy.roms.forcing.gfs_map, 'my_forcing.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2014,1,1))
+
+    NCEP reanalysis is trickier as the files are broken up by
+    variable type; hence, a separate file will be created for
+    each variable. We can use the wildcards though to put together
+    multiple time period (e.g., 2014 through 2015).
+
+    >>> seapy.roms.gen_bulk_forcing("uwnd.10m.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=True)
+    >>> seapy.roms.gen_bulk_forcing("vwnd.10m.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+    >>> seapy.roms.gen_bulk_forcing("air.2m.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+    >>> seapy.roms.gen_bulk_forcing("dlwrf.sfc.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+    >>> seapy.roms.gen_bulk_forcing("dswrf.sfc.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+    >>> seapy.roms.gen_bulk_forcing("prate.sfc.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+    >>> seapy.roms.gen_bulk_forcing("rhum.sig995.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=True)
+    >>> seapy.roms.gen_bulk_forcing("slp.*nc", 
+            seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
+            'mygrid.nc', datetime.datetime(2014,1,1),
+            datetime.datetime(2015,12,31)), clobber=False)
+
+    Two forcing files, 'ncep_frc.nc' and 'ncep_frc_rhum_slp.nc', are
+    generated for use with ROMS.
+    """
+    # Load the grid
+    grid = seapy.model.asgrid(grid)
+
+    # Open the Forcing data
+    forcing = seapy.netcdf4(infile)
+
+    # Gather the information about the forcing
+    frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],
+                                forcing.variables[fields['frc_time']].units)
+
+    # Figure out the time records that are required
+    time_list = np.where(np.logical_and(frc_time >= start_time,
+                                        frc_time <= end_time))[0]
+    if not np.any(time_list):
+        raise Exception("Cannot find valid times")
+
+    # Get the latitude and longitude ranges
+    minlat = np.min(grid.lat_rho) - 0.5
+    maxlat = np.max(grid.lat_rho) + 0.5
+    minlon = np.min(grid.lon_rho) - 0.5
+    maxlon = np.max(grid.lon_rho) + 0.5
+    frc_lon = forcing.variables[fields['frc_lon']][:]
+    frc_lat = forcing.variables[fields['frc_lat']][:]
+    # Make the forcing lat/lon on 2D grid
+    if frc_lon.ndim != 2:
+        frc_lon, frc_lat = np.meshgrid(frc_lon, frc_lat)
+
+    # Find the values in our region
+    if not grid.east():
+        frc_lon[frc_lon > 180] -= 360
+    region_list = np.where(np.logical_and.reduce((
+        frc_lon <= maxlon,
+        frc_lon >= minlon,
+        frc_lat <= maxlat,
+        frc_lat >= minlat)))
+    if not np.any(region_list):
+        raise Exception("Cannot find valid region")
+
+    eta_list = np.s_[np.min(region_list[0]):np.max(region_list[0])]
+    xi_list = np.s_[np.min(region_list[1]):np.max(region_list[1])]
+    frc_lon = frc_lon[eta_list, xi_list]
+    frc_lat = frc_lat[eta_list, xi_list]
+
+    # Create the output file
+    eta, xi = frc_lon.shape
+    out = seapy.roms.ncgen.create_frc_bulk(outfile, eta_rho=eta,
+                                           xi_rho=xi, reftime=epoch, clobber=clobber)
+    out.variables['time'][:] = netCDF4.date2num(frc_time[time_list],
+                                                out.variables['time'].units)
+    out.variables['lat'][:] = frc_lat
+    out.variables['lon'][:] = frc_lon
+
+    # Loop over the fields and fill out the output file
+    for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
+        out.variables[f][:] = \
+            forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
+            fields[f].ratio + fields[f].offset
+
+    out.close()
+
+
+

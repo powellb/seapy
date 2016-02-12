@@ -3,16 +3,18 @@ netcdf frc_bulk {
 dimensions:
 	xi_rho = 111 ;
 	eta_rho = 241 ;
-	xi_u = 110 ;
-	eta_u = 241 ;
-	xi_v = 111 ;
-	eta_v = 240 ;
 	time = UNLIMITED ; // (0 currently)
 
 variables:
+    float lat(eta_rho, xi_rho) ;
+        lat:long_name = "Latitude" ;
+        lat:units = "degrees_north" ;
+    float lon(eta_rho, xi_rho) ;
+        lon:long_name = "Longitude" ;
+        lon:units = "degrees_east" ;
 	double time(time) ;
 		time:long_name = "atmospheric forcing time" ;
-		time:units = "modified Julian day" ;
+		time:units = "hours since 1940-01-01 00:00:00" ;
 	float Uwind(time, eta_rho, xi_rho) ;
 		Uwind:long_name = "surface u-wind component" ;
 		Uwind:units = "meter second-1" ;
