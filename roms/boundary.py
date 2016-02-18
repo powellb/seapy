@@ -782,19 +782,8 @@ def detide(grid, bryfile, tidefile, tides=None):
             for i in seapy.progressbar.progress(range(size)):
                 out = seapy.tide.fit(
                     time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i])
-                ubar, vbar = seapy.rotate(ubar - np.real(out['fit']),
-                                          vbar - np.imag(out['fit']),
-                                          -grid.angle([idx[0], idx[1]]))
-                if sides[side.slice] == 0:
-                    bry.variables[vvar][:] = 0.5 * \
-                        (vbar[:, 1:] + vbar[:, :-1])
-                    bry.variables[uvar][:] = ubar
-                else:
-                    bry.variables[uvar][:] = 0.5 * \
-                        (ubar[:, 1:] + ubar[:, :-1])
-                    bry.variables[vvar][:] = vbar
-                bry.sync()
-                ubar = vbar = [0]
+                ubar[:, i] = ubar[:, i] - np.real(out['fit'])
+                vbar[:, i] = vbar[:, i] - np.imag(out['fit'])
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
@@ -812,6 +801,18 @@ def detide(grid, bryfile, tidefile, tides=None):
                             np.mod(out['major'][t].pha, 2 * np.pi))
                         cang[n, idx[0], i] = np.degrees(
                             np.mod(out['minor'][t].pha, 2 * np.pi))
+
+            ubar, vbar = seapy.rotate(ubar, vbar, -grid.angle[idx[0], idx[1]])
+            if sides[side].slice == 0:
+                bry.variables[vvar][:] = 0.5 * \
+                    (vbar[:, 1:] + vbar[:, :-1])
+                bry.variables[uvar][:] = ubar
+            else:
+                bry.variables[uvar][:] = 0.5 * \
+                    (ubar[:, 1:] + ubar[:, :-1])
+                bry.variables[vvar][:] = vbar
+            bry.sync()
+            ubar = vbar = [0]
 
     # Have to duplicate the boundary tide info into the inner row/column
     eamp[:, 1:-2, 1] = eamp[:, 1:-2, 0]
@@ -845,6 +846,10 @@ def detide(grid, bryfile, tidefile, tides=None):
                                                    str(out['tide_start']))
     tideout.variables['tide_Eamp'][:] = eamp
     tideout.variables['tide_Ephase'][:] = epha
+    tideout.variables['tide_Cmax'][:] = cmax
+    tideout.variables['tide_Cmin'][:] = cmin
+    tideout.variables['tide_Cphase'][:] = cpha
+    tideout.variables['tide_Cangle'][:] = cang
     tideout.close()
     bry.close()
 

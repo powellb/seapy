@@ -300,8 +300,9 @@ def fit(times, xin, tides=None, lat=None):
     else:
         tides = np.atleast_1d(tides)
 
-    # Calculate midpoint of time series
+    # Calculate midpoint of time series, but ensure 00:00 hour
     ctime = times[0] + (times[-1] - times[0]) / 2
+    ctime = datetime.datetime(ctime.year, ctime.month, ctime.day)
 
     # Nodal Corrections values
     vufs = _vuf(ctime, tides, lat)
