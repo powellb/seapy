@@ -139,7 +139,9 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
             datetime.datetime(2015,12,31)), clobber=False)
 
     Two forcing files, 'ncep_frc.nc' and 'ncep_frc_rhum_slp.nc', are
-    generated for use with ROMS.
+    generated for use with ROMS. NOTE: You will have to use 'ncks'
+    to eliminate the empty forcing fields between the two files
+    to prevent ROMS from loading them. 
     """
     # Load the grid
     grid = seapy.model.asgrid(grid)
@@ -199,6 +201,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
             out.variables[f][:] = \
                 forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
                 fields[f].ratio + fields[f].offset
+            out.sync()
         except:
             continue
 

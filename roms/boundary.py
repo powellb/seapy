@@ -13,12 +13,15 @@ import seapy
 import numpy as np
 import netCDF4
 import textwrap
+from collections import namedtuple
 
 # Define the sides of ROMS boundaries along with the DA ordering
-sides = {"west":{"indices":(np.s_[:], 0), "order":1},
-         "south":{"indices":(0, np.s_[:]), "order":2},
-         "east":{"indices":(np.s_[:], -1), "order":3},
-         "north":{"indices":(-1, np.s_[:]), "order":4}}
+__side_info = namedtuple("__side_info", "indices order slice")
+sides = {"west": __side_info((np.s_[:], 0), 1, 0),
+         "south": __side_info((0, np.s_[:]), 2, 1),
+         "east": __side_info((np.s_[:], -1), 3, 0),
+         "north": __side_info((-1, np.s_[:]), 4, 1)}
+
 
 def from_roms(roms_file, bry_file, grid=None, records=None):
     """
@@ -48,12 +51,13 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     ncroms = seapy.netcdf4(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
-                if records is None else records
+        if records is None else records
 
     # Create the boundary file and fill up the descriptive data
     ncbry = seapy.roms.ncgen.create_bry(bry_file,
-                eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
-                reftime=src_ref, title="generated from "+roms_file)
+                                        eta_rho=grid.eta_rho, xi_rho=grid.xi_rho,
+                                        s_rho=grid.n, reftime=src_ref,
+                                        title="generated from " + roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
     grid.to_netcdf(ncbry)
     ncbry.variables["bry_time"][:] = netCDF4.date2num(
@@ -67,16 +71,17 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
                 ndim = seapy.roms.fields[var]["dims"]
                 if ndim == 3:
                     ncbry.variables["_".join((var, bry))][:] = \
-                        ncroms.variables[var][records,:,
-                                                sides[bry]["indices"][0],
-                                                sides[bry]["indices"][1]]
+                        ncroms.variables[var][records, :,
+                                              sides[bry].indices[0],
+                                              sides[bry].indices[1]]
                 elif ndim == 2:
                     ncbry.variables["_".join((var, bry))][:] = \
-                          ncroms.variables[var][records,
-                                                sides[bry]["indices"][0],
-                                                sides[bry]["indices"][1]]
+                        ncroms.variables[var][records,
+                                              sides[bry].indices[0],
+                                              sides[bry].indices[1]]
     ncbry.close()
     pass
+
 
 def gen_ncks(parent_file, grid, sponge=0, pad=3):
     """
@@ -117,75 +122,78 @@ def gen_ncks(parent_file, grid, sponge=0, pad=3):
     # Make sure we are on the same coordinates
     if parent_grid.east() != child_grid.east():
         if child_grid.east():
-            parent_grid.lon_rho[parent_grid.lon_rho<0] += 360
+            parent_grid.lon_rho[parent_grid.lon_rho < 0] += 360
         else:
-            parent_grid.lon_rho[parent_grid.lon_rho>180] -= 360
+            parent_grid.lon_rho[parent_grid.lon_rho > 180] -= 360
 
     # Loop over each side of the grid and determine the indices from the
     # parent and child
     for side in sides:
         # Figure out which dimension this side is on and determine all
         # of the indices needed
-        idx = sides[side]["indices"]
-        if isinstance(idx[0],int):
+        idx = sides[side].indices
+        if isinstance(idx[0], int):
             pdim = parent_grid.key["lat_rho"]
             cdim = "eta"
             if idx[0] == -1:
-                idx = np.s_[-(sponge+2):,:]
+                idx = np.s_[-(sponge + 2):, :]
                 # pdidx = "{:d},".format(parent_grid.lat_rho.shape[0]-sponge-2)
-                cdidx = "{:d},".format(child_grid.eta_rho-sponge-2)
+                cdidx = "{:d},".format(child_grid.eta_rho - sponge - 2)
                 pass
             else:
-                idx = np.s_[:sponge+1,:]
-                cdidx = ",{:d}".format(sponge+1)
+                idx = np.s_[:sponge + 1, :]
+                cdidx = ",{:d}".format(sponge + 1)
             l = np.where(np.logical_and(
                 parent_grid.lat_rho >= np.min(child_grid.lat_rho[idx]),
                 parent_grid.lat_rho <= np.max(child_grid.lat_rho[idx])))
-            i = np.maximum(0,np.min(l[0])-pad)
-            j = np.minimum(parent_grid.lat_rho.shape[0], np.max(l[0])+pad)
+            i = np.maximum(0, np.min(l[0]) - pad)
+            j = np.minimum(parent_grid.lat_rho.shape[0], np.max(l[0]) + pad)
         else:
             pdim = parent_grid.key["lon_rho"]
             cdim = "xi"
             if idx[1] == -1:
-                idx = np.s_[:,-(sponge+2):]
-                cdidx = "{:d},".format(child_grid.xi_rho-sponge-2)
+                idx = np.s_[:, -(sponge + 2):]
+                cdidx = "{:d},".format(child_grid.xi_rho - sponge - 2)
             else:
-                idx = np.s_[:,:sponge+1]
-                cdidx = ",{:d}".format(sponge+1)
+                idx = np.s_[:, :sponge + 1]
+                cdidx = ",{:d}".format(sponge + 1)
             l = np.where(np.logical_and(
                 parent_grid.lon_rho >= np.min(child_grid.lon_rho[idx]),
                 parent_grid.lon_rho <= np.max(child_grid.lon_rho[idx])))
-            i = np.maximum(0,np.min(l[1])-pad)
-            j = np.minimum(parent_grid.lon_rho.shape[1], np.max(l[1])+pad)
+            i = np.maximum(0, np.min(l[1]) - pad)
+            j = np.minimum(parent_grid.lon_rho.shape[1], np.max(l[1]) + pad)
 
         # Put the indices together into strings for extracting out new files
-        pdidx = "{:d},{:d}".format(i,j)
+        pdidx = "{:d},{:d}".format(i, j)
 
         # Display the commands:
         cmd = "ncks"
         pfiles = "{:s} {:s}".format(parent_grid.filename,
-                    fre.sub("_{:s}.nc".format(side), parent_grid.filename))
+                                    fre.sub("_{:s}.nc".format(side),
+                                            parent_grid.filename))
         cfiles = "{:s} {:s}".format(child_grid.filename,
-                    fre.sub("_{:s}.nc".format(side), child_grid.filename))
+                                    fre.sub("_{:s}.nc".format(side),
+                                            child_grid.filename))
 
         grids = ('rho', 'u', 'v', 'psi')
         if parent_grid.cgrid:
-            pdim = ' -d'.join(["{:s}_{:s},{:s}".format(pdim, k, pdidx) \
-                                for k in grids])
+            pdim = ' -d'.join(["{:s}_{:s},{:s}".format(pdim, k, pdidx)
+                               for k in grids])
         else:
             pdim = "{:s},{:s}".format(pdim, pdidx)
 
         if child_grid.cgrid:
-            cdim = ' -d'.join(["{:s}_{:s},{:s}".format(cdim, k, cdidx) \
-                                for k in grids])
+            cdim = ' -d'.join(["{:s}_{:s},{:s}".format(cdim, k, cdidx)
+                               for k in grids])
         else:
             cdim = "{:s},{:s}".format(cdim, cdidx)
 
-        print("-"*40 + "\n" + side + "\n" + "-"*40)
+        print("-" * 40 + "\n" + side + "\n" + "-" * 40)
         print("{:s} -O -d{:s} {:s}".format(cmd, pdim, pfiles))
         print("{:s} -O -d{:s} {:s}".format(cmd, cdim, cfiles))
 
     pass
+
 
 def from_std(std_filename, bry_std_file, fields=None):
     """
@@ -219,8 +227,9 @@ def from_std(std_filename, bry_std_file, fields=None):
     xi_rho = len(ncstd.dimensions["xi_rho"])
     s_rho = len(ncstd.dimensions["s_rho"])
     ncout = seapy.roms.ncgen.create_da_bry_std(bry_std_file,
-                                eta_rho=eta_rho, xi_rho=xi_rho, s_rho=s_rho,
-                                title='STD from '+std_filename)
+                                               eta_rho=eta_rho, xi_rho=xi_rho,
+                                               s_rho=s_rho,
+                                               title='STD from ' + std_filename)
     ncout.variables["ocean_time"][:] = ncstd.variables["bry_time"][0]
 
     if fields is None:
@@ -234,8 +243,8 @@ def from_std(std_filename, bry_std_file, fields=None):
                                  ('ocean_time', "boundary", "s_rho", "IorJ"))
         ndat = np.zeros(ncout.variables[vname].shape)
         for bry in sides:
-            order = sides[bry]["order"]-1
-            dat = ncstd.variables[var + "_" + bry][0,:]
+            order = sides[bry].order - 1
+            dat = ncstd.variables[var + "_" + bry][0, :]
             if dat.ndim == 1:
                 ndat[0, order, :len(dat)] = dat
             else:
@@ -243,6 +252,7 @@ def from_std(std_filename, bry_std_file, fields=None):
         ncout.variables[vname][:] = ndat
         ncout.sync()
     pass
+
 
 def gen_stations(filename, grid):
     """
@@ -265,10 +275,10 @@ def gen_stations(filename, grid):
     grid = seapy.model.asgrid(grid)
 
     # Put together the boundaries
-    lon=np.concatenate([grid.lon_rho[0,:], grid.lon_rho[-1,:],
-                        grid.lon_rho[:,0], grid.lon_rho[:,-1]])
-    lat=np.concatenate([grid.lat_rho[0,:], grid.lat_rho[-1,:],
-                        grid.lat_rho[:,0], grid.lat_rho[:,-1]])
+    lon = np.concatenate([grid.lon_rho[0, :], grid.lon_rho[-1, :],
+                          grid.lon_rho[:, 0], grid.lon_rho[:, -1]])
+    lat = np.concatenate([grid.lat_rho[0, :], grid.lat_rho[-1, :],
+                          grid.lat_rho[:, 0], grid.lat_rho[:, -1]])
     Npts = len(lon)
 
     header = """\
@@ -406,10 +416,11 @@ def gen_stations(filename, grid):
         print("        NSTATION ==  {}".format(Npts), file=text_file)
         print(textwrap.dedent(stations), file=text_file)
         for i in range(Npts):
-            print("        1     1    {0:10.6f}   {1:10.6f}   BRY".format( \
+            print("        1     1    {0:10.6f}   {1:10.6f}   BRY".format(
                 lon[i], lat[i]), file=text_file)
 
     pass
+
 
 def from_stations(station_file, bry_file, grid=None):
     """
@@ -437,9 +448,9 @@ def from_stations(station_file, bry_file, grid=None):
 
     # Create the boundary file and fill up the descriptive data
     ncbry = seapy.roms.ncgen.create_bry(bry_file,
-                eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
-                reftime=src_ref, clobber=False,
-                title="generated from "+station_file)
+                                        eta_rho=grid.eta_rho, xi_rho=grid.xi_rho,
+                                        s_rho=grid.n, reftime=src_ref, clobber=False,
+                                        title="generated from " + station_file)
     grid.to_netcdf(ncbry)
 
     # Load the times: we need to see if the times are duplicated
@@ -447,22 +458,22 @@ def from_stations(station_file, bry_file, grid=None):
     # outer-loop. Currently, it overwrites the first one each time (this
     # will need to be fixed if ROMS is fixed).
     statime = ncstation.variables[time][:]
-    dup = np.where(statime[1:]==statime[0])[0]
+    dup = np.where(statime[1:] == statime[0])[0]
     rng = np.s_[:]
     if dup.size > 0:
         rng = np.s_[0:np.min(dup)]
         statime = statime[rng]
     brytime = seapy.roms.get_timevar(ncbry)
     ncbry.variables["bry_time"][:] = netCDF4.date2num(
-        netCDF4.num2date(statime,ncstation.variables[time].units),
-                         ncbry.variables[brytime].units)
+        netCDF4.num2date(statime, ncstation.variables[time].units),
+        ncbry.variables[brytime].units)
 
     # Set up the indices
     bry = {
-        "south":range(0, grid.lm),
-        "north":range(grid.lm, 2*grid.lm),
-        "west":range(2*grid.lm, 2*grid.lm+grid.ln),
-        "east":range(2*grid.lm+grid.ln, 2*(grid.lm+grid.ln))
+        "south": range(0, grid.lm),
+        "north": range(grid.lm, 2 * grid.lm),
+        "west": range(2 * grid.lm, 2 * grid.lm + grid.ln),
+        "east": range(2 * grid.lm + grid.ln, 2 * (grid.lm + grid.ln))
     }
 
     # Get the information to construct the depths of the station data
@@ -475,7 +486,7 @@ def from_stations(station_file, bry_file, grid=None):
     sta_lon = ncstation.variables["lon_rho"][:]
     sta_lat = ncstation.variables["lat_rho"][:]
     sta_mask = np.ones(sta_lat.shape)
-    sta_mask[sta_lon*sta_lat > 1e10] = 0
+    sta_mask[sta_lon * sta_lat > 1e10] = 0
 
     # Load the station data as we need to manipulate it
     sta_zeta = np.ma.masked_greater(ncstation.variables["zeta"][rng], 100)
@@ -487,50 +498,49 @@ def from_stations(station_file, bry_file, grid=None):
     sta_v = np.ma.masked_greater(ncstation.variables["v"][rng], 100)
     ncstation.close()
 
-
     # Create the true positions and mask
     grid_h = np.concatenate([grid.h[0, :], grid.h[-1, :],
-                         grid.h[:, 0], grid.h[:, -1]])
+                             grid.h[:, 0], grid.h[:, -1]])
     grid_lon = np.concatenate([grid.lon_rho[0, :], grid.lon_rho[-1, :],
-                         grid.lon_rho[:, 0], grid.lon_rho[:, -1]])
+                               grid.lon_rho[:, 0], grid.lon_rho[:, -1]])
     grid_lat = np.concatenate([grid.lat_rho[0, :], grid.lat_rho[-1, :],
-                         grid.lat_rho[:, 0], grid.lat_rho[:, -1]])
+                               grid.lat_rho[:, 0], grid.lat_rho[:, -1]])
     grid_mask = np.concatenate([grid.mask_rho[0, :], grid.mask_rho[-1, :],
-                              grid.mask_rho[:, 0], grid.mask_rho[:, -1]])
+                                grid.mask_rho[:, 0], grid.mask_rho[:, -1]])
     grid_angle = np.concatenate([grid.angle[0, :], grid.angle[-1, :],
-                              grid.angle[:, 0], grid.angle[:, -1]])
+                                 grid.angle[:, 0], grid.angle[:, -1]])
 
     # Search for bad stations due to child grid overlaying parent mask.
     # Unfortunately, ROMS will give points that are not at the locations
     # you specify if those points conflict with the mask. So, these points
     # are simply replaced with the nearest.
-    dist = np.sqrt((sta_lon-grid_lon)**2 + (sta_lat-grid_lat)**2 )
+    dist = np.sqrt((sta_lon - grid_lon)**2 + (sta_lat - grid_lat)**2)
     bad_pts = np.where(np.logical_and(dist > 0.001, grid_mask == 1))[0]
     good_pts = np.where(np.logical_and(dist < 0.001, grid_mask == 1))[0]
     for i in bad_pts:
-        didx = np.sqrt((sta_lon[i]-sta_lon[good_pts])**2 +
-                       (sta_lat[i]-sta_lat[good_pts])**2).argmin()
+        didx = np.sqrt((sta_lon[i] - sta_lon[good_pts])**2 +
+                       (sta_lat[i] - sta_lat[good_pts])**2).argmin()
         index = good_pts[didx]
         sta_h[i] = sta_h[index]
         sta_angle[i] = sta_angle[index]
         sta_lon[i] = sta_lon[index]
         sta_lat[i] = sta_lat[index]
-        sta_zeta[:,i] = sta_zeta[:,index]
-        sta_ubar[:,i] = sta_ubar[:,index]
-        sta_vbar[:,i] = sta_vbar[:,index]
-        sta_temp[:,i,:] = sta_temp[:,index,:]
-        sta_salt[:,i,:] = sta_salt[:,index,:]
-        sta_u[:,i,:] = sta_u[:,index,:]
-        sta_v[:,i,:] = sta_v[:,index,:]
+        sta_zeta[:, i] = sta_zeta[:, index]
+        sta_ubar[:, i] = sta_ubar[:, index]
+        sta_vbar[:, i] = sta_vbar[:, index]
+        sta_temp[:, i, :] = sta_temp[:, index, :]
+        sta_salt[:, i, :] = sta_salt[:, index, :]
+        sta_u[:, i, :] = sta_u[:, index, :]
+        sta_v[:, i, :] = sta_v[:, index, :]
 
     # Construct the boundaries: a dictionary of boundary side and two element
     # array whether the u[0] or v[1] dimensions need to be averaged
-    sides = {"north":[True, False], "south":[True, False],
-             "east":[False, True], "west":[False, True]}
+    sides = {"north": [True, False], "south": [True, False],
+             "east": [False, True], "west": [False, True]}
     delta_angle = sta_angle - grid_angle
     sta_ubar, sta_vbar = seapy.rotate(sta_ubar, sta_vbar, delta_angle)
     sta_u, sta_v = seapy.rotate(sta_u, sta_v, np.tile(delta_angle,
-                                                      (sta_u.shape[-1],1)).T)
+                                                      (sta_u.shape[-1], 1)).T)
 
     # Set up the parameters for depth-interpolated
     wght = 5
@@ -541,12 +551,12 @@ def from_stations(station_file, bry_file, grid=None):
     # position and depth
     def __expand_field(x):
         shp = x.shape
-        y = np.zeros((shp[0]+2,shp[1]+2))
-        y[1:-1,1:-1] = x
-        y[1:-1,0] = x[:,0]
-        y[1:-1,-1] = x[:,-1]
-        y[0,:] = y[1,:]
-        y[-1,:] = y[-2,:]
+        y = np.zeros((shp[0] + 2, shp[1] + 2))
+        y[1:-1, 1:-1] = x
+        y[1:-1, 0] = x[:, 0]
+        y[1:-1, -1] = x[:, -1]
+        y[0, :] = y[1, :]
+        y[-1, :] = y[-2, :]
         return y
 
     for side in sides:
@@ -561,80 +571,282 @@ def from_stations(station_file, bry_file, grid=None):
             continue
 
         # 1) Zeta
-        ncbry.variables["zeta_"+side][:,ocean] = sta_zeta[:, bry[side]][:,ocean]
+        ncbry.variables["zeta_" + side][:,
+                                        ocean] = sta_zeta[:, bry[side]][:, ocean]
 
         # 2) Ubar
         if sides[side][0]:
-            ncbry.variables["ubar_"+side][:] = 0.5 * (
-                sta_ubar[:, bry[side][0:-1]]+sta_ubar[:, bry[side][1:]])
+            ncbry.variables["ubar_" + side][:] = 0.5 * (
+                sta_ubar[:, bry[side][0:-1]] + sta_ubar[:, bry[side][1:]])
         else:
-            ncbry.variables["ubar_"+side][:] = sta_ubar[:, bry[side]]
+            ncbry.variables["ubar_" + side][:] = sta_ubar[:, bry[side]]
 
         # 3) Vbar
         if sides[side][1]:
-            ncbry.variables["vbar_"+side][:] = 0.5 * ( \
-                sta_vbar[:,bry[side][0:-1]]+sta_vbar[:, bry[side][1:]])
+            ncbry.variables["vbar_" + side][:] = 0.5 * (
+                sta_vbar[:, bry[side][0:-1]] + sta_vbar[:, bry[side][1:]])
         else:
-            ncbry.variables["vbar_"+side][:] = sta_vbar[:, bry[side]]
+            ncbry.variables["vbar_" + side][:] = sta_vbar[:, bry[side]]
 
         # For 3D variables, we need to loop through time and interpolate
         # onto the child grid. Construct the distances
         x = np.zeros(len(bry[side]))
         x[1:] = np.cumsum(seapy.earth_distance(grid_lon[bry[side][0:-1]],
-                                     grid_lat[bry[side][0:-1]],
-                                     grid_lon[bry[side][1:]],
-                                     grid_lat[bry[side][1:]]))
-        sta_x = seapy.adddim(x,len(sta_s_rho))
-        x = seapy.adddim(x,len(grid.s_rho))
+                                               grid_lat[bry[side][0:-1]],
+                                               grid_lon[bry[side][1:]],
+                                               grid_lat[bry[side][1:]]))
+        sta_x = seapy.adddim(x, len(sta_s_rho))
+        x = seapy.adddim(x, len(grid.s_rho))
 
-        for n,t in seapy.progress(enumerate(statime), statime.size):
+        for n, t in seapy.progress(enumerate(statime), statime.size):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
-                            sta_s_rho, sta_cs_r, sta_zeta[n,bry[side]])
+                                         sta_s_rho, sta_cs_r, sta_zeta[n, bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
-                        grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n,bry[side]])
+                                     grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n, bry[side]])
 
-            in_x = __expand_field(sta_x[:,sta_ocean])
-            in_x[:,0] = in_x[:,0] - 3600
-            in_x[:,-1] = in_x[:,-1] + 3600
-            in_depth = __expand_field(sta_depth[:,sta_ocean])
-            in_depth[0,:] = in_depth[0,:] - 1000
-            in_depth[-1,:] = in_depth[-1,:] + 10
+            in_x = __expand_field(sta_x[:, sta_ocean])
+            in_x[:, 0] = in_x[:, 0] - 3600
+            in_x[:, -1] = in_x[:, -1] + 3600
+            in_depth = __expand_field(sta_depth[:, sta_ocean])
+            in_depth[0, :] = in_depth[0, :] - 1000
+            in_depth[-1, :] = in_depth[-1, :] + 10
 
             # 4) Temp
-            in_data = __expand_field(np.transpose(sta_temp[n,bry[side],:][sta_ocean,:]))
-            ncbry.variables["temp_"+side][n,:]=0.0
-            ncbry.variables["temp_"+side][n,:,ocean],pmap = seapy.oa.oasurf(
+            in_data = __expand_field(np.transpose(
+                sta_temp[n, bry[side], :][sta_ocean, :]))
+            ncbry.variables["temp_" + side][n, :] = 0.0
+            ncbry.variables["temp_" + side][n, :, ocean], pmap = seapy.oa.oasurf(
                 in_x, in_depth, in_data,
-                x[:,ocean], depth[:,ocean], nx=nx, ny=ny, weight=wght)
+                x[:, ocean], depth[:, ocean], nx=nx, ny=ny, weight=wght)
 
             # 5) Salt
-            in_data = __expand_field(np.transpose(sta_salt[n,bry[side],:][sta_ocean,:]))
-            ncbry.variables["salt_"+side][n,:]=0.0
-            ncbry.variables["salt_"+side][n,:,ocean],pmap = seapy.oa.oasurf(
+            in_data = __expand_field(np.transpose(
+                sta_salt[n, bry[side], :][sta_ocean, :]))
+            ncbry.variables["salt_" + side][n, :] = 0.0
+            ncbry.variables["salt_" + side][n, :, ocean], pmap = seapy.oa.oasurf(
                 in_x, in_depth, in_data,
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
+                x[:, ocean], depth[:, ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
 
             # 6) U
-            in_data = __expand_field(np.transpose(sta_u[n,bry[side],:][sta_ocean,:]))
+            in_data = __expand_field(np.transpose(
+                sta_u[n, bry[side], :][sta_ocean, :]))
             data = np.zeros(x.shape)
-            data[:,ocean],pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
+            data[:, ocean], pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
+                                                   x[:, ocean],
+                                                   depth[:, ocean],
+                                                   pmap=pmap, nx=nx, ny=ny, weight=wght)
             if sides[side][0]:
-                ncbry.variables["u_"+side][n,:] = 0.5 * (
-                    data[:,0:-1]+data[:,1:])
+                ncbry.variables["u_" + side][n, :] = 0.5 * (
+                    data[:, 0:-1] + data[:, 1:])
             else:
-                ncbry.variables["u_"+side][n,:] = data
+                ncbry.variables["u_" + side][n, :] = data
 
             # 7) V
-            in_data = __expand_field(np.transpose(sta_v[n,bry[side],:][sta_ocean,:]))
+            in_data = __expand_field(np.transpose(
+                sta_v[n, bry[side], :][sta_ocean, :]))
             data = data * 0
-            data[:,ocean],pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
-                x[:,ocean], depth[:,ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
+            data[:, ocean], pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
+                                                   x[:, ocean],
+                                                   depth[:, ocean],
+                                                   pmap=pmap, nx=nx, ny=ny,
+                                                   weight=wght)
             if sides[side][1]:
-                ncbry.variables["v_"+side][n,:] = 0.5 * (
-                    data[:,0:-1]+data[:,1:])
+                ncbry.variables["v_" + side][n, :] = 0.5 * (
+                    data[:, 0:-1] + data[:, 1:])
             else:
-                ncbry.variables["v_"+side][n,:] = data
+                ncbry.variables["v_" + side][n, :] = data
             ncbry.sync()
     ncbry.close()
     pass
+
+
+def detide(grid, bryfile, tidefile, tides=None):
+    """
+    Given a boundary file, detide the barotropic components and create tidal
+    forcing file for the grid. This method will update the given boundary file.
+
+    Parameters
+    ----------
+    grid : seapy.model.grid or string,
+    infile : string,
+    outfile : string,
+    tidefile : string,
+    tides : string array,
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Make a long time-series boundary conditions from a group of boundary files, 
+    skipping the last record of each file to prevent overlap (if there are 100 records
+    in each file). Afterwards, detide the resulting file.
+
+    % ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
+    >>> seapy.roms.boundary.detide("mygrid.nc", "bry_detide.nc", "tide_out.nc")
+
+    """
+    if not tides:
+        tides = seapy.tide.default_tides
+    else:
+        tides = np.atleast_1d(tides)
+
+    # Load Files
+    grid = seapy.model.asgrid(grid)
+    bry = netCDF4.Dataset(bryfile, "a")
+
+    # Get the definitions of the boundary file
+    epoch, timevar = seapy.roms.get_reftime(bry)
+    time = netCDF4.num2date(bry.variables[timevar][:],
+                            bry.variables[timevar].units)
+    try:
+        s_rho = len(bry.dimensions['s_rho'])
+    except:
+        s_rho = grid.n
+
+    # Set variables to detide
+    detide_vars = ['zeta', 'ubar', 'vbar']
+
+    # Create the tide forcing file
+    tideout = seapy.roms.ncgen.create_tide(tidefile, eta_rho=grid.eta_rho,
+                                           xi_rho=grid.xi_rho,
+                                           s_rho=s_rho, ntides=len(tides),
+                                           reftime=epoch, clobber=True,
+                                           title="Tides from " + bryfile)
+    # Set the tide periods and attributes
+    tideout.variables['tide_period'][:] = 1.0 / seapy.tide.frequency(tides)
+    tideout.tides = ", ".join(tides)
+    bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
+
+    # Detide the free-surface
+    eamp = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    epha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    cmin = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    cmax = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    cang = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    cpha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    for side in sides:
+        lvar = "zeta_" + side
+        idx = sides[side].indices
+        lat = grid.lat_rho[idx[0], idx[1]]
+        size = grid.xi_rho if sides[side].slice else grid.eta_rho
+        if lvar in bry.variables:
+            print(lvar)
+            zeta = bry.variables[lvar][:]
+            # Detide
+            for i in seapy.progressbar.progress(range(size)):
+                out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i])
+                zeta[:, i] -= out['fit']
+
+                # Save the amp/phase in the tide file
+                for n, t in enumerate(tides):
+                    if sides[side].slice == 0:
+                        eamp[n, i, idx[1]] = out['major'][t].amp
+                        epha[n, i, idx[1]] = np.degrees(
+                            np.mod(out['major'][t].pha, 2 * np.pi))
+                    else:
+                        eamp[n, idx[0], i] = out['major'][t].amp
+                        epha[n, idx[0], i] = np.degrees(
+                            np.mod(out['major'][t].pha, 2 * np.pi))
+
+            # Save out the detided information
+            bry.variables[lvar][:] = zeta
+            zeta = [0]
+            bry.sync()
+
+        # Detide the barotropic velocity
+        uvar = "ubar_" + side
+        vvar = "vbar_" + side
+        if uvar in bry.variables and vvar in bry.variables:
+            print(uvar, vvar)
+            ubar = np.zeros((len(time), size))
+            vbar = np.zeros((len(time), size))
+
+            # Load data, put onto rho-grid, and rotate
+            if sides[side].slice == 0:
+                vbar[:, 1:-1] = 0.5 * (bry.variables[vvar][:, 1:] +
+                                       bry.variables[vvar][:, :-1])
+                vbar[:, 0] = vbar[:, 1]
+                vbar[:, -1] = vbar[:, -2]
+                ubar = bry.variables[uvar][:]
+            else:
+                ubar[:, 1:-1] = 0.5 * (bry.variables[uvar][:, 1:] +
+                                       bry.variables[uvar][:, :-1])
+                ubar[:, 0] = ubar[:, 1]
+                ubar[:, -1] = ubar[:, -2]
+                vbar = bry.variables[vvar][:]
+            ubar, vbar = seapy.rotate(ubar, vbar, grid.angle[idx[0], idx[1]])
+
+            # Detide
+            for i in seapy.progressbar.progress(range(size)):
+                out = seapy.tide.fit(
+                    time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i])
+                ubar, vbar = seapy.rotate(ubar - np.real(out['fit']),
+                                          vbar - np.imag(out['fit']),
+                                          -grid.angle([idx[0], idx[1]]))
+                if sides[side.slice] == 0:
+                    bry.variables[vvar][:] = 0.5 * \
+                        (vbar[:, 1:] + vbar[:, :-1])
+                    bry.variables[uvar][:] = ubar
+                else:
+                    bry.variables[uvar][:] = 0.5 * \
+                        (ubar[:, 1:] + ubar[:, :-1])
+                    bry.variables[vvar][:] = vbar
+                bry.sync()
+                ubar = vbar = [0]
+
+                # Save the amp/phase in the tide file
+                for n, t in enumerate(tides):
+                    if sides[side].slice == 0:
+                        cmax[n, i, idx[1]] = out['major'][t].amp
+                        cmin[n, i, idx[1]] = out['minor'][t].amp
+                        cpha[n, i, idx[1]] = np.degrees(
+                            np.mod(out['major'][t].pha, 2 * np.pi))
+                        cang[n, i, idx[1]] = np.degrees(
+                            np.mod(out['minor'][t].pha, 2 * np.pi))
+                    else:
+                        cmax[n, idx[0], i] = out['major'][t].amp
+                        cmin[n, idx[0], i] = out['minor'][t].amp
+                        cpha[n, idx[0], i] = np.degrees(
+                            np.mod(out['major'][t].pha, 2 * np.pi))
+                        cang[n, idx[0], i] = np.degrees(
+                            np.mod(out['minor'][t].pha, 2 * np.pi))
+
+    # Have to duplicate the boundary tide info into the inner row/column
+    eamp[:, 1:-2, 1] = eamp[:, 1:-2, 0]
+    eamp[:, 1:-2, -2] = eamp[:, 1:-2, -1]
+    eamp[:, 1, 1:-2] = eamp[:, 0, 1:-2]
+    eamp[:, -2, 1:-2] = eamp[:, -1, 1:-2]
+    epha[:, 1:-2, 1] = epha[:, 1:-2, 0]
+    epha[:, 1:-2, -2] = epha[:, 1:-2, -1]
+    epha[:, 1, 1:-2] = epha[:, 0, 1:-2]
+    epha[:, -2, 1:-2] = epha[:, -1, 1:-2]
+    cmax[:, 1:-2, 1] = cmax[:, 1:-2, 0]
+    cmax[:, 1:-2, -2] = cmax[:, 1:-2, -1]
+    cmax[:, 1, 1:-2] = cmax[:, 0, 1:-2]
+    cmax[:, -2, 1:-2] = cmax[:, -1, 1:-2]
+    cmin[:, 1:-2, 1] = cmin[:, 1:-2, 0]
+    cmin[:, 1:-2, -2] = cmin[:, 1:-2, -1]
+    cmin[:, 1, 1:-2] = cmin[:, 0, 1:-2]
+    cmin[:, -2, 1:-2] = cmin[:, -1, 1:-2]
+    cpha[:, 1:-2, 1] = cpha[:, 1:-2, 0]
+    cpha[:, 1:-2, -2] = cpha[:, 1:-2, -1]
+    cpha[:, 1, 1:-2] = cpha[:, 0, 1:-2]
+    cpha[:, -2, 1:-2] = cpha[:, -1, 1:-2]
+    cang[:, 1:-2, 1] = cang[:, 1:-2, 0]
+    cang[:, 1:-2, -2] = cang[:, 1:-2, -1]
+    cang[:, 1, 1:-2] = cang[:, 0, 1:-2]
+    cang[:, -2, 1:-2] = cang[:, -1, 1:-2]
+
+    # Set the tide reference
+    tideout.tide_ref = "Day {:5.1f} ({:s})".format((out['tide_start'] -
+                                                    epoch).total_seconds() / 86400,
+                                                   str(out['tide_start']))
+    tideout.variables['tide_Eamp'][:] = eamp
+    tideout.variables['tide_Ephase'][:] = epha
+    tideout.close()
+    bry.close()
+
+    pass
+

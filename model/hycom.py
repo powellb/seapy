@@ -44,7 +44,7 @@ def load_history(filename,
     url: string, optional
         URL to load SODA data from
     load_data: bool, optional
-        If true (default) actually load the data. If false, it
+        If true actually load the data. If false (default), it
         displays the information needed to load the data using ncks
 
     Returns
@@ -67,10 +67,10 @@ def load_history(filename,
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
-    minlat = np.min(grid.lat_rho)-0.5
-    maxlat = np.max(grid.lat_rho)+0.5
-    minlon = np.min(grid.lon_rho)-0.5
-    maxlon = np.max(grid.lon_rho)+0.5
+    minlat = np.min(grid.lat_rho) - 0.5
+    maxlat = np.max(grid.lat_rho) + 0.5
+    minlon = np.min(grid.lon_rho) - 0.5
+    maxlon = np.max(grid.lon_rho) + 0.5
     hycom_lon = hycom.variables["lon"][:]
     hycom_lat = hycom.variables["lat"][:]
 
@@ -88,16 +88,16 @@ def load_history(filename,
     # Build the history file
     if load_data:
         his = ncgen.create_zlevel(filename, len(latlist[0]),
-                    len(lonlist[0]),
-                    len(hycom.variables["depth"][:]), epoch,
-                    "HYCOM history from "+url, dims=1)
+                                  len(lonlist[0]),
+                                  len(hycom.variables["depth"][:]), epoch,
+                                  "HYCOM history from " + url, dims=1)
 
         # Write out the data
         his.variables["lat"][:] = hycom_lat[latlist]
         his.variables["lon"][:] = hycom_lon[lonlist]
         his.variables["depth"][:] = hycom.variables["depth"]
         his.variables["time"][:] = netCDF4.date2num(hycom_time[time_list],
-                                                 his.variables["time"].units)
+                                                    his.variables["time"].units)
     # Loop over the variables
     hycomvars = {"surf_el": 3, "water_u": 4, "water_v": 4, "water_temp": 4,
                  "salinity": 4}
@@ -106,21 +106,22 @@ def load_history(filename,
 
     if not load_data:
         print("ncks -v {:s} -d time,{:d},{:d} -d lat,{:d},{:d} -d lon,{:d},{:d} {:s} {:s}".format(
-                ",".join(hycomvars.keys()),
-                time_list[0][0], time_list[0][-1], latlist[0][0],
-                latlist[0][-1], lonlist[0][0], lonlist[0][-1], url, filename))
+            ",".join(hycomvars.keys()),
+            time_list[0][0], time_list[0][-1], latlist[0][0],
+            latlist[0][-1], lonlist[0][0], lonlist[0][-1], url, filename))
     else:
         for rn, recs in enumerate(chunker(time_list[0], _maxrecs)):
             print("{:s}-{:s}: ".format(hycom_time[recs[0]].strftime("%m/%d/%Y"),
-                                     hycom_time[recs[-1]].strftime("%m/%d/%Y")),
-                  end='',flush=True)
+                                       hycom_time[recs[-1]].strftime("%m/%d/%Y")),
+                  end='', flush=True)
             for var in hycomvars:
-                print("{:s} ".format(var), end='',flush=True)
-                hisrange = np.arange(rn*_maxrecs, (rn*_maxrecs)+len(recs))
+                print("{:s} ".format(var), end='', flush=True)
+                hisrange = np.arange(
+                    rn * _maxrecs, (rn * _maxrecs) + len(recs))
                 if hycomvars[var] == 3:
                     his.variables[hisvars[var]][hisrange, :, :] = \
-                      hycom.variables[var][recs, latlist[0], lonlist[0]].filled(
-                                                    fill_value=9.99E10)
+                        hycom.variables[var][recs, latlist[0], lonlist[0]].filled(
+                        fill_value=9.99E10)
                 else:
                     his.variables[hisvars[var]][hisrange, :, :, :] = \
                         hycom.variables[var][recs, :, latlist[0],

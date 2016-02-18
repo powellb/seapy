@@ -5,8 +5,7 @@
 
     Module for working with oceanographic data and models
 
-  Written by Brian Powell on 10/18/13
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 
   Requires the following packages: joblib
 
@@ -44,3 +43,4 @@ from . import filter
 from . import plot
 from .progressbar import *
 from . import seawater
+from . import tide
