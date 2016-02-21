@@ -32,6 +32,14 @@ default_tides = ['M4', 'K2', 'S2', 'M2', 'N2',
                  'K1', 'P1', 'O1', 'Q1', 'MF', 'MM']
 
 
+def __set_tides(tides=None):
+    """
+    Private method: make sure that tides passed in are a proper array
+    and in uppercase
+    """
+    return default_tides if tides is None else np.array([t.upper() for t in np.atleast_1d(tides)])
+
+
 def frequency(tides=None):
     """
     Returns array of the frequency in cycles per hour for the requested 
@@ -55,7 +63,7 @@ def frequency(tides=None):
     array([ 12.4206012,  12.       ])
 
     """
-    return np.array(list(map(lambda x: __const[x].freq, np.atleast_1d(tides))))
+    return np.array([__const[x].freq for x in __set_tides(tides)])
 
 
 def __astron(ctime):
@@ -143,7 +151,7 @@ def _vuf(time, tides, lat=5.0):
     except:
         pass
 
-    tides = np.atleast_1d(tides)
+    tides = __set_tides(tides)
 
     # Calculate astronomical arguments at the requested time (mid-point of
     # timeseries).
@@ -235,15 +243,13 @@ def predict(times, tide, lat=None):
     vufs = _vuf(ctime, clist, lat)
 
     # Time series as hours from ctime
-    hours = np.empty((len(times),))
-    for i, t in enumerate(times):
-        d = t - ctime
-        hours[i] = 24.0 * (d.days + d.seconds / 86400.0)
+    hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
     # Calulate time series
     ts = np.zeros(len(times))
     for i, ap in enumerate(tide):
         c = tide[ap]
+        ap = ap.upper()
         ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                           + (vufs[ap].v + vufs[ap].u) - c.pha)
 
@@ -294,11 +300,7 @@ def fit(times, xin, tides=None, lat=None):
     xin = np.atleast_1d(xin).flatten()
     if len(xin) != len(times):
         raise ValueError("The times and input data must be of same size.")
-
-    if not tides:
-        tides = default_tides
-    else:
-        tides = np.atleast_1d(tides)
+    tides = __set_tides(tides)
 
     # Calculate midpoint of time series, but ensure 00:00 hour
     ctime = times[0] + (times[-1] - times[0]) / 2
@@ -308,8 +310,7 @@ def fit(times, xin, tides=None, lat=None):
     vufs = _vuf(ctime, tides, lat)
 
     # time series as hours from ctime
-    hours = np.array(list(map(lambda t: (t - ctime).total_seconds() / 3600.0,
-                              times)))
+    hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
     # get frequencies
     freq = frequency(tides)

@@ -35,6 +35,21 @@ SEAPY Documentation
    :show-inheritance:
 
 
+:mod:`filter`
+------------------------------
+.. autoclass:: seapy.filter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+:mod:`tide`
+------------------------------
+.. autoclass:: seapy.tide
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 :mod:`hawaii`
 ----------------------------------

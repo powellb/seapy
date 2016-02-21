@@ -5,7 +5,7 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
 import numpy as np
@@ -16,10 +16,13 @@ import netCDF4
 # Create a function to do the multiprocessing vertical interpolation.
 # This function is used because we don't want to construct an array of
 # tuples from the oa routine.
-def __dinterp(x,y,z,dat,fz,pmap):
+
+
+def __dinterp(x, y, z, dat, fz, pmap):
     ndat, pm = seapy.oavol(x, y, z, dat, x, y, fz, pmap, 5, 1, 1)
     ndat = np.squeeze(ndat)
-    return np.ma.masked_where(np.abs(ndat)>9e10, ndat, copy=False)
+    return np.ma.masked_where(np.abs(ndat) > 9e10, ndat, copy=False)
+
 
 def constant_depth(field, grid, depth, zeta=None, threads=-2):
     """
@@ -48,23 +51,24 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
 
     # Make sure our inputs are all valid
     grid = seapy.model.asgrid(grid)
-    if np.ndim(field)==3:
+    if np.ndim(field) == 3:
         field = seapy.adddim(field)
-    if zeta is not None and np.ndim(zeta==2):
+    if zeta is not None and np.ndim(zeta == 2):
         zeta = seapy.adddim(zeta)
     depth = depth if depth < 0 else -depth
 
     # Set up some arrays
-    x, y = np.meshgrid(np.arange(field.shape[-1]),np.arange(field.shape[-2]))
-    fz, pmap = seapy.oasurf(x,y,x,x,y,None,5,1,1)
-    fz = seapy.adddim(np.ones(x.shape))*depth
+    x, y = np.meshgrid(np.arange(field.shape[-1]), np.arange(field.shape[-2]))
+    fz, pmap = seapy.oasurf(x, y, x, x, y, None, 5, 1, 1)
+    fz = seapy.adddim(np.ones(x.shape)) * depth
     # Loop over all times, generate new field at depth
-    nfield = np.ma.array(Parallel(n_jobs=threads,verbose=2)\
-                  (delayed(__dinterp)(x,y,grid.depth_rho,
-                                      np.squeeze(field[i,:,:,:]),fz,pmap)
-               for i in range(field.shape[0])), copy=False)
+    nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                         (delayed(__dinterp)(x, y, grid.depth_rho,
+                                             np.squeeze(field[i, :, :, :]), fz, pmap)
+                          for i in range(field.shape[0])), copy=False)
 
     return nfield
+
 
 def depth_average(field, grid, depth, zeta=None):
     """
@@ -98,7 +102,7 @@ def depth_average(field, grid, depth, zeta=None):
                                           grid.theta_b, grid.hc,
                                           grid.n, w_grid=True)
         depths = seapy.roms.depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
-                                 grid.cs_r)
+                                  grid.cs_r)
         thickness = seapy.roms.thickness(grid.vtransform, grid.h, grid.hc,
                                          s_w, cs_w, zeta)
     else:
@@ -117,7 +121,7 @@ def depth_average(field, grid, depth, zeta=None):
     thickness[np.where(depths < depth)] = 0
 
     # Do the integration
-    return np.sum(field * thickness, axis=0)/np.sum(thickness, axis=0)
+    return np.sum(field * thickness, axis=0) / np.sum(thickness, axis=0)
 
 
 def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
@@ -165,8 +169,8 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     epoch = netCDF4.num2date(0, nc.variables[time_var].units)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_ini_std(std_file,
-                      eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                      reftime=epoch, title="std from " + str(roms_file))
+                                               eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
+                                               reftime=epoch, title="std from " + str(roms_file))
     grid.to_netcdf(ncout)
 
     # If there are any fields that are not in the standard output file,
@@ -177,7 +181,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                len(time) - std_window + pad, std_window))):
+                                                               len(time) - std_window + pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:
@@ -187,6 +191,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         ncout.sync()
     ncout.close()
     nc.close()
+
 
 def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     """
@@ -233,19 +238,19 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     epoch = netCDF4.num2date(0, nc.variables[time_var].units)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_frc_std(std_file,
-                      eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                      reftime=epoch, title="std from " + str(roms_file))
+                                               eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
+                                               reftime=epoch, title="std from " + str(roms_file))
     grid.to_netcdf(ncout)
 
     # If there are any fields that are not part of the standard, add them
     # to the output file
     for f in fields.difference(ncout.variables):
-            ncout.createVariable(f, np.float32,
-                                 ('ocean_time', "eta_rho", "xi_rho"))
+        ncout.createVariable(f, np.float32,
+                             ('ocean_time', "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                len(time) - std_window + pad, std_window))):
+                                                               len(time) - std_window + pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:
@@ -255,6 +260,7 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         ncout.sync()
     ncout.close()
     nc.close()
+
 
 def plot_obs_surface(obs, type='zeta', prov=None, time=None,
                      gridcoord=False, error=False, **kwargs):
@@ -294,14 +300,14 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
     # Search the obs for the user
     if prov is not None:
         idx = np.where(np.logical_and.reduce(
-                        obs.type == otype,
-                        obs.provenance == prov,
-                        np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+            obs.type == otype,
+            obs.provenance == prov,
+            np.logical_or(obs.z == 0, obs.depth == 0)))[0]
 
     else:
         idx = np.where(np.logical_and(
-                        obs.type == otype,
-                        np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+            obs.type == otype,
+            np.logical_or(obs.z == 0, obs.depth == 0)))[0]
 
     # If there is a time specific condition, find the sets
     if time is not None:
@@ -313,7 +319,7 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
 
     # Plot it up
     if not kwargs:
-        kwargs = {'s':30, 'alpha':0.8, 'linewidths':(0, 0)}
+        kwargs = {'s': 30, 'alpha': 0.8, 'linewidths': (0, 0)}
     if gridcoord:
         x = obs.x
         y = obs.y
@@ -363,14 +369,14 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
     # Search the obs for the user
     if prov is not None:
         idx = np.where(np.logical_and.reduce(
-                        obs.type == otype,
-                        obs.provenance == prov,
-                        np.logical_or(obs.z < 0, obs.depth < 0)))[0]
+            obs.type == otype,
+            obs.provenance == prov,
+            np.logical_or(obs.z < 0, obs.depth < 0)))[0]
 
     else:
         idx = np.where(np.logical_and(
-                        obs.type == otype,
-                        np.logical_or(obs.z < 0, obs.depth < 0)))[0]
+            obs.type == otype,
+            np.logical_or(obs.z < 0, obs.depth < 0)))[0]
 
     # If there is a time specific condition, find the sets
     if time is not None:
@@ -382,9 +388,9 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
 
     # Plot it up
     if gridcoord:
-        dep = obs.z if np.mean(obs.z[idx]>0) else obs.depth
+        dep = obs.z if np.mean(obs.z[idx] > 0) else obs.depth
     else:
-        dep = obs.z if np.mean(obs.z[idx]<0) else obs.depth
+        dep = obs.z if np.mean(obs.z[idx] < 0) else obs.depth
     val = obs.value if not error else obs.error
     plt.plot(val[idx], dep[idx], 'k+', **kwargs)
 

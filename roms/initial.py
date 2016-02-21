@@ -5,13 +5,14 @@
   ROMS initial conditions utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2014 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
 
 import seapy
 import numpy as np
 import netCDF4
+
 
 def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     """
@@ -45,15 +46,15 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
     src_ref, romstime = seapy.roms.get_reftime(ncroms)
 
     # Create the initial file and fill up the descriptive data
-    ncini=seapy.roms.ncgen.create_ini(ini_file,
-             eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
-             reftime=src_ref, title="generated from "+roms_file)
+    ncini = seapy.roms.ncgen.create_ini(ini_file,
+                                        eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
+                                        reftime=src_ref, title="generated from " + roms_file)
     grid.to_netcdf(ncini)
     if time is None:
         time = netCDF4.num2date(ncroms.variables[romstime][record],
                                 ncroms.variables[romstime].units)
     ncini.variables["ocean_time"][:] = netCDF4.date2num(time,
-                                        ncini.variables["ocean_time"].units)
+                                                        ncini.variables["ocean_time"].units)
 
     # Fill up the initial state with the roms file data
     for var in seapy.roms.fields:

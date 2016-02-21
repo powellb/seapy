@@ -5,7 +5,7 @@
   ROMS boundary utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2014 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
 
@@ -815,30 +815,30 @@ def detide(grid, bryfile, tidefile, tides=None):
             ubar = vbar = [0]
 
     # Have to duplicate the boundary tide info into the inner row/column
-    eamp[:, 1:-2, 1] = eamp[:, 1:-2, 0]
-    eamp[:, 1:-2, -2] = eamp[:, 1:-2, -1]
-    eamp[:, 1, 1:-2] = eamp[:, 0, 1:-2]
-    eamp[:, -2, 1:-2] = eamp[:, -1, 1:-2]
-    epha[:, 1:-2, 1] = epha[:, 1:-2, 0]
-    epha[:, 1:-2, -2] = epha[:, 1:-2, -1]
-    epha[:, 1, 1:-2] = epha[:, 0, 1:-2]
-    epha[:, -2, 1:-2] = epha[:, -1, 1:-2]
-    cmax[:, 1:-2, 1] = cmax[:, 1:-2, 0]
-    cmax[:, 1:-2, -2] = cmax[:, 1:-2, -1]
-    cmax[:, 1, 1:-2] = cmax[:, 0, 1:-2]
-    cmax[:, -2, 1:-2] = cmax[:, -1, 1:-2]
-    cmin[:, 1:-2, 1] = cmin[:, 1:-2, 0]
-    cmin[:, 1:-2, -2] = cmin[:, 1:-2, -1]
-    cmin[:, 1, 1:-2] = cmin[:, 0, 1:-2]
-    cmin[:, -2, 1:-2] = cmin[:, -1, 1:-2]
-    cpha[:, 1:-2, 1] = cpha[:, 1:-2, 0]
-    cpha[:, 1:-2, -2] = cpha[:, 1:-2, -1]
-    cpha[:, 1, 1:-2] = cpha[:, 0, 1:-2]
-    cpha[:, -2, 1:-2] = cpha[:, -1, 1:-2]
-    cang[:, 1:-2, 1] = cang[:, 1:-2, 0]
-    cang[:, 1:-2, -2] = cang[:, 1:-2, -1]
-    cang[:, 1, 1:-2] = cang[:, 0, 1:-2]
-    cang[:, -2, 1:-2] = cang[:, -1, 1:-2]
+    eamp[:, 1:-1, 1] = eamp[:, 1:-1, 0]
+    eamp[:, 1:-1, -2] = eamp[:, 1:-1, -1]
+    eamp[:, 1, 1:-1] = eamp[:, 0, 1:-1]
+    eamp[:, -2, 1:-1] = eamp[:, -1, 1:-1]
+    epha[:, 1:-1, 1] = epha[:, 1:-1, 0]
+    epha[:, 1:-1, -2] = epha[:, 1:-1, -1]
+    epha[:, 1, 1:-1] = epha[:, 0, 1:-1]
+    epha[:, -2, 1:-1] = epha[:, -1, 1:-1]
+    cmax[:, 1:-1, 1] = cmax[:, 1:-1, 0]
+    cmax[:, 1:-1, -2] = cmax[:, 1:-1, -1]
+    cmax[:, 1, 1:-1] = cmax[:, 0, 1:-1]
+    cmax[:, -2, 1:-1] = cmax[:, -1, 1:-1]
+    cmin[:, 1:-1, 1] = cmin[:, 1:-1, 0]
+    cmin[:, 1:-1, -2] = cmin[:, 1:-1, -1]
+    cmin[:, 1, 1:-1] = cmin[:, 0, 1:-1]
+    cmin[:, -2, 1:-1] = cmin[:, -1, 1:-1]
+    cpha[:, 1:-1, 1] = cpha[:, 1:-1, 0]
+    cpha[:, 1:-1, -2] = cpha[:, 1:-1, -1]
+    cpha[:, 1, 1:-1] = cpha[:, 0, 1:-1]
+    cpha[:, -2, 1:-1] = cpha[:, -1, 1:-1]
+    cang[:, 1:-1, 1] = cang[:, 1:-1, 0]
+    cang[:, 1:-1, -2] = cang[:, 1:-1, -1]
+    cang[:, 1, 1:-1] = cang[:, 0, 1:-1]
+    cang[:, -2, 1:-1] = cang[:, -1, 1:-1]
 
     # Set the tide reference
     tideout.tide_ref = "Day {:5.1f} ({:s})".format((out['tide_start'] -

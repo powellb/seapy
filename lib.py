@@ -9,7 +9,7 @@
   when importing the seapy module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
 
@@ -20,9 +20,10 @@ import re
 import datetime
 import itertools
 
-secs2day = 1.0/86400.0
-default_epoch = datetime.datetime(2000,1,1)
-_default_timeref = "days since "+default_epoch.strftime("%Y-%m-%m %H:%M:%S")
+secs2day = 1.0 / 86400.0
+default_epoch = datetime.datetime(2000, 1, 1)
+_default_timeref = "days since " + default_epoch.strftime("%Y-%m-%m %H:%M:%S")
+
 
 def adddim(fld, size=1):
     """
@@ -38,11 +39,25 @@ def adddim(fld, size=1):
     Returns
     -------
     fld : array
+
+    Examples
+    --------
+    >>> a=np.array([4, 5, 6, 7])
+    >>> a.shape
+    (4,)
+    >>> b = seapy.adddim(a, 2)
+    >>> b.shape
+    (2, 4)
+    >>> b
+    array([[4, 5, 6, 7],
+           [4, 5, 6, 7]])
+
     """
-    fld=np.atleast_1d(fld)
-    s=np.ones(fld.ndim+1)
-    s[0]=size
-    return np.tile(fld,s)
+    fld = np.atleast_1d(fld)
+    s = np.ones(fld.ndim + 1)
+    s[0] = size
+    return np.tile(fld, s)
+
 
 def chunker(seq, size):
     """
@@ -72,6 +87,7 @@ def chunker(seq, size):
     """
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
+
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
     Convolve data over the missing regions of a mask
@@ -93,37 +109,38 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
     fld = np.ma.array(data, copy=copy)
     # Make sure ksize is odd
-    ksize = int(ksize+1) if int(ksize)%2==0 else int(ksize)
+    ksize = int(ksize + 1) if int(ksize) % 2 == 0 else int(ksize)
     if fld.ndim > 3 or fld.ndim < 2:
         raise AttributeError("Can only convolve 2- or 3-D fields")
     if ksize < 3:
         raise ValueError("ksize must be greater than or equal to 3")
 
     if kernel is None:
-        center=np.round(ksize/2)
-        kernel=np.ones([ksize,ksize])
-        kernel[center,center]=0.0
+        center = np.round(ksize / 2)
+        kernel = np.ones([ksize, ksize])
+        kernel[center, center] = 0.0
 
     # Convolve the mask
     msk = np.ma.getmaskarray(fld)
     if fld.ndim == 2:
         count = ndimage.convolve((~msk).view(np.int8), kernel,
-                               mode="constant", cval=0.0)
-        nfld = ndimage.convolve(fld.data*(~msk).view(np.int8), kernel,
-                               mode="constant", cval=0.0)
+                                 mode="constant", cval=0.0)
+        nfld = ndimage.convolve(fld.data * (~msk).view(np.int8), kernel,
+                                mode="constant", cval=0.0)
     else:
         kernel = np.expand_dims(kernel, axis=3)
-        count = np.transpose( ndimage.convolve(
-                (~msk).view(np.int8).transpose(1,2,0), kernel,
-                mode="constant", cval=0.0),(2,0,1))
-        nfld = np.transpose( ndimage.convolve(
-            (fld.data*(~msk).view(np.int8)).transpose(1,2,0), kernel,
-            mode="constant", cval=0.0),(2,0,1))
+        count = np.transpose(ndimage.convolve(
+            (~msk).view(np.int8).transpose(1, 2, 0), kernel,
+            mode="constant", cval=0.0), (2, 0, 1))
+        nfld = np.transpose(ndimage.convolve(
+            (fld.data * (~msk).view(np.int8)).transpose(1, 2, 0), kernel,
+            mode="constant", cval=0.0), (2, 0, 1))
 
-    lst = np.nonzero(np.logical_and(msk, count>0))
+    lst = np.nonzero(np.logical_and(msk, count > 0))
     msk[lst] = False
     fld[lst] = nfld[lst] / count[lst]
     return fld
+
 
 def date2day(date=default_epoch, epoch=default_epoch):
     """
@@ -141,7 +158,8 @@ def date2day(date=default_epoch, epoch=default_epoch):
     -------
     numdays : scalar
     """
-    return (date-epoch).total_seconds() * secs2day
+    return (date - epoch).total_seconds() * secs2day
+
 
 def day2date(day=0, epoch=default_epoch):
     """
@@ -159,6 +177,7 @@ def day2date(day=0, epoch=default_epoch):
     date : datetime
     """
     return epoch + datetime.timedelta(days=day)
+
 
 def earth_distance(lon1, lat1, lon2, lat2):
     """
@@ -180,9 +199,9 @@ def earth_distance(lon1, lat1, lon2, lat2):
     distance : array or scalar of distance in meters
 
     """
-    epsilon = 0.99664718940443;  # This is Sqrt(1-epsilon^2)
-    radius = 6378137; # Radius in meters
-    d2r = np.pi/180.0
+    epsilon = 0.99664718940443  # This is Sqrt(1-epsilon^2)
+    radius = 6378137  # Radius in meters
+    d2r = np.pi / 180.0
 
     lon1 = np.asanyarray(lon1)
     lat1 = np.asanyarray(lat1)
@@ -191,15 +210,16 @@ def earth_distance(lon1, lat1, lon2, lat2):
 
     # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for
     # working with geocentric where lat_gc = atan(epsilon * tan(lat))
-    tan_lat = epsilon * np.tan(d2r*lat1.astype(np.float64))
-    cos_lat = 1.0 / np.sqrt(1.0+tan_lat**2)
-    sin_lat = tan_lat / np.sqrt(1.0+tan_lat**2)
-    tan_lat = epsilon * np.tan(d2r*lat2.astype(np.float64))
-    cos_latj = 1.0 / np.sqrt(1.0+tan_lat**2)
-    sin_latj = tan_lat / np.sqrt(1.0+tan_lat**2)
+    tan_lat = epsilon * np.tan(d2r * lat1.astype(np.float64))
+    cos_lat = 1.0 / np.sqrt(1.0 + tan_lat**2)
+    sin_lat = tan_lat / np.sqrt(1.0 + tan_lat**2)
+    tan_lat = epsilon * np.tan(d2r * lat2.astype(np.float64))
+    cos_latj = 1.0 / np.sqrt(1.0 + tan_lat**2)
+    sin_latj = tan_lat / np.sqrt(1.0 + tan_lat**2)
 
-    return radius*np.sqrt(2.0*(1.0-cos_lat*cos_latj* \
-                  np.cos(d2r*(lon1-lon2))-sin_lat*sin_latj))
+    return radius * np.sqrt(2.0 * (1.0 - cos_lat * cos_latj *
+                                   np.cos(d2r * (lon1 - lon2)) - sin_lat * sin_latj))
+
 
 def flatten(l, ltypes=(list, tuple, set)):
     """
@@ -244,6 +264,7 @@ def flatten(l, ltypes=(list, tuple, set)):
                 l[i:i + 1] = l[i]
         i += 1
     return ltype(l)
+
 
 def list_files(path=".", regex=None, full_path=True):
     """
@@ -293,6 +314,7 @@ def list_files(path=".", regex=None, full_path=True):
     files.sort()
     return files
 
+
 def netcdf4(file):
     """
     Wrapper around netCDF4 to open a file as either a Dataset or an
@@ -315,6 +337,7 @@ def netcdf4(file):
         nc = netCDF4.MFDataset(file)
     return nc
 
+
 def primes(number):
     """
     Return a list of primes less than or equal to a given value.
@@ -335,21 +358,22 @@ def primes(number):
     <http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last>
 
     """
-    def __erat2( ):
-        D = {  }
+    def __erat2():
+        D = {}
         yield 2
         for q in itertools.islice(itertools.count(3), 0, None, 2):
             p = D.pop(q, None)
             if p is None:
-                D[q*q] = q
+                D[q * q] = q
                 yield q
             else:
                 x = p + q
-                while x in D or not (x&1):
+                while x in D or not (x & 1):
                     x += p
                 D[x] = p
 
-    return np.array(list(itertools.takewhile(lambda p: p<number, __erat2())))
+    return np.array(list(itertools.takewhile(lambda p: p < number, __erat2())))
+
 
 def rotate(u, v, angle):
     """
@@ -374,7 +398,8 @@ def rotate(u, v, angle):
     sa = np.sin(angle)
     ca = np.cos(angle)
 
-    return u*ca - v*sa, u*sa + v*ca
+    return u * ca - v * sa, u * sa + v * ca
+
 
 def today2day(epoch=default_epoch):
     """
@@ -390,6 +415,7 @@ def today2day(epoch=default_epoch):
     numdays : scalar
     """
     return date2day(datetime.datetime.utcnow(), epoch)
+
 
 def unique_rows(x):
     """
@@ -417,6 +443,7 @@ def unique_rows(x):
     vals, idx = np.unique(godelnumber(x), return_index=True)
 
     return vals, idx
+
 
 def vecfind(a, b, tolerance=0):
     """
@@ -449,9 +476,9 @@ def vecfind(a, b, tolerance=0):
     else:
         index_a = []
         index_b = []
-        for i,c in enumerate(b):
-            d = np.abs(a-c)
-            x = np.nonzero(d<tolerance)[0]
+        for i, c in enumerate(b):
+            d = np.abs(a - c)
+            x = np.nonzero(d < tolerance)[0]
             if x:
                 index_a.append(np.where(d == np.min(d))[0][0])
                 index_b.append(i)
@@ -474,7 +501,7 @@ def godelnumber(x):
     """
     x = np.atleast_2d(x.astype(int))
     if x.ndim > 1:
-        primevals = primes(x.shape[1]*10)[:x.shape[1]].astype(float)
+        primevals = primes(x.shape[1] * 10)[:x.shape[1]].astype(float)
         return(np.prod(primevals**x, axis=1))
     else:
         return 2.0**x

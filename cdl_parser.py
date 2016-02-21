@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+n  # !/usr/bin/env python
 """
   Module to load and parse Common Data Language (CDL) files and
   tokenize the dimensions and variables
 
   Written by Brian Powell on 04/30/13
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 from __future__ import print_function
 
 import re
+
 
 def cdl_parser(filename):
     """
@@ -26,15 +27,16 @@ def cdl_parser(filename):
         dictionaries description dimensions, variables, and attributes
 
     """
-    dim_pat=re.compile(r"\s*(\w+)\s*=\s*(\w*)\s*;")
-    var_pat=re.compile(r"\s*(\w+)\s*(\w+)\({0,1}([\w\s,]*)\){0,1}\s*;")
-    attr_pat=re.compile(r"\s*(\w+):(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
-    global_attr_pat=re.compile(r"\s*:(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
-    dims=dict()
-    attr=dict()
-    vars=list()
-    vcount=dict()
-    types={"float":"f4", "double":"f8", "short":"i2", "int":"i4", "char":"S1"}
+    dim_pat = re.compile(r"\s*(\w+)\s*=\s*(\w*)\s*;")
+    var_pat = re.compile(r"\s*(\w+)\s*(\w+)\({0,1}([\w\s,]*)\){0,1}\s*;")
+    attr_pat = re.compile(r"\s*(\w+):(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
+    global_attr_pat = re.compile(r"\s*:(\w+)\s*=\s*\"*([^\"]*)\"*\s*;")
+    dims = dict()
+    attr = dict()
+    vars = list()
+    vcount = dict()
+    types = {"float": "f4", "double": "f8",
+             "short": "i2", "int": "i4", "char": "S1"}
 
     for line in open(filename, 'r'):
         # Check if this is a dimension definition line. If it is, add
@@ -43,9 +45,9 @@ def cdl_parser(filename):
         if parser is not None:
             tokens = parser.groups()
             if tokens[1].upper() == "UNLIMITED":
-                dims[tokens[0]]=0
+                dims[tokens[0]] = 0
             else:
-                dims[tokens[0]]=int(tokens[1])
+                dims[tokens[0]] = int(tokens[1])
             continue
 
         # Check if this is a variable definition line. If it is, add
@@ -53,11 +55,11 @@ def cdl_parser(filename):
         parser = var_pat.match(line)
         if parser is not None:
             tokens = parser.groups()
-            nvar = { "name": tokens[1],
-                     "type": types[tokens[0]],
-                     "dims": tokens[2].strip().split(", ") }
+            nvar = {"name": tokens[1],
+                    "type": types[tokens[0]],
+                    "dims": tokens[2].strip().split(", ")}
             vars.append(nvar)
-            vcount[tokens[1]]=len(vars)-1
+            vcount[tokens[1]] = len(vars) - 1
             continue
 
         # If this is an attribute, add the info to the appropriate variable
@@ -73,7 +75,7 @@ def cdl_parser(filename):
         parser = global_attr_pat.match(line)
         if parser is not None:
             tokens = parser.groups()
-            attr[tokens[0]]=tokens[1]
+            attr[tokens[0]] = tokens[1]
             continue
 
     return dims, vars, attr
