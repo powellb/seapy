@@ -31,16 +31,16 @@
 
 """
 
-from .oa import *
 from .lib import *
-from .environ import opt
 from . import roms
 from . import model
 from . import qserver
-from .mapping import *
-from .hawaii import hawaii
-from . import filter
+from . import mapping
+from . import filt
 from . import plot
-from .progressbar import *
+from . import progressbar
 from . import seawater
 from . import tide
+from .environ import opt
+from .hawaii import hawaii
+from .oa import *

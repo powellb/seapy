@@ -18,81 +18,72 @@ SEAPY Documentation
    :show-inheritance:
 
 
-:mod:`cdl_parser`
-----------------------------------
+:mod:`cdl_parser` -- Read CDL files to generate NetCDF Catalog
+--------------------------------------------------------------
 .. automodule:: seapy.cdl_parser
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-
-:mod:`environ`
-------------------------------
+:mod:`environ` -- Load OS Environment Variables
+-----------------------------------------------
 .. autoclass:: seapy.environ
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`filter`
-------------------------------
-.. autoclass:: seapy.filter
+:mod:`filt` -- Spectral filter of time-series data
+----------------------------------------------------
+.. automodules:: seapy.filt
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`tide`
-------------------------------
-.. autoclass:: seapy.tide
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-:mod:`hawaii`
-----------------------------------
+:mod:`hawaii` -- Mapping subclass for Hawaii
+--------------------------------------------
 .. autoclass:: seapy.hawaii
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`map`
-----------------------------------
+:mod:`map` -- Mapping toolkit for basemap
+-----------------------------------------
 .. autoclass:: seapy.map
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`oa`
-----------------------------------
+:mod:`oa` -- Objective Analysis Interpolation
+---------------------------------------------
 .. automodule:: seapy.oa
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`plot`
-----------------------------------
+:mod:`plot` -- Simple Plotting wrappers
+---------------------------------------
 .. automodule:: seapy.plot
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`progressbar`
-----------------------------------
-.. autoclass:: seapy.progressbar
+:mod:`progressbar` -- Keep User informed of progress
+----------------------------------------------------
+.. automodule:: seapy.progressbar
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-:mod:`qserver`
-----------------------------------
+:mod:`qserver` -- Manage multiple processes
+-------------------------------------------
 .. autoclass:: seapy.qserver.task
    :members:
    :undoc-members:
@@ -109,8 +100,16 @@ SEAPY Documentation
    :show-inheritance:
 
 
-:mod:`timeout`
-----------------------------------
+:mod:`tide` -- Generate and Process tidal data
+----------------------------------------------
+.. automodule:: seapy.tide
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+:mod:`timeout` -- Set limits to processes
+-----------------------------------------
 .. automodule:: seapy.timeout
    :members:
    :undoc-members:

@@ -13,7 +13,7 @@
   <http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish>
 
 """
-from __future__ import print_function
+
 
 import errno
 import os

@@ -6,10 +6,8 @@
   when importing the model module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
-
 import numpy as np
 from seapy import convolve_mask
 

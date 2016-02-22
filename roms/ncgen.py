@@ -5,7 +5,7 @@
   Written by Brian Powell on 04/26/13
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 
 import os
 import re

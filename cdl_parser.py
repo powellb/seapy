@@ -1,4 +1,4 @@
-n  # !/usr/bin/env python
+# !/usr/bin/env python
 """
   Module to load and parse Common Data Language (CDL) files and
   tokenize the dimensions and variables
@@ -6,7 +6,7 @@ n  # !/usr/bin/env python
   Written by Brian Powell on 04/30/13
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 
 import re
 

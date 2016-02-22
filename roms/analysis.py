@@ -7,7 +7,7 @@
   Written by Brian Powell on 05/24/15
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 import numpy as np
 from joblib import Parallel, delayed
 import seapy

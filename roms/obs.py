@@ -21,7 +21,7 @@
   Written by Brian Powell on 08/05/14
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 
 import numpy as np
 import netCDF4

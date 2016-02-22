@@ -16,7 +16,7 @@
 
 
 """
-from __future__ import print_function
+
 import sys, time
 try:
     from IPython.display import clear_output

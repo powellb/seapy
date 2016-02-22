@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """
-  filter.py
+  filt.py
 
-  Functions for quickly filtering time-series 
+  Functions for quickly filtering time-series of data.
+
 
   Written by Brian Powell on 02/09/16
   Copyright (c)2016 University of Hawaii under the BSD-License.

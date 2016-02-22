@@ -11,7 +11,7 @@
   Written by Brian Powell on 10/18/13
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 
 import numpy as np
 from scipy import ndimage

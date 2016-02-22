@@ -31,9 +31,18 @@ SEAPY ROMS Package Documentation
    :undoc-members:
    :show-inheritance:
 
+
 :mod:`clim` -- Working with Climatology Conditions
--------------------------------------------------
+--------------------------------------------------
 .. automodule:: seapy.roms.clim
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+:mod:`forcing` -- Working with Atmospheric Conditions
+-----------------------------------------------------
+.. automodule:: seapy.roms.forcing
    :members:
    :undoc-members:
    :show-inheritance:

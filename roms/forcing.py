@@ -49,7 +49,7 @@ ncep_map = {
 
 
 def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
-                     epoch=seapy.lib.default_epoch, clobber=False):
+                     epoch=seapy.default_epoch, clobber=False):
     """
     Given a source file (or URL), a dictionary that defines the
     source fields mapped to the ROMS fields, then it will generate

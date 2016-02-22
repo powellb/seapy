@@ -13,7 +13,7 @@
   >>> grid = seapy.model.asgrid("grid_file.nc")
 
 """
-from __future__ import print_function
+
 
 import os
 import re

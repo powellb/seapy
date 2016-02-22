@@ -293,7 +293,7 @@ def fit(times, xin, tides=None, lat=None):
     Fit the 'M2' and 'K1' to the given time-series, x.
 
     >>> data = np.load('water_level.npz')
-    >>> out = fit(data.times, data.level, ['M2','S2','S1','K1'], lat=28)
+    >>> out = fit(data.times, data.level, ['M2','K1'], lat=28)
     >>> plt.plot(data.times, out['fit'])
     '''
 

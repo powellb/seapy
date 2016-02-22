@@ -21,23 +21,25 @@
     >>> m.fig.savefig("sst.png",dpi=100)
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2013 University of Hawaii under the BSD-License.
+  Copyright (c)2016 University of Hawaii under the BSD-License.
 """
-from __future__ import print_function
+
 
 from .mapping import map
 from matplotlib.patches import Polygon
 from matplotlib.collections import PolyCollection
 import os
 
-_shape_file = os.path.dirname(__file__)+"/hawaii_coast/hawaii"
+_shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii"
+
 
 class hawaii(map):
-    def __init__(self, figsize=(8.,6.), llcrnrlon=-164.5, llcrnrlat=16.6,
-                   urcrnrlon=-152.0, urcrnrlat=24.2, dlat=1, dlon=2):
-        super().__init__( llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
-                   urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize,
-                   dlat=dlat, dlon=dlon)
+
+    def __init__(self, figsize=(8., 6.), llcrnrlon=-164.5, llcrnrlat=16.6,
+                 urcrnrlon=-152.0, urcrnrlat=24.2, dlat=1, dlon=2):
+        super().__init__(llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
+                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize,
+                         dlat=dlat, dlon=dlon)
 
     def land(self, color="black"):
         """
@@ -56,12 +58,13 @@ class hawaii(map):
 
         """
 
-        if  hasattr(self.basemap,"coast") == False or hasattr(self, "landpoly"):
+        if hasattr(self.basemap, "coast") == False or hasattr(self, "landpoly"):
             self.basemap.readshapefile(_shape_file, "coast")
-            vert=[]
+            vert = []
             for shape in self.basemap.coast:
                 vert.append(shape)
 
-            self.landpoly = PolyCollection(vert,facecolors=color,edgecolors=color)
+            self.landpoly = PolyCollection(
+                vert, facecolors=color, edgecolors=color)
         # Draw the loaded shapes
         self.ax.add_collection(self.landpoly)
