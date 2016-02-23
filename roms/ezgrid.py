@@ -15,7 +15,12 @@ from collections import namedtuple
 
 def create_grid(grid_file, lat, lon):
     """
-    Create a new, basic grid
+    Create a new, basic grid. This will construct the ROMS grid netcdf file
+    given a set of latitude and longitude coordinates for the rho-grid.
+    The coordinates can be spaced however specified, and the grid will be
+    created; however, this does not guarantee the grid will be valid.
+    After the grid is created, the bathymetry and mask will need to be
+    generated independently.
 
     Parameters
     ----------
@@ -31,9 +36,24 @@ def create_grid(grid_file, lat, lon):
 
     Returns
     -------
+    netCDF4 : 
+      The netcdf object of the new grid
 
     Examples
     --------
+    To create a basic, evenly spaced grid:
+
+    >>> lat = np.linspace(10,20,0.25)
+    >>> lon = np.linspace(-100,-80,0.25)
+    >>> lon, lat = np.meshgrid(lon, lat)
+    >>> create_grid('mygrid.nc', lat, lon)
+
+    To create more advanced grids, simply generate the
+    2D arrays of lat and lon in the manner you want your cells
+    and call create_grid:
+
+    >>> create_grid('mygrid.nc', lat, lon)
+
     """
 
     # Put lat/lon into proper arrays
@@ -153,8 +173,7 @@ def create_grid(grid_file, lat, lon):
     nc.variables["rdrag"][:] = np.ones(lon.shape) * 0.0003
     nc.variables["rdrag2"][:] = np.ones(lon.shape) * 0.003
     nc.variables["ZoBot"][:] = np.ones(lon.shape) * 0.02
-
-    pass
+    nc.sync()
 
 
 def calc_latlon(llcrnrlat, llcrnrlon, reseta, resxi=None, rotate=0):
@@ -202,8 +221,12 @@ def calc_latlon(llcrnrlat, llcrnrlon, reseta, resxi=None, rotate=0):
 
     Examples
     --------
-    >>> res = np.ones((100,70))
-    >>> lat, lon = calc_latlon(20, 150, res, rotate=-90)
+    Create a grid of 1km resolution in both eta and xi, 
+    rotated toward the SE by 33 degrees, with the lower left
+    point at 20N, 150E:
+
+    >>> res = np.ones((100,70)) * 1000
+    >>> lat, lon = calc_latlon(20, 150, res, rotate=-33)
     """
 
     # Set up the resolutions
