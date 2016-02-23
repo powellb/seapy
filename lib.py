@@ -179,6 +179,40 @@ def day2date(day=0, epoch=default_epoch):
     return epoch + datetime.timedelta(days=day)
 
 
+def earth_angle(lon1, lat1, lon2, lat2):
+    """
+    Compute the angle between lat/lon points. NOTE: The bearing angle
+    is computed, but then converted to geometric (counter-clockwise)
+    angle to be returned.
+
+    Parameters
+    ----------
+    lon1 : array_like or scalar
+        Input array of source longitude(s)
+    lat1 : array_like or scalar
+        Input array of source latitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+
+    Returns
+    -------
+    angle : array or scalar of bearing in radians
+
+    """
+    lon1 = np.asanyarray(lon1)
+    lon2 = np.asanyarray(lon2)
+    lat1 = np.radians(np.asanyarray(lat1))
+    lat2 = np.radians(np.asanyarray(lat2))
+
+    dlon = np.radians(lon2 - lon1)
+    angle = np.arctan2(np.sin(dlon) * np.cos(lat2),
+                       np.cos(lat1) * np.sin(lat2) -
+                       np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
+    return (np.pi / 2.0 - angle)
+
+
 def earth_distance(lon1, lat1, lon2, lat2):
     """
     Compute the distance between lat/lon points

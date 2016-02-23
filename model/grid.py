@@ -432,7 +432,7 @@ class grid:
                 else:
                     self.depth_u = self.depth_rho
                     self.depth_v = self.depth_rho
-        except AttributeError:
+        except (AttributeError, ValueError):
             warn("could not compute grid depths.")
             pass
 

@@ -257,7 +257,7 @@ def predict(times, tide, lat=None):
 
 
 def fit(times, xin, tides=None, lat=None):
-    '''
+    """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
 
@@ -295,7 +295,7 @@ def fit(times, xin, tides=None, lat=None):
     >>> data = np.load('water_level.npz')
     >>> out = fit(data.times, data.level, ['M2','K1'], lat=28)
     >>> plt.plot(data.times, out['fit'])
-    '''
+    """
 
     xin = np.atleast_1d(xin).flatten()
     if len(xin) != len(times):
