@@ -40,6 +40,14 @@ SEAPY ROMS Package Documentation
    :show-inheritance:
 
 
+:mod:`ezgrid` -- Generating grids for ROMS
+--------------------------------------------------
+.. automodule:: seapy.roms.ezgrid
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 :mod:`forcing` -- Working with Atmospheric Conditions
 -----------------------------------------------------
 .. automodule:: seapy.roms.forcing

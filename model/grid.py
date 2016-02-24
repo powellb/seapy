@@ -200,10 +200,12 @@ class grid:
 
     def __str__(self):
         return "\n".join((self.filename if self.filename else "Constructed",
-                          "{:d}x{:d}x{:d}: {:s} with {:s}".format(self.n, self.ln, self.lm,
-                                                                  "C-Grid" if self.cgrid else "A-Grid",
-                                                                  "S-level" if self._isroms else "Z-Level"),
-                          "Available: " + ",".join(sorted(list(self.__dict__.keys())))))
+                          "{:d}x{:d}x{:d}: {:s} with {:s}".format(
+                              self.n, self.ln, self.lm,
+                              "C-Grid" if self.cgrid else "A-Grid",
+                              "S-level" if self._isroms else "Z-Level"),
+                          "Available: " + ",".join(sorted(
+                              list(self.__dict__.keys())))))
 
     def east(self):
         """

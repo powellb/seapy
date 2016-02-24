@@ -374,10 +374,12 @@ class obs:
         Examples
         --------
         Load a list from netcdf, then append a new set of values
+
         >>> a=obs("test.nc")
         >>> b=obs(time=4,x=3.2,y=2.8,z=0,value=23.44,error=0.5,type="temp",
         >>>       provenance="glider")
         >>> a.add(b)
+
         """
         self._consistent()
         new_obs._consistent()
