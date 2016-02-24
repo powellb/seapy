@@ -175,6 +175,8 @@ def create_grid(grid_file, lat, lon):
     nc.variables["ZoBot"][:] = np.ones(lon.shape) * 0.02
     nc.sync()
 
+    return nc
+
 
 def calc_latlon(llcrnrlat, llcrnrlon, reseta, resxi=None, rotate=0):
     """
