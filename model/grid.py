@@ -683,6 +683,38 @@ class grid:
 
         return (lati(indices), loni(indices))
 
+    def rfactor(self):
+        """
+        Return the 2D field of the r-factor for the given grid.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        ndarray:
+          array of r-factors size of the grid
+
+        """
+        hx = np.zeros(self.shape)
+        hy = hx.copy()
+        r = hx.copy()
+
+        hx[:, :-1] = np.abs(np.diff(self.h, axis=1) /
+                            (self.h[:, 1:] + self.h[:, :-1]))
+        hy[:-1, :] = np.abs(np.diff(self.h, axis=0) /
+                            (self.h[1:, :] + self.h[:-1, :]))
+        hx[:, :-1] *= self.mask_u
+        hy[:-1, :] *= self.mask_v
+
+        r[:-1, :-1] = np.maximum(np.maximum(hx[:-1, :-1], hx[:-1, 1:]),
+                                 np.maximum(hy[:-1, :-1], hy[1:, :-1]))
+        r[:, -1] = r[:, -2]
+        r[-1, :] = r[-2, :]
+        hx = hy = 0
+        return r
+
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """
         Create an np.masked_array of the same shape as the grid with values
