@@ -10,6 +10,7 @@
 
 import numpy as np
 from seapy.lib import default_epoch
+import netCDF4
 
 fields = {"zeta": {"grid": "rho", "dims": 2},
           "ubar": {"grid": "u", "dims": 2, "rotate": "vbar"},
@@ -248,8 +249,6 @@ def get_reftime(nc, epoch=default_epoch):
     time : string
         name of variable used to generate the base (None if default)
     """
-    import netCDF4
-
     try:
         time = get_timevar(nc)
         return netCDF4.num2date(0, nc.variables[time].units), time
