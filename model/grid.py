@@ -713,7 +713,7 @@ class grid:
         r[:, -1] = r[:, -2]
         r[-1, :] = r[-2, :]
         hx = hy = 0
-        return r
+        return r * self.mask_rho
 
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """

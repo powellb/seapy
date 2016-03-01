@@ -190,6 +190,24 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     return z_w[1:, :, :] - z_w[0:-1, :, :]
 
 
+def get_time(nc):
+    """
+    Load the time vector from a netCDF file as a datetime array.
+
+    Parameters
+    ----------
+    nc : netCDF4.Dataset netcdf input file
+
+    Returns
+    -------
+    ndarray of datetime
+       The times of the given netCDF file
+    """
+    tvar = get_timevar(nc)
+    return netCDF4.num2date(nc.variables[tvar][:],
+                            nc.variables[tvar].units)
+
+
 def get_timevar(nc):
     """
     Find the appropriate time variable (bry_time, ocean_time, etc.) from a
