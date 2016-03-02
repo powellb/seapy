@@ -160,10 +160,10 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
-    minlat = np.min(grid.lat_rho) - 0.5
-    maxlat = np.max(grid.lat_rho) + 0.5
-    minlon = np.min(grid.lon_rho) - 0.5
-    maxlon = np.max(grid.lon_rho) + 0.5
+    minlat = np.floor(np.min(grid.lat_rho)) - 0.5
+    maxlat = np.ceil(np.max(grid.lat_rho)) + 0.5
+    minlon = np.floor(np.min(grid.lon_rho)) - 0.5
+    maxlon = np.ceil(np.max(grid.lon_rho)) + 0.5
     frc_lon = forcing.variables[fields['frc_lon']][:]
     frc_lat = forcing.variables[fields['frc_lat']][:]
     # Make the forcing lat/lon on 2D grid
@@ -181,15 +181,15 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     if not np.any(region_list):
         raise Exception("Cannot find valid region")
 
-    eta_list = np.s_[np.min(region_list[0]):np.max(region_list[0])]
-    xi_list = np.s_[np.min(region_list[1]):np.max(region_list[1])]
+    eta_list = np.s_[np.min(region_list[0]):np.max(region_list[0]) + 1]
+    xi_list = np.s_[np.min(region_list[1]):np.max(region_list[1]) + 1]
     frc_lon = frc_lon[eta_list, xi_list]
     frc_lat = frc_lat[eta_list, xi_list]
 
     # Create the output file
-    eta, xi = frc_lon.shape
-    out = seapy.roms.ncgen.create_frc_bulk(outfile, eta_rho=eta,
-                                           xi_rho=xi, reftime=epoch, clobber=clobber)
+    out = seapy.roms.ncgen.create_frc_bulk(outfile, lat=frc_lat.shape[0],
+                                           lon=frc_lon.shape[1], reftime=epoch,
+                                           clobber=clobber)
     out.variables['time'][:] = netCDF4.date2num(frc_time[time_list],
                                                 out.variables['time'].units)
     out.variables['lat'][:] = frc_lat

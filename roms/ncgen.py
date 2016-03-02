@@ -382,7 +382,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
     return _nc
 
 
-def create_frc_bulk(filename, eta_rho=10, xi_rho=10,
+def create_frc_bulk(filename, lat=10, lon=10,
                     reftime=default_epoch, clobber=False,
                     title="My Forcing"):
     """
@@ -413,7 +413,8 @@ def create_frc_bulk(filename, eta_rho=10, xi_rho=10,
     dims, vars, attr = cdl_parser(_cdl_dir + "frc_bulk.cdl")
 
     # Fill in the appropriate dimension values
-    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, 1)
+    dims["lat"] = lat
+    dims["lon"] = lon
     vars = _set_time_ref(vars, "time", reftime)
 
     # Create the file

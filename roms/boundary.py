@@ -147,7 +147,8 @@ def gen_ncks(parent_file, grid, sponge=0, pad=3):
                 parent_grid.lat_rho >= np.min(child_grid.lat_rho[idx]),
                 parent_grid.lat_rho <= np.max(child_grid.lat_rho[idx])))
             i = np.maximum(0, np.min(l[0]) - pad)
-            j = np.minimum(parent_grid.lat_rho.shape[0], np.max(l[0]) + pad)
+            j = np.minimum(parent_grid.lat_rho.shape[0],
+                           np.max(l[0]) + pad + 1)
         else:
             pdim = parent_grid.key["lon_rho"]
             cdim = "xi"
@@ -161,7 +162,8 @@ def gen_ncks(parent_file, grid, sponge=0, pad=3):
                 parent_grid.lon_rho >= np.min(child_grid.lon_rho[idx]),
                 parent_grid.lon_rho <= np.max(child_grid.lon_rho[idx])))
             i = np.maximum(0, np.min(l[1]) - pad)
-            j = np.minimum(parent_grid.lon_rho.shape[1], np.max(l[1]) + pad)
+            j = np.minimum(parent_grid.lon_rho.shape[1],
+                           np.max(l[1]) + pad + 1)
 
         # Put the indices together into strings for extracting out new files
         pdidx = "{:d},{:d}".format(i, j)

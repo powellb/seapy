@@ -1,53 +1,61 @@
 netcdf frc_bulk {
 
 dimensions:
-	xi_rho = 111 ;
-	eta_rho = 241 ;
+	lon = 111 ;
+	lat = 241 ;
 	time = UNLIMITED ; // (0 currently)
 
 variables:
-    float lat(eta_rho, xi_rho) ;
+    float lat(lat, lon) ;
         lat:long_name = "Latitude" ;
         lat:units = "degrees_north" ;
-    float lon(eta_rho, xi_rho) ;
+    float lon(lat, lon) ;
         lon:long_name = "Longitude" ;
         lon:units = "degrees_east" ;
 	double time(time) ;
 		time:long_name = "atmospheric forcing time" ;
-		time:units = "hours since 1940-01-01 00:00:00" ;
-	float Uwind(time, eta_rho, xi_rho) ;
+		time:units = "days since 1940-01-01 00:00:00" ;
+	float Uwind(time, lat, lon) ;
 		Uwind:long_name = "surface u-wind component" ;
 		Uwind:units = "meter second-1" ;
+        Uwind:coordinates = "lon lat" ;
 		Uwind:time = "time" ;
-	float Vwind(time, eta_rho, xi_rho) ;
+	float Vwind(time, lat, lon) ;
 		Vwind:long_name = "surface v-wind component" ;
 		Vwind:units = "meter second-1" ;
+        Vwind:coordinates = "lon lat" ;
 		Vwind:time = "time" ;
-	float Pair(time, eta_rho, xi_rho) ;
+	float Pair(time, lat, lon) ;
 		Pair:long_name = "surface air pressure" ;
 		Pair:units = "millibar" ;
+        Pair:coordinates = "lon lat" ;
 		Pair:time = "time" ;
-	float Tair(time, eta_rho, xi_rho) ;
+	float Tair(time, lat, lon) ;
 		Tair:long_name = "surface air temperature" ;
 		Tair:units = "Celsius" ;
+        Tair:coordinates = "lon lat" ;
 		Tair:time = "time" ;
-	float Qair(time, eta_rho, xi_rho) ;
+	float Qair(time, lat, lon) ;
 		Qair:long_name = "surface air relative humidity" ;
 		Qair:units = "percentage" ;
+        Qair:coordinates = "lon lat" ;
 		Qair:time = "time" ;
-	float rain(time, eta_rho, xi_rho) ;
+	float rain(time, lat, lon) ;
 		rain:long_name = "rain fall rate" ;
 		rain:units = "kilogram meter-2 second-1" ;
+        rain:coordinates = "lon lat" ;
 		rain:time = "time" ;
-	float swrad(time, eta_rho, xi_rho) ;
+	float swrad(time, lat, lon) ;
 		swrad:long_name = "solar shortwave radiation" ;
 		swrad:units = "Watts meter-2" ;
+        swrad:coordinates = "lon lat" ;
 		swrad:positive_value = "downward flux, heating" ;
 		swrad:negative_value = "upward flux, cooling" ;
 		swrad:time = "time" ;
-	float lwrad(time, eta_rho, xi_rho) ;
+	float lwrad(time, lat, lon) ;
 		lwrad:long_name = "net longwave radiation flux" ;
 		lwrad:units = "Watts meter-2" ;
+        lwrad:coordinates = "lon lat" ;
 		lwrad:positive_value = "downward flux, heating" ;
 		lwrad:negative_value = "upward flux, cooling" ;
 		lwrad:time = "time" ;

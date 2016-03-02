@@ -414,8 +414,8 @@ class grid:
                         self.hc, self.n)
                 self.depth_rho = seapy.roms.depth(
                     self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
-                self.depth_u = seapy.model.rho2u(self.depth_rho)
-                self.depth_v = seapy.model.rho2v(self.depth_rho)
+                self.depth_u = seapy.model.rho2u(self.depth_rho).filled(0)
+                self.depth_v = seapy.model.rho2v(self.depth_rho).filled(0)
             else:
                 d = self.z.copy()
                 l = np.nonzero(d > 0)
@@ -429,8 +429,8 @@ class grid:
                 else:
                     self.depth_rho = self.z
                 if self.cgrid:
-                    self.depth_u = seapy.model.rho2u(self.depth_rho)
-                    self.depth_v = seapy.model.rho2v(self.depth_rho)
+                    self.depth_u = seapy.model.rho2u(self.depth_rho).filled(0)
+                    self.depth_v = seapy.model.rho2v(self.depth_rho).filled(0)
                 else:
                     self.depth_u = self.depth_rho
                     self.depth_v = self.depth_rho
