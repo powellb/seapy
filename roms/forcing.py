@@ -197,13 +197,10 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
 
     # Loop over the fields and fill out the output file
     for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
-        try:
-            out.variables[f][:] = \
-                forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
-                fields[f].ratio + fields[f].offset
-            out.sync()
-        except:
-            continue
+        out.variables[f][:] = \
+            forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
+            fields[f].ratio + fields[f].offset
+        out.sync()
 
     out.close()
 
