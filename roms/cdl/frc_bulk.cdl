@@ -52,13 +52,13 @@ variables:
 		swrad:positive_value = "downward flux, heating" ;
 		swrad:negative_value = "upward flux, cooling" ;
 		swrad:time = "time" ;
-	float lwrad(time, lat, lon) ;
-		lwrad:long_name = "net longwave radiation flux" ;
-		lwrad:units = "Watts meter-2" ;
-        lwrad:coordinates = "lon lat" ;
-		lwrad:positive_value = "downward flux, heating" ;
-		lwrad:negative_value = "upward flux, cooling" ;
-		lwrad:time = "time" ;
+	float lwrad_down(time, lat, lon) ;
+		lwrad_down:long_name = "net longwave radiation flux" ;
+		lwrad_down:units = "Watts meter-2" ;
+        lwrad_down:coordinates = "lon lat" ;
+		lwrad_down:positive_value = "downward flux, heating" ;
+		lwrad_down:negative_value = "upward flux, cooling" ;
+		lwrad_down:time = "time" ;
 
 // global attributes:
 		:type = "FORCING file" ;

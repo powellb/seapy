@@ -29,7 +29,7 @@ gfs_map = {
     "rain": forcing_data("pratesfc", 1, 0),
     "Uwind": forcing_data("ugrd10m", 1, 0),
     "Vwind": forcing_data("vgrd10m", 1, 0),
-    "lwrad": forcing_data("dlwrfsfc", 1, 0),
+    "lwrad_down": forcing_data("dlwrfsfc", 1, 0),
     "swrad": forcing_data("dswrfsfc", 1, 0)
 }
 
@@ -43,7 +43,7 @@ ncep_map = {
     "rain": forcing_data("prate", 1, 0),
     "Uwind": forcing_data("uwnd", 1, 0),
     "Vwind": forcing_data("vwnd", 1, 0),
-    "lwrad": forcing_data("dlwrf", 1, 0),
+    "lwrad_down": forcing_data("dlwrf", 1, 0),
     "swrad": forcing_data("dswrf", 1, 0)
 }
 
@@ -66,7 +66,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
          "frc_lon":STRING name of longitude field in forcing file
          "frc_time":STRING name of time field in forcing file
          keys of ROMS bulk forcing field names (Tair, Pair, Qair,
-         rain, Uwind, Vwind, lwrad, swrad) each with an 
+         rain, Uwind, Vwind, lwrad_down, swrad) each with an 
          array of values of a named tuple (forcing_data) with the 
          following fields:
             field: STRING value of the forcing field to use
