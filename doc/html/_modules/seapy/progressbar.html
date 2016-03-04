@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.progressbar &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.progressbar</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ASCII Progress Bar that work in IPython notebooks.</span>
+
+<span class="sd">    Code take from examples shown at:</span>
+
+<span class="sd">  &lt;http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb&gt;</span>
+
+<span class="sd">    Modified to include a timer and added an iterator that displays a</span>
+<span class="sd">    progressbar as it iterates.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    &gt;&gt;&gt; for i in progressbar.progress(range(10)):</span>
+<span class="sd">    &gt;&gt;&gt;     frobnicate(i)</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">time</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">clear_output</span>
+    <span class="n">have_ipython</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">have_ipython</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="ProgressBar"><a class="viewcode-back" href="../../modules/seapy.html#seapy.progressbar.ProgressBar">[docs]</a><span class="k">class</span> <span class="nc">ProgressBar</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span> <span class="o">=</span> <span class="s1">&#39;[]&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fill_char</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">40</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_amount</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">have_ipython</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">animate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">animate_ipython</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">animate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">animate_noipython</span>
+
+<div class="viewcode-block" id="ProgressBar.animate_ipython"><a class="viewcode-back" href="../../modules/seapy.html#seapy.progressbar.ProgressBar.animate_ipython">[docs]</a>    <span class="k">def</span> <span class="nf">animate_ipython</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">iter</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_iteration</span><span class="p">(</span><span class="nb">iter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProgressBar.update_iteration"><a class="viewcode-back" href="../../modules/seapy.html#seapy.progressbar.ProgressBar.update_iteration">[docs]</a>    <span class="k">def</span> <span class="nf">update_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elapsed_iter</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_amount</span><span class="p">((</span><span class="n">elapsed_iter</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">))</span> <span class="o">*</span> <span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">process_time</span><span class="p">()</span>
+        <span class="n">delta</span><span class="o">=</span><span class="n">t</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+        <span class="n">togo</span><span class="o">=</span><span class="p">(</span><span class="n">delta</span><span class="o">/</span><span class="n">elapsed_iter</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="o">-</span><span class="n">elapsed_iter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span> <span class="o">+=</span> <span class="s1">&#39;  [</span><span class="si">%d</span><span class="s1"> of </span><span class="si">%d</span><span class="s1">, </span><span class="si">%.1f</span><span class="s1"> secs elapsed/</span><span class="si">%.1f</span><span class="s1"> secs ETA]&#39;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="n">elapsed_iter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">togo</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elapsed_iter</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2"> [ COMPLETED </span><span class="si">%d</span><span class="s2"> ITERATIONS IN </span><span class="si">%.1f</span><span class="s2"> SECS ] </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__update_amount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_amount</span><span class="p">):</span>
+        <span class="n">percent_done</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">new_amount</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">100.0</span><span class="p">))</span>
+        <span class="n">all_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="n">num_hashes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">percent_done</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">all_full</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span> <span class="o">=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fill_char</span> <span class="o">*</span> <span class="n">num_hashes</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="n">all_full</span> <span class="o">-</span> <span class="n">num_hashes</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span>
+        <span class="n">pct_place</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">percent_done</span><span class="p">))</span>
+        <span class="n">pct_string</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d%%</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">percent_done</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">pct_place</span><span class="p">]</span> <span class="o">+</span> \
+            <span class="p">(</span><span class="n">pct_string</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span><span class="p">[</span><span class="n">pct_place</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">pct_string</span><span class="p">):])</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prog_bar</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="progress"><a class="viewcode-back" href="../../modules/seapy.html#seapy.progressbar.progress">[docs]</a><span class="k">class</span> <span class="nc">progress</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draw a progess bar while going through the given iterator.</span>
+
+<span class="sd">    NOTE: If the iterator does not support the len() method, you should</span>
+<span class="sd">    supply the maxlen parameter.</span>
+
+<span class="sd">    &gt;&gt;&gt; for i in progress(range(10)):</span>
+<span class="sd">    &gt;&gt;&gt;    frobnicate(i)</span>
+
+<span class="sd">    or</span>
+
+<span class="sd">    &gt;&gt;&gt; for n,i in progressbar(enumerate(range(10)),10)</span>
+<span class="sd">    &gt;&gt;&gt;    frobnicate(n, i)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">maxlen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbar</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator</span><span class="p">)</span></div>
+
+
+<span class="c1">## Usage</span>
+<span class="k">if</span> <span class="n">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;use iterator&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">progress</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

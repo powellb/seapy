@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.roms.forcing &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.roms.forcing</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  forcing.py</span>
+
+<span class="sd">  Functions for generating ROMS forcing files (atmosphere, tides,</span>
+<span class="sd">  rivers, etc.)</span>
+
+<span class="sd">  Written by Brian Powell on 02/09/16</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">netCDF4</span>
+<span class="kn">import</span> <span class="nn">seapy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="c1"># Define a named tuple to store raw data for the gridder</span>
+<span class="n">forcing_data</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;forcing_data&#39;</span><span class="p">,</span> <span class="s1">&#39;field ratio offset&#39;</span><span class="p">)</span>
+
+<span class="n">gfs_url</span> <span class="o">=</span> <span class="s2">&quot;http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd&quot;</span>
+
+<span class="n">gfs_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;frc_lat&quot;</span><span class="p">:</span> <span class="s2">&quot;latitude&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;frc_lon&quot;</span><span class="p">:</span> <span class="s2">&quot;longitude&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;frc_time&quot;</span><span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Tair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;tmpsfc&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">273.15</span><span class="p">),</span>
+    <span class="s2">&quot;Pair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;prmslmsl&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Qair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;rh2m&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;rain&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;pratesfc&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Uwind&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;ugrd10m&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Vwind&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;vgrd10m&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;lwrad_down&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;dlwrfsfc&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;swrad&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;dswrfsfc&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">ncep_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;frc_lat&quot;</span><span class="p">:</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;frc_lon&quot;</span><span class="p">:</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;frc_time&quot;</span><span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Tair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;air&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">273.15</span><span class="p">),</span>
+    <span class="s2">&quot;Pair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;slp&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Qair&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;rhum&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;rain&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;prate&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Uwind&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;uwnd&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;Vwind&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;vwnd&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;lwrad_down&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;dlwrf&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="s2">&quot;swrad&quot;</span><span class="p">:</span> <span class="n">forcing_data</span><span class="p">(</span><span class="s2">&quot;dswrf&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="gen_bulk_forcing"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.forcing.gen_bulk_forcing">[docs]</a><span class="k">def</span> <span class="nf">gen_bulk_forcing</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span>
+                     <span class="n">epoch</span><span class="o">=</span><span class="n">seapy</span><span class="o">.</span><span class="n">default_epoch</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a source file (or URL), a dictionary that defines the</span>
+<span class="sd">    source fields mapped to the ROMS fields, then it will generate</span>
+<span class="sd">    a new bulk forcing file for ROMS.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infile: string,</span>
+<span class="sd">      The source file (or URL) to load the data from</span>
+<span class="sd">    fields: dict,</span>
+<span class="sd">        A dictionary of the fields to load and process. The dictionary</span>
+<span class="sd">        is composed of:</span>
+<span class="sd">         &quot;frc_lat&quot;:STRING name of latitude field in forcing file</span>
+<span class="sd">         &quot;frc_lon&quot;:STRING name of longitude field in forcing file</span>
+<span class="sd">         &quot;frc_time&quot;:STRING name of time field in forcing file</span>
+<span class="sd">         keys of ROMS bulk forcing field names (Tair, Pair, Qair,</span>
+<span class="sd">         rain, Uwind, Vwind, lwrad_down, swrad) each with an </span>
+<span class="sd">         array of values of a named tuple (forcing_data) with the </span>
+<span class="sd">         following fields:</span>
+<span class="sd">            field: STRING value of the forcing field to use</span>
+<span class="sd">            ratio: FLOAT value to multiply with the source data</span>
+<span class="sd">            offset: FLOAT value to add to the source data</span>
+<span class="sd">    outfile: string,</span>
+<span class="sd">        Name of the output file to create</span>
+<span class="sd">    grid: seapy.model.grid or string,</span>
+<span class="sd">        Grid to use for selecting spatial region</span>
+<span class="sd">    start_time: datetime,</span>
+<span class="sd">        Starting time of data to process</span>
+<span class="sd">    end_time: datetime,</span>
+<span class="sd">        Ending time of data to process</span>
+<span class="sd">    epoch: datetime,</span>
+<span class="sd">        Epoch to use for ROMS times</span>
+<span class="sd">    clobber: bool optional,</span>
+<span class="sd">        Delete existing file or not, default False</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None: Generates an output file of bulk forcings</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    To generate GFS forcing for the grid &quot;mygrid.nc&quot; for the year</span>
+<span class="sd">    2014, then use the standard GFS map definitions (and even</span>
+<span class="sd">    the built-in GFS archive url):</span>
+
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(seapy.roms.forcing.gfs_url,</span>
+<span class="sd">            seapy.roms.forcing.gfs_map, &#39;my_forcing.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2014,1,1))</span>
+
+<span class="sd">    NCEP reanalysis is trickier as the files are broken up by</span>
+<span class="sd">    variable type; hence, a separate file will be created for</span>
+<span class="sd">    each variable. We can use the wildcards though to put together</span>
+<span class="sd">    multiple time period (e.g., 2014 through 2015).</span>
+
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;uwnd.10m.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=True)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;vwnd.10m.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;air.2m.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;dlwrf.sfc.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;dswrf.sfc.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;prate.sfc.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;rhum.sig995.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc_rhum_slp.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=True)</span>
+<span class="sd">    &gt;&gt;&gt; seapy.roms.forcing.gen_bulk_forcing(&quot;slp.*nc&quot;, </span>
+<span class="sd">            seapy.roms.forcing.ncep_map, &#39;ncep_frc_rhum_slp.nc&#39;,</span>
+<span class="sd">            &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="sd">            datetime.datetime(2015,12,31)), clobber=False)</span>
+
+<span class="sd">    Two forcing files, &#39;ncep_frc.nc&#39; and &#39;ncep_frc_rhum_slp.nc&#39;, are</span>
+<span class="sd">    generated for use with ROMS. NOTE: You will have to use &#39;ncks&#39;</span>
+<span class="sd">    to eliminate the empty forcing fields between the two files</span>
+<span class="sd">    to prevent ROMS from loading them. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load the grid</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">asgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+
+    <span class="c1"># Open the Forcing data</span>
+    <span class="n">forcing</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+
+    <span class="c1"># Gather the information about the forcing</span>
+    <span class="n">frc_time</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;frc_time&#39;</span><span class="p">]][:],</span>
+                                <span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;frc_time&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+
+    <span class="c1"># Figure out the time records that are required</span>
+    <span class="n">time_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">frc_time</span> <span class="o">&gt;=</span> <span class="n">start_time</span><span class="p">,</span>
+                                        <span class="n">frc_time</span> <span class="o">&lt;=</span> <span class="n">end_time</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">time_list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot find valid times&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get the latitude and longitude ranges</span>
+    <span class="n">minlat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">maxlat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">))</span> <span class="o">+</span> <span class="mf">0.5</span>
+    <span class="n">minlon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">maxlon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">))</span> <span class="o">+</span> <span class="mf">0.5</span>
+    <span class="n">frc_lon</span> <span class="o">=</span> <span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;frc_lon&#39;</span><span class="p">]][:]</span>
+    <span class="n">frc_lat</span> <span class="o">=</span> <span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;frc_lat&#39;</span><span class="p">]][:]</span>
+    <span class="c1"># Make the forcing lat/lon on 2D grid</span>
+    <span class="k">if</span> <span class="n">frc_lon</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">frc_lon</span><span class="p">,</span> <span class="n">frc_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">frc_lon</span><span class="p">,</span> <span class="n">frc_lat</span><span class="p">)</span>
+
+    <span class="c1"># Find the values in our region</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">grid</span><span class="o">.</span><span class="n">east</span><span class="p">():</span>
+        <span class="n">frc_lon</span><span class="p">[</span><span class="n">frc_lon</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">360</span>
+    <span class="n">region_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">((</span>
+        <span class="n">frc_lon</span> <span class="o">&lt;=</span> <span class="n">maxlon</span><span class="p">,</span>
+        <span class="n">frc_lon</span> <span class="o">&gt;=</span> <span class="n">minlon</span><span class="p">,</span>
+        <span class="n">frc_lat</span> <span class="o">&lt;=</span> <span class="n">maxlat</span><span class="p">,</span>
+        <span class="n">frc_lat</span> <span class="o">&gt;=</span> <span class="n">minlat</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">region_list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot find valid region&quot;</span><span class="p">)</span>
+
+    <span class="n">eta_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">region_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">region_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">xi_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">region_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">region_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">frc_lon</span> <span class="o">=</span> <span class="n">frc_lon</span><span class="p">[</span><span class="n">eta_list</span><span class="p">,</span> <span class="n">xi_list</span><span class="p">]</span>
+    <span class="n">frc_lat</span> <span class="o">=</span> <span class="n">frc_lat</span><span class="p">[</span><span class="n">eta_list</span><span class="p">,</span> <span class="n">xi_list</span><span class="p">]</span>
+
+    <span class="c1"># Create the output file</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">ncgen</span><span class="o">.</span><span class="n">create_frc_bulk</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="n">frc_lat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                           <span class="n">lon</span><span class="o">=</span><span class="n">frc_lon</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reftime</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+                                           <span class="n">clobber</span><span class="o">=</span><span class="n">clobber</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">date2num</span><span class="p">(</span><span class="n">frc_time</span><span class="p">[</span><span class="n">time_list</span><span class="p">],</span>
+                                                <span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">frc_lat</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">frc_lon</span>
+
+    <span class="c1"># Loop over the fields and fill out the output file</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">seapy</span><span class="o">.</span><span class="n">progressbar</span><span class="o">.</span><span class="n">progress</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">()))):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">f</span><span class="p">][:]</span> <span class="o">=</span> \
+            <span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">field</span><span class="p">][</span><span class="n">time_list</span><span class="p">,</span> <span class="n">eta_list</span><span class="p">,</span> <span class="n">xi_list</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">fields</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">ratio</span> <span class="o">+</span> <span class="n">fields</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">offset</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+
+    <span class="n">out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

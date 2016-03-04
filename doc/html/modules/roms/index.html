@@ -1,0 +1,3358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SEAPY ROMS Package Documentation &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="SEAPY modules" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seapy-roms-package-documentation">
+<h1>SEAPY ROMS Package Documentation<a class="headerlink" href="#seapy-roms-package-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-seapy.roms.__init__">
+<span id="seapy-roms-working-with-roms-fields-and-observations"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">seapy.roms</span></code> &#8211; Working with ROMS fields and observations<a class="headerlink" href="#module-seapy.roms.__init__" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-seapy.roms.lib"></span><p>lib.py</p>
+<p>General ROMS utils</p>
+<p>Written by Brian Powell on 05/24/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.lib.depth">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">depth</code><span class="sig-paren">(</span><em>vtransform=1</em>, <em>h=None</em>, <em>hc=100</em>, <em>scoord=None</em>, <em>stretching=None</em>, <em>zeta=0</em>, <em>w_grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#depth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the depth of the given bathymetry in s-levels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vtransform</strong> : int, optional</p>
+<blockquote>
+<div><p>transform algorithm type</p>
+</div></blockquote>
+<p><strong>h: array, optional</strong></p>
+<blockquote>
+<div><p>value of bottom depths</p>
+</div></blockquote>
+<p><strong>hc: int, optional</strong></p>
+<blockquote>
+<div><p>critical depth</p>
+</div></blockquote>
+<p><strong>scoord: array</strong></p>
+<blockquote>
+<div><p>s coordinates from stretching method</p>
+</div></blockquote>
+<p><strong>stretching: array</strong></p>
+<blockquote>
+<div><p>stretching values from stretching method</p>
+</div></blockquote>
+<p><strong>zeta: array</strong></p>
+<blockquote>
+<div><p>sea surface height to add to bottom</p>
+</div></blockquote>
+<p><strong>w_grid: bool, optional</strong></p>
+<blockquote>
+<div><p>solve stretching on the w-grid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">s, cs: array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.lib.get_reftime">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">get_reftime</code><span class="sig-paren">(</span><em>nc</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#get_reftime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.get_reftime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a ROMS netCDF4 file, return the reference time for the file. This
+is the timebase of the record dimension in the format:
+&#8220;&lt;units&gt; since &lt;reftime&gt;&#8221;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nc</strong> : netCDF4 dataset</p>
+<blockquote>
+<div><p>Input ROMS file</p>
+</div></blockquote>
+<p><strong>epoch_str</strong> : string, optional</p>
+<blockquote>
+<div><p>If lacking units, use this string as the units</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>timebase</strong> : datetime</p>
+<blockquote>
+<div><p>datetime of the origin for the file</p>
+</div></blockquote>
+<p><strong>time</strong> : string</p>
+<blockquote class="last">
+<div><p>name of variable used to generate the base (None if default)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.lib.get_time">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">get_time</code><span class="sig-paren">(</span><em>nc</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the time vector from a netCDF file as a datetime array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nc</strong> : netCDF4.Dataset netcdf input file</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray of datetime</p>
+<blockquote class="last">
+<div><p>The times of the given netCDF file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.lib.get_timevar">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">get_timevar</code><span class="sig-paren">(</span><em>nc</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#get_timevar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.get_timevar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the appropriate time variable (bry_time, ocean_time, etc.) from a
+given netcdf file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nc</strong> : netCDF4.Dataset netcdf input file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">time: string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.lib.stretching">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">stretching</code><span class="sig-paren">(</span><em>vstretching=2</em>, <em>theta_s=2</em>, <em>theta_b=0.1</em>, <em>hc=100</em>, <em>s_rho=10</em>, <em>w_grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#stretching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.stretching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the stretching function for ROMS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vstretching</strong> : int, optional</p>
+<blockquote>
+<div><p>stretching algorithm type</p>
+</div></blockquote>
+<p><strong>theta_s: float, optional</strong></p>
+<blockquote>
+<div><p>value of surface theta</p>
+</div></blockquote>
+<p><strong>theta_b: float, optional</strong></p>
+<blockquote>
+<div><p>value of bottom theta</p>
+</div></blockquote>
+<p><strong>hc: int, optional</strong></p>
+<blockquote>
+<div><p>critical depth</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>w_grid: bool, optional</strong></p>
+<blockquote>
+<div><p>solve stretching on the w-grid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">s, cs: array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.lib.thickness">
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">thickness</code><span class="sig-paren">(</span><em>vtransform=1</em>, <em>h=None</em>, <em>hc=100</em>, <em>scoord=None</em>, <em>stretching=None</em>, <em>zeta=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#thickness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.thickness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the transform method, the bathyemtry, the sea surface height
+[optional], the critical depth, the s-coordinates, and stretching
+function (returned by the roms.utils.stretching function), determine
+the thickness of the grid cells</p>
+</dd></dl>
+
+<div class="section" id="module-seapy.roms.analysis">
+<span id="analysis-performing-analysis-on-output-fields"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">analysis</span></code> &#8211; Performing analysis on output fields<a class="headerlink" href="#module-seapy.roms.analysis" title="Permalink to this headline">¶</a></h3>
+<p>analysis.py</p>
+<p>Methods to assist in the analysis of ROMS fields</p>
+<p>Written by Brian Powell on 05/24/15
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.analysis.constant_depth">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">constant_depth</code><span class="sig-paren">(</span><em>field</em>, <em>grid</em>, <em>depth</em>, <em>zeta=None</em>, <em>threads=-2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#constant_depth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.constant_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the values of a 3-D field at a constant depth for all times given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>field</strong> : ndarray,</p>
+<blockquote>
+<div><p>ROMS 3-D field to interpolate onto a constant depth level. Can be
+two- or three-dimensional array (first dimension assumed to be time).</p>
+</div></blockquote>
+<p><strong>grid</strong> : seapy.model.grid or string or list,</p>
+<blockquote>
+<div><p>Grid that defines the depths and stretching for the field given</p>
+</div></blockquote>
+<p><strong>depth</strong> : float,</p>
+<blockquote>
+<div><p>Depth (in meters) to find all values</p>
+</div></blockquote>
+<p><strong>zeta</strong> : ndarray, optional,</p>
+<blockquote>
+<div><p>ROMS zeta field corresponding to field if you wish to apply the SSH
+correction to the depth calculations.</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional,</p>
+<blockquote>
+<div><p>Number of threads to use for processing</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>nfield</strong> : ndarray,</p>
+<blockquote class="last">
+<div><p>Values from ROMS field on the given constant depth</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.analysis.depth_average">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">depth_average</code><span class="sig-paren">(</span><em>field</em>, <em>grid</em>, <em>depth</em>, <em>zeta=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#depth_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.depth_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the depth-averaged field down to the depth specified. NOTE:
+This just finds the nearest layer, so at every grid cell, it may not be
+exactly the specified depth.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>field</strong> : ndarray,</p>
+<blockquote>
+<div><p>ROMS 3-D field to integrate from a depth level. Must be
+three-dimensional array (single time).</p>
+</div></blockquote>
+<p><strong>grid</strong> : seapy.model.grid or string or list,</p>
+<blockquote>
+<div><p>Grid that defines the depths and stretching for the field given</p>
+</div></blockquote>
+<p><strong>depth</strong> : float,</p>
+<blockquote>
+<div><p>Depth (in meters) to integrate to</p>
+</div></blockquote>
+<p><strong>zeta</strong> : ndarray, optional,</p>
+<blockquote>
+<div><p>ROMS zeta field corresponding to field if you wish to apply the SSH
+correction to the depth calculations.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray,</p>
+<blockquote class="last">
+<div><p>Values from depth integrated ROMS field</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.analysis.gen_std_f">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">gen_std_f</code><span class="sig-paren">(</span><em>roms_file</em>, <em>std_file</em>, <em>std_window=5</em>, <em>pad=1</em>, <em>skip=30</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#gen_std_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.gen_std_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a std file for the given atmospheric forcing fields. This std
+file can be used for the forcing constraint in 4D-Var. This requires a
+long-term model spinup file from which to compute the standard deviation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roms_file: string or list of strings,</strong></p>
+<blockquote>
+<div><p>The ROMS (history or average) file from which to compute the std. If
+it is a list of strings, a netCDF4.MFDataset is opened instead.</p>
+</div></blockquote>
+<p><strong>std_file: string,</strong></p>
+<blockquote>
+<div><p>The name of the file to store the standard deviations fields</p>
+</div></blockquote>
+<p><strong>std_window: int,</strong></p>
+<blockquote>
+<div><p>The size of the window (in number of records) to compute the std over</p>
+</div></blockquote>
+<p><strong>pad: int,</strong></p>
+<blockquote>
+<div><p>How much to pad each side of the window for overlap. For example,
+std_window=10 and pad=2 would give a total window of 14 with 2 records
+used in the prior window and 2 in the post window as well.</p>
+</div></blockquote>
+<p><strong>skip: int,</strong></p>
+<blockquote>
+<div><p>How many records to skip at the beginning of the file</p>
+</div></blockquote>
+<p><strong>fields: list of str,</strong></p>
+<blockquote>
+<div><p>The fields to compute std for. Default is to use the ROMS atmospheric
+variables (sustr, svstr, shflux, ssflux).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.analysis.gen_std_i">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">gen_std_i</code><span class="sig-paren">(</span><em>roms_file</em>, <em>std_file</em>, <em>std_window=5</em>, <em>pad=1</em>, <em>skip=30</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#gen_std_i"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.gen_std_i" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a std file for the given ocean fields. This std file can be used
+for initial conditions constraint in 4D-Var. This requires a long-term
+model spinup file from which to compute the standard deviation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roms_file: string or list of strings,</strong></p>
+<blockquote>
+<div><p>The ROMS (history or average) file from which to compute the std. If
+it is a list of strings, a netCDF4.MFDataset is opened instead.</p>
+</div></blockquote>
+<p><strong>std_file: string,</strong></p>
+<blockquote>
+<div><p>The name of the file to store the standard deviations fields</p>
+</div></blockquote>
+<p><strong>std_window: int,</strong></p>
+<blockquote>
+<div><p>The size of the window (in number of records) to compute the std over</p>
+</div></blockquote>
+<p><strong>pad: int,</strong></p>
+<blockquote>
+<div><p>How much to pad each side of the window for overlap. For example,
+std_window=10 and pad=2 would give a total window of 14 with 2 records
+used in the prior window and 2 in the post window as well.</p>
+</div></blockquote>
+<p><strong>skip: int,</strong></p>
+<blockquote>
+<div><p>How many records to skip at the beginning of the file</p>
+</div></blockquote>
+<p><strong>fields: list of str,</strong></p>
+<blockquote>
+<div><p>The fields to compute std for. Default is to use the ROMS prognostic
+variables.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.analysis.plot_obs_profile">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">plot_obs_profile</code><span class="sig-paren">(</span><em>obs</em>, <em>type='temp'</em>, <em>prov=None</em>, <em>time=None</em>, <em>gridcoord=False</em>, <em>error=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#plot_obs_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.plot_obs_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sub-surface profile plot of the observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obs: filename, list, or observation class</strong></p>
+<blockquote>
+<div><p>The observations to use for plotting</p>
+</div></blockquote>
+<p><strong>type: string or int,</strong></p>
+<blockquote>
+<div><p>The type of observation to plot (&#8216;zeta&#8217;, &#8216;temp&#8217;, &#8216;salt&#8217;, etc.)</p>
+</div></blockquote>
+<p><strong>prov: string or int,</strong></p>
+<blockquote>
+<div><p>The provenance of the observations to plot</p>
+</div></blockquote>
+<p><strong>time: ndarray,</strong></p>
+<blockquote>
+<div><p>The times of the observations to plot</p>
+</div></blockquote>
+<p><strong>gridcoord: bool,</strong></p>
+<blockquote>
+<div><p>If True, plot on grid coordinates. If False [default] plot on lat/lon</p>
+</div></blockquote>
+<p><strong>error: bool,</strong></p>
+<blockquote>
+<div><p>If True plot the errors rather than values. Default is False.</p>
+</div></blockquote>
+<p><strong>**kwargs: keywords</strong></p>
+<blockquote>
+<div><p>Passed to matplotlib.pyplot.scatter</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.analysis.plot_obs_surface">
+<code class="descclassname">seapy.roms.analysis.</code><code class="descname">plot_obs_surface</code><span class="sig-paren">(</span><em>obs</em>, <em>type='zeta'</em>, <em>prov=None</em>, <em>time=None</em>, <em>gridcoord=False</em>, <em>error=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/analysis.html#plot_obs_surface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.analysis.plot_obs_surface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a surface plot of the observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obs: filename, list, or observation class</strong></p>
+<blockquote>
+<div><p>The observations to use for plotting</p>
+</div></blockquote>
+<p><strong>type: string or int,</strong></p>
+<blockquote>
+<div><p>The type of observation to plot (&#8216;zeta&#8217;, &#8216;temp&#8217;, &#8216;salt&#8217;, etc.)</p>
+</div></blockquote>
+<p><strong>prov: string or int,</strong></p>
+<blockquote>
+<div><p>The provenance of the observations to plot</p>
+</div></blockquote>
+<p><strong>time: ndarray,</strong></p>
+<blockquote>
+<div><p>The times of the observations to plot</p>
+</div></blockquote>
+<p><strong>gridcoord: bool,</strong></p>
+<blockquote>
+<div><p>If True, plot on grid coordinates. If False [default] plot on lat/lon</p>
+</div></blockquote>
+<p><strong>error: bool,</strong></p>
+<blockquote>
+<div><p>If True plot the errors rather than values. Default is False.</p>
+</div></blockquote>
+<p><strong>**kwargs: keywords</strong></p>
+<blockquote>
+<div><p>Passed to matplotlib.pyplot.scatter</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.boundary">
+<span id="boundary-generating-boundary-conditions"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">boundary</span></code> &#8211; Generating Boundary Conditions<a class="headerlink" href="#module-seapy.roms.boundary" title="Permalink to this headline">¶</a></h3>
+<p>boundary.py</p>
+<p>ROMS boundary utilities</p>
+<p>Written by Brian Powell on 01/15/14
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.boundary.detide">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">detide</code><span class="sig-paren">(</span><em>grid</em>, <em>bryfile</em>, <em>tidefile</em>, <em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#detide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.detide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a boundary file, detide the barotropic components and create tidal
+forcing file for the grid. This method will update the given boundary file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>grid</strong> : seapy.model.grid or string,</p>
+<p><strong>infile</strong> : string,</p>
+<p><strong>outfile</strong> : string,</p>
+<p><strong>tidefile</strong> : string,</p>
+<p><strong>tides</strong> : string array,</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Make a long time-series boundary conditions from a group of boundary files, 
+skipping the last record of each file to prevent overlap (if there are 100 records
+in each file). Afterwards, detide the resulting file.</p>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt;&gt; !ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
+&gt;&gt;&gt; seapy.roms.boundary.detide(&quot;mygrid.nc&quot;, &quot;bry_detide.nc&quot;, &quot;tide_out.nc&quot;)
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.boundary.from_roms">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">from_roms</code><span class="sig-paren">(</span><em>roms_file</em>, <em>bry_file</em>, <em>grid=None</em>, <em>records=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#from_roms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.from_roms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a ROMS history, average, or climatology file, generate
+boundary conditions on the same grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roms_file</strong> : string or list,</p>
+<blockquote>
+<div><p>ROMS source (history, average, climatology file)</p>
+</div></blockquote>
+<p><strong>bry_file</strong> : string,</p>
+<blockquote>
+<div><p>output boundary file</p>
+</div></blockquote>
+<p><strong>grid</strong> : seapy.model.grid or string, optional,</p>
+<blockquote>
+<div><p>ROMS grid for boundaries</p>
+</div></blockquote>
+<p><strong>records</strong> : array, optional</p>
+<blockquote>
+<div><p>record indices to put into the boundary</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.boundary.from_stations">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">from_stations</code><span class="sig-paren">(</span><em>station_file</em>, <em>bry_file</em>, <em>grid=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#from_stations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.from_stations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a boundary forcing file from a stations file generated by a parent-grid.
+The stations.in file must have been generated by the seapy.roms.gen_stations method;
+otherwise, the order will be incorrect.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>station_file</strong> : string</p>
+<blockquote>
+<div><p>Filename of the stations file that is the source for the boundary data</p>
+</div></blockquote>
+<p><strong>bry_file</strong> : string</p>
+<blockquote>
+<div><p>Filename of the boundary conditions file to generate</p>
+</div></blockquote>
+<p><strong>grid</strong> : string or seapy.model.grid</p>
+<blockquote>
+<div><p>Grid that the boundary conditions are created for</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.boundary.from_std">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">from_std</code><span class="sig-paren">(</span><em>std_filename</em>, <em>bry_std_file</em>, <em>fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#from_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.from_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the boundary standard deviations file for 4DVAR from the
+standard deviation of a boundary file. Best to use nco:</p>
+<p>$ ncwa -a bry_time roms_bry_file tmp.nc</p>
+<p>$ ncbo -O -y sub roms_bry_file tmp.nc tmp.nc</p>
+<p>$ ncra -y rmssdn tmp.nc roms_bry_std.nc</p>
+<p>to generate the standard deviations. This method simply takes the
+standard deviations of the boundaries and puts them into the
+proper format for ROMS 4DVAR.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>std_filename</strong> : string or list,</p>
+<blockquote>
+<div><p>Filename of the boundary standard deviation file</p>
+</div></blockquote>
+<p><strong>bry_std_file</strong> : string,</p>
+<blockquote>
+<div><p>Filename of the boundary standard deviations file to create</p>
+</div></blockquote>
+<p><strong>fields</strong> : list, optional,</p>
+<blockquote>
+<div><p>ROMS fields to generate boundaries for. The default are the
+standard fields as defined in seapy.roms.fields</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.boundary.gen_ncks">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">gen_ncks</code><span class="sig-paren">(</span><em>parent_file</em>, <em>grid</em>, <em>sponge=0</em>, <em>pad=3</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#gen_ncks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.gen_ncks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the ncks commands for extracting a section of a global model
+that encompasses each of the boundaries of the given grid. The reason
+for this is that often we end up with massive global files, and we do
+not want to interpolate the entirety onto our regional grids (if our
+regional grid is large also), but only the boundary and nudge/sponge
+region.</p>
+<p>This script simply does the computation and outputs the necessary <cite>ncks</cite>
+commands that the user needs to produce global boundary region and
+boundary &#8220;grid&#8221; for the regional grid to then use in the interpolation
+(e.g., seapy.interp.to_clim). This is purely to save disk and cpu
+expense, and it is non-trivial to use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parent_file</strong> : seapy.model.grid or string,</p>
+<blockquote>
+<div><p>Parent file (HYCOM, etc.)</p>
+</div></blockquote>
+<p><strong>grid</strong> : seapy.model.grid or string, optional,</p>
+<blockquote>
+<div><p>ROMS grid for boundaries</p>
+</div></blockquote>
+<p><strong>sponge</strong> : int,</p>
+<blockquote>
+<div><p>Width to extract along each boundary. If 0, only the boundary itself
+will be extracted.</p>
+</div></blockquote>
+<p><strong>pad</strong> : int,</p>
+<blockquote>
+<div><p>Additional rows/columns to extract from parent around the region</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.boundary.gen_stations">
+<code class="descclassname">seapy.roms.boundary.</code><code class="descname">gen_stations</code><span class="sig-paren">(</span><em>filename</em>, <em>grid</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/boundary.html#gen_stations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.boundary.gen_stations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a station file with stations at every boundary location for use in
+nesting one grid within another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>Input name of station file to create</p>
+</div></blockquote>
+<p><strong>grid: string or seapy.model.grid</strong></p>
+<blockquote>
+<div><p>Input grid to generate station file from. If string, it will open
+the grid file. If grid, it will use the grid information</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.clim">
+<span id="clim-working-with-climatology-conditions"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">clim</span></code> &#8211; Working with Climatology Conditions<a class="headerlink" href="#module-seapy.roms.clim" title="Permalink to this headline">¶</a></h3>
+<p>clim.py</p>
+<p>ROMS climatology utilities</p>
+<p>Written by Brian Powell on 08/15/15
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.clim.gen_bry_clim">
+<code class="descclassname">seapy.roms.clim.</code><code class="descname">gen_bry_clim</code><span class="sig-paren">(</span><em>clim_file</em>, <em>grid</em>, <em>bry</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/clim.html#gen_bry_clim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.clim.gen_bry_clim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Taking the results of gen_ncks and interpolation, stitch together
+climatology files that were interpolated using only the boundary regions
+into a single climatology (with no data where interpolation wasn&#8217;t
+performed).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>clim_file: str,</strong></p>
+<blockquote>
+<div><p>The name of the output climate file</p>
+</div></blockquote>
+<p><strong>grid: seapy.model.grid or str,</strong></p>
+<blockquote>
+<div><p>The output ROMS grid</p>
+</div></blockquote>
+<p><strong>bry: dict,</strong></p>
+<blockquote>
+<div><p>A dictionary prescribing the climatology file interpolated for each
+boundary side.
+{&#8220;west&#8221;:filename, &#8220;south&#8221;:filename}, ...}</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.clim.nc_concat">
+<code class="descclassname">seapy.roms.clim.</code><code class="descname">nc_concat</code><span class="sig-paren">(</span><em>clim_files</em>, <em>out_file</em>, <em>maxrecs=20</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/clim.html#nc_concat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.clim.nc_concat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since climatology files have multiple non-record dimensions, they are
+difficult to work with using standard netcdf operations. This routine
+takes a list of climatology files and creates a new one with the list
+concatenated together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>clim_files: list,</strong></p>
+<blockquote>
+<div><p>List of climatology files to concatenate</p>
+</div></blockquote>
+<p><strong>out_file: string,</strong></p>
+<blockquote>
+<div><p>Name of output file</p>
+</div></blockquote>
+<p><strong>maxrecs: int,</strong></p>
+<blockquote>
+<div><p>For large records, we can only deal with so many at each chunk.
+Define how many to grab in one pass.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.ezgrid">
+<span id="ezgrid-generating-grids-for-roms"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">ezgrid</span></code> &#8211; Generating grids for ROMS<a class="headerlink" href="#module-seapy.roms.ezgrid" title="Permalink to this headline">¶</a></h3>
+<p>ezgrid.py</p>
+<p>Functions for generating ROMS grid files</p>
+<p>Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.ezgrid.calc_latlon">
+<code class="descclassname">seapy.roms.ezgrid.</code><code class="descname">calc_latlon</code><span class="sig-paren">(</span><em>llcrnrlat</em>, <em>llcrnrlon</em>, <em>reseta</em>, <em>resxi=None</em>, <em>rotate=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ezgrid.html#calc_latlon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ezgrid.calc_latlon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate arrays for latitude and longitude for use in
+creating simple grids.</p>
+<p>NOTE: You can specify variational resolutions and rotations;
+however, this uses a simple algorithm to step along from the
+origin, and discrepencies are averaged together. THEREFORE,
+if you are not specifying inconsistent resolutions or
+rotations within single row or columns, you may get results
+slightly different than specified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>llcrnrlat</strong> : float,</p>
+<blockquote>
+<div><p>Latitude for the lower, left of the grid</p>
+</div></blockquote>
+<p><strong>llcrnrlon</strong> : float,</p>
+<blockquote>
+<div><p>Longitude for the lower, left of the grid</p>
+</div></blockquote>
+<p><strong>reseta</strong> : ndarray,</p>
+<blockquote>
+<div><p>Resolution in meters in the eta-direction of each grid cell.
+A 2D array that is the horizontal size of the grid (e.g.,
+resolution.shape = (100,70)) and the values stored are
+the desired resolution of the grid cell in m. Hence,
+a 100 x 70 array of ones would create a grid that is
+100 in the eta-direction, 70 in the xi-direction, and
+a constant resolution of 1km. If the lat and lon is
+specified as arrays, this is optional.</p>
+</div></blockquote>
+<p><strong>resxi</strong> : ndarray, optional,</p>
+<blockquote>
+<div><p>Resolution in meters in the xi-direction of each grid cell.
+This is the same as reseta; however, it is optional, and
+is set to the same as reseta if not specified.</p>
+</div></blockquote>
+<p><strong>rotate</strong> : float or ndarray,</p>
+<blockquote>
+<div><p>Amount to rotate the grid in degrees. If given as a scalar,
+the entire grid is rotated at the same angle; otherwise, the
+grid my have curvilinear shape. The angle is geometric
+(counter-clockwise).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>lat, lon</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Two arrays of size resolution containing the computed lat
+and lons</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a grid of 1km resolution in both eta and xi, 
+rotated toward the SE by 33 degrees, with the lower left
+point at 20N, 150E:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span><span class="mi">70</span><span class="p">))</span> <span class="o">*</span> <span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">calc_latlon</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=-</span><span class="mi">33</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ezgrid.create_grid">
+<code class="descclassname">seapy.roms.ezgrid.</code><code class="descname">create_grid</code><span class="sig-paren">(</span><em>grid_file</em>, <em>lat</em>, <em>lon</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ezgrid.html#create_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ezgrid.create_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new, basic grid. This will construct the ROMS grid netcdf file
+given a set of latitude and longitude coordinates for the rho-grid.
+The coordinates can be spaced however specified, and the grid will be
+created; however, this does not guarantee the grid will be valid.
+After the grid is created, the bathymetry and mask will need to be
+generated independently.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>grid_file</strong> : string,</p>
+<blockquote>
+<div><p>Name of the grid file to create. NOTE: this file will be
+overwritten.</p>
+</div></blockquote>
+<p><strong>lat</strong> : ndarray,</p>
+<blockquote>
+<div><p>latitude of the grid cells. The array must be the size
+of the desired grid.</p>
+</div></blockquote>
+<p><strong>lon</strong> : ndarray,</p>
+<blockquote>
+<div><p>longitude of the grid cells. The array must be the size
+of the desired grid.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">netCDF4 :</p>
+<blockquote class="last">
+<div><p>The netcdf object of the new grid</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>To create a basic, evenly spaced grid:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">create_grid</span><span class="p">(</span><span class="s1">&#39;mygrid.nc&#39;</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create more advanced grids, simply generate the
+2D arrays of lat and lon in the manner you want your cells
+and call create_grid:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">create_grid</span><span class="p">(</span><span class="s1">&#39;mygrid.nc&#39;</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.forcing">
+<span id="forcing-working-with-atmospheric-conditions"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">forcing</span></code> &#8211; Working with Atmospheric Conditions<a class="headerlink" href="#module-seapy.roms.forcing" title="Permalink to this headline">¶</a></h3>
+<p>forcing.py</p>
+<p>Functions for generating ROMS forcing files (atmosphere, tides,
+rivers, etc.)</p>
+<p>Written by Brian Powell on 02/09/16
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="class">
+<dt id="seapy.roms.forcing.forcing_data">
+<em class="property">class </em><code class="descclassname">seapy.roms.forcing.</code><code class="descname">forcing_data</code><span class="sig-paren">(</span><em>field</em>, <em>ratio</em>, <em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.roms.forcing.forcing_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.forcing.forcing_data.field" title="seapy.roms.forcing.forcing_data.field"><code class="xref py py-obj docutils literal"><span class="pre">field</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.forcing.forcing_data.offset" title="seapy.roms.forcing.forcing_data.offset"><code class="xref py py-obj docutils literal"><span class="pre">offset</span></code></a></td>
+<td>Alias for field number 2</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.forcing.forcing_data.ratio" title="seapy.roms.forcing.forcing_data.ratio"><code class="xref py py-obj docutils literal"><span class="pre">ratio</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="seapy.roms.forcing.forcing_data.field">
+<code class="descname">field</code><a class="headerlink" href="#seapy.roms.forcing.forcing_data.field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.forcing.forcing_data.offset">
+<code class="descname">offset</code><a class="headerlink" href="#seapy.roms.forcing.forcing_data.offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.forcing.forcing_data.ratio">
+<code class="descname">ratio</code><a class="headerlink" href="#seapy.roms.forcing.forcing_data.ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.forcing.gen_bulk_forcing">
+<code class="descclassname">seapy.roms.forcing.</code><code class="descname">gen_bulk_forcing</code><span class="sig-paren">(</span><em>infile</em>, <em>fields</em>, <em>outfile</em>, <em>grid</em>, <em>start_time</em>, <em>end_time</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/forcing.html#gen_bulk_forcing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.forcing.gen_bulk_forcing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a source file (or URL), a dictionary that defines the
+source fields mapped to the ROMS fields, then it will generate
+a new bulk forcing file for ROMS.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>infile: string,</strong></p>
+<blockquote>
+<div><p>The source file (or URL) to load the data from</p>
+</div></blockquote>
+<p><strong>fields: dict,</strong></p>
+<blockquote>
+<div><p>A dictionary of the fields to load and process. The dictionary
+is composed of:</p>
+<blockquote>
+<div><p>&#8220;frc_lat&#8221;:STRING name of latitude field in forcing file
+&#8220;frc_lon&#8221;:STRING name of longitude field in forcing file
+&#8220;frc_time&#8221;:STRING name of time field in forcing file
+keys of ROMS bulk forcing field names (Tair, Pair, Qair,
+rain, Uwind, Vwind, lwrad_down, swrad) each with an 
+array of values of a named tuple (forcing_data) with the 
+following fields:</p>
+<blockquote>
+<div><p>field: STRING value of the forcing field to use
+ratio: FLOAT value to multiply with the source data
+offset: FLOAT value to add to the source data</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p><strong>outfile: string,</strong></p>
+<blockquote>
+<div><p>Name of the output file to create</p>
+</div></blockquote>
+<p><strong>grid: seapy.model.grid or string,</strong></p>
+<blockquote>
+<div><p>Grid to use for selecting spatial region</p>
+</div></blockquote>
+<p><strong>start_time: datetime,</strong></p>
+<blockquote>
+<div><p>Starting time of data to process</p>
+</div></blockquote>
+<p><strong>end_time: datetime,</strong></p>
+<blockquote>
+<div><p>Ending time of data to process</p>
+</div></blockquote>
+<p><strong>epoch: datetime,</strong></p>
+<blockquote>
+<div><p>Epoch to use for ROMS times</p>
+</div></blockquote>
+<p><strong>clobber: bool optional,</strong></p>
+<blockquote>
+<div><p>Delete existing file or not, default False</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None: Generates an output file of bulk forcings</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>To generate GFS forcing for the grid &#8220;mygrid.nc&#8221; for the year
+2014, then use the standard GFS map definitions (and even
+the built-in GFS archive url):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gfs_url</span><span class="p">,</span>
+<span class="go">        seapy.roms.forcing.gfs_map, &#39;my_forcing.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2014,1,1))</span>
+</pre></div>
+</div>
+<p>NCEP reanalysis is trickier as the files are broken up by
+variable type; hence, a separate file will be created for
+each variable. We can use the wildcards though to put together
+multiple time period (e.g., 2014 through 2015).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;uwnd.10m.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=True)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;vwnd.10m.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;air.2m.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;dlwrf.sfc.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;dswrf.sfc.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;prate.sfc.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;rhum.sig995.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc_rhum_slp.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=True)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">forcing</span><span class="o">.</span><span class="n">gen_bulk_forcing</span><span class="p">(</span><span class="s2">&quot;slp.*nc&quot;</span><span class="p">,</span> 
+<span class="go">        seapy.roms.forcing.ncep_map, &#39;ncep_frc_rhum_slp.nc&#39;,</span>
+<span class="go">        &#39;mygrid.nc&#39;, datetime.datetime(2014,1,1),</span>
+<span class="go">        datetime.datetime(2015,12,31)), clobber=False)</span>
+</pre></div>
+</div>
+<p>Two forcing files, &#8216;ncep_frc.nc&#8217; and &#8216;ncep_frc_rhum_slp.nc&#8217;, are
+generated for use with ROMS. NOTE: You will have to use &#8216;ncks&#8217;
+to eliminate the empty forcing fields between the two files
+to prevent ROMS from loading them.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.initial">
+<span id="initial-generating-initial-conditions"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">initial</span></code> &#8211; Generating Initial Conditions<a class="headerlink" href="#module-seapy.roms.initial" title="Permalink to this headline">¶</a></h3>
+<p>initial.py</p>
+<p>ROMS initial conditions utilities</p>
+<p>Written by Brian Powell on 01/15/14
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.initial.from_roms">
+<code class="descclassname">seapy.roms.initial.</code><code class="descname">from_roms</code><span class="sig-paren">(</span><em>roms_file</em>, <em>ini_file</em>, <em>record=0</em>, <em>time=None</em>, <em>grid=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/initial.html#from_roms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.initial.from_roms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a ROMS history, average, or climatology file, generate
+initial conditions on the same grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roms_file: string or list</strong></p>
+<blockquote>
+<div><p>Input ROMS source (history, average, climatology file)</p>
+</div></blockquote>
+<p><strong>ini_file: string</strong></p>
+<blockquote>
+<div><p>Input name for output initial condition file</p>
+</div></blockquote>
+<p><strong>record: int</strong></p>
+<blockquote>
+<div><p>Input index to use as initial condition</p>
+</div></blockquote>
+<p><strong>time: datetime optional</strong></p>
+<blockquote>
+<div><p>Input datetime to use for the initial condition (default to record time)</p>
+</div></blockquote>
+<p><strong>grid: seapy.model.grid or string, optional</strong></p>
+<blockquote>
+<div><p>Input ROMS grid: specify the grid if loaded or filename to load</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.interp">
+<span id="interp-converting-between-grids"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">interp</span></code> &#8211; Converting between grids<a class="headerlink" href="#module-seapy.roms.interp" title="Permalink to this headline">¶</a></h3>
+<p>roms.interp</p>
+<p>Methods to interpolate ROMS fields onto other grids</p>
+<p>Written by Brian Powell on 11/02/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.interp.field2d">
+<code class="descclassname">seapy.roms.interp.</code><code class="descname">field2d</code><span class="sig-paren">(</span><em>src_lon</em>, <em>src_lat</em>, <em>src_field</em>, <em>dest_lon</em>, <em>dest_lat</em>, <em>dest_mask=None</em>, <em>nx=0</em>, <em>ny=0</em>, <em>weight=10</em>, <em>threads=2</em>, <em>pmap=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/interp.html#field2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.interp.field2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a 2D field with time (dimensions [time, lat, lon]), interpolate
+onto a new grid and return the new field. This is a helper function
+when needing to interpolate data within files, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_lon: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>longitude that field is on</p>
+</div></blockquote>
+<p><strong>src_lat: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>latitude that field is on</p>
+</div></blockquote>
+<p><strong>src_field: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>field to interpolate</p>
+</div></blockquote>
+<p><strong>dest_lon: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>output longitudes to interpolate to</p>
+</div></blockquote>
+<p><strong>dest_lat: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>output latitudes to interpolate to</p>
+</div></blockquote>
+<p><strong>dest_mask: numpy.ndarray, optional</strong></p>
+<blockquote>
+<div><p>mask to apply to interpolated data</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional:</strong></p>
+<blockquote>
+<div><p>Reference time as the epoch for z-grid file</p>
+</div></blockquote>
+<p><strong>nx</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>ny</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>weight</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of points to use in weighting matrix</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of processing threads</p>
+</div></blockquote>
+<p><strong>pmap</strong> : numpy.ndarray, optional:</p>
+<blockquote class="last">
+<div><p>use the specified pmap rather than compute it</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.interp.field3d">
+<code class="descclassname">seapy.roms.interp.</code><code class="descname">field3d</code><span class="sig-paren">(</span><em>src_lon</em>, <em>src_lat</em>, <em>src_depth</em>, <em>src_field</em>, <em>dest_lon</em>, <em>dest_lat</em>, <em>dest_depth</em>, <em>dest_mask=None</em>, <em>nx=0</em>, <em>ny=0</em>, <em>weight=10</em>, <em>threads=2</em>, <em>pmap=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/interp.html#field3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.interp.field3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a 3D field with time (dimensions [time, z, lat, lon]), interpolate
+onto a new grid and return the new field. This is a helper function
+when needing to interpolate data within files, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_lon: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>longitude that field is on</p>
+</div></blockquote>
+<p><strong>src_lat: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>latitude that field is on</p>
+</div></blockquote>
+<p><strong>srf_depth: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>depths of the field</p>
+</div></blockquote>
+<p><strong>src_field: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>field to interpolate</p>
+</div></blockquote>
+<p><strong>dest_lon: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>output longitudes to interpolate to</p>
+</div></blockquote>
+<p><strong>dest_lat: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>output latitudes to interpolate to</p>
+</div></blockquote>
+<p><strong>dest_depth: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>output depths to interpolate to</p>
+</div></blockquote>
+<p><strong>dest_mask: numpy.ndarray, optional</strong></p>
+<blockquote>
+<div><p>mask to apply to interpolated data</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional:</strong></p>
+<blockquote>
+<div><p>Reference time as the epoch for z-grid file</p>
+</div></blockquote>
+<p><strong>nx</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>ny</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>weight</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of points to use in weighting matrix</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of processing threads</p>
+</div></blockquote>
+<p><strong>pmap</strong> : numpy.ndarray, optional:</p>
+<blockquote class="last">
+<div><p>use the specified pmap rather than compute it</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.interp.to_clim">
+<code class="descclassname">seapy.roms.interp.</code><code class="descname">to_clim</code><span class="sig-paren">(</span><em>src_file</em>, <em>dest_file</em>, <em>dest_grid=None</em>, <em>records=None</em>, <em>threads=2</em>, <em>reftime=None</em>, <em>nx=0</em>, <em>ny=0</em>, <em>weight=10</em>, <em>vmap=None</em>, <em>pmap=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/interp.html#to_clim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.interp.to_clim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an model output file, create (if does not exit) a
+new ROMS climatology file using the given ROMS destination grid and
+interpolate the ROMS fields onto the new grid. If an existing destination
+file is given, it is interpolated onto the specified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_file</strong> : string,</p>
+<blockquote>
+<div><p>Filename of src file to interpolate from</p>
+</div></blockquote>
+<p><strong>dest_file</strong> : string,</p>
+<blockquote>
+<div><p>Name of desination file to write to</p>
+</div></blockquote>
+<p><strong>dest_grid: (string or seapy.model.grid), optional:</strong></p>
+<blockquote>
+<div><p>Name or instance of output definition</p>
+</div></blockquote>
+<p><strong>records</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>Record indices to interpolate</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of processing threads</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional:</strong></p>
+<blockquote>
+<div><p>Reference time as the epoch for climatology file</p>
+</div></blockquote>
+<p><strong>nx</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>ny</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>weight</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of points to use in weighting matrix</p>
+</div></blockquote>
+<p><strong>vmap</strong> : dictionary, optional</p>
+<blockquote>
+<div><p>mapping source and destination variables</p>
+</div></blockquote>
+<p><strong>pmap</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>use the specified pmap rather than compute it</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pmap</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>the weighting matrix computed during the interpolation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.interp.to_grid">
+<code class="descclassname">seapy.roms.interp.</code><code class="descname">to_grid</code><span class="sig-paren">(</span><em>src_file</em>, <em>dest_file</em>, <em>dest_grid=None</em>, <em>records=None</em>, <em>threads=2</em>, <em>reftime=None</em>, <em>nx=0</em>, <em>ny=0</em>, <em>weight=10</em>, <em>vmap=None</em>, <em>pmap=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/interp.html#to_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.interp.to_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an existing model file, create (if does not exit) a
+new ROMS history file using the given ROMS destination grid and
+interpolate the ROMS fields onto the new grid. If an existing destination
+file is given, it is interpolated onto the specified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>src_file</strong> : string,</p>
+<blockquote>
+<div><p>Filename of src file to interpolate from</p>
+</div></blockquote>
+<p><strong>dest_file</strong> : string,</p>
+<blockquote>
+<div><p>Name of desination file to write to</p>
+</div></blockquote>
+<p><strong>dest_grid: (string or seapy.model.grid), optional:</strong></p>
+<blockquote>
+<div><p>Name or instance of output definition</p>
+</div></blockquote>
+<p><strong>records</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>Record indices to interpolate</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of processing threads</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional:</strong></p>
+<blockquote>
+<div><p>Reference time as the epoch for ROMS file</p>
+</div></blockquote>
+<p><strong>nx</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>ny</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>weight</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of points to use in weighting matrix</p>
+</div></blockquote>
+<p><strong>vmap</strong> : dictionary, optional</p>
+<blockquote>
+<div><p>mapping source and destination variables</p>
+</div></blockquote>
+<p><strong>pmap</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>use the specified pmap rather than compute it</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pmap</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>the weighting matrix computed during the interpolation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.interp.to_zgrid">
+<code class="descclassname">seapy.roms.interp.</code><code class="descname">to_zgrid</code><span class="sig-paren">(</span><em>roms_file</em>, <em>z_file</em>, <em>z_grid=None</em>, <em>depth=None</em>, <em>records=None</em>, <em>threads=2</em>, <em>reftime=None</em>, <em>nx=0</em>, <em>ny=0</em>, <em>weight=10</em>, <em>vmap=None</em>, <em>cdlfile=None</em>, <em>dims=2</em>, <em>pmap=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/interp.html#to_zgrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.interp.to_zgrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an existing ROMS history or average file, create (if does not exit)
+a new z-grid file. Use the given z_grid or otherwise build one with the
+same horizontal extent and the specified depths and interpolate the
+ROMS fields onto the z-grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>roms_file</strong> : string,</p>
+<blockquote>
+<div><p>File name of src file to interpolate from</p>
+</div></blockquote>
+<p><strong>z_file</strong> : string,</p>
+<blockquote>
+<div><p>Name of desination file to write to</p>
+</div></blockquote>
+<p><strong>z_grid: (string or seapy.model.grid), optional:</strong></p>
+<blockquote>
+<div><p>Name or instance of output definition</p>
+</div></blockquote>
+<p><strong>depth: numpy.ndarray, optional:</strong></p>
+<blockquote>
+<div><p>array of depths to use for z-level</p>
+</div></blockquote>
+<p><strong>records</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>Record indices to interpolate</p>
+</div></blockquote>
+<p><strong>threads</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of processing threads</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional:</strong></p>
+<blockquote>
+<div><p>Reference time as the epoch for z-grid file</p>
+</div></blockquote>
+<p><strong>nx</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>ny</strong> : float, optional:</p>
+<blockquote>
+<div><p>decorrelation length-scale for OA (same units as source data)</p>
+</div></blockquote>
+<p><strong>weight</strong> : int, optional:</p>
+<blockquote>
+<div><p>number of points to use in weighting matrix</p>
+</div></blockquote>
+<p><strong>vmap</strong> : dictionary, optional</p>
+<blockquote>
+<div><p>mapping source and destination variables</p>
+</div></blockquote>
+<p><strong>cdlfile</strong> : string, optional</p>
+<blockquote>
+<div><p>cdlfile to use for generating the z-file</p>
+</div></blockquote>
+<p><strong>dims</strong> : int, optional</p>
+<blockquote>
+<div><p>number of dimensions to use for lat/lon arrays (default 2)</p>
+</div></blockquote>
+<p><strong>pmap</strong> : numpy.ndarray, optional:</p>
+<blockquote>
+<div><p>use the specified pmap rather than compute it</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pmap</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>the weighting matrix computed during the interpolation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.ncgen">
+<span id="ncgen-generate-roms-files"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">ncgen</span></code> &#8211; Generate ROMS files<a class="headerlink" href="#module-seapy.roms.ncgen" title="Permalink to this headline">¶</a></h3>
+<p>Functions to generate ROMS netcdf files</p>
+<p>Written by Brian Powell on 04/26/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_adsen">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_adsen</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Adsen'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_adsen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_adsen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new adjoint sensitivity file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_bry">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_bry</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My BRY'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_bry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_bry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bry forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_clim">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_clim</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>ntimes=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My CLIM'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_clim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_clim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a climatology forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>ntimes: int, optional</strong></p>
+<blockquote>
+<div><p>number of time records (climatology files do not have unlimited
+dimension)</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_bry_std">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_bry_std</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>bry=4</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My BRY STD'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_bry_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_bry_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a boundaries standard deviation file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>bry: int, optional</strong></p>
+<blockquote>
+<div><p>number of open boundaries to specify</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_frc_std">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_frc_std</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My FRC STD'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_frc_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_frc_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a forcing standard deviation file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_ini_std">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_ini_std</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My INI STD'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_ini_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_ini_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an initialization standard deviation file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_model_std">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_model_std</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Model STD'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_model_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_model_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an time varying model standard deviation file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_obs">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_obs</code><span class="sig-paren">(</span><em>filename</em>, <em>state_variable=20</em>, <em>survey=1</em>, <em>provenance=None</em>, <em>clobber=False</em>, <em>title='My Observations'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_obs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_obs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an assimilation observations file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>survey: int, optional</strong></p>
+<blockquote>
+<div><p>number of surveys in the file</p>
+</div></blockquote>
+<p><strong>state_variable: int, optional</strong></p>
+<blockquote>
+<div><p>number of state variables in the observations</p>
+</div></blockquote>
+<p><strong>provenance: string, optional</strong></p>
+<blockquote>
+<div><p>Description of the provenance values</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_da_ray_obs">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_da_ray_obs</code><span class="sig-paren">(</span><em>filename</em>, <em>ray_datum=1</em>, <em>provenance='None'</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Observations'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_da_ray_obs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_da_ray_obs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an acoustic ray assimilation observations file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>ray_datum: int, optional</strong></p>
+<blockquote>
+<div><p>Number of rays to assimilate</p>
+</div></blockquote>
+<p><strong>provenance: string, optional</strong></p>
+<blockquote>
+<div><p>Description of the provenance values</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_frc_bulk">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_frc_bulk</code><span class="sig-paren">(</span><em>filename</em>, <em>lat=10</em>, <em>lon=10</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Forcing'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_frc_bulk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_frc_bulk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bulk flux forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_frc_flux">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_frc_flux</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>ntimes=1</em>, <em>cycle=None</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Flux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_frc_flux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_frc_flux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a surface flux forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>ntimes: int, optional</strong></p>
+<blockquote>
+<div><p>number of time records (climatology files do not have unlimited
+dimension)</p>
+</div></blockquote>
+<p><strong>cycle: int or None, optional</strong></p>
+<blockquote>
+<div><p>The number of days before cycling the forcing records</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_frc_qcorr">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_frc_qcorr</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>cycle=None</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Qcorrection'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_frc_qcorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_frc_qcorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Q Correction forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>cycle: int or None, optional</strong></p>
+<blockquote>
+<div><p>The number of days before cycling the forcing records</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_frc_wind">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_frc_wind</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>cycle=None</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Winds'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_frc_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_frc_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a surface wind stress forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>cycle: int or None, optional</strong></p>
+<blockquote>
+<div><p>The number of days before cycling the forcing records</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_grid">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_grid</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>clobber=False</em>, <em>title='My Grid'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new, blank grid file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_ini">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_ini</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Ini'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_ini"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_ini" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an initial condition file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_river">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_river</code><span class="sig-paren">(</span><em>filename</em>, <em>nriver=1</em>, <em>s_rho=5</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My River'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_river"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_river" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new, blank river file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>nriver</strong> : int, optional</p>
+<blockquote>
+<div><p>number of rivers to put in file</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_tide">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_tide</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>ntides=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My Tides'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_tide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_tide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a barotropic tide forcing file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>eta_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of rows in the eta direction</p>
+</div></blockquote>
+<p><strong>xi_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of columns in the xi direction</p>
+</div></blockquote>
+<p><strong>s_rho: int, optional</strong></p>
+<blockquote>
+<div><p>number of s-levels</p>
+</div></blockquote>
+<p><strong>ntides: int, optional</strong></p>
+<blockquote>
+<div><p>number of tidal frequencies to force with</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_zlevel">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_zlevel</code><span class="sig-paren">(</span><em>filename</em>, <em>lat=10</em>, <em>lon=10</em>, <em>depth=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='Zlevel Model Data'</em>, <em>cdlfile=None</em>, <em>dims=2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_zlevel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_zlevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an time varying model standard deviation file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>lat: int, optional</strong></p>
+<blockquote>
+<div><p>number of latitudinal rows</p>
+</div></blockquote>
+<p><strong>lon: int, optional</strong></p>
+<blockquote>
+<div><p>number of longitudinal columns</p>
+</div></blockquote>
+<p><strong>depth: int, optional</strong></p>
+<blockquote>
+<div><p>number of z-levels</p>
+</div></blockquote>
+<p><strong>reftime: datetime, optional</strong></p>
+<blockquote>
+<div><p>date of epoch for time origin in netcdf</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+<p><strong>cdlfile: string, optional</strong></p>
+<blockquote>
+<div><p>name of CDL file to use for construction</p>
+</div></blockquote>
+<p><strong>dims: int, optional</strong></p>
+<blockquote>
+<div><p>number of dimensions to use for lat/lon</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.create_zlevel_grid">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_zlevel_grid</code><span class="sig-paren">(</span><em>filename</em>, <em>lat=10</em>, <em>lon=10</em>, <em>depth=1</em>, <em>clobber=False</em>, <em>title='Zlevel Grid'</em>, <em>cdlfile=None</em>, <em>dims=2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_zlevel_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_zlevel_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create z-level grid file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>lat: int, optional</strong></p>
+<blockquote>
+<div><p>number of latitudinal rows</p>
+</div></blockquote>
+<p><strong>lon: int, optional</strong></p>
+<blockquote>
+<div><p>number of longitudinal columns</p>
+</div></blockquote>
+<p><strong>depth: int, optional</strong></p>
+<blockquote>
+<div><p>number of z-levels</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, clobber any existing files and recreate. If False, use
+the existing file definition</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+<p><strong>cdlfile: string, optional</strong></p>
+<blockquote>
+<div><p>name of CDL file to use for construction</p>
+</div></blockquote>
+<p><strong>dims: int, optional</strong></p>
+<blockquote>
+<div><p>number of dimensions to use for lat/lon</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.ncgen.ncgen">
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">ncgen</code><span class="sig-paren">(</span><em>filename</em>, <em>dims=None</em>, <em>vars=None</em>, <em>attr=None</em>, <em>title=None</em>, <em>clobber=False</em>, <em>format='NETCDF4_CLASSIC'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#ncgen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.ncgen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new netcdf file with the given definitions. Need to define
+the dimensions, the variables, and the attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of file to create</p>
+</div></blockquote>
+<p><strong>dims</strong> : dict</p>
+<blockquote>
+<div><p>dictionary of dimensions with dimension name as keys, and the value
+as the length of the dimension. NOTE: 0 value means UNLIMITED.</p>
+</div></blockquote>
+<p><strong>vars: list of dictionaries</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>each variable to define is a dictionary that contains three keys:</dt>
+<dd><p class="first">name: string name of variable
+type: string type (float, double, etc.)
+dims: comma separated string of dimensions (&#8220;ocean_time, eta_rho&#8221;)
+attr: dictionary of variable attributes where the key is</p>
+<blockquote class="last">
+<div><p>the attribute name and the value is the attribute string</p>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>attr: dict, optional</strong></p>
+<blockquote>
+<div><p>optional dictionary of global attributes for the netcdf file:
+key is the attribute name and the value is the attribute string</p>
+</div></blockquote>
+<p><strong>title: string, optional</strong></p>
+<blockquote>
+<div><p>netcdf attribute title</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, destroy existing file</p>
+</div></blockquote>
+<p><strong>format: string, optional</strong></p>
+<blockquote>
+<div><p>NetCDF format to use. Default is NETCDF4_CLASSIC</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nc, netCDF4 object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dims</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ocean_time&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;eta_rho&quot;</span><span class="p">:</span><span class="mi">120</span><span class="p">,</span> <span class="s2">&quot;xi_rho&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span>  <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;eta_slice&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;double&quot;</span><span class="p">,</span>
+<span class="go">               &quot;dims&quot;:&quot;ocean_time, eta_rho&quot;,</span>
+<span class="go">               &quot;attr&quot;:{&quot;units&quot;:&quot;degrees Celcius&quot;}},</span>
+<span class="go">              {&quot;name&quot;:&quot;xi_slice&quot;, &quot;type&quot;:&quot;double&quot;,</span>
+<span class="go">               &quot;dims&quot;:&quot;ocean_time, xi_rho&quot;,</span>
+<span class="go">               &quot;attr&quot;:{&quot;units&quot;:&quot;degrees Celcius&quot;}} ]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">ncgen</span><span class="p">(</span><span class="s2">&quot;test.nc&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="nb">vars</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Test&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.obs">
+<span id="obs-store-roms-observations"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">obs</span></code> &#8211; Store ROMS observations<a class="headerlink" href="#module-seapy.roms.obs" title="Permalink to this headline">¶</a></h3>
+<p>obs.py</p>
+<p>State Estimation and Analysis for PYthon</p>
+<p>Module to handle the observation structure within ROMS. The ROMS structure
+defines the obs_provenance, which is a numeric ID for tracking the source
+of the observations you use. This module defines a dictionary to translate
+between the numeric and string representations so that either can be used.
+Standard instruments are predefined; however, for your own applications,
+you will want to define additional provenances for the observations you use.
+This is accomplished via:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">seapy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">obs_provenance</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="mi">353</span><span class="p">:</span><span class="s1">&#39;MY_OBS1&#39;</span><span class="p">,</span> <span class="mi">488</span><span class="p">:</span><span class="s1">&#39;MY_OBS2&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>You can make your own module for importing seapy and adding your definitions
+easily.</p>
+<p>Written by Brian Powell on 08/05/14
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.roms.obs.asobs">
+<code class="descclassname">seapy.roms.obs.</code><code class="descname">asobs</code><span class="sig-paren">(</span><em>obs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#asobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.asobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the input as an observation array if possible. If the parameter
+is already an observation, just return; otherwise, create a new class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obs: obs class, string, or list</strong></p>
+<blockquote class="last">
+<div><p>what to cast as observation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.obs.asprovenance">
+<code class="descclassname">seapy.roms.obs.</code><code class="descname">asprovenance</code><span class="sig-paren">(</span><em>prov</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#asprovenance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.asprovenance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the integer provenance of the given provenance array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.obs.astype">
+<code class="descclassname">seapy.roms.obs.</code><code class="descname">astype</code><span class="sig-paren">(</span><em>otype</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#astype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.astype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the integer type of the given observation array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.obs.gridder">
+<code class="descclassname">seapy.roms.obs.</code><code class="descname">gridder</code><span class="sig-paren">(</span><em>grid</em>, <em>time</em>, <em>lon</em>, <em>lat</em>, <em>depth</em>, <em>data</em>, <em>dt</em>, <em>title='ROMS Observations'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#gridder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.gridder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct an observations set from raw observations by placing them
+onto a grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>grid</strong> : seapy.model.grid or filename string,</p>
+<blockquote>
+<div><p>Grid to place the raw observations onto</p>
+</div></blockquote>
+<p><strong>time</strong> : ndarray,</p>
+<blockquote>
+<div><p>Time of the observations. This can be a scalar and all values
+will be assigned to the single time; otherwise, there must be a
+corresponding time to each value in the data.</p>
+</div></blockquote>
+<p><strong>lon</strong> : ndarray,</p>
+<blockquote>
+<div><p>longitude of the observations. This can be a scalar and all values
+will be assigned to the single location; otherwise, there must be a
+corresponding longitude to each value in the data.</p>
+</div></blockquote>
+<p><strong>lat</strong> : ndarray,</p>
+<blockquote>
+<div><p>latitude of the observations. This can be a scalar and all values
+will be assigned to the single location; otherwise, there must be a
+corresponding latitude to each value in the data.</p>
+</div></blockquote>
+<p><strong>depth</strong> : ndarray or None,</p>
+<blockquote>
+<div><p>depth of the observations. If None, then all values are placed on
+the surface; otherwise, must be a corresponding depth for each
+value in the data.</p>
+</div></blockquote>
+<p><strong>data</strong> : list of named tuples of seapy.roms.obs.raw_data,</p>
+<blockquote>
+<div><p>This list is comprised of each set of observation data types that
+are to be gridded together. If there is only one type (e.g.,
+SSH observations, there is only one item). An Argo float would have
+two items in the list (temperature and salinity observations).
+The list is comprised of named tuples of the raw observations
+with the following fields:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>&#8220;type&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">string (or integer) of the type from</span></dt>
+<dd><blockquote class="first">
+<div><p>seapy.roms.obs.obs_types</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>&#8220;provenance&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">string (or integer) of the type from</span></dt>
+<dd><p class="first last">seapy.roms.obs.obs_provenance</p>
+</dd>
+</dl>
+</dd>
+<dt>&#8220;values&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">ndarray of actual observed values in units</span></dt>
+<dd><p class="first last">for type</p>
+</dd>
+<dt>&#8220;error&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">ndarray (or None) of individual observational</span></dt>
+<dd><p class="first last">uncertainty (same units of values). If not known,
+use None</p>
+</dd>
+<dt>&#8220;min_error&#8221; <span class="classifier-delimiter">:</span> <span class="classifier">float of the minimum error that should be</span></dt>
+<dd><p class="first last">prescribed to the observations (typically,
+the instrument error) in the same units of
+values.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<p><strong>dt</strong> : float</p>
+<blockquote>
+<div><p>The bin size of time for observations to be considered at the
+same time. The units must be the same as the provided time.</p>
+</div></blockquote>
+<p><strong>title</strong> : string, optional,</p>
+<blockquote>
+<div><p>Title to assign the observations structure for output</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>obs</strong> : seapy.obs class</p>
+<blockquote class="last">
+<div><p>Resulting observations from the raw data as placed onto grid.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>A profile of temp and salt observations at a given lat/lon:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">gridder</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span>
+<span class="go">        [ seapy.roms.obs.raw_data(&quot;TEMP&quot;, &quot;CTD_ARGO&quot;, temp, None, 0.1),</span>
+<span class="go">          seapy.roms.obs.raw_data(&quot;SALT&quot;, &quot;CTD_ARGO&quot;, salt, None, 0.05)],</span>
+<span class="go">        dt = 1/24, title=&quot;Argo&quot;)</span>
+</pre></div>
+</div>
+<p>Satellite Data from a number of lat/lons at a single time</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">gridder</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span>
+<span class="go">        seapy.roms.obs.raw_data(&quot;ZETA&quot;, &quot;SSH_AVISO&quot;, sla, sla_err, 0.05),</span>
+<span class="go">        dt = 2/24, title=&quot;SSH&quot;)</span>
+</pre></div>
+</div>
+<p>These will generate new observation structures from the raw data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.obs.merge_files">
+<code class="descclassname">seapy.roms.obs.</code><code class="descname">merge_files</code><span class="sig-paren">(</span><em>obs_files</em>, <em>out_files</em>, <em>days</em>, <em>dt</em>, <em>limits=None</em>, <em>clobber=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#merge_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.merge_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>merge together a group of observation files into combined new files
+with observations that lie only within the corresponding dates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obs_files</strong> : list,</p>
+<blockquote>
+<div><p>List of files to merge together (a single file will work, it will
+just be filtered by the dates)</p>
+</div></blockquote>
+<p><strong>out_files</strong> : list or string,</p>
+<blockquote>
+<div><p>list of the filenames to create for each of the output periods.
+If a single string is given, the character &#8216;#&#8217; will be replaced
+by the starting time of the observation (e.g. out_files=&#8221;out_#.nc&#8221;
+will become out_03234.nc)</p>
+</div></blockquote>
+<p><strong>days</strong> : list of tuples,</p>
+<blockquote>
+<div><p>List of starting and ending day numbers for each cycle to process.
+The first value is the start day, the second is the end day. The
+number of tuples is the number of files to output.</p>
+</div></blockquote>
+<p><strong>dt</strong> : float,</p>
+<blockquote>
+<div><p>Time separation of observations. Observations that are less than
+dt apart in time will be set to the same time.</p>
+</div></blockquote>
+<p><strong>limits</strong> : dict, optional</p>
+<blockquote>
+<div><p>Set the limits of the grid points that observations are allowed
+within, {&#8216;north&#8217;:i, &#8216;south&#8217;:i, &#8216;east&#8217;:i, &#8216;west&#8217;:i }. As obs near
+the boundaries are not advisable, this allows you to specify the
+valid grid range to accept obs within.</p>
+</div></blockquote>
+<p><strong>clobber: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, output files are overwritten. If False, they are skipped.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Put together three files into 5 separate files in two day intervals from
+day 10 through day 20:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_files</span><span class="p">([</span><span class="s2">&quot;obs_1.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_2.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_3.nc&quot;</span><span class="p">],</span> <span class="s2">&quot;new_#.nc&quot;</span><span class="p">,</span>
+<span class="go">               [(i, i+2) for i in range(10, 20, 2)])</span>
+</pre></div>
+</div>
+<p>Put together same three files into 3 overlapping separate files in five
+day intervals with one overlapping day:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">merge_files</span><span class="p">([</span><span class="s2">&quot;obs_1.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_2.nc&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_3.nc&quot;</span><span class="p">],</span> <span class="s2">&quot;new_#.nc&quot;</span><span class="p">,</span>
+<span class="go">               [(i, i+5) for i in range(10, 20, 4)])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obs.obs">
+<em class="property">class </em><code class="descclassname">seapy.roms.obs.</code><code class="descname">obs</code><span class="sig-paren">(</span><em>filename=None</em>, <em>time=None</em>, <em>x=None</em>, <em>y=None</em>, <em>z=None</em>, <em>lat=None</em>, <em>lon=None</em>, <em>depth=None</em>, <em>value=None</em>, <em>error=None</em>, <em>type=None</em>, <em>provenance=None</em>, <em>meta=None</em>, <em>title='ROMS Observations'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.obs.add" title="seapy.roms.obs.obs.add"><code class="xref py py-obj docutils literal"><span class="pre">add</span></code></a>(new_obs)</td>
+<td>Add another class of obs into this one</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obs.obs.copy" title="seapy.roms.obs.obs.copy"><code class="xref py py-obj docutils literal"><span class="pre">copy</span></code></a>()</td>
+<td>deep copy this class and return the new copy.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.obs.create_survey" title="seapy.roms.obs.obs.create_survey"><code class="xref py py-obj docutils literal"><span class="pre">create_survey</span></code></a>([dt])</td>
+<td>Build the survey structure from the observations</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obs.obs.delete" title="seapy.roms.obs.obs.delete"><code class="xref py py-obj docutils literal"><span class="pre">delete</span></code></a>(obj)</td>
+<td>delete observations from the record.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.obs.to_netcdf" title="seapy.roms.obs.obs.to_netcdf"><code class="xref py py-obj docutils literal"><span class="pre">to_netcdf</span></code></a>(filename[,&nbsp;dt,&nbsp;clobber])</td>
+<td>Write out the observations into the specified netcdf file</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obs.obs.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>new_obs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add another class of obs into this one</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>new_obs</strong> : obs,</p>
+<blockquote>
+<div><p>Class of obs to append to the existing</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Load a list from netcdf, then append a new set of values</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">=</span><span class="n">obs</span><span class="p">(</span><span class="s2">&quot;test.nc&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">=</span><span class="n">obs</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">3.2</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">value</span><span class="o">=</span><span class="mf">23.44</span><span class="p">,</span><span class="n">error</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;temp&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>      <span class="n">provenance</span><span class="o">=</span><span class="s2">&quot;glider&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.roms.obs.obs.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>deep copy this class and return the new copy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>obs</strong> : obs,</p>
+<blockquote class="last">
+<div><p>deep copy of the class</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.roms.obs.obs.create_survey">
+<code class="descname">create_survey</code><span class="sig-paren">(</span><em>dt=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs.create_survey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs.create_survey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the survey structure from the observations</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.roms.obs.obs.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>delete observations from the record.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obj</strong> : slice, int or array of ints</p>
+<blockquote>
+<div><p>Indicate which sub-arrays to remove.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing: updates the class arrays</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Delete every other observation
+&gt;&gt;&gt; myobs.delete(np.s_[::2])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.roms.obs.obs.to_netcdf">
+<code class="descname">to_netcdf</code><span class="sig-paren">(</span><em>filename</em>, <em>dt=0</em>, <em>clobber=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obs.html#obs.to_netcdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obs.obs.to_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write out the observations into the specified netcdf file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string,</p>
+<blockquote>
+<div><p>name of file to save</p>
+</div></blockquote>
+<p><strong>dt</strong> : float,</p>
+<blockquote>
+<div><p>ensure data are at least separated in time by dt; otherwise,
+make as part of same survey</p>
+</div></blockquote>
+<p><strong>clobber</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>if True, any existing file is overwritten</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obs.raw_data">
+<em class="property">class </em><code class="descclassname">seapy.roms.obs.</code><code class="descname">raw_data</code><span class="sig-paren">(</span><em>type</em>, <em>provenance</em>, <em>values</em>, <em>error</em>, <em>min_error</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.roms.obs.raw_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.raw_data.error" title="seapy.roms.obs.raw_data.error"><code class="xref py py-obj docutils literal"><span class="pre">error</span></code></a></td>
+<td>Alias for field number 3</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obs.raw_data.min_error" title="seapy.roms.obs.raw_data.min_error"><code class="xref py py-obj docutils literal"><span class="pre">min_error</span></code></a></td>
+<td>Alias for field number 4</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.raw_data.provenance" title="seapy.roms.obs.raw_data.provenance"><code class="xref py py-obj docutils literal"><span class="pre">provenance</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obs.raw_data.type" title="seapy.roms.obs.raw_data.type"><code class="xref py py-obj docutils literal"><span class="pre">type</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obs.raw_data.values" title="seapy.roms.obs.raw_data.values"><code class="xref py py-obj docutils literal"><span class="pre">values</span></code></a></td>
+<td>Alias for field number 2</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="seapy.roms.obs.raw_data.error">
+<code class="descname">error</code><a class="headerlink" href="#seapy.roms.obs.raw_data.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.obs.raw_data.min_error">
+<code class="descname">min_error</code><a class="headerlink" href="#seapy.roms.obs.raw_data.min_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.obs.raw_data.provenance">
+<code class="descname">provenance</code><a class="headerlink" href="#seapy.roms.obs.raw_data.provenance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.obs.raw_data.type">
+<code class="descname">type</code><a class="headerlink" href="#seapy.roms.obs.raw_data.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.roms.obs.raw_data.values">
+<code class="descname">values</code><a class="headerlink" href="#seapy.roms.obs.raw_data.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.roms.obsgen">
+<span id="obsgen-generate-roms-observations-from-raw-data"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">obsgen</span></code> &#8211; Generate ROMS observations from raw data<a class="headerlink" href="#module-seapy.roms.obsgen" title="Permalink to this headline">¶</a></h3>
+<p>genobs.py</p>
+<p>State Estimation and Analysis for PYthon</p>
+<dl class="docutils">
+<dt>Module to process observations:</dt>
+<dd><dl class="first last docutils">
+<dt>obsgen <span class="classifier-delimiter">:</span> <span class="classifier">class to convert from raw to ROMS observations using</span></dt>
+<dd>specific subclasses</dd>
+</dl>
+</dd>
+</dl>
+<p>Written by Brian Powell on 08/15/15
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="class">
+<dt id="seapy.roms.obsgen.aquarius_sss">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">aquarius_sss</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>salt_limits=None</em>, <em>salt_error=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aquarius_sss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aquarius_sss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process Aquarius SSS HDF5 files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.aquarius_sss.convert_file" title="seapy.roms.obsgen.aquarius_sss.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an Aquarius file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.aquarius_sss.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='AQUARIUS Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aquarius_sss.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aquarius_sss.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an Aquarius file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.argo_ctd">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">argo_ctd</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_limits=None</em>, <em>salt_limits=None</em>, <em>temp_error=0.25</em>, <em>salt_error=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#argo_ctd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.argo_ctd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process ARGO CTD netcdf files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.argo_ctd.convert_file" title="seapy.roms.obsgen.argo_ctd.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an Argo file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.argo_ctd.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='Argo Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#argo_ctd.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.argo_ctd.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an Argo file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.aviso_sla_map">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">aviso_sla_map</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>ssh_mean=None</em>, <em>ssh_error=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aviso_sla_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aviso_sla_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process AVISO SLA map netcdf files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.aviso_sla_map.convert_file" title="seapy.roms.obsgen.aviso_sla_map.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an AVISO file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.aviso_sla_map.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='AVISO Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aviso_sla_map.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aviso_sla_map.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an AVISO file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.mooring">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">mooring</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_limits=None</em>, <em>salt_limits=None</em>, <em>u_limits=None</em>, <em>v_limits=None</em>, <em>depth_limit=0</em>, <em>temp_error=0.25</em>, <em>salt_error=0.08</em>, <em>u_error=0.08</em>, <em>v_error=0.08</em>, <em>lat=None</em>, <em>lon=None</em>, <em>provenance=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#mooring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.mooring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>Class to process generic moorings into ROMS observation files. This
+handles temp, salt, u, and v.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.mooring.convert_data" title="seapy.roms.obsgen.mooring.convert_data"><code class="xref py py-obj docutils literal"><span class="pre">convert_data</span></code></a>(time,&nbsp;depth,&nbsp;data[,&nbsp;error,&nbsp;title])</td>
+<td>Given a set of data, process into an observation structure</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code>(file[,&nbsp;title])</td>
+<td>convert a raw observation file into a ROMS observations structure.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.mooring.convert_data">
+<code class="descname">convert_data</code><span class="sig-paren">(</span><em>time</em>, <em>depth</em>, <em>data</em>, <em>error=None</em>, <em>title='Mooring Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#mooring.convert_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.mooring.convert_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a set of data, process into an observation structure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : ndarray</p>
+<blockquote>
+<div><p>time of observations</p>
+</div></blockquote>
+<p><strong>depth</strong> : ndarray</p>
+<blockquote>
+<div><p>depth of observations. depth is in rows, time in columns.
+If depth does not change with time, it will be replicated in time.</p>
+</div></blockquote>
+<p><strong>data</strong> : dict</p>
+<blockquote>
+<div><p>data to put into observations. A dictionary using seapy.roms.fields
+as keys.</p>
+</div></blockquote>
+<p><strong>error</strong> : dict, optional</p>
+<blockquote>
+<div><p>error of the observations (same keys and sizes as data)</p>
+</div></blockquote>
+<p><strong>title</strong> : string, optional</p>
+<blockquote>
+<div><p>title for obs</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">obs: seapy.roms.obs.obs</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.obsgen">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">obsgen</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#obsgen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.obsgen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obsgen.obsgen.batch_files" title="seapy.roms.obsgen.obsgen.batch_files"><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code></a>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.obsgen.convert_file" title="seapy.roms.obsgen.obsgen.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>convert a raw observation file into a ROMS observations structure.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.obsgen.batch_files">
+<code class="descname">batch_files</code><span class="sig-paren">(</span><em>in_files</em>, <em>out_files</em>, <em>clobber=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#obsgen.batch_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.obsgen.batch_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of input files, process each one and save each result
+into the given output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_files</strong> : list of strings,</p>
+<blockquote>
+<div><p>filenames of the files to process</p>
+</div></blockquote>
+<p><strong>out_files</strong> : list of strings,</p>
+<blockquote>
+<div><p>filenames of the files to create for each of the input filenames.
+If a single string is given, the character &#8216;#&#8217; will be replaced
+by the starting time of the observation (e.g. out_files=&#8221;out_#.nc&#8221;
+will become out_03234.nc)</p>
+</div></blockquote>
+<p><strong>clobber</strong> : bool, optional</p>
+<blockquote>
+<div><p>If TRUE, overwrite any existing output files. If False, the
+file is not processed.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.roms.obsgen.obsgen.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#obsgen.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.obsgen.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert a raw observation file into a ROMS observations structure.
+The subclasses are responsible for the conversion, and this method
+is obsgen is only a stub.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>file</strong> : string,</p>
+<blockquote>
+<div><p>filename of the file to process</p>
+</div></blockquote>
+<p><strong>title</strong> : string,</p>
+<blockquote>
+<div><p>Title to give the new observation structure global attribute</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">seapy.roms.obs.obs,</p>
+<blockquote class="last">
+<div><p>observation structure from raw obs</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.ostia_sst_map">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">ostia_sst_map</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_error=0.4</em>, <em>temp_limits=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#ostia_sst_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.ostia_sst_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process OSTIA SST map netcdf files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.ostia_sst_map.convert_file" title="seapy.roms.obsgen.ostia_sst_map.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an OSTIA file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.ostia_sst_map.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='OSTIA SST Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#ostia_sst_map.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.ostia_sst_map.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an OSTIA file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.remss">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">remss</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_error=0.4</em>, <em>temp_limits=None</em>, <em>provenance='SST_REMSS'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#remss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.remss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process REMSS SST netcdf files into ROMS observation
+files. The files may be AMSRE, TMI, etc. This is a subclass of 
+seapy.roms.genobs.genobs, and handles the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.remss.convert_file" title="seapy.roms.obsgen.remss.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an AMSRE file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.remss.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='REMSS SST Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#remss.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.remss.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an AMSRE file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.seaglider_profile">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">seaglider_profile</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_limits=None</em>, <em>salt_limits=None</em>, <em>depth_limit=-15</em>, <em>temp_error=0.2</em>, <em>salt_error=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#seaglider_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.seaglider_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process SeaGlider .pro files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.seaglider_profile.convert_file" title="seapy.roms.obsgen.seaglider_profile.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load a SeaGlider .pro file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.seaglider_profile.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='SeaGlider Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#seaglider_profile.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.seaglider_profile.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a SeaGlider .pro file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.tao_mooring">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">tao_mooring</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_limits=None</em>, <em>salt_limits=None</em>, <em>u_limits=None</em>, <em>v_limits=None</em>, <em>depth_limit=0</em>, <em>temp_error=0.25</em>, <em>salt_error=0.08</em>, <em>u_error=0.08</em>, <em>v_error=0.08</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#tao_mooring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.tao_mooring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.mooring" title="seapy.roms.obsgen.mooring"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.mooring</span></code></a></p>
+<p>class to process TAO files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">convert_data</span></code>(time,&nbsp;depth,&nbsp;data[,&nbsp;error,&nbsp;title])</td>
+<td>Given a set of data, process into an observation structure</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.roms.obsgen.tao_mooring.convert_file" title="seapy.roms.obsgen.tao_mooring.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load a TAO netcdf file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.tao_mooring.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='TAO Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#tao_mooring.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.tao_mooring.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a TAO netcdf file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SEAPY ROMS Package Documentation</a><ul>
+<li><a class="reference internal" href="#module-seapy.roms.__init__"><code class="docutils literal"><span class="pre">seapy.roms</span></code> &#8211; Working with ROMS fields and observations</a><ul>
+<li><a class="reference internal" href="#module-seapy.roms.analysis"><code class="docutils literal"><span class="pre">analysis</span></code> &#8211; Performing analysis on output fields</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.boundary"><code class="docutils literal"><span class="pre">boundary</span></code> &#8211; Generating Boundary Conditions</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.clim"><code class="docutils literal"><span class="pre">clim</span></code> &#8211; Working with Climatology Conditions</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.ezgrid"><code class="docutils literal"><span class="pre">ezgrid</span></code> &#8211; Generating grids for ROMS</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.forcing"><code class="docutils literal"><span class="pre">forcing</span></code> &#8211; Working with Atmospheric Conditions</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-seapy.roms.initial"><code class="docutils literal"><span class="pre">initial</span></code> &#8211; Generating Initial Conditions</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.interp"><code class="docutils literal"><span class="pre">interp</span></code> &#8211; Converting between grids</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.ncgen"><code class="docutils literal"><span class="pre">ncgen</span></code> &#8211; Generate ROMS files</a></li>
+<li><a class="reference internal" href="#module-seapy.roms.obs"><code class="docutils literal"><span class="pre">obs</span></code> &#8211; Store ROMS observations</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-seapy.roms.obsgen"><code class="docutils literal"><span class="pre">obsgen</span></code> &#8211; Generate ROMS observations from raw data</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/modules/roms/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

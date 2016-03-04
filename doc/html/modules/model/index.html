@@ -1,0 +1,756 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SEAPY Model Package Documentation &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="SEAPY modules" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seapy-model-package-documentation">
+<h1>SEAPY Model Package Documentation<a class="headerlink" href="#seapy-model-package-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-seapy.model.__init__">
+<span id="seapy-model-methods-for-working-with-general-ocean-models"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">seapy.model</span></code> &#8211; Methods for working with general ocean models<a class="headerlink" href="#module-seapy.model.__init__" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-seapy.model.lib"></span><p>lib.py</p>
+<p>Library of utilities for ocean models, imported into the namespace
+when importing the model module</p>
+<p>Written by Brian Powell on 10/18/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.model.lib.rho2u">
+<code class="descclassname">seapy.model.lib.</code><code class="descname">rho2u</code><span class="sig-paren">(</span><em>rho</em>, <em>fill=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/lib.html#rho2u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.lib.rho2u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the rho field onto the u field for the c-grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>rho</strong> : masked array like</p>
+<blockquote>
+<div><p>Input rho field</p>
+</div></blockquote>
+<p><strong>fill</strong> : bool, optional</p>
+<blockquote>
+<div><p>Fill the masked data before moving grids</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>u</strong> : masked array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.model.lib.rho2v">
+<code class="descclassname">seapy.model.lib.</code><code class="descname">rho2v</code><span class="sig-paren">(</span><em>rho</em>, <em>fill=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/lib.html#rho2v"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.lib.rho2v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the rho field onto the v field for the c-grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>rho</strong> : masked array like</p>
+<blockquote>
+<div><p>Input rho field</p>
+</div></blockquote>
+<p><strong>fill</strong> : bool, optional</p>
+<blockquote>
+<div><p>Fill the masked data before moving grids</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>v</strong> : masked array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.model.lib.u2rho">
+<code class="descclassname">seapy.model.lib.</code><code class="descname">u2rho</code><span class="sig-paren">(</span><em>u</em>, <em>fill=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/lib.html#u2rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.lib.u2rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the u field onto the rho field for the c-grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>u</strong> : masked array like</p>
+<blockquote>
+<div><p>Input u field</p>
+</div></blockquote>
+<p><strong>fill</strong> : bool, optional</p>
+<blockquote>
+<div><p>Fill the masked data before moving grids</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>rho</strong> : masked array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.model.lib.v2rho">
+<code class="descclassname">seapy.model.lib.</code><code class="descname">v2rho</code><span class="sig-paren">(</span><em>v</em>, <em>fill=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/lib.html#v2rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.lib.v2rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put the v field onto the rho field for the c-grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>v</strong> : masked array like</p>
+<blockquote>
+<div><p>Input v field</p>
+</div></blockquote>
+<p><strong>fill</strong> : bool, optional</p>
+<blockquote>
+<div><p>Fill the masked data before moving grids</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>rho</strong> : masked array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="grid-collect-grid-information-about-a-model">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">grid</span></code> &#8211; Collect grid information about a model<a class="headerlink" href="#grid-collect-grid-information-about-a-model" title="Permalink to this headline">¶</a></h3>
+<p>grid</p>
+<p>This module handles general model grid information, whether from ROMS or
+other models; however, it is mostly geared towards ROMS</p>
+<p>Written by Brian Powell on 10/09/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">asgrid</span><span class="p">(</span><span class="s2">&quot;grid_file.nc&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="seapy.model.grid">
+<em class="property">class </em><code class="descclassname">seapy.model.</code><code class="descname">grid</code><span class="sig-paren">(</span><em>filename=None</em>, <em>lat=None</em>, <em>lon=None</em>, <em>z=None</em>, <em>depths=True</em>, <em>cgrid=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">east</span></code>()</td>
+<td>Test the longitude convention of the grid.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">ij</span></code>(points)</td>
+<td>Compute the fractional i,j indices of the grid from a set of lon, lat points.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">ijk</span></code>(points[,&nbsp;depth_adjust])</td>
+<td>Compute the fractional i, j, k indices of the grid from a set of lon, lat, depth points.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">latlon</span></code>(indices)</td>
+<td>Compute the latitude and longitude from the given (i,j) indices</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">mask_poly</span></code>(vertices[,&nbsp;lat_lon,&nbsp;radius])</td>
+<td>Create an np.masked_array of the same shape as the grid with values</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">nearest</span></code>(lon,&nbsp;lat[,&nbsp;grid])</td>
+<td>Find the indices nearest to each point in the given list of longitudes and latitudes.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">plot_trace</span></code>(basemap,&nbsp;**kwargs)</td>
+<td>Trace the boundary of the grid onto a map projection</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">rfactor</span></code>()</td>
+<td>Return the 2D field of the r-factor for the given grid.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_depth</span></code>()</td>
+<td>Compute the depth of each cell for the model grid.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_dims</span></code>()</td>
+<td>Compute the dimension attributes of the grid based upon the information provided.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_east</span></code>([east])</td>
+<td>When working with various other grids, we may want the longitudes to be consistent.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_mask_h</span></code>([fld])</td>
+<td>Compute the mask and h array from a z-level model</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_thickness</span></code>()</td>
+<td>Compute the thickness of each cell for the model grid.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">to_netcdf</span></code>(nc)</td>
+<td>Write all available grid information into the records present in the netcdf file.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.model.grid.east">
+<code class="descname">east</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.east"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.east" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the longitude convention of the grid. If there are negative
+values, then east is False. If there are only positive values then
+assume that east is True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>None</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>east</strong> : bool,</p>
+<blockquote class="last">
+<div><p>True - The convention is all positive values to the east
+False - The convention is positive values east and negative west</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.ij">
+<code class="descname">ij</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.ij"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.ij" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the fractional i,j indices of the grid from a
+set of lon, lat points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>points</strong> : list of tuples</p>
+<blockquote>
+<div><p>longitude, latitude points to compute i, j indicies</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : tuple of numpy masked array (with netcdf-type indexing),</p>
+<blockquote class="last">
+<div><p>list of j,i indices for the given lon, lat points. NOTE: values
+that lie on the mask_rho are masked; however, if you wish to
+ignore masking, you can use the data field (i.data) directly.
+Values that do not lie within the grid are masked and stored as
+np.nan.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">([</span><span class="o">-</span><span class="mi">158</span><span class="p">,</span> <span class="o">-</span><span class="mf">160.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">155.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mf">22.443</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">idx</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ij</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.ijk">
+<code class="descname">ijk</code><span class="sig-paren">(</span><em>points</em>, <em>depth_adjust=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.ijk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.ijk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the fractional i, j, k indices of the grid from a
+set of lon, lat, depth points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>points</strong> : list of tuples,</p>
+<blockquote>
+<div><p>longitude, latitude, depth points to compute i, j, k indicies.
+NOTE: depth is in meters (defaults to negative)</p>
+</div></blockquote>
+<p><strong>depth_adjust</strong> : bool,</p>
+<blockquote>
+<div><p>If True, depths that are deeper than the grid are set to the
+bottom layer, 0. If False, a nan value is used for values
+beyond the grid depth. Default is False.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : tuple of numpy.maskedarray (with netcdf-type indexing),</p>
+<blockquote class="last">
+<div><p>list of k, j, i indices for the given lon, lat, depth points</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">([</span><span class="o">-</span><span class="mi">158</span><span class="p">,</span> <span class="o">-</span><span class="mf">160.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">155.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mf">22.443</span><span class="p">,</span> <span class="mf">19.5</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">10</span> <span class="o">-</span><span class="mi">200</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">idx</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ijk</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.latlon">
+<code class="descname">latlon</code><span class="sig-paren">(</span><em>indices</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.latlon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.latlon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the latitude and longitude from the given (i,j) indices
+of the grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>indices</strong> : list of tuples</p>
+<blockquote>
+<div><p>i, j points to compute latitude and longitude</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : tuple of ndarray</p>
+<blockquote class="last">
+<div><p>list of lat,lon points from the given i,j indices</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">23.4</span><span class="p">,</span> <span class="mf">16.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">3.66</span><span class="p">,</span> <span class="mf">22.43</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">idx</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">latlon</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.mask_poly">
+<code class="descname">mask_poly</code><span class="sig-paren">(</span><em>vertices</em>, <em>lat_lon=False</em>, <em>radius=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.mask_poly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.mask_poly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an np.masked_array of the same shape as the grid with values
+masked if they are not within the given polygon vertices</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vertices: list of tuples,</strong></p>
+<blockquote>
+<div><p>points that define the vertices of the polygon</p>
+</div></blockquote>
+<p><strong>lat_lon</strong> : bool, optional,</p>
+<blockquote>
+<div><p>If True, the vertices are a list of lon, lat points rather
+than indexes</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mask</strong> : np.masked_array</p>
+<blockquote class="last">
+<div><p>mask of values that are located within the polygon</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">vertices</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">mask_poly</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.nearest">
+<code class="descname">nearest</code><span class="sig-paren">(</span><em>lon</em>, <em>lat</em>, <em>grid='rho'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.nearest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.nearest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the indices nearest to each point in the given list of
+longitudes and latitudes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : ndarray,</p>
+<blockquote>
+<div><p>longitude of points to find</p>
+</div></blockquote>
+<p><strong>lat</strong> : ndarray</p>
+<blockquote>
+<div><p>latitude of points to find</p>
+</div></blockquote>
+<p><strong>grid</strong> : string, optional,</p>
+<blockquote>
+<div><p>&#8220;rho&#8221;, &#8220;u&#8221;, or &#8220;v&#8221; grid to search</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>indices</strong> : tuple of ndarray</p>
+<blockquote class="last">
+<div><p>The indices for each dimension of the grid that are closest
+to the lon/lat points specified</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.plot_trace">
+<code class="descname">plot_trace</code><span class="sig-paren">(</span><em>basemap</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.plot_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.plot_trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trace the boundary of the grid onto a map projection</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>basemap: basemap instance</strong></p>
+<blockquote>
+<div><p>The basemap instance to use for drawing</p>
+</div></blockquote>
+<p><strong>**kwargs: optional</strong></p>
+<blockquote>
+<div><p>Arguments to pass to the plot routine</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.rfactor">
+<code class="descname">rfactor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.rfactor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.rfactor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the 2D field of the r-factor for the given grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>None</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray:</p>
+<blockquote class="last">
+<div><p>array of r-factors size of the grid</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.set_depth">
+<code class="descname">set_depth</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.set_depth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.set_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the depth of each cell for the model grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>None</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>None</strong> : sets depth attributes in grid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.set_dims">
+<code class="descname">set_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.set_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.set_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the dimension attributes of the grid based upon the information provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>None</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>None</strong> : sets attributes in grid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.set_east">
+<code class="descname">set_east</code><span class="sig-paren">(</span><em>east=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.set_east"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.set_east" title="Permalink to this definition">¶</a></dt>
+<dd><p>When working with various other grids, we may want the longitudes
+to be consistent. This can be changed by setting the east to be
+either True or False. If False, then longitudes will be positive east
+and negative west. If True, only positive east.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>east</strong> : bool,</p>
+<blockquote>
+<div><p>True - all longitudes are positive
+False - longitudes are positive east and negative west</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> : sets attributes in grid</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.set_mask_h">
+<code class="descname">set_mask_h</code><span class="sig-paren">(</span><em>fld=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.set_mask_h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.set_mask_h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the mask and h array from a z-level model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fld</strong> : np.array</p>
+<blockquote>
+<div><p>3D array of values (such as temperature) to analyze to determine
+where the bottom and land lie</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>None</strong> : sets mask and h attributes in grid</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.set_thickness">
+<code class="descname">set_thickness</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.set_thickness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.set_thickness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the thickness of each cell for the model grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>None</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>None</strong> : sets thick attributes in grid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="seapy.model.grid.to_netcdf">
+<code class="descname">to_netcdf</code><span class="sig-paren">(</span><em>nc</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/grid.html#grid.to_netcdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.grid.to_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write all available grid information into the records present in the netcdf file.
+This is used to pre-fill boundary, initial, etc. files that require some of the
+grid information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nc</strong> : netCDF4</p>
+<blockquote>
+<div><p>File to fill all known records from the grid information</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.model.hycom">
+<span id="hycom-download-hycom-data-for-a-given-region-time"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">hycom</span></code> &#8211; Download HYCOM data for a given region/time<a class="headerlink" href="#module-seapy.model.hycom" title="Permalink to this headline">¶</a></h3>
+<p>hycom.py</p>
+<p>Functions for dealing with the HYCOM model for importation into ROMS</p>
+<p>Written by Brian Powell on 07/24/15
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.model.hycom.load_history">
+<code class="descclassname">seapy.model.hycom.</code><code class="descname">load_history</code><span class="sig-paren">(</span><em>filename</em>, <em>start_time=datetime.datetime(1</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>end_time=datetime.datetime(1</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>grid=None</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>url='http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1'</em>, <em>load_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/hycom.html#load_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.hycom.load_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download HYCOM data and save into local file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>name of output file</p>
+</div></blockquote>
+<p><strong>start_time: datetime</strong></p>
+<blockquote>
+<div><p>starting date to load HYCOM data</p>
+</div></blockquote>
+<p><strong>end_time: datetime</strong></p>
+<blockquote>
+<div><p>ending date for loading HYCOM data</p>
+</div></blockquote>
+<p><strong>grid: seapy.model.grid, optional</strong></p>
+<blockquote>
+<div><p>if specified, only load SODA data that covers the grid</p>
+</div></blockquote>
+<p><strong>epoch: datetime, optional</strong></p>
+<blockquote>
+<div><p>reference time for new file</p>
+</div></blockquote>
+<p><strong>url: string, optional</strong></p>
+<blockquote>
+<div><p>URL to load SODA data from</p>
+</div></blockquote>
+<p><strong>load_data: bool, optional</strong></p>
+<blockquote>
+<div><p>If true actually load the data. If false (default), it
+displays the information needed to load the data using ncks</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.model.soda">
+<span id="soda-download-soda-data-for-a-given-region-time"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">soda</span></code> &#8211; Download SODA data for a given region/time<a class="headerlink" href="#module-seapy.model.soda" title="Permalink to this headline">¶</a></h3>
+<p>soda.py</p>
+<p>Functions for dealing with the soda model for importation into ROMS</p>
+<p>Written by Brian Powell on 07/24/15
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.model.soda.load_history">
+<code class="descclassname">seapy.model.soda.</code><code class="descname">load_history</code><span class="sig-paren">(</span><em>filename</em>, <em>start_time=datetime.datetime(1</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>end_time=datetime.datetime(1</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>grid=None</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>url='http://apdrc.soest.hawaii.edu:80/dods/public_data/SODA/soda_pop2.2.4'</em>, <em>load_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/model/soda.html#load_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.model.soda.load_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download soda data and save into local file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>name of output file</p>
+</div></blockquote>
+<p><strong>start_time: datetime</strong></p>
+<blockquote>
+<div><p>starting date to load soda data</p>
+</div></blockquote>
+<p><strong>end_time: datetime</strong></p>
+<blockquote>
+<div><p>ending date for loading soda data</p>
+</div></blockquote>
+<p><strong>grid: seapy.model.grid, optional</strong></p>
+<blockquote>
+<div><p>if specified, only load SODA data that covers the grid</p>
+</div></blockquote>
+<p><strong>epoch: datetime, optional</strong></p>
+<blockquote>
+<div><p>reference time for new file</p>
+</div></blockquote>
+<p><strong>url: string, optional</strong></p>
+<blockquote>
+<div><p>URL to load SODA data from</p>
+</div></blockquote>
+<p><strong>load_data: bool, optional</strong></p>
+<blockquote>
+<div><p>If true (default) actually load the data. If false, it
+displays the information needed to load the data using ncks</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SEAPY Model Package Documentation</a><ul>
+<li><a class="reference internal" href="#module-seapy.model.__init__"><code class="docutils literal"><span class="pre">seapy.model</span></code> &#8211; Methods for working with general ocean models</a><ul>
+<li><a class="reference internal" href="#grid-collect-grid-information-about-a-model"><code class="docutils literal"><span class="pre">grid</span></code> &#8211; Collect grid information about a model</a></li>
+<li><a class="reference internal" href="#module-seapy.model.hycom"><code class="docutils literal"><span class="pre">hycom</span></code> &#8211; Download HYCOM data for a given region/time</a></li>
+<li><a class="reference internal" href="#module-seapy.model.soda"><code class="docutils literal"><span class="pre">soda</span></code> &#8211; Download SODA data for a given region/time</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/modules/model/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

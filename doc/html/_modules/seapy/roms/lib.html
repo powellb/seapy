@@ -1,0 +1,352 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.roms.lib &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.roms.lib</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  lib.py</span>
+
+<span class="sd">  General ROMS utils</span>
+
+<span class="sd">  Written by Brian Powell on 05/24/13</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">seapy.lib</span> <span class="kn">import</span> <span class="n">default_epoch</span>
+<span class="kn">import</span> <span class="nn">netCDF4</span>
+
+<span class="n">fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;zeta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;rho&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+          <span class="s2">&quot;ubar&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;rotate&quot;</span><span class="p">:</span> <span class="s2">&quot;vbar&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;vbar&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;rotate&quot;</span><span class="p">:</span> <span class="s2">&quot;ubar&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;u&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;rotate&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;rotate&quot;</span><span class="p">:</span> <span class="s2">&quot;u&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;temp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;rho&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+          <span class="s2">&quot;salt&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;grid&quot;</span><span class="p">:</span> <span class="s2">&quot;rho&quot;</span><span class="p">,</span> <span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}}</span>
+
+
+<div class="viewcode-block" id="stretching"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.stretching">[docs]</a><span class="k">def</span> <span class="nf">stretching</span><span class="p">(</span><span class="n">vstretching</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">theta_s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">theta_b</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hc</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">s_rho</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+               <span class="n">w_grid</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the stretching function for ROMS</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vstretching : int, optional</span>
+<span class="sd">        stretching algorithm type</span>
+<span class="sd">    theta_s: float, optional</span>
+<span class="sd">        value of surface theta</span>
+<span class="sd">    theta_b: float, optional</span>
+<span class="sd">        value of bottom theta</span>
+<span class="sd">    hc: int, optional</span>
+<span class="sd">        critical depth</span>
+<span class="sd">    s_rho: int, optional</span>
+<span class="sd">        number of s-levels</span>
+<span class="sd">    w_grid: bool, optional</span>
+<span class="sd">        solve stretching on the w-grid</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s, cs: array</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">s_rho</span>
+    <span class="k">if</span> <span class="n">w_grid</span><span class="p">:</span>
+        <span class="n">lev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s_rho</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s_rho</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">lev</span> <span class="o">-</span> <span class="n">s_rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">ds</span>
+
+    <span class="k">if</span> <span class="n">vstretching</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">theta_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ptheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">theta_s</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">theta_s</span><span class="p">)</span>
+            <span class="n">rtheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">theta_s</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span> <span class="o">/</span> \
+                <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">theta_s</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">theta_b</span><span class="p">)</span> <span class="o">*</span> <span class="n">ptheta</span> <span class="o">+</span> <span class="n">theta_b</span> <span class="o">*</span> <span class="n">rtheta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">vstretching</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">theta_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span> <span class="o">*</span> <span class="n">s</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">theta_b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cbot</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">theta_b</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">theta_b</span><span class="p">)</span>
+                <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">cs</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">csur</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">cbot</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cs</span> <span class="o">=</span> <span class="n">csur</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">vstretching</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">theta_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">exp_s</span> <span class="o">=</span> <span class="n">theta_s</span>
+            <span class="n">exp_b</span> <span class="o">=</span> <span class="n">theta_b</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="n">cbot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">**</span><span class="n">exp_b</span><span class="p">))</span> <span class="o">/</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1.0</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="n">exp_s</span><span class="p">))</span> <span class="o">/</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">cbot</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">csur</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">vstretching</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">theta_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span> <span class="o">*</span> <span class="n">s</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">theta_b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">theta_b</span> <span class="o">*</span> <span class="n">csur</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">theta_b</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">vstretching</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">lev</span> <span class="o">*</span> <span class="n">lev</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">lev</span> <span class="o">*</span> <span class="n">s_rho</span> <span class="o">+</span> <span class="n">lev</span> <span class="o">+</span> <span class="n">s_rho</span> <span class="o">*</span> <span class="n">s_rho</span> <span class="o">-</span> <span class="n">s_rho</span><span class="p">)</span> <span class="o">/</span> \
+            <span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">s_rho</span> <span class="o">*</span> <span class="n">s_rho</span> <span class="o">-</span> <span class="n">s_rho</span><span class="p">)</span> <span class="o">-</span> \
+            <span class="mf">0.01</span> <span class="o">*</span> <span class="p">(</span><span class="n">lev</span> <span class="o">*</span> <span class="n">lev</span> <span class="o">-</span> <span class="n">lev</span> <span class="o">*</span> <span class="n">s_rho</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">s_rho</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">theta_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span> <span class="o">*</span> <span class="n">s</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">theta_s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">csur</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">theta_b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">theta_b</span> <span class="o">*</span> <span class="p">(</span><span class="n">csur</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> \
+                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">theta_b</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">csur</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stretching value must be between 1 and 5&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">cs</span></div>
+
+
+<div class="viewcode-block" id="depth"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.depth">[docs]</a><span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="n">vtransform</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hc</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">scoord</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+          <span class="n">stretching</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zeta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">w_grid</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve the depth of the given bathymetry in s-levels.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vtransform : int, optional</span>
+<span class="sd">        transform algorithm type</span>
+<span class="sd">    h: array, optional</span>
+<span class="sd">        value of bottom depths</span>
+<span class="sd">    hc: int, optional</span>
+<span class="sd">        critical depth</span>
+<span class="sd">    scoord: array</span>
+<span class="sd">        s coordinates from stretching method</span>
+<span class="sd">    stretching: array</span>
+<span class="sd">        stretching values from stretching method</span>
+<span class="sd">    zeta: array</span>
+<span class="sd">        sea surface height to add to bottom</span>
+<span class="sd">    w_grid: bool, optional</span>
+<span class="sd">        solve stretching on the w-grid</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s, cs: array</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">h</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">scoord</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">stretching</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;you must supply h, scoord, and stretching&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scoord</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">stretching</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;the stretching and scoord arrays must be the same size&quot;</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">scoord</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">hinv</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">h</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w_grid</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">vtransform</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">cff</span> <span class="o">=</span> <span class="n">hc</span> <span class="o">*</span> <span class="p">(</span><span class="n">scoord</span> <span class="o">-</span> <span class="n">stretching</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">z0</span> <span class="o">=</span> <span class="n">cff</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">stretching</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span>
+            <span class="n">z</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">z0</span> <span class="o">+</span> <span class="n">zeta</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">z0</span> <span class="o">*</span> <span class="n">hinv</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">vtransform</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">cff</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">hc</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">cff1</span> <span class="o">=</span> <span class="n">hc</span> <span class="o">*</span> <span class="n">scoord</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">h</span> <span class="o">*</span> <span class="n">stretching</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">z</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">zeta</span> <span class="o">+</span> <span class="p">(</span><span class="n">zeta</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">cff</span> <span class="o">*</span> <span class="n">cff1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;transform value must be between 1 and 2&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w_grid</span><span class="p">:</span>
+        <span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="n">h</span>
+
+    <span class="k">return</span> <span class="n">z</span></div>
+
+
+<div class="viewcode-block" id="thickness"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.thickness">[docs]</a><span class="k">def</span> <span class="nf">thickness</span><span class="p">(</span><span class="n">vtransform</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hc</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">scoord</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">stretching</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zeta</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">     Given the transform method, the bathyemtry, the sea surface height</span>
+<span class="sd">     [optional], the critical depth, the s-coordinates, and stretching</span>
+<span class="sd">     function (returned by the roms.utils.stretching function), determine</span>
+<span class="sd">     the thickness of the grid cells</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We need the w-coordinate depths</span>
+    <span class="n">z_w</span> <span class="o">=</span> <span class="n">depth</span><span class="p">(</span><span class="n">vtransform</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">hc</span><span class="p">,</span> <span class="n">scoord</span><span class="p">,</span> <span class="n">stretching</span><span class="p">,</span> <span class="n">zeta</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">z_w</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">z_w</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="get_time"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.get_time">[docs]</a><span class="k">def</span> <span class="nf">get_time</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the time vector from a netCDF file as a datetime array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nc : netCDF4.Dataset netcdf input file</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray of datetime</span>
+<span class="sd">       The times of the given netCDF file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tvar</span> <span class="o">=</span> <span class="n">get_timevar</span><span class="p">(</span><span class="n">nc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">tvar</span><span class="p">][:],</span>
+                            <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">tvar</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_timevar"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.get_timevar">[docs]</a><span class="k">def</span> <span class="nf">get_timevar</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the appropriate time variable (bry_time, ocean_time, etc.) from a</span>
+<span class="sd">    given netcdf file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nc : netCDF4.Dataset netcdf input file</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    time: string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ocean_time&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;zeta_time&quot;</span><span class="p">,</span> <span class="s2">&quot;bry_time&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">time</span>
+    <span class="k">return</span> <span class="bp">None</span></div>
+
+
+<div class="viewcode-block" id="get_reftime"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.lib.get_reftime">[docs]</a><span class="k">def</span> <span class="nf">get_reftime</span><span class="p">(</span><span class="n">nc</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a ROMS netCDF4 file, return the reference time for the file. This</span>
+<span class="sd">    is the timebase of the record dimension in the format:</span>
+<span class="sd">    &quot;&lt;units&gt; since &lt;reftime&gt;&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nc : netCDF4 dataset</span>
+<span class="sd">        Input ROMS file</span>
+<span class="sd">    epoch_str : string, optional</span>
+<span class="sd">        If lacking units, use this string as the units</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    timebase : datetime</span>
+<span class="sd">        datetime of the origin for the file</span>
+<span class="sd">    time : string</span>
+<span class="sd">        name of variable used to generate the base (None if default)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">get_timevar</span><span class="p">(</span><span class="n">nc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">time</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">),</span> <span class="n">time</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">epoch</span><span class="p">,</span> <span class="bp">None</span></div>
+
+<span class="k">pass</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

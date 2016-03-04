@@ -1,0 +1,638 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.lib &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.lib</h1><div class="highlight"><pre>
+
+<span class="c1">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  lib.py</span>
+
+<span class="sd">  State Estimation and Analysis for PYthon</span>
+
+<span class="sd">  Library of utilities for general seapy module, imported into the namespace</span>
+<span class="sd">  when importing the seapy module</span>
+
+<span class="sd">  Written by Brian Powell on 10/18/13</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="n">secs2day</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">86400.0</span>
+<span class="n">default_epoch</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">_default_timeref</span> <span class="o">=</span> <span class="s2">&quot;days since &quot;</span> <span class="o">+</span> <span class="n">default_epoch</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-%m %H:%M:%S&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="adddim"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.adddim">[docs]</a><span class="k">def</span> <span class="nf">adddim</span><span class="p">(</span><span class="n">fld</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    replicate a field and add a new first dimension with given size</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fld : array_like</span>
+<span class="sd">        Input field.</span>
+<span class="sd">    size : int, optional</span>
+<span class="sd">        Size of additional first dimension</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fld : array</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; a=np.array([4, 5, 6, 7])</span>
+<span class="sd">    &gt;&gt;&gt; a.shape</span>
+<span class="sd">    (4,)</span>
+<span class="sd">    &gt;&gt;&gt; b = seapy.adddim(a, 2)</span>
+<span class="sd">    &gt;&gt;&gt; b.shape</span>
+<span class="sd">    (2, 4)</span>
+<span class="sd">    &gt;&gt;&gt; b</span>
+<span class="sd">    array([[4, 5, 6, 7],</span>
+<span class="sd">           [4, 5, 6, 7]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">fld</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">fld</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">fld</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="chunker"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.chunker">[docs]</a><span class="k">def</span> <span class="nf">chunker</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterate over an iterable in &#39;chunks&#39; of a given size</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seq : iterable,</span>
+<span class="sd">        The sequence to iterate over</span>
+<span class="sd">    size : int,</span>
+<span class="sd">        The number of items to be returned in each &#39;chunk&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    chunk : seq,</span>
+<span class="sd">        The items of the chunk to be iterated</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; x = [0,3,4,7,9,10,12,14]</span>
+<span class="sd">    &gt;&gt;&gt; for i in chunker(x, 3):</span>
+<span class="sd">    &gt;&gt;&gt;     print(i)</span>
+<span class="sd">    [0, 3, 4]</span>
+<span class="sd">    [7, 9, 10]</span>
+<span class="sd">    [12, 14]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="convolve_mask"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.convolve_mask">[docs]</a><span class="k">def</span> <span class="nf">convolve_mask</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ksize</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convolve data over the missing regions of a mask</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : masked array_like</span>
+<span class="sd">        Input field.</span>
+<span class="sd">    ksize : int, optional</span>
+<span class="sd">        Size of square kernel</span>
+<span class="sd">    kernel : ndarray, optional</span>
+<span class="sd">        Define a convolution kernel. Default is averaging</span>
+<span class="sd">    copy : bool, optional</span>
+<span class="sd">        If true, a copy of input array is made</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fld : masked array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">)</span>
+    <span class="c1"># Make sure ksize is odd</span>
+    <span class="n">ksize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ksize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">ksize</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">ksize</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fld</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">fld</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Can only convolve 2- or 3-D fields&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ksize</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ksize must be greater than or equal to 3&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">ksize</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">ksize</span><span class="p">,</span> <span class="n">ksize</span><span class="p">])</span>
+        <span class="n">kernel</span><span class="p">[</span><span class="n">center</span><span class="p">,</span> <span class="n">center</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Convolve the mask</span>
+    <span class="n">msk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="n">fld</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fld</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">((</span><span class="o">~</span><span class="n">msk</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span> <span class="n">kernel</span><span class="p">,</span>
+                                 <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">nfld</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">fld</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="p">(</span><span class="o">~</span><span class="n">msk</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span> <span class="n">kernel</span><span class="p">,</span>
+                                <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+            <span class="p">(</span><span class="o">~</span><span class="n">msk</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">kernel</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">nfld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">fld</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="p">(</span><span class="o">~</span><span class="n">msk</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">kernel</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">lst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">msk</span><span class="p">,</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">msk</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">fld</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span> <span class="o">=</span> <span class="n">nfld</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span> <span class="o">/</span> <span class="n">count</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">fld</span></div>
+
+
+<div class="viewcode-block" id="date2day"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.date2day">[docs]</a><span class="k">def</span> <span class="nf">date2day</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the fractional number of days elapsed since the epoch to the date</span>
+<span class="sd">    given.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    date : datetime</span>
+<span class="sd">        Input date</span>
+<span class="sd">    epoch : datetime</span>
+<span class="sd">        Date of epoch</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numdays : scalar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">date</span> <span class="o">-</span> <span class="n">epoch</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">*</span> <span class="n">secs2day</span></div>
+
+
+<div class="viewcode-block" id="day2date"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.day2date">[docs]</a><span class="k">def</span> <span class="nf">day2date</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a datetime object from the number of days since the epoch</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    day : scalar</span>
+<span class="sd">        Input day number</span>
+<span class="sd">    epoch : datetime</span>
+<span class="sd">        Date of epoch</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    date : datetime</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">epoch</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">day</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="earth_angle"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.earth_angle">[docs]</a><span class="k">def</span> <span class="nf">earth_angle</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the angle between lat/lon points. NOTE: The bearing angle</span>
+<span class="sd">    is computed, but then converted to geometric (counter-clockwise)</span>
+<span class="sd">    angle to be returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lon1 : array_like or scalar</span>
+<span class="sd">        Input array of source longitude(s)</span>
+<span class="sd">    lat1 : array_like or scalar</span>
+<span class="sd">        Input array of source latitude(s)</span>
+<span class="sd">    lon2 : array_like or scalar</span>
+<span class="sd">        Input array of destination longitude(s)</span>
+<span class="sd">    lon2 : array_like or scalar</span>
+<span class="sd">        Input array of destination longitude(s)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    angle : array or scalar of bearing in radians</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lon1</span><span class="p">)</span>
+    <span class="n">lon2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lon2</span><span class="p">)</span>
+    <span class="n">lat1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lat1</span><span class="p">))</span>
+    <span class="n">lat2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lat2</span><span class="p">))</span>
+
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span><span class="p">)</span>
+    <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="p">),</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span> <span class="o">-</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dlon</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="n">angle</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="earth_distance"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.earth_distance">[docs]</a><span class="k">def</span> <span class="nf">earth_distance</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the distance between lat/lon points</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lon1 : array_like or scalar</span>
+<span class="sd">        Input array of source longitude(s)</span>
+<span class="sd">    lat1 : array_like or scalar</span>
+<span class="sd">        Input array of source latitude(s)</span>
+<span class="sd">    lon2 : array_like or scalar</span>
+<span class="sd">        Input array of destination longitude(s)</span>
+<span class="sd">    lon2 : array_like or scalar</span>
+<span class="sd">        Input array of destination longitude(s)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distance : array or scalar of distance in meters</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.99664718940443</span>  <span class="c1"># This is Sqrt(1-epsilon^2)</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="mi">6378137</span>  <span class="c1"># Radius in meters</span>
+    <span class="n">d2r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">lon1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lon1</span><span class="p">)</span>
+    <span class="n">lat1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span>
+    <span class="n">lon2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lon2</span><span class="p">)</span>
+    <span class="n">lat2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span>
+
+    <span class="c1"># Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for</span>
+    <span class="c1"># working with geocentric where lat_gc = atan(epsilon * tan(lat))</span>
+    <span class="n">tan_lat</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">d2r</span> <span class="o">*</span> <span class="n">lat1</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+    <span class="n">cos_lat</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">tan_lat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">sin_lat</span> <span class="o">=</span> <span class="n">tan_lat</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">tan_lat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">tan_lat</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">d2r</span> <span class="o">*</span> <span class="n">lat2</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+    <span class="n">cos_latj</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">tan_lat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">sin_latj</span> <span class="o">=</span> <span class="n">tan_lat</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">tan_lat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">cos_lat</span> <span class="o">*</span> <span class="n">cos_latj</span> <span class="o">*</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">d2r</span> <span class="o">*</span> <span class="p">(</span><span class="n">lon1</span> <span class="o">-</span> <span class="n">lon2</span><span class="p">))</span> <span class="o">-</span> <span class="n">sin_lat</span> <span class="o">*</span> <span class="n">sin_latj</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">ltypes</span><span class="o">=</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flatten a list or tuple that contains additional lists or tuples. Like</span>
+<span class="sd">    the numpy flatten, but for python types.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l: tuple or list,</span>
+<span class="sd">        The data that is to be flattened</span>
+<span class="sd">    ltypes: tuple,</span>
+<span class="sd">        Data types to attempt to flatten</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numpy.flatten()</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This code was taken from:</span>
+<span class="sd">    &lt;http://rightfootin.blogspot.com.au/2006/09/more-on-python-flatten.html&gt;</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; a=[[1,3,4,1], (&#39;test&#39;, &#39;this&#39;), [5,2]]</span>
+<span class="sd">    &gt;&gt;&gt; flatten(a)</span>
+<span class="sd">    [1, 3, 4, 1, &#39;test&#39;, &#39;this&#39;, 5, 2]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ltype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+        <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ltypes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">ltype</span><span class="p">(</span><span class="n">l</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="list_files"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.list_files">[docs]</a><span class="k">def</span> <span class="nf">list_files</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">full_path</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    list all sorted file names in the given path that conform to the regular</span>
+<span class="sd">    expression pattern. This is not a generator function because it sorts</span>
+<span class="sd">    the files in alphabetic/numeric order.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : string</span>
+<span class="sd">        Search for the given matches</span>
+<span class="sd">    regex : string, optional</span>
+<span class="sd">        Input regular expression string to filter filenames</span>
+<span class="sd">    full_path : bool, optional</span>
+<span class="sd">        If True, return the full path for each found object. If false,</span>
+<span class="sd">        return only the filename</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    files : array</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; files = seapy.list_files(&#39;/path/to/dir/test_.*txt&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; print(files)</span>
+<span class="sd">    [&#39;/path/to/dir/test_001.txt&#39;, &#39;/path/to/dir/test_002.txt&#39;]</span>
+
+<span class="sd">    NOTE: this is equivalent for separating:</span>
+<span class="sd">    &gt;&gt;&gt; files = seapy.list_files(&#39;/path/to/dir&#39;, &#39;test_.*txt&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If only one parameter is given, parse into its components</span>
+    <span class="k">if</span> <span class="n">regex</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">regex</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span>
+    <span class="k">elif</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regex</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">prog</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">full_path</span><span class="p">:</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="nb">file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+    <span class="n">files</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">files</span></div>
+
+
+<div class="viewcode-block" id="netcdf4"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.netcdf4">[docs]</a><span class="k">def</span> <span class="nf">netcdf4</span><span class="p">(</span><span class="nb">file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper around netCDF4 to open a file as either a Dataset or an</span>
+<span class="sd">    MFDataset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : string or list,</span>
+<span class="sd">        Filename(s) to open. If the string has wildcards or is a list,</span>
+<span class="sd">        this attempts to open an MFDataset</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    netCDF4 Dataset or MFDataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">netCDF4</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nc</span></div>
+
+
+<div class="viewcode-block" id="primes"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.primes">[docs]</a><span class="k">def</span> <span class="nf">primes</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of primes less than or equal to a given value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number : int</span>
+<span class="sd">        Find prime values up to this value</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    primes : ndarray</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This code was taken from &quot;Cooking with Python, Part 2&quot; by Martelli, et al.</span>
+
+<span class="sd">    &lt;http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__erat2</span><span class="p">():</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">yield</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">D</span><span class="p">[</span><span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="n">q</span>
+                <span class="k">yield</span> <span class="n">q</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="n">q</span>
+                <span class="k">while</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">D</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">x</span> <span class="o">+=</span> <span class="n">p</span>
+                <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">takewhile</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">number</span><span class="p">,</span> <span class="n">__erat2</span><span class="p">())))</span></div>
+
+
+<div class="viewcode-block" id="rotate"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.rotate">[docs]</a><span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotate a vector field by the given angle</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    u : array like</span>
+<span class="sd">        Input u component</span>
+<span class="sd">    v : array like</span>
+<span class="sd">        Input v component</span>
+<span class="sd">    angle : array like</span>
+<span class="sd">        Input angle of rotation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rotated_u, rotated_v : array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">ca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">u</span> <span class="o">*</span> <span class="n">ca</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sa</span><span class="p">,</span> <span class="n">u</span> <span class="o">*</span> <span class="n">sa</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">ca</span></div>
+
+
+<div class="viewcode-block" id="today2day"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.today2day">[docs]</a><span class="k">def</span> <span class="nf">today2day</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the day number of today (UTC time) since the epoch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    epoch : datetime</span>
+<span class="sd">        Date of epoch</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numdays : scalar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">date2day</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span> <span class="n">epoch</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unique_rows"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.unique_rows">[docs]</a><span class="k">def</span> <span class="nf">unique_rows</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert rows into godelnumbers and find the rows that are unique using</span>
+<span class="sd">    np.unique</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ndarray or tuple,</span>
+<span class="sd">        array of elements to find unique value. If columns are greater</span>
+<span class="sd">        than 1, then the columns are combined into a single Godel number.</span>
+<span class="sd">        If a tuple of arrays are passed, they are combined.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vals : ndarray,</span>
+<span class="sd">        unique values</span>
+<span class="sd">    idx : ndarray,</span>
+<span class="sd">        Indices of the unique values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">vals</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">godelnumber</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">return_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vals</span><span class="p">,</span> <span class="n">idx</span></div>
+
+
+<div class="viewcode-block" id="vecfind"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.vecfind">[docs]</a><span class="k">def</span> <span class="nf">vecfind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find all occurences of b in a within the given tolerance and return</span>
+<span class="sd">    the indices into a and b that correspond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : array</span>
+<span class="sd">        Input vector</span>
+<span class="sd">    b : array</span>
+<span class="sd">        Input vector</span>
+<span class="sd">    tolerance : float, optional</span>
+<span class="sd">        Input tolerance for how close a==b</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    index_a, index_b : arrays of indices for each vector where values are equal,</span>
+<span class="sd">            such that a[index_a] == b[index_b]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="c1"># If the tolerance is zero, we can use built-in methods</span>
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">index_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">index_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="c1"># Otherwise, slow method</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index_a</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">index_b</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">d</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">index_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">d</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">d</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">index_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_a</span><span class="p">,</span> <span class="n">index_b</span></div>
+
+
+<div class="viewcode-block" id="godelnumber"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.godelnumber">[docs]</a><span class="k">def</span> <span class="nf">godelnumber</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the columns of x into godel numbers. If x is MxN, return an Mx1</span>
+<span class="sd">    vector. The Godel number is prime**x</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ndarray,</span>
+<span class="sd">        Values to convert into Godel number(s)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    godel : ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">primevals</span> <span class="o">=</span> <span class="n">primes</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span><span class="p">)[:</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">primevals</span><span class="o">**</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">2.0</span><span class="o">**</span><span class="n">x</span></div>
+
+
+<span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

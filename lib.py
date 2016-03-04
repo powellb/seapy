@@ -259,6 +259,7 @@ def flatten(l, ltypes=(list, tuple, set)):
     """
     Flatten a list or tuple that contains additional lists or tuples. Like
     the numpy flatten, but for python types.
+
     Parameters
     ----------
     l: tuple or list,

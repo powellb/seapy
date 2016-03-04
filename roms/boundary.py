@@ -203,7 +203,9 @@ def from_std(std_filename, bry_std_file, fields=None):
     standard deviation of a boundary file. Best to use nco:
 
     $ ncwa -a bry_time roms_bry_file tmp.nc
+
     $ ncbo -O -y sub roms_bry_file tmp.nc tmp.nc
+
     $ ncra -y rmssdn tmp.nc roms_bry_std.nc
 
     to generate the standard deviations. This method simply takes the
@@ -685,7 +687,7 @@ def detide(grid, bryfile, tidefile, tides=None):
     skipping the last record of each file to prevent overlap (if there are 100 records
     in each file). Afterwards, detide the resulting file.
 
-    % ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
+    >>> !ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
     >>> seapy.roms.boundary.detide("mygrid.nc", "bry_detide.nc", "tide_out.nc")
 
     """

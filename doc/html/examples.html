@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Examples &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="index.html" />
+    <link rel="prev" title="SEAPY Seawater Toolbox Documentation" href="modules/seawater/index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules/seawater/index.html" title="SEAPY Seawater Toolbox Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">seapy 1.0a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<p>Many of the time-saving features are in generating fields for running the ROMS model.</p>
+<ol class="arabic simple">
+<li>To load the meta information about a model (ROMS, HYCOM, MITgcm, POM, SODA), load an output file (history, average, climatology, grid, etc.) via:</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; mygrid = seapy.model.asgrid(filename)
+
+&gt;&gt; mygrid
+C-Grid: 32x194x294
+
+&gt;&gt; print(mygrid)
+filename
+32x194x294: C-Grid with S-level
+Available: I,J,_isroms,_nc,angle,cgrid,cs_r,depth_rho,depth_u,depth_v,dm,dn,eta_rho,eta_u,eta_v,f,filename,h,hc,lat_rho,lat_u,lat_v,lm,ln,lon_rho,lon_u,lon_v,mask_rho,mask_u,mask_v,n,name,pm,pn,s_rho,shape,spatial_dims,tcline,theta_b,theta_s,thick_rho,thick_u,thick_v,vstretching,vtransform,xi_rho,xi_u,xi_v
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li>Most methods available in SEAPY require a grid, which can be specified as a &#8220;filename&#8221; or as a grid object.</li>
+<li>Find out how to download global HYCOM data that will span my grid from 1/1/2015 through 5/1/2015:</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; seapy.model.hycom.load_history(&quot;hycom_file.nc&quot;, start_time=datetime(2015,1,1),
+                                 end_time=datetime(2015,5,1),
+                                 grid=mygrid, load_data=False)
+ncks -v water_temp,salinity,surf_el,water_v,water_u -d time,352,352 -d lat,1204,1309 -d lon,2438,2603 http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1 hycom_file.nc
+</pre></div>
+</div>
+<p>This will display the &#8216;ncks&#8217; command necessary to download the data. If you want to have SEAPY download it (not recommended due to server-speed), use &#8216;load_data=True&#8217;.</p>
+<ol class="arabic simple" start="4">
+<li>Once you have HYCOM data, interpolate it to your grid</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; seapy.roms.interp.to_clim(&quot;hycom_file.nc&quot;, &quot;my_clim.nc&quot;,
+                      dest_grid=mygrid, nx=1/6, ny=1/6,
+                      vmap={&quot;surf_el&quot;:&quot;zeta&quot;, &quot;water_temp&quot;:&quot;temp&quot;,
+                      &quot;water_u&quot;:&quot;u&quot;, &quot;water_v&quot;:&quot;v&quot;, &quot;salinity&quot;:&quot;salt&quot;})
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li>Generate boundary conditions from the climatology</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; seapy.roms.boundary.from_roms(&quot;my_clim.nc&quot;, &quot;my_bry.nc&quot;)
+</pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li>Generate initial conditions from the climatology</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; seapy.roms.initial.from_roms(&quot;my_clim.nc&quot;, &quot;my_ini.nc&quot;)
+</pre></div>
+</div>
+<ol class="arabic simple" start="7">
+<li>You now have what you need to run your model</li>
+<li>To set up data assimilation, download the raw observations (e.g., aviso_map_day1.nc, aviso_map_day2.nc, argo_day1.nc ). You can then process the data:</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; dt = 400/86400       # time-step of the model in days
+&gt;&gt; aviso_gen = seapy.roms.obsgen.aviso_sla_map(mygrid, dt)
+&gt;&gt; aviso_gen.batch_files(seapy.list_files(&#39;.&#39;,&#39;aviso.*nc&#39;), &#39;aviso_roms_#.nc&#39;)
+&gt;&gt; argo_gen = seapy.roms.obsgen.argo_ctd(mygrid, dt)
+&gt;&gt; obs = argo_gen.convert_file(&quot;argo_day1.nc&quot;)
+&gt;&gt; obs.to_netcdf(&quot;argo_roms_1.nc&quot;)
+</pre></div>
+</div>
+<ol class="arabic simple" start="9">
+<li>Put all of the processed observations files together into a file for a given assimilation window</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre>&gt;&gt; seapy.roms.obs.merge_files(seapy.list_files(&#39;.*roms_[0-9]+.nc&#39;), &#39;roms_obs_#.nc&#39;, np.arange([0, 10.1, 5]))
+</pre></div>
+</div>
+<p>There are many more things that can be done, but these show some of the power available via simple commands.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules/seawater/index.html"
+                        title="previous chapter">SEAPY Seawater Toolbox Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/examples.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules/seawater/index.html" title="SEAPY Seawater Toolbox Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">seapy 1.0a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

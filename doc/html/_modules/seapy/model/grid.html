@@ -1,0 +1,846 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.model.grid &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.model.grid</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  grid</span>
+
+<span class="sd">  This module handles general model grid information, whether from ROMS or</span>
+<span class="sd">  other models; however, it is mostly geared towards ROMS</span>
+
+<span class="sd">  Written by Brian Powell on 10/09/13</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+
+<span class="sd">  **Examples**</span>
+
+<span class="sd">  &gt;&gt;&gt; grid = seapy.model.asgrid(&quot;grid_file.nc&quot;)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">seapy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">griddata</span><span class="p">,</span> <span class="n">interp1d</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial</span>
+<span class="kn">import</span> <span class="nn">matplotlib.path</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+
+<span class="k">def</span> <span class="nf">asgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return either an existing or new grid object. This decorator will ensure that</span>
+<span class="sd">    the variable being used is a seapy.model.grid. If it is not, it will attempt</span>
+<span class="sd">    to construct a new grid with the variable passed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grid: string, list, or model.seapy.grid</span>
+<span class="sd">        Input variable to cast. If it is already a grid, it will return it;</span>
+<span class="sd">        otherwise, it attempts to construct a new grid.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    seapy.model.grid</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;No grid was specified&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">grid</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">grid</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="grid"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid">[docs]</a><span class="k">class</span> <span class="nc">grid</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lon</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">depths</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cgrid</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Class to wrap around a numerical model grid for oceanography.</span>
+<span class="sd">            It attempts to track latitude, longitude, z, and other</span>
+<span class="sd">            parameters. A grid can be constructed by specifying a filename or</span>
+<span class="sd">            by specifying lat, lon, and z.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            filename: filename or list,</span>
+<span class="sd">              name to load to build data structure [optional]</span>
+<span class="sd">                or</span>
+<span class="sd">            lat: ndarray,</span>
+<span class="sd">                latitude values of grid</span>
+<span class="sd">            lon: ndarray,</span>
+<span class="sd">                longitude values of grid</span>
+<span class="sd">            z : ndarray,</span>
+<span class="sd">                z-level depths of grid</span>
+
+<span class="sd">            Options</span>
+<span class="sd">            -------</span>
+<span class="sd">            depths: ndarray,</span>
+<span class="sd">                Set the depths of the grid [True]</span>
+<span class="sd">            cgrid: bool,</span>
+<span class="sd">                Whether the grid is an Arakawa C-Grid [False]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span> <span class="o">=</span> <span class="n">cgrid</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initfile</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_isroms</span> <span class="o">=</span> <span class="bp">True</span> <span class="k">if</span> \
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="s2">&quot;s_rho&quot;</span><span class="p">,</span> <span class="s2">&quot;pm&quot;</span><span class="p">,</span> <span class="s2">&quot;pn&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_s&quot;</span><span class="p">,</span> <span class="s2">&quot;theta_b&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;vtransform&quot;</span><span class="p">,</span> <span class="s2">&quot;vstretching&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                    <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">))))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="bp">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span> <span class="o">=</span> <span class="bp">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isroms</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span> <span class="o">=</span> <span class="n">lat</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span> <span class="o">=</span> <span class="n">lon</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verify_shape</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">depths</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_dims</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_depth</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_thickness</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_mask_h</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ijinterp</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">llinterp</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_initfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Using an input file, try to load as much information</span>
+<span class="sd">        as can be found in the given file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets attributes in grid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Define a dictionary to go through and convert netcdf variables</span>
+        <span class="c1"># to internal class attributes</span>
+        <span class="n">gvars</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;lat_rho&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lat_rho&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;latitude&quot;</span><span class="p">,</span> <span class="s2">&quot;y_rho&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;lon_rho&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lon_rho&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;longitude&quot;</span><span class="p">,</span> <span class="s2">&quot;x_rho&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;lat_u&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lat_u&quot;</span><span class="p">,</span> <span class="s2">&quot;y_u&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;lon_u&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lon_u&quot;</span><span class="p">,</span> <span class="s2">&quot;x_u&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;lat_v&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lat_v&quot;</span><span class="p">,</span> <span class="s2">&quot;y_v&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;lon_v&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;lon_v&quot;</span><span class="p">,</span> <span class="s2">&quot;x_v&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;mask_rho&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mask_rho&quot;</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;mask_u&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mask_u&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;mask_v&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;mask_v&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;angle&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;angle&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;h&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;theta_s&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;theta_s&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;theta_b&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;theta_b&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;tcline&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Tcline&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;hc&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;hc&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;vtransform&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Vtransform&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;vstretching&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Vstretching&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;s_rho&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;s_rho&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;cs_r&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Cs_r&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;f&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;pm&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;pm&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;pn&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;pn&quot;</span><span class="p">],</span>
+                 <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="s2">&quot;lev&quot;</span><span class="p">]</span>
+                 <span class="p">}</span>
+
+        <span class="c1"># Open the file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;[^\.]*&quot;</span><span class="p">,</span>
+                                  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;untitled&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">gvars</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">gvars</span><span class="p">[</span><span class="n">var</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">inp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">inp</span><span class="p">][:]</span>
+                    <span class="k">break</span>
+
+        <span class="c1"># Close the file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_verify_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Verify the dimensionality of the system, create variables that</span>
+<span class="sd">        can be generated from the others if they aren&#39;t already loaded</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets attributes in grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that we have the minimum required data</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;lat_rho&quot;</span> <span class="ow">or</span> <span class="s2">&quot;lon_rho&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;grid does not have attribute lat_rho or lon_rho&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check that it is formatted into 2-D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spatial_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">)</span>
+
+        <span class="c1"># Compute the dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ln</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lm</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;{:s}: {:d}x{:d}x{:d}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;C-Grid&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span>
+                                             <span class="k">else</span> <span class="s2">&quot;A-Grid&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="k">else</span> <span class="s2">&quot;Constructed&quot;</span><span class="p">,</span>
+                          <span class="s2">&quot;{:d}x{:d}x{:d}: {:s} with {:s}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">,</span>
+                              <span class="s2">&quot;C-Grid&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span> <span class="k">else</span> <span class="s2">&quot;A-Grid&quot;</span><span class="p">,</span>
+                              <span class="s2">&quot;S-level&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isroms</span> <span class="k">else</span> <span class="s2">&quot;Z-Level&quot;</span><span class="p">),</span>
+                          <span class="s2">&quot;Available: &quot;</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span>
+                              <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())))))</span>
+
+<div class="viewcode-block" id="grid.east"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.east">[docs]</a>    <span class="k">def</span> <span class="nf">east</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test the longitude convention of the grid. If there are negative</span>
+<span class="sd">        values, then east is False. If there are only positive values then</span>
+<span class="sd">        assume that east is True.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        east : bool,</span>
+<span class="sd">            True - The convention is all positive values to the east</span>
+<span class="sd">            False - The convention is positive values east and negative west</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="grid.set_east"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.set_east">[docs]</a>    <span class="k">def</span> <span class="nf">set_east</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">east</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        When working with various other grids, we may want the longitudes</span>
+<span class="sd">        to be consistent. This can be changed by setting the east to be</span>
+<span class="sd">        either True or False. If False, then longitudes will be positive east</span>
+<span class="sd">        and negative west. If True, only positive east.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        east : bool,</span>
+<span class="sd">            True - all longitudes are positive</span>
+<span class="sd">            False - longitudes are positive east and negative west</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets attributes in grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">east</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">360.0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">360.0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">360.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">360.0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">360.0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">]</span> <span class="o">-=</span> <span class="mf">360.0</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="grid.set_dims"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.set_dims">[docs]</a>    <span class="k">def</span> <span class="nf">set_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the dimension attributes of the grid based upon the information provided.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets attributes in grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If C-Grid, set the dimensions for consistency</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eta_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eta_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eta_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xi_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xi_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xi_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span>
+
+        <span class="c1"># Set the number of layers</span>
+        <span class="k">if</span> <span class="s2">&quot;n&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;s_rho&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s_rho</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">&quot;z&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="c1"># Generate the u- and v-grids</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;lat_u&quot;</span> <span class="ow">or</span> <span class="s2">&quot;lon_u&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lat_u</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lat_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;lat_v&quot;</span> <span class="ow">or</span> <span class="s2">&quot;lon_v&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lat_v</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> \
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lat_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lon_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span>
+        <span class="k">if</span> <span class="s2">&quot;mask_rho&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;mask_u&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mask_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mask_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span>
+            <span class="k">if</span> <span class="s2">&quot;mask_v&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mask_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">mask_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span>
+
+        <span class="c1"># Compute the resolution</span>
+        <span class="k">if</span> <span class="s2">&quot;pm&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pm</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">earth_distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;pn&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dn</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">pn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">earth_distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dn</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># Compute the Coriolis</span>
+        <span class="k">if</span> <span class="s2">&quot;f&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">seapy</span><span class="o">.</span><span class="n">secs2day</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">))</span>
+
+        <span class="c1"># Set the grid index coordinates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="grid.set_mask_h"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.set_mask_h">[docs]</a>    <span class="k">def</span> <span class="nf">set_mask_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fld</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the mask and h array from a z-level model</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fld : np.array</span>
+<span class="sd">            3D array of values (such as temperature) to analyze to determine</span>
+<span class="sd">            where the bottom and land lie</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets mask and h attributes in grid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;mask_rho&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">fld</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+            <span class="c1"># Try to load a field from the file</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="s2">&quot;water_temp&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                    <span class="n">fld</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
+                    <span class="n">fld</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fld</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">fld</span><span class="p">))</span>
+                    <span class="k">break</span>
+
+            <span class="c1"># Close the file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nc</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># If we don&#39;t have a field to examine, then we cannot compute the</span>
+        <span class="c1"># mask and bathymetry</span>
+        <span class="k">if</span> <span class="n">fld</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Missing 3D field to evaluate.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Next, we go over the field to examine the depths and mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">water</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">fld</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">water</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[</span><span class="n">water</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span></div>
+
+<div class="viewcode-block" id="grid.set_depth"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.set_depth">[docs]</a>    <span class="k">def</span> <span class="nf">set_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the depth of each cell for the model grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets depth attributes in grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isroms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;s_rho&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">s_rho</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_r</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">stretching</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">vstretching</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_b</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">hc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">depth</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vtransform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_rho</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs_r</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">depth_u</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2u</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">depth_v</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2v</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">d</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">d</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span>
+                        <span class="n">d</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                        <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_u</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2u</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_v</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2v</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depth_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;could not compute grid depths.&quot;</span><span class="p">)</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="grid.set_thickness"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.set_thickness">[docs]</a>    <span class="k">def</span> <span class="nf">set_thickness</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the thickness of each cell for the model grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None : sets thick attributes in grid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;n&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_dims</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isroms</span><span class="p">:</span>
+                <span class="n">s_w</span><span class="p">,</span> <span class="n">cs_w</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">stretching</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vstretching</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hc</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">w_grid</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">roms</span><span class="o">.</span><span class="n">thickness</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vtransform</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hc</span><span class="p">,</span> <span class="n">s_w</span><span class="p">,</span> <span class="n">cs_w</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thick_u</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2u</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thick_v</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2v</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="mi">0</span>
+                <span class="c1"># Check which way the depths are going</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">d</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">w</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">w</span><span class="p">,</span>
+                                                 <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                                         <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgrid</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">thick_u</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2u</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">thick_v</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rho2v</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">thick_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">thick_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thick_rho</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;could not compute grid thicknesses.&quot;</span><span class="p">)</span>
+            <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="grid.plot_trace"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.plot_trace">[docs]</a>    <span class="k">def</span> <span class="nf">plot_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basemap</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trace the boundary of the grid onto a map projection</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        basemap: basemap instance</span>
+<span class="sd">            The basemap instance to use for drawing</span>
+<span class="sd">        **kwargs: optional</span>
+<span class="sd">            Arguments to pass to the plot routine</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">basemap</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="n">basemap</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="grid.to_netcdf"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.to_netcdf">[docs]</a>    <span class="k">def</span> <span class="nf">to_netcdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write all available grid information into the records present in the netcdf file.</span>
+<span class="sd">        This is used to pre-fill boundary, initial, etc. files that require some of the</span>
+<span class="sd">        grid information.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nc : netCDF4</span>
+<span class="sd">            File to fill all known records from the grid information</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">][:]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="grid.nearest"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.nearest">[docs]</a>    <span class="k">def</span> <span class="nf">nearest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="s2">&quot;rho&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the indices nearest to each point in the given list of</span>
+<span class="sd">        longitudes and latitudes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lon : ndarray,</span>
+<span class="sd">            longitude of points to find</span>
+<span class="sd">        lat : ndarray</span>
+<span class="sd">            latitude of points to find</span>
+<span class="sd">        grid : string, optional,</span>
+<span class="sd">            &quot;rho&quot;, &quot;u&quot;, or &quot;v&quot; grid to search</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        indices : tuple of ndarray</span>
+<span class="sd">            The indices for each dimension of the grid that are closest</span>
+<span class="sd">            to the lon/lat points specified</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">glat</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;lat_&quot;</span> <span class="o">+</span> <span class="n">grid</span><span class="p">)</span>
+        <span class="n">glon</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;lon_&quot;</span> <span class="o">+</span> <span class="n">grid</span><span class="p">)</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">glat</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">glon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">lat</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">lon</span><span class="p">)])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grid_tree</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span>
+        <span class="n">dist</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">grid_tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">glat</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="grid.ij"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.ij">[docs]</a>    <span class="k">def</span> <span class="nf">ij</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the fractional i,j indices of the grid from a</span>
+<span class="sd">        set of lon, lat points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points : list of tuples</span>
+<span class="sd">            longitude, latitude points to compute i, j indicies</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : tuple of numpy masked array (with netcdf-type indexing),</span>
+<span class="sd">            list of j,i indices for the given lon, lat points. NOTE: values</span>
+<span class="sd">            that lie on the mask_rho are masked; however, if you wish to</span>
+<span class="sd">            ignore masking, you can use the data field (i.data) directly.</span>
+<span class="sd">            Values that do not lie within the grid are masked and stored as</span>
+<span class="sd">            np.nan.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; a = ([-158, -160.5, -155.5], [20, 22.443, 19.5])</span>
+<span class="sd">        &gt;&gt;&gt; idx = g.ij(a)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Interpolate the lat/lons onto the I, J</span>
+        <span class="n">xgrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">griddata</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">points</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">))</span>
+        <span class="n">ygrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">griddata</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">points</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">))</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span><span class="p">[(</span><span class="n">ygrid</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                              <span class="n">xgrid</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))]</span>
+        <span class="n">xgrid</span><span class="p">[</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="n">ygrid</span><span class="p">[</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ygrid</span><span class="p">,</span> <span class="n">xgrid</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="grid.ijk"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.ijk">[docs]</a>    <span class="k">def</span> <span class="nf">ijk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">depth_adjust</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the fractional i, j, k indices of the grid from a</span>
+<span class="sd">        set of lon, lat, depth points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points : list of tuples,</span>
+<span class="sd">            longitude, latitude, depth points to compute i, j, k indicies.</span>
+<span class="sd">            NOTE: depth is in meters (defaults to negative)</span>
+<span class="sd">        depth_adjust : bool,</span>
+<span class="sd">            If True, depths that are deeper than the grid are set to the</span>
+<span class="sd">            bottom layer, 0. If False, a nan value is used for values</span>
+<span class="sd">            beyond the grid depth. Default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : tuple of numpy.maskedarray (with netcdf-type indexing),</span>
+<span class="sd">            list of k, j, i indices for the given lon, lat, depth points</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; a = ([-158, -160.5, -155.5], [20, 22.443, 19.5], [-10 -200 0])</span>
+<span class="sd">        &gt;&gt;&gt; idx = g.ijk(a)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># NOTE: Attempted to use a 3D griddata, but it took over 2 minutes</span>
+        <span class="c1"># for each call, resulting in a 6minute runtime for this method</span>
+        <span class="c1"># Reverted to 2D i,j indices, then looping a 1-D interpolation</span>
+        <span class="c1"># to get depths for increased-speed (though this method is still slow)</span>
+
+        <span class="c1"># Get the i,j points</span>
+        <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ij</span><span class="p">((</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="n">grid_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">depth</span><span class="p">[</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c1"># Determine the unique points</span>
+        <span class="n">good</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">j</span><span class="o">.</span><span class="n">mask</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">good</span><span class="p">])</span>
+        <span class="n">jj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="n">good</span><span class="p">])</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">unique_rows</span><span class="p">((</span><span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">))</span>
+        <span class="n">fill_value</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">depth_adjust</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">jj</span> <span class="o">==</span> <span class="n">jj</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">ii</span> <span class="o">==</span> <span class="n">ii</span><span class="p">[</span><span class="n">n</span><span class="p">]))</span>
+            <span class="n">fi</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_rho</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">ii</span><span class="p">[</span><span class="n">n</span><span class="p">]],</span> <span class="n">grid_k</span><span class="p">,</span>
+                          <span class="n">bounds_error</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">[</span><span class="n">good</span><span class="p">[</span><span class="n">pts</span><span class="p">]]</span> <span class="o">=</span> <span class="n">fi</span><span class="p">(</span><span class="n">depth</span><span class="p">[</span><span class="n">good</span><span class="p">][</span><span class="n">pts</span><span class="p">])</span>
+
+        <span class="c1"># Mask bad points</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">i</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="n">j</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="n">k</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="grid.latlon"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.latlon">[docs]</a>    <span class="k">def</span> <span class="nf">latlon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the latitude and longitude from the given (i,j) indices</span>
+<span class="sd">        of the grid</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indices : list of tuples</span>
+<span class="sd">            i, j points to compute latitude and longitude</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : tuple of ndarray</span>
+<span class="sd">            list of lat,lon points from the given i,j indices</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; a = [(23.4, 16.5), (3.66, 22.43)]</span>
+<span class="sd">        &gt;&gt;&gt; idx = g.latlon(a)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">RegularGridInterpolator</span>
+
+        <span class="n">lati</span> <span class="o">=</span> <span class="n">RegularGridInterpolator</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">loni</span> <span class="o">=</span> <span class="n">RegularGridInterpolator</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">lon_rho</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">lati</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">loni</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="grid.rfactor"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.rfactor">[docs]</a>    <span class="k">def</span> <span class="nf">rfactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the 2D field of the r-factor for the given grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray:</span>
+<span class="sd">          array of r-factors size of the grid</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">hy</span> <span class="o">=</span> <span class="n">hx</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">hx</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">hx</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">hy</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]))</span>
+        <span class="n">hx</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_u</span>
+        <span class="n">hy</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_v</span>
+
+        <span class="n">r</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">hx</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">hx</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]),</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">hy</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">hy</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">r</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">hx</span> <span class="o">=</span> <span class="n">hy</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">r</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_rho</span></div>
+
+<div class="viewcode-block" id="grid.mask_poly"><a class="viewcode-back" href="../../../modules/model/index.html#seapy.model.grid.mask_poly">[docs]</a>    <span class="k">def</span> <span class="nf">mask_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">lat_lon</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an np.masked_array of the same shape as the grid with values</span>
+<span class="sd">        masked if they are not within the given polygon vertices</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vertices: list of tuples,</span>
+<span class="sd">            points that define the vertices of the polygon</span>
+<span class="sd">        lat_lon : bool, optional,</span>
+<span class="sd">            If True, the vertices are a list of lon, lat points rather</span>
+<span class="sd">            than indexes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : np.masked_array</span>
+<span class="sd">            mask of values that are located within the polygon</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; vertices = [ (1,2), (4,5), (1,3) ]</span>
+<span class="sd">        &gt;&gt;&gt; mask = grid.mask_poly(vertices)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If lat/lon vertices are given, we need to put these onto</span>
+        <span class="c1"># the grid coordinates</span>
+        <span class="k">if</span> <span class="n">lat_lon</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ij</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">asint</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">vertices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="c1"># Now, with grid coordinates, test the grid against the vertices</span>
+        <span class="n">poly</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="n">inside</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                                 <span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                                      <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">inside</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+                                  <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lat_rho</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# SeaPY documentation build configuration file, created by
+# SeaPY documentation build configuration file, created by
 # sphinx-quickstart on Fri Feb  6 11:03:18 2015.
 #
 # This file is execfile()d with the current directory set to its

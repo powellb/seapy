@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.oa &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.oa</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  oa</span>
+
+<span class="sd">  Objective analysis.  This function will interpolate data using the</span>
+<span class="sd">  fortran routines written by Emanuelle Di Lorenzo and Bruce Cornuelle</span>
+
+<span class="sd">  Written by Brian Powell on 10/08/13</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seapy.oalib</span>
+
+<span class="n">__bad_val</span> <span class="o">=</span> <span class="o">-</span><span class="mf">999999.0</span>
+
+
+<div class="viewcode-block" id="oasurf"><a class="viewcode-back" href="../../modules/seapy.html#seapy.oa.oasurf">[docs]</a><span class="k">def</span> <span class="nf">oasurf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">pmap</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Objective analysis interpolation for 2D fields</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: array [2-D]</span>
+<span class="sd">        x-values of source data</span>
+<span class="sd">    y: array [2-D]</span>
+<span class="sd">        y-values of source data</span>
+<span class="sd">    d: array [2-D]</span>
+<span class="sd">        data values of source</span>
+<span class="sd">    xx: array [2-D]</span>
+<span class="sd">        x-values of destination</span>
+<span class="sd">    yy: array [2-D]</span>
+<span class="sd">        y-values of destination</span>
+<span class="sd">    pmap: array, optional</span>
+<span class="sd">        weighting array to map between source and destination.</span>
+<span class="sd">        NOTE: best to save this after using to prevent recomputing</span>
+<span class="sd">        weights for every interpolate</span>
+<span class="sd">    weight: int, optional</span>
+<span class="sd">        number of neighbor points to consider for every destination point</span>
+<span class="sd">    nx: int, optional</span>
+<span class="sd">        decorrelation lengthscale in x [same units as x]</span>
+<span class="sd">    ny: int, optional</span>
+<span class="sd">        decorrelation lengthscale in y [same units as y]</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        display information within the OA routine</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_data: ndarray</span>
+<span class="sd">        data interpolated onto the new grid</span>
+<span class="sd">    pmap: ndarray</span>
+<span class="sd">        weighting map used in the interpolation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Do some error checking</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">ny</span> <span class="k">if</span> <span class="n">nx</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">nx</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="n">nx</span> <span class="k">if</span> <span class="n">ny</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">ny</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c1"># Generate a mapping weight matrix if not passed</span>
+    <span class="k">if</span> <span class="n">pmap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">pmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">weight</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Call FORTRAN library to objectively map</span>
+    <span class="n">vv</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">oalib</span><span class="o">.</span><span class="n">oa2d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                               <span class="n">d</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">__bad_val</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                               <span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">pmap</span><span class="p">,</span>
+                               <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Reshape the results and return</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">vv</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">__bad_val</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span> \
+        <span class="n">pmap</span></div>
+
+
+<div class="viewcode-block" id="oavol"><a class="viewcode-back" href="../../modules/seapy.html#seapy.oa.oavol">[docs]</a><span class="k">def</span> <span class="nf">oavol</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">pmap</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+          <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Objective analysis interpolation for 3D fields</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: array [2-D]</span>
+<span class="sd">        x-values of source data</span>
+<span class="sd">    y: array [2-D]</span>
+<span class="sd">        y-values of source data</span>
+<span class="sd">    z: array [3-D]</span>
+<span class="sd">        z-values of source data</span>
+<span class="sd">    v: array [3-D]</span>
+<span class="sd">        data values of source</span>
+<span class="sd">    xx: array [2-D]</span>
+<span class="sd">        x-values of destination</span>
+<span class="sd">    yy: array [2-D]</span>
+<span class="sd">        y-values of destination</span>
+<span class="sd">    zz: array [3-D]</span>
+<span class="sd">        z-values of destination</span>
+<span class="sd">    pmap: array, optional</span>
+<span class="sd">        weighting array to map between source and destination.</span>
+<span class="sd">        NOTE: best to save this after using to prevent recomputing</span>
+<span class="sd">        weights for every interpolate</span>
+<span class="sd">    weight: int, optional</span>
+<span class="sd">        number of neighbor points to consider for every destination point</span>
+<span class="sd">    nx: int, optional</span>
+<span class="sd">        decorrelation lengthscale in x [same units as x]</span>
+<span class="sd">    ny: int, optional</span>
+<span class="sd">        decorrelation lengthscale in y [same units as y]</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        display information within the OA routine</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_data: ndarray</span>
+<span class="sd">        data interpolated onto the new grid</span>
+<span class="sd">    pmap: ndarray</span>
+<span class="sd">        weighting map used in the interpolation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Do some error checking</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">ny</span> <span class="k">if</span> <span class="n">nx</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">nx</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="n">nx</span> <span class="k">if</span> <span class="n">ny</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">ny</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c1"># Generate a mapping weight matrix if not passed</span>
+    <span class="k">if</span> <span class="n">pmap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Build the map</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">pmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">xx</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">weight</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="n">seapy</span><span class="o">.</span><span class="n">oalib</span><span class="o">.</span><span class="n">oa2d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">tmp</span><span class="p">,</span>
+                         <span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">pmap</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Call FORTRAN library to objectively map</span>
+    <span class="n">vv</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">oalib</span><span class="o">.</span><span class="n">oa3d</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                               <span class="n">z</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">__bad_val</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                                   <span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+                               <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+                               <span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                               <span class="n">zz</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">zz</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+                               <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">pmap</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="c1"># Reshape the results and return</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">vv</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">zz</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">__bad_val</span><span class="p">,</span>
+                              <span class="n">copy</span><span class="o">=</span><span class="bp">False</span><span class="p">),</span> <span class="n">pmap</span></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>seapy.tide &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for seapy.tide</h1><div class="highlight"><pre>
+<span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  tide.py</span>
+
+<span class="sd">  Functions for working with tidal time-series</span>
+
+<span class="sd">  Written by Glenn Carter and Dale Partridge</span>
+<span class="sd">  Copyright (c)2016 University of Hawaii under the BSD-License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">amp_pha</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;amp_pha&#39;</span><span class="p">,</span> <span class="s1">&#39;amp pha&#39;</span><span class="p">)</span>
+<span class="n">__cformat</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;__cformat&#39;</span><span class="p">,</span> <span class="s1">&#39;freq doodson semi sat&#39;</span><span class="p">)</span>
+<span class="n">__satinfo</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;__satinfo&#39;</span><span class="p">,</span> <span class="s1">&#39;deldood phcorr amprat ilatfac&#39;</span><span class="p">)</span>
+<span class="n">__vuf_vals</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;__vuf_vals&#39;</span><span class="p">,</span> <span class="s1">&#39;v u f&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load the constituent data when the module is imported</span>
+<span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/constituents.npz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">__const_file</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;__const&#39;</span><span class="p">][()]</span>
+
+<span class="n">__const</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">__const_file</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+    <span class="n">__sat</span> <span class="o">=</span> <span class="n">__satinfo</span><span class="p">(</span><span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;sat&#39;</span><span class="p">][</span><span class="s1">&#39;deldood&#39;</span><span class="p">],</span> <span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;sat&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;phcorr&#39;</span><span class="p">],</span> <span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;sat&#39;</span><span class="p">][</span><span class="s1">&#39;amprat&#39;</span><span class="p">],</span> <span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;sat&#39;</span><span class="p">][</span><span class="s1">&#39;ilatfac&#39;</span><span class="p">])</span>
+    <span class="n">__const</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">__cformat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;freq&#39;</span><span class="p">]),</span> <span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span>
+        <span class="s1">&#39;doodson&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">__const_file</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;semi&#39;</span><span class="p">]),</span> <span class="n">__sat</span><span class="p">)</span>
+
+<span class="n">default_tides</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;M4&#39;</span><span class="p">,</span> <span class="s1">&#39;K2&#39;</span><span class="p">,</span> <span class="s1">&#39;S2&#39;</span><span class="p">,</span> <span class="s1">&#39;M2&#39;</span><span class="p">,</span> <span class="s1">&#39;N2&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;K1&#39;</span><span class="p">,</span> <span class="s1">&#39;P1&#39;</span><span class="p">,</span> <span class="s1">&#39;O1&#39;</span><span class="p">,</span> <span class="s1">&#39;Q1&#39;</span><span class="p">,</span> <span class="s1">&#39;MF&#39;</span><span class="p">,</span> <span class="s1">&#39;MM&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">__set_tides</span><span class="p">(</span><span class="n">tides</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Private method: make sure that tides passed in are a proper array</span>
+<span class="sd">    and in uppercase</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">default_tides</span> <span class="k">if</span> <span class="n">tides</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">tides</span><span class="p">)])</span>
+
+
+<div class="viewcode-block" id="frequency"><a class="viewcode-back" href="../../modules/seapy.html#seapy.tide.frequency">[docs]</a><span class="k">def</span> <span class="nf">frequency</span><span class="p">(</span><span class="n">tides</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns array of the frequency in cycles per hour for the requested </span>
+<span class="sd">    tidal constituents.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tides: string or list of strings,</span>
+<span class="sd">        List of consituents to obtain the frequency for</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray:</span>
+<span class="sd">        List of frequencies matching the tidal names</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Display the period (in hours) of M2 and S2</span>
+
+<span class="sd">    &gt;&gt;&gt; 1 / frequency([&#39;M2&#39;, &#39;S2&#39;])</span>
+<span class="sd">    array([ 12.4206012,  12.       ])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">__const</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">freq</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">__set_tides</span><span class="p">(</span><span class="n">tides</span><span class="p">)])</span></div>
+
+
+<span class="k">def</span> <span class="nf">__astron</span><span class="p">(</span><span class="n">ctime</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PRIVATE METHOD</span>
+<span class="sd">    --------------</span>
+<span class="sd">        This subroutine calculates the following five ephermides of the sun </span>
+<span class="sd">        and moon following t_tide&#39;s t_astron.</span>
+<span class="sd">                h = mean longitude of the sum</span>
+<span class="sd">                pp = mean longitude of the solar perigee</span>
+<span class="sd">                s = mean longitude of the moon</span>
+<span class="sd">                p = mean longitude of the lunar perigee</span>
+<span class="sd">                np = negative of the longitude of the mean ascending node</span>
+<span class="sd">        and their rates of change. Units for the ephermides are cycles and</span>
+<span class="sd">        for their derivatives are cycles/365 days</span>
+<span class="sd">        The formulae for calculating this ephermides were taken from pages 98 </span>
+<span class="sd">        and 107 of the Explanatory Supplement to the Astronomical  </span>
+<span class="sd">        Ephermeris and the American Ephermis and Nautical Almanac (1961).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute number of days from epoch of 12:00 UT Dec 31, 1899.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">ctime</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">1899</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">seconds</span> <span class="o">/</span> <span class="mi">86400</span>
+
+    <span class="c1"># Coefficients used in t_tide</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">270.434164</span><span class="p">,</span> <span class="mf">13.1763965268</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0000850</span><span class="p">,</span> <span class="mf">0.000000039</span><span class="p">])</span>
+    <span class="n">hc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">279.696678</span><span class="p">,</span> <span class="mf">0.9856473354</span><span class="p">,</span> <span class="mf">0.00002267</span><span class="p">,</span> <span class="mf">0.000000000</span><span class="p">])</span>
+    <span class="n">pc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">334.329556</span><span class="p">,</span> <span class="mf">0.1114040803</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0007739</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.00000026</span><span class="p">])</span>
+    <span class="n">npc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">259.183275</span><span class="p">,</span> <span class="mf">0.0529539222</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0001557</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.000000050</span><span class="p">])</span>
+    <span class="n">ppc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">281.220844</span><span class="p">,</span> <span class="mf">0.0000470684</span><span class="p">,</span> <span class="mf">0.0000339</span><span class="p">,</span> <span class="mf">0.000000070</span><span class="p">])</span>
+    <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">sc</span><span class="p">,</span> <span class="n">hc</span><span class="p">,</span> <span class="n">pc</span><span class="p">,</span> <span class="n">npc</span><span class="p">,</span> <span class="n">ppc</span><span class="p">))</span>
+
+    <span class="c1"># output variables</span>
+    <span class="n">astro</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">6</span><span class="p">,)</span>
+    <span class="n">ader</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">6</span><span class="p">,)</span>
+
+    <span class="c1"># Compute astronomical constants at ctime; we only need the fractional</span>
+    <span class="c1"># part of the cycle.</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="mf">1e-4</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">D</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span>
+    <span class="n">astro</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">/</span> <span class="mi">360</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="c1"># Compute lunar time tau, based on fractional part of solar day.</span>
+    <span class="c1"># Add the hour angle to the longitude of the sun and subtract the</span>
+    <span class="c1"># longitude of the moon.</span>
+    <span class="n">astro</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctime</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">ctime</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">ctime</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">ctime</span><span class="o">.</span><span class="n">day</span><span class="p">))</span> <span class="o">/</span> \
+        <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">astro</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">astro</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Compute rates of change.</span>
+    <span class="n">dargs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2e-4</span> <span class="o">*</span> <span class="n">D</span><span class="p">,</span> <span class="mf">3e-4</span> <span class="o">*</span> <span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">ader</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">dargs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">360</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">ader</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">ader</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">ader</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">astro</span><span class="p">,</span> <span class="n">ader</span>
+
+
+<span class="k">def</span> <span class="nf">_vuf</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">tides</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mf">5.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the astronomical phase V, the nodal phase modulation U, and </span>
+<span class="sd">    the nodal amplitude correction F at ctime for the requested </span>
+<span class="sd">    constituents and latitude.</span>
+
+<span class="sd">    Note, there are differences compared to t_tide:</span>
+<span class="sd">        - That V and U are returned as radians, not cycles. </span>
+<span class="sd">        - Shallow water constituents are not supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : datetime,</span>
+<span class="sd">        Time for the nodal correction</span>
+<span class="sd">    tides : string or list of strings,</span>
+<span class="sd">        Names of tidal constituents</span>
+<span class="sd">    lat : float</span>
+<span class="sd">        Latitude for nodal correction</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict : </span>
+<span class="sd">        dictionary of vuf corrections with the tide names as keys</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If the user tries to pass a list, we only want the mid-point;</span>
+    <span class="c1"># otherwise, just use what was sent</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="n">tides</span> <span class="o">=</span> <span class="n">__set_tides</span><span class="p">(</span><span class="n">tides</span><span class="p">)</span>
+
+    <span class="c1"># Calculate astronomical arguments at the requested time (mid-point of</span>
+    <span class="c1"># timeseries).</span>
+    <span class="n">astro</span><span class="p">,</span> <span class="n">ader</span> <span class="o">=</span> <span class="n">__astron</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+
+    <span class="c1"># According to t_tide, the second order terms in the tidal potential</span>
+    <span class="c1"># go to zero at the equator, but the third order terms do not. Hence,</span>
+    <span class="c1"># when trying to infer the third-order terms from the second-order</span>
+    <span class="c1"># terms the nodal correction factors blow up. In order to prevent</span>
+    <span class="c1"># this it is assumed that the equatorial forcing at the equator is</span>
+    <span class="c1"># due to second-order forcing off the equator from about the 5 degree</span>
+    <span class="c1"># location. Latitudes are hence (somewhat arbitrarily) forced to be</span>
+    <span class="c1"># no closer than 5 degrees to the equator.</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">5.0</span><span class="p">):</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">lat</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">slat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.</span><span class="p">)</span>
+
+    <span class="c1"># Setup output dictionaries</span>
+    <span class="n">vufs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tides</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fmod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">doodson</span><span class="p">,</span> <span class="n">astro</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">semi</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">ilatfac</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fsum</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">uu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fmod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">deldood</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:],</span> <span class="n">astro</span><span class="p">[</span><span class="mi">3</span><span class="p">:])</span>
+                             <span class="o">+</span> <span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">phcorr</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">rr</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="mi">0</span><span class="p">:</span> <span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">amprat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">amprat</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.36309</span> <span class="o">*</span>
+                    <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">slat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">slat</span><span class="p">,</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">amprat</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="mf">2.59808</span> <span class="o">*</span> <span class="n">slat</span>
+                <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">__const</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">sat</span><span class="o">.</span><span class="n">ilatfac</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">fsum</span> <span class="o">+=</span> <span class="n">rr</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">uu</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">fsum</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">fsum</span><span class="p">)</span>
+        <span class="n">vufs</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">__vuf_vals</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vufs</span>
+
+
+<div class="viewcode-block" id="predict"><a class="viewcode-back" href="../../modules/seapy.html#seapy.tide.predict">[docs]</a><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">tide</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a tidal time-series for the given tides. Nodal correction</span>
+<span class="sd">    is applied for the time as well as the given latitude (if specified).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    times : datetime array,</span>
+<span class="sd">        The times of the predicted tide(s)</span>
+<span class="sd">    tide : dict,</span>
+<span class="sd">        Dictionary of the tides to predict with the constituent name as </span>
+<span class="sd">        the key, and the value is an amp_ph namedtuple.</span>
+<span class="sd">    lat : float optional,</span>
+<span class="sd">        latitude of the nodal correction</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray : </span>
+<span class="sd">        Values of the total tidal prediction of all constituents provided</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Generate a time series every hour for the month of April, 2014 for</span>
+<span class="sd">    a specific phase and amplitude of M2 and K1.</span>
+
+<span class="sd">    &gt;&gt;&gt; times = [ datetime(2014,4,1) + timedelta(t/24) for t in range(31*24) ]</span>
+<span class="sd">    &gt;&gt;&gt; tide = {&#39;M2&#39;: amp_pha(2.3, np.radians(22)), </span>
+<span class="sd">                &#39;K1&#39;: amp_pha(0.4, np.radians(227))}</span>
+<span class="sd">    &gt;&gt;&gt; z = predict(times, tide, 23)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="n">clist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tide</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">(</span><span class="n">clist</span><span class="p">)</span>
+
+    <span class="c1"># Calculate midpoint of time series</span>
+    <span class="n">ctime</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Calculate astronomical and nodal values</span>
+    <span class="n">vufs</span> <span class="o">=</span> <span class="n">_vuf</span><span class="p">(</span><span class="n">ctime</span><span class="p">,</span> <span class="n">clist</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="c1"># Time series as hours from ctime</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">t</span> <span class="o">-</span> <span class="n">ctime</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">3600.0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">times</span><span class="p">])</span>
+
+    <span class="c1"># Calulate time series</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ap</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tide</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">tide</span><span class="p">[</span><span class="n">ap</span><span class="p">]</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">ts</span> <span class="o">+=</span> <span class="n">c</span><span class="o">.</span><span class="n">amp</span> <span class="o">*</span> <span class="n">vufs</span><span class="p">[</span><span class="n">ap</span><span class="p">]</span><span class="o">.</span><span class="n">f</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">freq</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">hours</span><span class="p">)</span>
+                                          <span class="o">+</span> <span class="p">(</span><span class="n">vufs</span><span class="p">[</span><span class="n">ap</span><span class="p">]</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">vufs</span><span class="p">[</span><span class="n">ap</span><span class="p">]</span><span class="o">.</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">c</span><span class="o">.</span><span class="n">pha</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ts</span></div>
+
+
+<div class="viewcode-block" id="fit"><a class="viewcode-back" href="../../modules/seapy.html#seapy.tide.fit">[docs]</a><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">xin</span><span class="p">,</span> <span class="n">tides</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a harmonic fit of tidal constituents to a time-series of data. The</span>
+<span class="sd">    series can be unevenly spaced in time, but every time must be specified.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    times : datetime array,</span>
+<span class="sd">        List of times matching each value of the time-series input</span>
+<span class="sd">    xin : ndarray,</span>
+<span class="sd">        Data values to perform the harmonic fit upon</span>
+<span class="sd">    tides : string or list of strings, optional,</span>
+<span class="sd">        list of tidal constituents to fit to the data provided. If not</span>
+<span class="sd">        specified, the dominant 11 consituents are used:</span>
+<span class="sd">        [&#39;M4&#39;, &#39;K2&#39;, &#39;S2&#39;, &#39;M2&#39;, &#39;N2&#39;, &#39;K1&#39;, &#39;P1&#39;, &#39;O1&#39;, &#39;Q1&#39;, &#39;MF&#39;, &#39;MM&#39;]</span>
+<span class="sd">    lat : float, optional,</span>
+<span class="sd">        latitude of the nodal correction</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict :</span>
+<span class="sd">        A dictionary of the results are returned with the following keys:</span>
+<span class="sd">        &#39;tide_start&#39;: Reference date used as phase reference in fit</span>
+<span class="sd">        &#39;fit&#39;: the time-series of the tidal fit</span>
+<span class="sd">        &#39;percent&#39;: percentage of the signal explained by the tides</span>
+<span class="sd">        &#39;major&#39;: dictionary of the major axis fit comprised of:</span>
+<span class="sd">            tidename: amp_ph namedtuple</span>
+<span class="sd">            Providing the amplitude and phase of each fit constituent</span>
+<span class="sd">        &#39;minor&#39;: dictionary of the minor axis fit comprised of:</span>
+<span class="sd">            tidename: amp_ph namedtuple</span>
+<span class="sd">            Providing the amplitude and phase of each fit constituent</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Fit the &#39;M2&#39; and &#39;K1&#39; to the given time-series, x.</span>
+
+<span class="sd">    &gt;&gt;&gt; data = np.load(&#39;water_level.npz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; out = fit(data.times, data.level, [&#39;M2&#39;,&#39;K1&#39;], lat=28)</span>
+<span class="sd">    &gt;&gt;&gt; plt.plot(data.times, out[&#39;fit&#39;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">xin</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The times and input data must be of same size.&quot;</span><span class="p">)</span>
+    <span class="n">tides</span> <span class="o">=</span> <span class="n">__set_tides</span><span class="p">(</span><span class="n">tides</span><span class="p">)</span>
+
+    <span class="c1"># Calculate midpoint of time series, but ensure 00:00 hour</span>
+    <span class="n">ctime</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">ctime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">ctime</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">ctime</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">ctime</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+
+    <span class="c1"># Nodal Corrections values</span>
+    <span class="n">vufs</span> <span class="o">=</span> <span class="n">_vuf</span><span class="p">(</span><span class="n">ctime</span><span class="p">,</span> <span class="n">tides</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+
+    <span class="c1"># time series as hours from ctime</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">t</span> <span class="o">-</span> <span class="n">ctime</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">3600.0</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">times</span><span class="p">])</span>
+
+    <span class="c1"># get frequencies</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">frequency</span><span class="p">(</span><span class="n">tides</span><span class="p">)</span>
+
+    <span class="c1"># Generate cosines and sines for all the requested constitutents.</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="n">freq</span><span class="p">)),</span>
+                   <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="n">freq</span><span class="p">))])</span>
+
+    <span class="c1"># Calculate coefficients</span>
+    <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">xin</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">xout</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">coef</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="c1"># Explained variance</span>
+    <span class="n">var_exp</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">xout</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">xout</span><span class="p">)))</span> <span class="o">/</span> \
+        <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">xin</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">xin</span><span class="p">)))</span>
+
+    <span class="c1"># Calculate amplitude &amp; phase</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tides</span><span class="p">)</span>
+    <span class="n">ap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">((</span><span class="n">coef</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span> <span class="o">+</span> <span class="n">num</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">coef</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="n">num</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+    <span class="n">am</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">((</span><span class="n">coef</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span> <span class="o">+</span> <span class="n">num</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">coef</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="n">num</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+
+    <span class="c1"># Compute major/minor axis amplitude and phase</span>
+    <span class="n">maj_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">tides</span><span class="p">),))</span>
+    <span class="n">maj_pha</span> <span class="o">=</span> <span class="n">maj_amp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">min_amp</span> <span class="o">=</span> <span class="n">maj_amp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">min_pha</span> <span class="o">=</span> <span class="n">maj_amp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tides</span><span class="p">):</span>
+        <span class="n">maj_amp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">am</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">/</span> <span class="n">vufs</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">min_amp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">am</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">/</span> <span class="n">vufs</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">min_pha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span>
+            <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">am</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">maj_pha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">vufs</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">vufs</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">u</span> <span class="o">-</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ap</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">min_pha</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                            <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;tide_start&#39;</span><span class="p">:</span> <span class="n">ctime</span><span class="p">,</span>
+        <span class="s1">&#39;fit&#39;</span><span class="p">:</span> <span class="n">xout</span><span class="p">,</span>
+        <span class="s1">&#39;percent&#39;</span><span class="p">:</span> <span class="n">var_exp</span><span class="p">,</span>
+        <span class="s1">&#39;major&#39;</span><span class="p">:</span> <span class="n">make_amp_ph</span><span class="p">(</span><span class="n">tides</span><span class="p">,</span> <span class="n">maj_amp</span><span class="p">,</span> <span class="n">maj_pha</span><span class="p">),</span>
+        <span class="s1">&#39;minor&#39;</span><span class="p">:</span> <span class="n">make_amp_ph</span><span class="p">(</span><span class="n">tides</span><span class="p">,</span> <span class="n">min_amp</span><span class="p">,</span> <span class="n">min_pha</span><span class="p">)</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="make_amp_ph"><a class="viewcode-back" href="../../modules/seapy.html#seapy.tide.make_amp_ph">[docs]</a><span class="k">def</span> <span class="nf">make_amp_ph</span><span class="p">(</span><span class="n">tides</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">pha</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a dictionary of amp_pha named tuples given arrays of names, amplitudes and phases</span>
+<span class="sd">    Inputs:-</span>
+<span class="sd">        tides - List of constituent strings</span>
+<span class="sd">        amp - array of amplitudes for each constituent </span>
+<span class="sd">        pha - array of phases (rad) for each constituent</span>
+<span class="sd">    Outputs:-</span>
+<span class="sd">        amp_ph - dictionary of amp_ph named tuples, with constiutents as keys</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">amp_ph</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tides</span><span class="p">):</span>
+        <span class="n">amp_ph</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">amp_pha</span><span class="p">(</span><span class="n">amp</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pha</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">amp_ph</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

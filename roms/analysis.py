@@ -88,6 +88,7 @@ def depth_average(field, grid, depth, zeta=None):
     zeta : ndarray, optional,
         ROMS zeta field corresponding to field if you wish to apply the SSH
         correction to the depth calculations.
+
     Returns
     -------
     ndarray,

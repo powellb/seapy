@@ -1,0 +1,1608 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SEAPY Documentation &mdash; seapy 1.0a1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="seapy 1.0a1 documentation" href="../index.html" />
+    <link rel="up" title="SEAPY modules" href="index.html" />
+    <link rel="prev" title="SEAPY modules" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SEAPY modules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="seapy-documentation">
+<h1>SEAPY Documentation<a class="headerlink" href="#seapy-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-seapy.__init__">
+<span id="seapy-general-tools-for-working-with-ocean-fields"></span><h2><code class="xref py py-mod docutils literal"><span class="pre">seapy</span></code> &#8211; General tools for working with ocean fields<a class="headerlink" href="#module-seapy.__init__" title="Permalink to this headline">¶</a></h2>
+<p>__init__.py</p>
+<p>State Estimation and Analysis for PYthon</p>
+<blockquote>
+<div>Module for working with oceanographic data and models</div></blockquote>
+<p>Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<p>Requires the following packages: joblib</p>
+<p>Import classes include:</p>
+<ul class="simple">
+<li><code class="xref py py-class docutils literal"><span class="pre">opt</span></code></li>
+<li><a class="reference internal" href="#seapy.progressbar.ProgressBar" title="seapy.progressbar.ProgressBar"><code class="xref py py-class docutils literal"><span class="pre">ProgressBar</span></code></a></li>
+</ul>
+<p>Imported functions include:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#seapy.lib.adddim" title="seapy.lib.adddim"><code class="xref py py-func docutils literal"><span class="pre">adddim()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.convolve_mask" title="seapy.lib.convolve_mask"><code class="xref py py-func docutils literal"><span class="pre">convolve_mask()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.earth_distance" title="seapy.lib.earth_distance"><code class="xref py py-func docutils literal"><span class="pre">earth_distance()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.rotate" title="seapy.lib.rotate"><code class="xref py py-func docutils literal"><span class="pre">rotate()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.vecfind" title="seapy.lib.vecfind"><code class="xref py py-func docutils literal"><span class="pre">vecfind()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.list_files" title="seapy.lib.list_files"><code class="xref py py-func docutils literal"><span class="pre">list_files()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.day2date" title="seapy.lib.day2date"><code class="xref py py-func docutils literal"><span class="pre">day2date()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.date2day" title="seapy.lib.date2day"><code class="xref py py-func docutils literal"><span class="pre">date2day()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.lib.today2day" title="seapy.lib.today2day"><code class="xref py py-func docutils literal"><span class="pre">today2day()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.oa.oasurf" title="seapy.oa.oasurf"><code class="xref py py-func docutils literal"><span class="pre">oasurf()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.oa.oavol" title="seapy.oa.oavol"><code class="xref py py-func docutils literal"><span class="pre">oavol()</span></code></a></li>
+<li><a class="reference internal" href="#seapy.progressbar.progress" title="seapy.progressbar.progress"><code class="xref py py-func docutils literal"><span class="pre">progress()</span></code></a></li>
+</ul>
+<span class="target" id="module-seapy.lib"></span><p>lib.py</p>
+<p>State Estimation and Analysis for PYthon</p>
+<p>Library of utilities for general seapy module, imported into the namespace
+when importing the seapy module</p>
+<p>Written by Brian Powell on 10/18/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.lib.adddim">
+<code class="descclassname">seapy.lib.</code><code class="descname">adddim</code><span class="sig-paren">(</span><em>fld</em>, <em>size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#adddim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.adddim" title="Permalink to this definition">¶</a></dt>
+<dd><p>replicate a field and add a new first dimension with given size</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fld</strong> : array_like</p>
+<blockquote>
+<div><p>Input field.</p>
+</div></blockquote>
+<p><strong>size</strong> : int, optional</p>
+<blockquote>
+<div><p>Size of additional first dimension</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>fld</strong> : array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(4,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">adddim</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">array([[4, 5, 6, 7],</span>
+<span class="go">       [4, 5, 6, 7]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.chunker">
+<code class="descclassname">seapy.lib.</code><code class="descname">chunker</code><span class="sig-paren">(</span><em>seq</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#chunker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.chunker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over an iterable in &#8216;chunks&#8217; of a given size</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>seq</strong> : iterable,</p>
+<blockquote>
+<div><p>The sequence to iterate over</p>
+</div></blockquote>
+<p><strong>size</strong> : int,</p>
+<blockquote>
+<div><p>The number of items to be returned in each &#8216;chunk&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>chunk</strong> : seq,</p>
+<blockquote class="last">
+<div><p>The items of the chunk to be iterated</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">14</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">chunker</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">[0, 3, 4]</span>
+<span class="go">[7, 9, 10]</span>
+<span class="go">[12, 14]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.convolve_mask">
+<code class="descclassname">seapy.lib.</code><code class="descname">convolve_mask</code><span class="sig-paren">(</span><em>data</em>, <em>ksize=3</em>, <em>kernel=None</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#convolve_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.convolve_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve data over the missing regions of a mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : masked array_like</p>
+<blockquote>
+<div><p>Input field.</p>
+</div></blockquote>
+<p><strong>ksize</strong> : int, optional</p>
+<blockquote>
+<div><p>Size of square kernel</p>
+</div></blockquote>
+<p><strong>kernel</strong> : ndarray, optional</p>
+<blockquote>
+<div><p>Define a convolution kernel. Default is averaging</p>
+</div></blockquote>
+<p><strong>copy</strong> : bool, optional</p>
+<blockquote>
+<div><p>If true, a copy of input array is made</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>fld</strong> : masked array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.date2day">
+<code class="descclassname">seapy.lib.</code><code class="descname">date2day</code><span class="sig-paren">(</span><em>date=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#date2day"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.date2day" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the fractional number of days elapsed since the epoch to the date
+given.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>date</strong> : datetime</p>
+<blockquote>
+<div><p>Input date</p>
+</div></blockquote>
+<p><strong>epoch</strong> : datetime</p>
+<blockquote>
+<div><p>Date of epoch</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>numdays</strong> : scalar</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.day2date">
+<code class="descclassname">seapy.lib.</code><code class="descname">day2date</code><span class="sig-paren">(</span><em>day=0</em>, <em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#day2date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.day2date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a datetime object from the number of days since the epoch</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>day</strong> : scalar</p>
+<blockquote>
+<div><p>Input day number</p>
+</div></blockquote>
+<p><strong>epoch</strong> : datetime</p>
+<blockquote>
+<div><p>Date of epoch</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>date</strong> : datetime</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.earth_angle">
+<code class="descclassname">seapy.lib.</code><code class="descname">earth_angle</code><span class="sig-paren">(</span><em>lon1</em>, <em>lat1</em>, <em>lon2</em>, <em>lat2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#earth_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.earth_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the angle between lat/lon points. NOTE: The bearing angle
+is computed, but then converted to geometric (counter-clockwise)
+angle to be returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon1</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of source longitude(s)</p>
+</div></blockquote>
+<p><strong>lat1</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of source latitude(s)</p>
+</div></blockquote>
+<p><strong>lon2</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of destination longitude(s)</p>
+</div></blockquote>
+<p><strong>lon2</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of destination longitude(s)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>angle</strong> : array or scalar of bearing in radians</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.earth_distance">
+<code class="descclassname">seapy.lib.</code><code class="descname">earth_distance</code><span class="sig-paren">(</span><em>lon1</em>, <em>lat1</em>, <em>lon2</em>, <em>lat2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#earth_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.earth_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the distance between lat/lon points</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon1</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of source longitude(s)</p>
+</div></blockquote>
+<p><strong>lat1</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of source latitude(s)</p>
+</div></blockquote>
+<p><strong>lon2</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of destination longitude(s)</p>
+</div></blockquote>
+<p><strong>lon2</strong> : array_like or scalar</p>
+<blockquote>
+<div><p>Input array of destination longitude(s)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>distance</strong> : array or scalar of distance in meters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.flatten">
+<code class="descclassname">seapy.lib.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>l</em>, <em>ltypes=(&lt;class 'list'&gt;</em>, <em>&lt;class 'tuple'&gt;</em>, <em>&lt;class 'set'&gt;)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten a list or tuple that contains additional lists or tuples. Like
+the numpy flatten, but for python types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>l: tuple or list,</strong></p>
+<blockquote>
+<div><p>The data that is to be flattened</p>
+</div></blockquote>
+<p><strong>ltypes: tuple,</strong></p>
+<blockquote>
+<div><p>Data types to attempt to flatten</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">numpy.flatten</span></code></p>
+</div>
+<p class="rubric">Notes</p>
+<p>This code was taken from:
+&lt;<a class="reference external" href="http://rightfootin.blogspot.com.au/2006/09/more-on-python-flatten.html">http://rightfootin.blogspot.com.au/2006/09/more-on-python-flatten.html</a>&gt;</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;this&#39;</span><span class="p">),</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">[1, 3, 4, 1, &#39;test&#39;, &#39;this&#39;, 5, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.godelnumber">
+<code class="descclassname">seapy.lib.</code><code class="descname">godelnumber</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#godelnumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.godelnumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the columns of x into godel numbers. If x is MxN, return an Mx1
+vector. The Godel number is prime**x</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray,</p>
+<blockquote>
+<div><p>Values to convert into Godel number(s)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>godel</strong> : ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.list_files">
+<code class="descclassname">seapy.lib.</code><code class="descname">list_files</code><span class="sig-paren">(</span><em>path='.'</em>, <em>regex=None</em>, <em>full_path=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#list_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.list_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>list all sorted file names in the given path that conform to the regular
+expression pattern. This is not a generator function because it sorts
+the files in alphabetic/numeric order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>path</strong> : string</p>
+<blockquote>
+<div><p>Search for the given matches</p>
+</div></blockquote>
+<p><strong>regex</strong> : string, optional</p>
+<blockquote>
+<div><p>Input regular expression string to filter filenames</p>
+</div></blockquote>
+<p><strong>full_path</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, return the full path for each found object. If false,
+return only the filename</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>files</strong> : array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">list_files</span><span class="p">(</span><span class="s1">&#39;/path/to/dir/test_.*txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+<span class="go">[&#39;/path/to/dir/test_001.txt&#39;, &#39;/path/to/dir/test_002.txt&#39;]</span>
+</pre></div>
+</div>
+<p>NOTE: this is equivalent for separating:
+&gt;&gt;&gt; files = seapy.list_files(&#8216;/path/to/dir&#8217;, &#8216;<a href="#id1"><span class="problematic" id="id2">test_</span></a>.*txt&#8217;)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.netcdf4">
+<code class="descclassname">seapy.lib.</code><code class="descname">netcdf4</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#netcdf4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.netcdf4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around netCDF4 to open a file as either a Dataset or an
+MFDataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>file</strong> : string or list,</p>
+<blockquote>
+<div><p>Filename(s) to open. If the string has wildcards or is a list,
+this attempts to open an MFDataset</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">netCDF4 Dataset or MFDataset</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.primes">
+<code class="descclassname">seapy.lib.</code><code class="descname">primes</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#primes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.primes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of primes less than or equal to a given value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>number</strong> : int</p>
+<blockquote>
+<div><p>Find prime values up to this value</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>primes</strong> : ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This code was taken from &#8220;Cooking with Python, Part 2&#8221; by Martelli, et al.</p>
+<p>&lt;<a class="reference external" href="http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last">http://archive.oreilly.com/pub/a/python/excerpt/pythonckbk_chap1/index1.html?page=last</a>&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.rotate">
+<code class="descclassname">seapy.lib.</code><code class="descname">rotate</code><span class="sig-paren">(</span><em>u</em>, <em>v</em>, <em>angle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate a vector field by the given angle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>u</strong> : array like</p>
+<blockquote>
+<div><p>Input u component</p>
+</div></blockquote>
+<p><strong>v</strong> : array like</p>
+<blockquote>
+<div><p>Input v component</p>
+</div></blockquote>
+<p><strong>angle</strong> : array like</p>
+<blockquote>
+<div><p>Input angle of rotation</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>rotated_u, rotated_v</strong> : array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.today2day">
+<code class="descclassname">seapy.lib.</code><code class="descname">today2day</code><span class="sig-paren">(</span><em>epoch=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#today2day"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.today2day" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the day number of today (UTC time) since the epoch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>epoch</strong> : datetime</p>
+<blockquote>
+<div><p>Date of epoch</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>numdays</strong> : scalar</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.unique_rows">
+<code class="descclassname">seapy.lib.</code><code class="descname">unique_rows</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#unique_rows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.unique_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert rows into godelnumbers and find the rows that are unique using
+np.unique</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray or tuple,</p>
+<blockquote>
+<div><p>array of elements to find unique value. If columns are greater
+than 1, then the columns are combined into a single Godel number.
+If a tuple of arrays are passed, they are combined.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>vals</strong> : ndarray,</p>
+<blockquote>
+<div><p>unique values</p>
+</div></blockquote>
+<p><strong>idx</strong> : ndarray,</p>
+<blockquote class="last">
+<div><p>Indices of the unique values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.lib.vecfind">
+<code class="descclassname">seapy.lib.</code><code class="descname">vecfind</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>tolerance=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#vecfind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.vecfind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all occurences of b in a within the given tolerance and return
+the indices into a and b that correspond.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : array</p>
+<blockquote>
+<div><p>Input vector</p>
+</div></blockquote>
+<p><strong>b</strong> : array</p>
+<blockquote>
+<div><p>Input vector</p>
+</div></blockquote>
+<p><strong>tolerance</strong> : float, optional</p>
+<blockquote>
+<div><p>Input tolerance for how close a==b</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>index_a, index_b</strong> : arrays of indices for each vector where values are equal,</p>
+<blockquote class="last">
+<div><p>such that a[index_a] == b[index_b]</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="module-seapy.cdl_parser">
+<span id="cdl-parser-read-cdl-files-to-generate-netcdf-catalog"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">cdl_parser</span></code> &#8211; Read CDL files to generate NetCDF Catalog<a class="headerlink" href="#module-seapy.cdl_parser" title="Permalink to this headline">¶</a></h3>
+<p>Module to load and parse Common Data Language (CDL) files and
+tokenize the dimensions and variables</p>
+<p>Written by Brian Powell on 04/30/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.cdl_parser.cdl_parser">
+<code class="descclassname">seapy.cdl_parser.</code><code class="descname">cdl_parser</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/cdl_parser.html#cdl_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.cdl_parser.cdl_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a netcdf-compliant CDL file, parse it to determine the structure:
+dimensions, variables, attributes, and global attributes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>name and path of CDL file to parse</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dims, vars, attr: dict</p>
+<blockquote class="last">
+<div><p>dictionaries description dimensions, variables, and attributes</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="environ-load-os-environment-variables">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">environ</span></code> &#8211; Load OS Environment Variables<a class="headerlink" href="#environ-load-os-environment-variables" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="seapy.environ">
+<code class="descclassname">seapy.</code><code class="descname">environ</code><a class="headerlink" href="#seapy.environ" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#seapy.environ" title="seapy.environ"><code class="xref py py-class docutils literal"><span class="pre">seapy.environ</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.filt">
+<span id="filt-spectral-filter-of-time-series-data"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">filt</span></code> &#8211; Spectral filter of time-series data<a class="headerlink" href="#module-seapy.filt" title="Permalink to this headline">¶</a></h3>
+<p>filt.py</p>
+<p>Functions for quickly filtering time-series of data.</p>
+<p>Written by Brian Powell on 02/09/16
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.filt.average_err">
+<code class="descclassname">seapy.filt.</code><code class="descname">average_err</code><span class="sig-paren">(</span><em>x</em>, <em>window=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/filt.html#average_err"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.filt.average_err" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a moving (boxcar) average and variance of the time-series, x, using
+the specified window size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x: ndarray,</strong></p>
+<blockquote>
+<div><p>The time-series of data to bandpass filter.</p>
+</div></blockquote>
+<p><strong>cutoff: float,</strong></p>
+<blockquote>
+<div><p>The period at which the bandpass filter will apply the cutoff. 
+Units are same as the time-step of the signal provided (e.g., if the
+data are provided every hour, then a cutoff=12 would be a 12 hour
+cutoff.)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">x, variance: ndarray, ndarray</p>
+<blockquote class="last">
+<div><p>Returns the moving average of x with the moving variance of the
+average window</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create data every 30 minutes for 3 days with time in days:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="o">.</span><span class="mo">00</span><span class="mi">8</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="o">.</span><span class="mi">11</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">11</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Average the data over 6 hour period</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">nx</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">average_err</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Average&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Variance&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.filt.bandpass">
+<code class="descclassname">seapy.filt.</code><code class="descname">bandpass</code><span class="sig-paren">(</span><em>x</em>, <em>dt</em>, <em>low_cutoff=None</em>, <em>hi_cutoff=None</em>, <em>order=7</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/filt.html#bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.filt.bandpass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a bandpass filter at the cutoff period (same units as the
+time-series step).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray,</p>
+<blockquote>
+<div><p>The time-series of data to bandpass filter.</p>
+</div></blockquote>
+<p><strong>dt</strong> : float,</p>
+<blockquote>
+<div><p>The time-step between the values in x. Units must be consistent
+with the cutoff period.</p>
+</div></blockquote>
+<p><strong>low_cutoff: float,</strong></p>
+<blockquote>
+<div><p>The period at which the bandpass filter will apply the lowpass filter. 
+Units are same as the time-step of the signal provided (e.g., if the
+data are provided every hour, then a cutoff=12 would be a 12 hour
+cutoff.) Everything that has a longer period will remain. If you only
+want a hi-pass filter, this value should be None.</p>
+</div></blockquote>
+<p><strong>hi_cutoff: float,</strong></p>
+<blockquote>
+<div><p>The period at which the bandpass filter will apply the high-pass filter. 
+Units are same as the time-step of the signal provided (e.g., if the
+data are provided every hour, then a cutoff=12 would be a 12 hour
+cutoff.) Everything that has a shorter period will remain. If you only
+want a low-pass filter, this value should be None.</p>
+</div></blockquote>
+<p><strong>order: int optional,</strong></p>
+<blockquote>
+<div><p>The order of the filter to apply</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>The bandpass filtered time-series</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create data every 30 minutes for 3 days with time in days:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="o">.</span><span class="mo">00</span><span class="mi">8</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="o">.</span><span class="mi">11</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">11</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Filter the data to low-pass everything below the 1 day period</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">nx</span> <span class="o">=</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">low_cutoff</span><span class="o">=</span><span class="mi">24</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Filter&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Filter the data to low-pass everything below the 2 day period</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">nx</span> <span class="o">=</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">low_cutoff</span><span class="o">=</span><span class="mi">48</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Filter&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Filter the data to band-pass everything above the 2 day period
+and below the 1 hour period</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span> <span class="n">nx</span> <span class="o">=</span> <span class="n">bandpass</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">low_cutoff</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hi_cutoff</span><span class="o">=</span><span class="mi">48</span> <span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span> <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Filter&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="hawaii-mapping-subclass-for-hawaii">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">hawaii</span></code> &#8211; Mapping subclass for Hawaii<a class="headerlink" href="#hawaii-mapping-subclass-for-hawaii" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="seapy.hawaii">
+<em class="property">class </em><code class="descclassname">seapy.</code><code class="descname">hawaii</code><span class="sig-paren">(</span><em>figsize=(8.0</em>, <em>6.0)</em>, <em>llcrnrlon=-164.5</em>, <em>llcrnrlat=16.6</em>, <em>urcrnrlon=-152.0</em>, <em>urcrnrlat=24.2</em>, <em>dlat=1</em>, <em>dlon=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/hawaii.html#hawaii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.hawaii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">seapy.mapping.map</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">colorbar</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">land</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">new_figure</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">pcolormesh</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">zoom</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.hawaii.land">
+<code class="descname">land</code><span class="sig-paren">(</span><em>color='black'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/hawaii.html#hawaii.land"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.hawaii.land" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the GIS coastline data from the state of Hawaii to draw the
+land boundaries. This does not include rivers, etc., only the
+coastline.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>color: string, optional</strong></p>
+<blockquote>
+<div><p>Color to draw the land mask with</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mapping-mapping-toolkit-for-basemap">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">mapping</span></code> &#8211; Mapping toolkit for basemap<a class="headerlink" href="#mapping-mapping-toolkit-for-basemap" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="seapy.mapping">
+<code class="descclassname">seapy.</code><code class="descname">mapping</code><a class="headerlink" href="#seapy.mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#seapy.mapping" title="seapy.mapping"><code class="xref py py-class docutils literal"><span class="pre">seapy.mapping</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.oa">
+<span id="oa-objective-analysis-interpolation"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">oa</span></code> &#8211; Objective Analysis Interpolation<a class="headerlink" href="#module-seapy.oa" title="Permalink to this headline">¶</a></h3>
+<p>oa</p>
+<p>Objective analysis.  This function will interpolate data using the
+fortran routines written by Emanuelle Di Lorenzo and Bruce Cornuelle</p>
+<p>Written by Brian Powell on 10/08/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.oa.oasurf">
+<code class="descclassname">seapy.oa.</code><code class="descname">oasurf</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>d</em>, <em>xx</em>, <em>yy</em>, <em>pmap=None</em>, <em>weight=10</em>, <em>nx=2</em>, <em>ny=2</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/oa.html#oasurf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.oa.oasurf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objective analysis interpolation for 2D fields</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x: array [2-D]</strong></p>
+<blockquote>
+<div><p>x-values of source data</p>
+</div></blockquote>
+<p><strong>y: array [2-D]</strong></p>
+<blockquote>
+<div><p>y-values of source data</p>
+</div></blockquote>
+<p><strong>d: array [2-D]</strong></p>
+<blockquote>
+<div><p>data values of source</p>
+</div></blockquote>
+<p><strong>xx: array [2-D]</strong></p>
+<blockquote>
+<div><p>x-values of destination</p>
+</div></blockquote>
+<p><strong>yy: array [2-D]</strong></p>
+<blockquote>
+<div><p>y-values of destination</p>
+</div></blockquote>
+<p><strong>pmap: array, optional</strong></p>
+<blockquote>
+<div><p>weighting array to map between source and destination.
+NOTE: best to save this after using to prevent recomputing
+weights for every interpolate</p>
+</div></blockquote>
+<p><strong>weight: int, optional</strong></p>
+<blockquote>
+<div><p>number of neighbor points to consider for every destination point</p>
+</div></blockquote>
+<p><strong>nx: int, optional</strong></p>
+<blockquote>
+<div><p>decorrelation lengthscale in x [same units as x]</p>
+</div></blockquote>
+<p><strong>ny: int, optional</strong></p>
+<blockquote>
+<div><p>decorrelation lengthscale in y [same units as y]</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool, optional</p>
+<blockquote>
+<div><p>display information within the OA routine</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_data: ndarray</p>
+<blockquote>
+<div><p>data interpolated onto the new grid</p>
+</div></blockquote>
+<p>pmap: ndarray</p>
+<blockquote class="last">
+<div><p>weighting map used in the interpolation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.oa.oavol">
+<code class="descclassname">seapy.oa.</code><code class="descname">oavol</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>v</em>, <em>xx</em>, <em>yy</em>, <em>zz</em>, <em>pmap=None</em>, <em>weight=10</em>, <em>nx=2</em>, <em>ny=2</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/oa.html#oavol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.oa.oavol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objective analysis interpolation for 3D fields</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x: array [2-D]</strong></p>
+<blockquote>
+<div><p>x-values of source data</p>
+</div></blockquote>
+<p><strong>y: array [2-D]</strong></p>
+<blockquote>
+<div><p>y-values of source data</p>
+</div></blockquote>
+<p><strong>z: array [3-D]</strong></p>
+<blockquote>
+<div><p>z-values of source data</p>
+</div></blockquote>
+<p><strong>v: array [3-D]</strong></p>
+<blockquote>
+<div><p>data values of source</p>
+</div></blockquote>
+<p><strong>xx: array [2-D]</strong></p>
+<blockquote>
+<div><p>x-values of destination</p>
+</div></blockquote>
+<p><strong>yy: array [2-D]</strong></p>
+<blockquote>
+<div><p>y-values of destination</p>
+</div></blockquote>
+<p><strong>zz: array [3-D]</strong></p>
+<blockquote>
+<div><p>z-values of destination</p>
+</div></blockquote>
+<p><strong>pmap: array, optional</strong></p>
+<blockquote>
+<div><p>weighting array to map between source and destination.
+NOTE: best to save this after using to prevent recomputing
+weights for every interpolate</p>
+</div></blockquote>
+<p><strong>weight: int, optional</strong></p>
+<blockquote>
+<div><p>number of neighbor points to consider for every destination point</p>
+</div></blockquote>
+<p><strong>nx: int, optional</strong></p>
+<blockquote>
+<div><p>decorrelation lengthscale in x [same units as x]</p>
+</div></blockquote>
+<p><strong>ny: int, optional</strong></p>
+<blockquote>
+<div><p>decorrelation lengthscale in y [same units as y]</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool, optional</p>
+<blockquote>
+<div><p>display information within the OA routine</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_data: ndarray</p>
+<blockquote>
+<div><p>data interpolated onto the new grid</p>
+</div></blockquote>
+<p>pmap: ndarray</p>
+<blockquote class="last">
+<div><p>weighting map used in the interpolation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.plot">
+<span id="plot-simple-plotting-wrappers"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">plot</span></code> &#8211; Simple Plotting wrappers<a class="headerlink" href="#module-seapy.plot" title="Permalink to this headline">¶</a></h3>
+<p>plot.py</p>
+<p>State Estimation and Analysis for PYthon</p>
+<p>Module with plotting utilities</p>
+<p>Written by Brian Powell on 10/18/13
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="function">
+<dt id="seapy.plot.stackbar">
+<code class="descclassname">seapy.plot.</code><code class="descname">stackbar</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>colors=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/plot.html#stackbar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.plot.stackbar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an array of vectors in y, draw a bar chart for each one stacked on
+the prior.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="progressbar-keep-user-informed-of-progress">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">progressbar</span></code> &#8211; Keep User informed of progress<a class="headerlink" href="#progressbar-keep-user-informed-of-progress" title="Permalink to this headline">¶</a></h3>
+<p>&lt;<a class="reference external" href="http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb">http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb</a>&gt;</p>
+<blockquote>
+<div><p>Modified to include a timer and added an iterator that displays a
+progressbar as it iterates.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">progressbar</span><span class="o">.</span><span class="n">progress</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">frobnicate</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="class">
+<dt id="seapy.progressbar.ProgressBar">
+<em class="property">class </em><code class="descclassname">seapy.progressbar.</code><code class="descname">ProgressBar</code><span class="sig-paren">(</span><em>iterations</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/progressbar.html#ProgressBar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.progressbar.ProgressBar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">animate_ipython</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">update_iteration</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.progressbar.ProgressBar.animate_ipython">
+<code class="descname">animate_ipython</code><span class="sig-paren">(</span><em>iter</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/progressbar.html#ProgressBar.animate_ipython"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.progressbar.ProgressBar.animate_ipython" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="seapy.progressbar.ProgressBar.update_iteration">
+<code class="descname">update_iteration</code><span class="sig-paren">(</span><em>elapsed_iter</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/progressbar.html#ProgressBar.update_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.progressbar.ProgressBar.update_iteration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.progressbar.progress">
+<em class="property">class </em><code class="descclassname">seapy.progressbar.</code><code class="descname">progress</code><span class="sig-paren">(</span><em>iterable</em>, <em>maxlen=100</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/progressbar.html#progress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.progressbar.progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Draw a progess bar while going through the given iterator.</p>
+<p>NOTE: If the iterator does not support the len() method, you should
+supply the maxlen parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">progress</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)):</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">frobnicate</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="n">progressbar</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)),</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">frobnicate</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="qserver-manage-multiple-processes">
+<h3><code class="xref py py-mod docutils literal"><span class="pre">qserver</span></code> &#8211; Manage multiple processes<a class="headerlink" href="#qserver-manage-multiple-processes" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="seapy.qserver.task">
+<em class="property">class </em><code class="descclassname">seapy.qserver.</code><code class="descname">task</code><span class="sig-paren">(</span><em>name</em>, <em>cmd</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.qserver.task.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#task.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.task.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.qserver.os_task">
+<em class="property">class </em><code class="descclassname">seapy.qserver.</code><code class="descname">os_task</code><span class="sig-paren">(</span><em>name</em>, <em>cmd</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#os_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.os_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.qserver.task" title="seapy.qserver.task"><code class="xref py py-class docutils literal"><span class="pre">seapy.qserver.task</span></code></a></p>
+<p>task class simply defines a task for the queue server to process.
+It requires a descriptive name of the task for logging and the command
+to execute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote>
+<div><p>title of the task</p>
+</div></blockquote>
+<p><strong>cmd</strong> : string</p>
+<blockquote>
+<div><p>shell command with arguments to ru</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.qserver.os_task.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#os_task.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.os_task.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-seapy.qserver"></span><p>This module will execute any number of tasks using a queue of the
+specified number of threads.</p>
+<p>Define a list of qserver.task objects and then tell the server to 
+execute the list with a given number of threads.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tasks</span> <span class="o">=</span> <span class="p">(</span><span class="n">qserver</span><span class="o">.</span><span class="n">os_task</span><span class="p">(</span><span class="s2">&quot;list files&quot;</span><span class="p">,</span><span class="s2">&quot;ls -1&quot;</span><span class="p">),</span> 
+<span class="gp">&gt;&gt;&gt; </span>         <span class="n">qserver</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s2">&quot;my job&quot;</span><span class="p">,</span><span class="n">my_func</span><span class="p">,</span><span class="n">arg1</span><span class="p">,</span><span class="n">arg2</span><span class="p">,</span><span class="n">arg3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qserver</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="n">nthreads</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="seapy.qserver.execute">
+<code class="descclassname">seapy.qserver.</code><code class="descname">execute</code><span class="sig-paren">(</span><em>tasks</em>, <em>nthreads=2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the list of tasks in a queued server with the specified number of
+threads.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tasks</strong> : list</p>
+<blockquote>
+<div><p>list of task classes to execute in the queue server</p>
+</div></blockquote>
+<p><strong>nthreads: int</strong></p>
+<blockquote>
+<div><p>number of threads to use to process tasks in the queue</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">seapy.qserver.</code><code class="descname">os_task</code><span class="sig-paren">(</span><em>name</em>, <em>cmd</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#os_task"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.qserver.task" title="seapy.qserver.task"><code class="xref py py-class docutils literal"><span class="pre">seapy.qserver.task</span></code></a></p>
+<p>task class simply defines a task for the queue server to process.
+It requires a descriptive name of the task for logging and the command
+to execute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : string</p>
+<blockquote>
+<div><p>title of the task</p>
+</div></blockquote>
+<p><strong>cmd</strong> : string</p>
+<blockquote>
+<div><p>shell command with arguments to ru</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">none</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.qserver.os_task.run" title="seapy.qserver.os_task.run"><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></a>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt>
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#os_task.run"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.qserver.process_thread">
+<em class="property">class </em><code class="descclassname">seapy.qserver.</code><code class="descname">process_thread</code><span class="sig-paren">(</span><em>queue</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#process_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.process_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">daemon</span></code></td>
+<td>A boolean value indicating whether this thread is a daemon thread.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">ident</span></code></td>
+<td>Thread identifier of this thread or None if it has not been started.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
+<td>A string used for identification purposes only.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">getName</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">isAlive</span></code>()</td>
+<td>Return whether the thread is alive.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">isDaemon</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_alive</span></code>()</td>
+<td>Return whether the thread is alive.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">join</span></code>([timeout])</td>
+<td>Wait until the thread terminates.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.qserver.process_thread.run" title="seapy.qserver.process_thread.run"><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">setDaemon</span></code>(daemonic)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">setName</span></code>(name)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code>()</td>
+<td>Start the thread&#8217;s activity.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.qserver.process_thread.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#process_thread.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.qserver.process_thread.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">seapy.qserver.</code><code class="descname">task</code><span class="sig-paren">(</span><em>name</em>, <em>cmd</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#task"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.qserver.task.run" title="seapy.qserver.task.run"><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></a>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt>
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/qserver.html#task.run"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.tide">
+<span id="tide-generate-and-process-tidal-data"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">tide</span></code> &#8211; Generate and Process tidal data<a class="headerlink" href="#module-seapy.tide" title="Permalink to this headline">¶</a></h3>
+<p>tide.py</p>
+<p>Functions for working with tidal time-series</p>
+<p>Written by Glenn Carter and Dale Partridge
+Copyright (c)2016 University of Hawaii under the BSD-License.</p>
+<dl class="class">
+<dt id="seapy.tide.amp_pha">
+<em class="property">class </em><code class="descclassname">seapy.tide.</code><code class="descname">amp_pha</code><span class="sig-paren">(</span><em>amp</em>, <em>pha</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.tide.amp_pha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.amp_pha.amp" title="seapy.tide.amp_pha.amp"><code class="xref py py-obj docutils literal"><span class="pre">amp</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.amp_pha.pha" title="seapy.tide.amp_pha.pha"><code class="xref py py-obj docutils literal"><span class="pre">pha</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="seapy.tide.amp_pha.amp">
+<code class="descname">amp</code><a class="headerlink" href="#seapy.tide.amp_pha.amp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.amp_pha.pha">
+<code class="descname">pha</code><a class="headerlink" href="#seapy.tide.amp_pha.pha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.fit">
+<code class="descclassname">seapy.tide.</code><code class="descname">fit</code><span class="sig-paren">(</span><em>times</em>, <em>xin</em>, <em>tides=None</em>, <em>lat=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a harmonic fit of tidal constituents to a time-series of data. The
+series can be unevenly spaced in time, but every time must be specified.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>times</strong> : datetime array,</p>
+<blockquote>
+<div><p>List of times matching each value of the time-series input</p>
+</div></blockquote>
+<p><strong>xin</strong> : ndarray,</p>
+<blockquote>
+<div><p>Data values to perform the harmonic fit upon</p>
+</div></blockquote>
+<p><strong>tides</strong> : string or list of strings, optional,</p>
+<blockquote>
+<div><p>list of tidal constituents to fit to the data provided. If not
+specified, the dominant 11 consituents are used:
+[&#8216;M4&#8217;, &#8216;K2&#8217;, &#8216;S2&#8217;, &#8216;M2&#8217;, &#8216;N2&#8217;, &#8216;K1&#8217;, &#8216;P1&#8217;, &#8216;O1&#8217;, &#8216;Q1&#8217;, &#8216;MF&#8217;, &#8216;MM&#8217;]</p>
+</div></blockquote>
+<p><strong>lat</strong> : float, optional,</p>
+<blockquote>
+<div><p>latitude of the nodal correction</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict :</p>
+<blockquote class="last">
+<div><p>A dictionary of the results are returned with the following keys:
+&#8216;tide_start&#8217;: Reference date used as phase reference in fit
+&#8216;fit&#8217;: the time-series of the tidal fit
+&#8216;percent&#8217;: percentage of the signal explained by the tides
+&#8216;major&#8217;: dictionary of the major axis fit comprised of:</p>
+<blockquote>
+<div><p>tidename: amp_ph namedtuple
+Providing the amplitude and phase of each fit constituent</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>&#8216;minor&#8217;: dictionary of the minor axis fit comprised of:</dt>
+<dd><p class="first last">tidename: amp_ph namedtuple
+Providing the amplitude and phase of each fit constituent</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Fit the &#8216;M2&#8217; and &#8216;K1&#8217; to the given time-series, x.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;water_level.npz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;M2&#39;</span><span class="p">,</span><span class="s1">&#39;K1&#39;</span><span class="p">],</span> <span class="n">lat</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="s1">&#39;fit&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.frequency">
+<code class="descclassname">seapy.tide.</code><code class="descname">frequency</code><span class="sig-paren">(</span><em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#frequency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array of the frequency in cycles per hour for the requested 
+tidal constituents.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tides: string or list of strings,</strong></p>
+<blockquote>
+<div><p>List of consituents to obtain the frequency for</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray:</p>
+<blockquote class="last">
+<div><p>List of frequencies matching the tidal names</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Display the period (in hours) of M2 and S2</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span> <span class="o">/</span> <span class="n">frequency</span><span class="p">([</span><span class="s1">&#39;M2&#39;</span><span class="p">,</span> <span class="s1">&#39;S2&#39;</span><span class="p">])</span>
+<span class="go">array([ 12.4206012,  12.       ])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.make_amp_ph">
+<code class="descclassname">seapy.tide.</code><code class="descname">make_amp_ph</code><span class="sig-paren">(</span><em>tides</em>, <em>amp</em>, <em>pha</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#make_amp_ph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.make_amp_ph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes a dictionary of amp_pha named tuples given arrays of names, amplitudes and phases
+Inputs:-</p>
+<blockquote>
+<div>tides - List of constituent strings
+amp - array of amplitudes for each constituent 
+pha - array of phases (rad) for each constituent</div></blockquote>
+<dl class="docutils">
+<dt>Outputs:-</dt>
+<dd>amp_ph - dictionary of amp_ph named tuples, with constiutents as keys</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.predict">
+<code class="descclassname">seapy.tide.</code><code class="descname">predict</code><span class="sig-paren">(</span><em>times</em>, <em>tide</em>, <em>lat=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a tidal time-series for the given tides. Nodal correction
+is applied for the time as well as the given latitude (if specified).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>times</strong> : datetime array,</p>
+<blockquote>
+<div><p>The times of the predicted tide(s)</p>
+</div></blockquote>
+<p><strong>tide</strong> : dict,</p>
+<blockquote>
+<div><p>Dictionary of the tides to predict with the constituent name as 
+the key, and the value is an amp_ph namedtuple.</p>
+</div></blockquote>
+<p><strong>lat</strong> : float optional,</p>
+<blockquote>
+<div><p>latitude of the nodal correction</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray :</p>
+<blockquote class="last">
+<div><p>Values of the total tidal prediction of all constituents provided</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Generate a time series every hour for the month of April, 2014 for
+a specific phase and amplitude of M2 and K1.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="mi">24</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">31</span><span class="o">*</span><span class="mi">24</span><span class="p">)</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tide</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;M2&#39;</span><span class="p">:</span> <span class="n">amp_pha</span><span class="p">(</span><span class="mf">2.3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">22</span><span class="p">)),</span> 
+<span class="go">            &#39;K1&#39;: amp_pha(0.4, np.radians(227))}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">tide</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-seapy.timeout">
+<span id="timeout-set-limits-to-processes"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">timeout</span></code> &#8211; Set limits to processes<a class="headerlink" href="#module-seapy.timeout" title="Permalink to this headline">¶</a></h3>
+<p>Wrap your code with a time limit to prevent something from taking too long
+(getting into an infinite loop, etc.)</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">timeout</span> <span class="kn">import</span> <span class="n">timeout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">timeout</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">do</span> <span class="n">something</span>
+</pre></div>
+</div>
+<p>Taken and slightly modified from Thomas Ahle at:
+&lt;<a class="reference external" href="http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish">http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish</a>&gt;</p>
+<dl class="exception">
+<dt id="seapy.timeout.TimeoutError">
+<em class="property">exception </em><code class="descclassname">seapy.timeout.</code><code class="descname">TimeoutError</code><a class="reference internal" href="../_modules/seapy/timeout.html#TimeoutError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.timeout.TimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.timeout.timeout">
+<em class="property">class </em><code class="descclassname">seapy.timeout.</code><code class="descname">timeout</code><span class="sig-paren">(</span><em>seconds=1</em>, <em>minutes=None</em>, <em>error_message='Timeout'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/timeout.html#timeout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.timeout.timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.timeout.timeout.handle_timeout" title="seapy.timeout.timeout.handle_timeout"><code class="xref py py-obj docutils literal"><span class="pre">handle_timeout</span></code></a>(signum,&nbsp;frame)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.timeout.timeout.handle_timeout">
+<code class="descname">handle_timeout</code><span class="sig-paren">(</span><em>signum</em>, <em>frame</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/timeout.html#timeout.handle_timeout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.timeout.timeout.handle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SEAPY Documentation</a><ul>
+<li><a class="reference internal" href="#module-seapy.__init__"><code class="docutils literal"><span class="pre">seapy</span></code> &#8211; General tools for working with ocean fields</a><ul>
+<li><a class="reference internal" href="#module-seapy.cdl_parser"><code class="docutils literal"><span class="pre">cdl_parser</span></code> &#8211; Read CDL files to generate NetCDF Catalog</a></li>
+<li><a class="reference internal" href="#environ-load-os-environment-variables"><code class="docutils literal"><span class="pre">environ</span></code> &#8211; Load OS Environment Variables</a></li>
+<li><a class="reference internal" href="#module-seapy.filt"><code class="docutils literal"><span class="pre">filt</span></code> &#8211; Spectral filter of time-series data</a></li>
+<li><a class="reference internal" href="#hawaii-mapping-subclass-for-hawaii"><code class="docutils literal"><span class="pre">hawaii</span></code> &#8211; Mapping subclass for Hawaii</a></li>
+<li><a class="reference internal" href="#mapping-mapping-toolkit-for-basemap"><code class="docutils literal"><span class="pre">mapping</span></code> &#8211; Mapping toolkit for basemap</a></li>
+<li><a class="reference internal" href="#module-seapy.oa"><code class="docutils literal"><span class="pre">oa</span></code> &#8211; Objective Analysis Interpolation</a></li>
+<li><a class="reference internal" href="#module-seapy.plot"><code class="docutils literal"><span class="pre">plot</span></code> &#8211; Simple Plotting wrappers</a></li>
+<li><a class="reference internal" href="#progressbar-keep-user-informed-of-progress"><code class="docutils literal"><span class="pre">progressbar</span></code> &#8211; Keep User informed of progress</a></li>
+<li><a class="reference internal" href="#qserver-manage-multiple-processes"><code class="docutils literal"><span class="pre">qserver</span></code> &#8211; Manage multiple processes</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-seapy.tide"><code class="docutils literal"><span class="pre">tide</span></code> &#8211; Generate and Process tidal data</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-seapy.timeout"><code class="docutils literal"><span class="pre">timeout</span></code> &#8211; Set limits to processes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">SEAPY modules</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/seapy.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SEAPY modules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">seapy 1.0a1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >SEAPY modules</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Powell Lab.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>
