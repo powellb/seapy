@@ -200,7 +200,7 @@ def _vuf(time, tides, lat=5.0):
     return vufs
 
 
-def predict(times, tide, lat=None):
+def predict(times, tide, lat=None, tide_start=None):
     """
     Generate a tidal time-series for the given tides. Nodal correction
     is applied for the time as well as the given latitude (if specified).
@@ -214,6 +214,9 @@ def predict(times, tide, lat=None):
         the key, and the value is an amp_ph namedtuple.
     lat : float optional,
         latitude of the nodal correction
+    tide_start : datetime optional,
+        If specified, the nodal correction are applied to adjust from
+        the tide_start to the center of the times record
 
     Returns
     -------
@@ -241,6 +244,14 @@ def predict(times, tide, lat=None):
 
     # Calculate astronomical and nodal values
     vufs = _vuf(ctime, clist, lat)
+
+    # If we have a start time, then we have to adjust for that
+    if tide_start:
+        cor_vufs = _vuf(tide_start, clist, lat)
+        for ap in tide:
+            vufs[ap].f -= cor_vufs[ap].f
+            vufs[ap].v -= cor_vufs[ap].v
+            vufs[ap].u -= cor_vufs[ap].u
 
     # Time series as hours from ctime
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
