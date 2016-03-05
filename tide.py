@@ -18,6 +18,8 @@ __satinfo = namedtuple('__satinfo', 'deldood phcorr amprat ilatfac')
 __vuf_vals = namedtuple('__vuf_vals', 'v u f')
 
 # Load the constituent data when the module is imported
+__reftime = datetime.datetime(1899, 12, 31, 12, 0, 0)
+
 with np.load(os.path.dirname(__file__) + "/constituents.npz") as data:
     __const_file = data['__const'][()]
 
@@ -84,7 +86,7 @@ def __astron(ctime):
         Ephermeris and the American Ephermis and Nautical Almanac (1961).
     """
     # Compute number of days from epoch of 12:00 UT Dec 31, 1899.
-    dt = ctime - datetime.datetime(1899, 12, 31, 12, 0, 0)
+    dt = ctime - __reftime
     d = dt.days + dt.seconds / 86400
 
     # Coefficients used in t_tide
@@ -120,7 +122,7 @@ def __astron(ctime):
     return astro, ader
 
 
-def _vuf(time, tides, lat=5.0):
+def _vuf(time, tides=None, lat=5.0):
     """
     Returns the astronomical phase V, the nodal phase modulation U, and 
     the nodal amplitude correction F at ctime for the requested 
@@ -134,7 +136,7 @@ def _vuf(time, tides, lat=5.0):
     ----------
     time : datetime,
         Time for the nodal correction
-    tides : string or list of strings,
+    tides : string or list of strings, optional,
         Names of tidal constituents
     lat : float
         Latitude for nodal correction
@@ -209,7 +211,7 @@ def predict(times, tide, lat=None, tide_start=None):
     ----------
     times : datetime array,
         The times of the predicted tide(s)
-    tide : dict,
+    tide : dict, 
         Dictionary of the tides to predict with the constituent name as 
         the key, and the value is an amp_ph namedtuple.
     lat : float optional,
@@ -242,16 +244,16 @@ def predict(times, tide, lat=None, tide_start=None):
     # Calculate midpoint of time series
     ctime = times[0] + (times[-1] - times[0]) / 2
 
-    # Calculate astronomical and nodal values
-    vufs = _vuf(ctime, clist, lat)
-
     # If we have a start time, then we have to adjust for that
     if tide_start:
-        cor_vufs = _vuf(tide_start, clist, lat)
+        # vufs = _vuf(__reftime + (ctime - tide_start), clist, lat)
+        vufs = _vuf(tide_start, clist, lat)
         for ap in tide:
-            vufs[ap].f -= cor_vufs[ap].f
-            vufs[ap].v -= cor_vufs[ap].v
-            vufs[ap].u -= cor_vufs[ap].u
+            tide[ap] = amp_pha(tide[ap].amp / vufs[ap].f,
+                               -tide[ap].pha + (vufs[ap].v + vufs[ap].u))
+
+    # Calculate astronomical and nodal values
+    vufs = _vuf(ctime, clist, lat)
 
     # Time series as hours from ctime
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
@@ -267,7 +269,7 @@ def predict(times, tide, lat=None, tide_start=None):
     return ts
 
 
-def fit(times, xin, tides=None, lat=None):
+def fit(times, xin, tides=None, lat=None, use_reftime=False):
     """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
@@ -284,6 +286,10 @@ def fit(times, xin, tides=None, lat=None):
         ['M4', 'K2', 'S2', 'M2', 'N2', 'K1', 'P1', 'O1', 'Q1', 'MF', 'MM']
     lat : float, optional,
         latitude of the nodal correction
+    use_reftime : bool, optional,
+        If True, apply nodal corrections to the fit to put the phases
+        back to the reference time. If False [Default], the phases
+        are relative to the returned 'tide_start'.
 
     Returns
     -------
@@ -313,12 +319,17 @@ def fit(times, xin, tides=None, lat=None):
         raise ValueError("The times and input data must be of same size.")
     tides = __set_tides(tides)
 
-    # Calculate midpoint of time series, but ensure 00:00 hour
-    ctime = times[0] + (times[-1] - times[0]) / 2
-    ctime = datetime.datetime(ctime.year, ctime.month, ctime.day)
+    # The tide_start is the beginning of the time record
+    ctime = times[0]
+    tide_start = times[0]
 
     # Nodal Corrections values
-    vufs = _vuf(ctime, tides, lat)
+    if use_reftime:
+        # Calculate midpoint of time series, but ensure 00:00 hour
+        tide_start = __reftime
+        ctime = times[0] + (times[-1] - times[0]) / 2
+        ctime = datetime.datetime(ctime.year, ctime.month, ctime.day)
+        vufs = _vuf(ctime, tides, lat)
 
     # time series as hours from ctime
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
@@ -350,16 +361,21 @@ def fit(times, xin, tides=None, lat=None):
     min_amp = maj_amp.copy()
     min_pha = maj_amp.copy()
     for i, c in enumerate(tides):
-        maj_amp[i] = (np.abs(ap[i]) + np.abs(am[i])) / vufs[c].f
-        min_amp[i] = (np.abs(ap[i]) - np.abs(am[i])) / vufs[c].f
+        maj_amp[i] = (np.abs(ap[i]) + np.abs(am[i]))
+        min_amp[i] = (np.abs(ap[i]) - np.abs(am[i]))
         min_pha[i] = np.mod(
             ((np.angle(ap[i]) + np.angle(am[i])) / 2), np.pi)
-        maj_pha[i] = np.mod(np.mod(vufs[c].v + vufs[c].u -
-                                   np.angle(ap[i]), 2.0 * np.pi) + min_pha[i],
+        maj_pha[i] = np.mod(np.mod(np.angle(ap[i]), 2.0 * np.pi) + min_pha[i],
                             2.0 * np.pi)
+        if use_reftime:
+            maj_amp[i] /= vufs[c].f
+            min_amp[i] /= vufs[c].f
+            maj_pha[i] = np.mod(np.mod(vufs[c].v + vufs[c].u -
+                                       np.angle(ap[i]), 2.0 * np.pi) + min_pha[i],
+                                2.0 * np.pi)
 
     return {
-        'tide_start': ctime,
+        'tide_start': tide_start,
         'fit': xout,
         'percent': var_exp,
         'major': make_amp_ph(tides, maj_amp, maj_pha),
