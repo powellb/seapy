@@ -683,7 +683,7 @@ def detide(grid, bryfile, tidefile, tides=None):
 
     Examples
     --------
-    Make a long time-series boundary conditions from a group of boundary files, 
+    Make a long time-series boundary conditions from a group of boundary files,
     skipping the last record of each file to prevent overlap (if there are 100 records
     in each file). Afterwards, detide the resulting file.
 
@@ -730,6 +730,7 @@ def detide(grid, bryfile, tidefile, tides=None):
     cmax = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
     cang = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
     cpha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+
     for side in sides:
         lvar = "zeta_" + side
         idx = sides[side].indices

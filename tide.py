@@ -13,6 +13,7 @@ from collections import namedtuple
 import os
 
 amp_pha = namedtuple('amp_pha', 'amp pha')
+ellipse = namedtuple('ellipse', 'major minor angle pha')
 __cformat = namedtuple('__cformat', 'freq doodson semi sat')
 __satinfo = namedtuple('__satinfo', 'deldood phcorr amprat ilatfac')
 __vuf_vals = namedtuple('__vuf_vals', 'v u f')
@@ -122,7 +123,7 @@ def __astron(ctime):
     return astro, ader
 
 
-def _vuf(time, tides=None, lat=5.0):
+def _vuf(time, tides=None, lat=55):
     """
     Returns the astronomical phase V, the nodal phase modulation U, and 
     the nodal amplitude correction F at ctime for the requested 
@@ -202,7 +203,63 @@ def _vuf(time, tides=None, lat=5.0):
     return vufs
 
 
-def predict(times, tide, lat=None, tide_start=None):
+def vel_ellipse(u, v):
+    """
+    Generate ellipse parameters from the U and V amplitude and phases
+
+    Parameters
+    ----------
+    u : dict,
+       Dictionary of the u-component of velocity tides with the 
+       constituent name as a key, and the value is an amp_pha namedtuple.
+    v : dict,
+       Dictionary of the v-component of velocity tides with the 
+       constituent name as a key, and the value is an amp_pha namedtuple.
+
+    Returns
+    -------
+    ellipse: dict,
+       Dictionary of the tidal ellipses with the constituent name as the
+       keys and the values are the parameters of the ellipse namedtuple.
+
+    Examples
+    --------
+    With a set of u and v amplitude and phases, generate the ellipse
+    parameters:
+    >>> u = {"M2":amp_pha(4.3, np.radians(231.4))}
+    >>> v = {"M2":amp_pha(0.7, np.radians(10.1))}
+    >>> ell = vel_ellipse(u, v)
+    >>> print(ell)
+    {'M2': ellipse(major=4.3324053381635519, minor=0.45854551121121889,
+     angle=6.1601050372480319, pha=4.0255995338808006)}
+    """
+    ell = {}
+    for c in u:
+        # Compute the parameters of the tide
+        au = u[c].amp * np.exp(-1j * u[c].pha)
+        av = v[c].amp * np.exp(-1j * v[c].pha)
+        rccw = (au + 1j * av) / 2.0
+        rcw = ((au - 1j * av) / 2.0).conjugate()
+        theta_ccw = np.angle(rccw)
+        theta_cw = np.angle(rcw)
+        rccw = np.abs(rccw)
+        rcw = np.abs(rcw)
+
+        # Set the ellipse parameters
+        major = rccw + rcw
+        minor = rccw - rcw
+        pha = (theta_cw - theta_ccw) / 2.0
+        angle = (theta_cw + theta_ccw) / 2.0
+        pha = pha if pha > 0 else pha + 2 * np.pi
+        angle = angle if angle > 0 else angle + 2 * np.pi
+
+        # Store the result
+        ell[c] = ellipse(major, minor, angle, pha)
+
+    return ell
+
+
+def predict(times, tide, lat=55, tide_start=None):
     """
     Generate a tidal time-series for the given tides. Nodal correction
     is applied for the time as well as the given latitude (if specified).
@@ -213,7 +270,7 @@ def predict(times, tide, lat=None, tide_start=None):
         The times of the predicted tide(s)
     tide : dict, 
         Dictionary of the tides to predict with the constituent name as 
-        the key, and the value is an amp_ph namedtuple.
+        the key, and the value is an amp_pha namedtuple.
     lat : float optional,
         latitude of the nodal correction
     tide_start : datetime optional,
@@ -269,7 +326,7 @@ def predict(times, tide, lat=None, tide_start=None):
     return ts
 
 
-def fit(times, xin, tides=None, lat=None, use_reftime=False):
+def fit(times, xin, tides=None, lat=55, use_reftime=False):
     """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
@@ -299,10 +356,10 @@ def fit(times, xin, tides=None, lat=None, use_reftime=False):
         'fit': the time-series of the tidal fit
         'percent': percentage of the signal explained by the tides
         'major': dictionary of the major axis fit comprised of:
-            tidename: amp_ph namedtuple
+            tidename: amp_pha namedtuple
             Providing the amplitude and phase of each fit constituent
         'minor': dictionary of the minor axis fit comprised of:
-            tidename: amp_ph namedtuple
+            tidename: amp_pha namedtuple
             Providing the amplitude and phase of each fit constituent
 
     Examples
@@ -375,24 +432,37 @@ def fit(times, xin, tides=None, lat=None, use_reftime=False):
                                 2.0 * np.pi)
 
     return {
+
         'tide_start': tide_start,
         'fit': xout,
         'percent': var_exp,
-        'major': make_amp_ph(tides, maj_amp, maj_pha),
-        'minor': make_amp_ph(tides, min_amp, min_pha)
+        'major': make_amp_pha(tides, maj_amp, maj_pha),
+        'minor': make_amp_pha(tides, min_amp, min_pha)
     }
 
 
-def make_amp_ph(tides, amp, pha):
+def make_amp_pha(tides, amp, pha):
     """
     Makes a dictionary of amp_pha named tuples given arrays of names, amplitudes and phases
-    Inputs:-
-        tides - List of constituent strings
-        amp - array of amplitudes for each constituent 
-        pha - array of phases (rad) for each constituent
-    Outputs:-
-        amp_ph - dictionary of amp_ph named tuples, with constiutents as keys
+
+    Parameters
+    ----------
+    tides : ndarray of strings,
+       List of constituent strings
+    amp : ndarray,
+       Amplitudes for each constituent 
+    pha : ndarray,
+       phases (rad) for each constituent
+
+    Returns
+    -------
+       dict:  amplitudes and phases
+        constituent name as key and amp_pha namedtuple as value
     """
+    tides = np.atleast_1d(tides)
+    amp = np.atleast_1d(amp)
+    pha = np.atleast_1d(pha)
+
     amp_ph = {}
     for i, c in enumerate(tides):
         amp_ph[c] = amp_pha(amp[i], pha[i])
