@@ -13,10 +13,10 @@ from collections import namedtuple
 import os
 
 amp_pha = namedtuple('amp_pha', 'amp pha')
-ellipse = namedtuple('ellipse', 'major minor angle pha')
+tellipse = namedtuple('tellipse', 'major minor angle pha')
+vuf_vals = namedtuple('vuf_vals', 'v u f')
 __cformat = namedtuple('__cformat', 'freq doodson semi sat')
 __satinfo = namedtuple('__satinfo', 'deldood phcorr amprat ilatfac')
-__vuf_vals = namedtuple('__vuf_vals', 'v u f')
 
 # Load the constituent data when the module is imported
 __reftime = datetime.datetime(1899, 12, 31, 12, 0, 0)
@@ -45,7 +45,7 @@ def __set_tides(tides=None):
 
 def frequency(tides=None):
     """
-    Returns array of the frequency in cycles per hour for the requested 
+    Returns array of the frequency in cycles per hour for the requested
     tidal constituents.
 
     Parameters
@@ -73,7 +73,7 @@ def __astron(ctime):
     """
     PRIVATE METHOD
     --------------
-        This subroutine calculates the following five ephermides of the sun 
+        This subroutine calculates the following five ephermides of the sun
         and moon following t_tide's t_astron.
                 h = mean longitude of the sum
                 pp = mean longitude of the solar perigee
@@ -82,8 +82,8 @@ def __astron(ctime):
                 np = negative of the longitude of the mean ascending node
         and their rates of change. Units for the ephermides are cycles and
         for their derivatives are cycles/365 days
-        The formulae for calculating this ephermides were taken from pages 98 
-        and 107 of the Explanatory Supplement to the Astronomical  
+        The formulae for calculating this ephermides were taken from pages 98
+        and 107 of the Explanatory Supplement to the Astronomical
         Ephermeris and the American Ephermis and Nautical Almanac (1961).
     """
     # Compute number of days from epoch of 12:00 UT Dec 31, 1899.
@@ -123,14 +123,14 @@ def __astron(ctime):
     return astro, ader
 
 
-def _vuf(time, tides=None, lat=55):
+def vuf(time, tides=None, lat=55):
     """
-    Returns the astronomical phase V, the nodal phase modulation U, and 
-    the nodal amplitude correction F at ctime for the requested 
+    Returns the astronomical phase V, the nodal phase modulation U, and
+    the nodal amplitude correction F at ctime for the requested
     constituents and latitude.
 
     Note, there are differences compared to t_tide:
-        - That V and U are returned as radians, not cycles. 
+        - That V and U are returned as radians, not cycles.
         - Shallow water constituents are not supported.
 
     Parameters
@@ -144,7 +144,7 @@ def _vuf(time, tides=None, lat=55):
 
     Returns
     -------
-    dict : 
+    dict :
         dictionary of vuf corrections with the tide names as keys
     """
     # If the user tries to pass a list, we only want the mid-point;
@@ -198,7 +198,7 @@ def _vuf(time, tides=None, lat=55):
                 fsum += rr * np.exp(1j * 2 * np.pi * uu)
             f = np.absolute(fsum)
             u = np.angle(fsum)
-        vufs[c] = __vuf_vals(v, u, f)
+        vufs[c] = vuf_vals(v, u, f)
 
     return vufs
 
@@ -210,17 +210,17 @@ def vel_ellipse(u, v):
     Parameters
     ----------
     u : dict,
-       Dictionary of the u-component of velocity tides with the 
+       Dictionary of the u-component of velocity tides with the
        constituent name as a key, and the value is an amp_pha namedtuple.
     v : dict,
-       Dictionary of the v-component of velocity tides with the 
+       Dictionary of the v-component of velocity tides with the
        constituent name as a key, and the value is an amp_pha namedtuple.
 
     Returns
     -------
     ellipse: dict,
        Dictionary of the tidal ellipses with the constituent name as the
-       keys and the values are the parameters of the ellipse namedtuple.
+       keys and the values are the parameters of the tellipse namedtuple.
 
     Examples
     --------
@@ -230,7 +230,7 @@ def vel_ellipse(u, v):
     >>> v = {"M2":amp_pha(0.7, np.radians(10.1))}
     >>> ell = vel_ellipse(u, v)
     >>> print(ell)
-    {'M2': ellipse(major=4.3324053381635519, minor=0.45854551121121889,
+    {'M2': tellipse(major=4.3324053381635519, minor=0.45854551121121889,
      angle=6.1601050372480319, pha=4.0255995338808006)}
     """
     ell = {}
@@ -250,11 +250,11 @@ def vel_ellipse(u, v):
         minor = rccw - rcw
         pha = (theta_cw - theta_ccw) / 2.0
         angle = (theta_cw + theta_ccw) / 2.0
-        pha = pha if pha > 0 else pha + 2 * np.pi
-        angle = angle if angle > 0 else angle + 2 * np.pi
+        pha = np.mod(pha, 2 * np.pi) if pha > 0 else pha + 2 * np.pi
+        angle = np.mod(angle, 2 * np.pi) if angle > 0 else angle + 2 * np.pi
 
         # Store the result
-        ell[c] = ellipse(major, minor, angle, pha)
+        ell[c.upper()] = tellipse(major, minor, angle, pha)
 
     return ell
 
@@ -268,8 +268,8 @@ def predict(times, tide, lat=55, tide_start=None):
     ----------
     times : datetime array,
         The times of the predicted tide(s)
-    tide : dict, 
-        Dictionary of the tides to predict with the constituent name as 
+    tide : dict,
+        Dictionary of the tides to predict with the constituent name as
         the key, and the value is an amp_pha namedtuple.
     lat : float optional,
         latitude of the nodal correction
@@ -279,7 +279,7 @@ def predict(times, tide, lat=55, tide_start=None):
 
     Returns
     -------
-    ndarray : 
+    ndarray :
         Values of the total tidal prediction of all constituents provided
 
     Examples
@@ -288,7 +288,7 @@ def predict(times, tide, lat=55, tide_start=None):
     a specific phase and amplitude of M2 and K1.
 
     >>> times = [ datetime(2014,4,1) + timedelta(t/24) for t in range(31*24) ]
-    >>> tide = {'M2': amp_pha(2.3, np.radians(22)), 
+    >>> tide = {'M2': amp_pha(2.3, np.radians(22)),
                 'K1': amp_pha(0.4, np.radians(227))}
     >>> z = predict(times, tide, 23)
 
@@ -301,16 +301,14 @@ def predict(times, tide, lat=55, tide_start=None):
     # Calculate midpoint of time series
     ctime = times[0] + (times[-1] - times[0]) / 2
 
-    # If we have a start time, then we have to adjust for that
-    if tide_start:
-        # vufs = _vuf(__reftime + (ctime - tide_start), clist, lat)
-        vufs = _vuf(tide_start, clist, lat)
-        for ap in tide:
-            tide[ap] = amp_pha(tide[ap].amp / vufs[ap].f,
-                               -tide[ap].pha + (vufs[ap].v + vufs[ap].u))
-
     # Calculate astronomical and nodal values
-    vufs = _vuf(ctime, clist, lat)
+    vufs = vuf(ctime, clist, lat)
+    if tide_start:
+        vufs_ref = vuf(tide_start, clist, lat)
+        for v in vufs:
+            vufs[v] = vuf_vals(np.mod(vufs[v].v - vufs_ref[v].v, 2.0 * np.pi),
+                               np.mod(vufs[v].u - vufs_ref[v].u, 2.0 * np.pi),
+                               vufs[v].f / vufs_ref[v].f)
 
     # Time series as hours from ctime
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
@@ -326,7 +324,7 @@ def predict(times, tide, lat=55, tide_start=None):
     return ts
 
 
-def fit(times, xin, tides=None, lat=55, use_reftime=False):
+def fit(times, xin, tides=None, lat=55, tide_start=None):
     """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
@@ -343,10 +341,9 @@ def fit(times, xin, tides=None, lat=55, use_reftime=False):
         ['M4', 'K2', 'S2', 'M2', 'N2', 'K1', 'P1', 'O1', 'Q1', 'MF', 'MM']
     lat : float, optional,
         latitude of the nodal correction
-    use_reftime : bool, optional,
-        If True, apply nodal corrections to the fit to put the phases
-        back to the reference time. If False [Default], the phases
-        are relative to the returned 'tide_start'.
+    tide_start : datetime, optional,
+        If specified, the phases of the fit will be relative to the
+        given tide_start day.
 
     Returns
     -------
@@ -375,18 +372,16 @@ def fit(times, xin, tides=None, lat=55, use_reftime=False):
     if len(xin) != len(times):
         raise ValueError("The times and input data must be of same size.")
     tides = __set_tides(tides)
-
-    # The tide_start is the beginning of the time record
-    ctime = times[0]
-    tide_start = times[0]
+    ctime = times[0] + (times[-1] - times[0]) / 2
 
     # Nodal Corrections values
-    if use_reftime:
-        # Calculate midpoint of time series, but ensure 00:00 hour
-        tide_start = __reftime
-        ctime = times[0] + (times[-1] - times[0]) / 2
-        ctime = datetime.datetime(ctime.year, ctime.month, ctime.day)
-        vufs = _vuf(ctime, tides, lat)
+    vufs = vuf(ctime, tides, lat)
+    if tide_start:
+        vufs_ref = vuf(tide_start, tides, lat)
+        for v in vufs:
+            vufs[v] = vuf_vals(np.mod(vufs[v].v - vufs_ref[v].v, 2.0 * np.pi),
+                               np.mod(vufs[v].u - vufs_ref[v].u, 2.0 * np.pi),
+                               vufs[v].f / vufs_ref[v].f)
 
     # time series as hours from ctime
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
@@ -418,39 +413,33 @@ def fit(times, xin, tides=None, lat=55, use_reftime=False):
     min_amp = maj_amp.copy()
     min_pha = maj_amp.copy()
     for i, c in enumerate(tides):
-        maj_amp[i] = (np.abs(ap[i]) + np.abs(am[i]))
-        min_amp[i] = (np.abs(ap[i]) - np.abs(am[i]))
+        maj_amp[i] = (np.abs(ap[i]) + np.abs(am[i])) / vufs[c].f
+        min_amp[i] = (np.abs(ap[i]) - np.abs(am[i])) / vufs[c].f
         min_pha[i] = np.mod(
             ((np.angle(ap[i]) + np.angle(am[i])) / 2), np.pi)
-        maj_pha[i] = np.mod(np.mod(np.angle(ap[i]), 2.0 * np.pi) + min_pha[i],
+        maj_pha[i] = np.mod(vufs[c].v + vufs[c].u - np.angle(ap[i]) + min_pha[i],
                             2.0 * np.pi)
-        if use_reftime:
-            maj_amp[i] /= vufs[c].f
-            min_amp[i] /= vufs[c].f
-            maj_pha[i] = np.mod(np.mod(vufs[c].v + vufs[c].u -
-                                       np.angle(ap[i]), 2.0 * np.pi) + min_pha[i],
-                                2.0 * np.pi)
 
     return {
-
         'tide_start': tide_start,
         'fit': xout,
         'percent': var_exp,
-        'major': make_amp_pha(tides, maj_amp, maj_pha),
-        'minor': make_amp_pha(tides, min_amp, min_pha)
+        'major': pack_amp_pha(tides, maj_amp, maj_pha),
+        'minor': pack_amp_pha(tides, min_amp, min_pha)
     }
 
 
-def make_amp_pha(tides, amp, pha):
+def pack_amp_pha(tides, amp, pha):
     """
-    Makes a dictionary of amp_pha named tuples given arrays of names, amplitudes and phases
+    Pack together the tides, amplitudes, and phases into a dictionary of
+    tide names as keys and amp_pha namedtuples as values
 
     Parameters
     ----------
     tides : ndarray of strings,
        List of constituent strings
     amp : ndarray,
-       Amplitudes for each constituent 
+       Amplitudes for each constituent
     pha : ndarray,
        phases (rad) for each constituent
 
@@ -459,7 +448,7 @@ def make_amp_pha(tides, amp, pha):
        dict:  amplitudes and phases
         constituent name as key and amp_pha namedtuple as value
     """
-    tides = np.atleast_1d(tides)
+    tides = __set_tides(tides)
     amp = np.atleast_1d(amp)
     pha = np.atleast_1d(pha)
 
@@ -468,3 +457,104 @@ def make_amp_pha(tides, amp, pha):
         amp_ph[c] = amp_pha(amp[i], pha[i])
 
     return amp_ph
+
+
+def unpack_amp_pha(amp_ph, tides=None):
+    """
+    Given a dictionary of amplitude and phase parameters, unpack the dictionary
+    and return an amp_pha namedtuple with arrays for each element that
+    are in the order of the tides array.
+
+    Parameters
+    ----------
+    amp_ph : dict,
+      amp_pha dictionary returned by fit or pack_amp_pha
+    tides: list of strings,
+      List of strings to provide the order of the arrays
+
+    Returns
+    -------
+      amp_pha : namedtuple
+
+    """
+    tides = __set_tides(tides)
+    am = np.zeros((len(tides),))
+    ph = am.copy()
+
+    for n, t in enumerate(tides):
+        try:
+            am[n] = amp_ph[t].amp
+            ph[n] = amp_ph[t].pha
+        except KeyError:
+            continue
+    return amp_pha(am, ph)
+
+
+def unpack_vuf(vuf, tides=None):
+    """
+    Given a dictionary of vuf parameters, unpack the dictionary
+    and return a vuf_vals namedtuple with arrays for each element that
+    are in the order of the tides array.
+
+    Parameters
+    ----------
+    vuf : dict,
+      vuf_vals dictionary returned by vuf
+    tides: list of strings,
+      List of strings to provide the order of the arrays
+
+    Returns
+    -------
+      vuf_vals : namedtuple
+
+    """
+    tides = __set_tides(tides)
+    v = np.zeros((len(tides),))
+    u = v.copy()
+    f = v.copy()
+
+    for n, t in enumerate(tides):
+        try:
+            v[n] = vuf[t].v
+            u[n] = vuf[t].u
+            f[n] = vuf[t].f
+        except KeyError:
+            continue
+    return vuf_vals(v, u, f)
+
+
+def unpack_ellipse(ellipse, tides=None):
+    """
+    Given a dictionary of tidal ellipse parameters, unpack the dictionary
+    and return an ellipse namedtuple with arrays for each element that
+    are in the order of the tides array.
+
+    Parameters
+    ----------
+    ellipse : dict,
+      Ellipse dictionary returned by tidal_ellipse
+    tides: list of strings,
+      List of strings to provide the order of the arrays
+
+    Returns
+    -------
+      tellipse : namedtuple
+
+    """
+    tides = __set_tides(tides)
+    mj = np.zeros((len(tides),))
+    mn = mj.copy()
+    ph = mj.copy()
+    ag = mj.copy()
+
+    for n, t in enumerate(tides):
+        try:
+            mj[n] = ellipse[t].major
+            mn[n] = ellipse[t].minor
+            ph[n] = ellipse[t].pha
+            ag[n] = ellipse[t].angle
+        except KeyError:
+            continue
+    return tellipse(mj, mn, ag, ph)
+
+

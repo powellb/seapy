@@ -117,7 +117,7 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
     # Do some error checking
     nx = ny if nx == 0 else nx
     ny = nx if ny == 0 else ny
-    z = np.ma.masked_invalid(z, copy=False)
+    v = np.ma.masked_invalid(v, copy=False)
 
     # Generate a mapping weight matrix if not passed
     if pmap is None:
@@ -129,9 +129,9 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
 
     # Call FORTRAN library to objectively map
     vv, err = seapy.oalib.oa3d(x.ravel(), y.ravel(),
-                               z.filled(__bad_val).reshape(
-                                   z.shape[0], -1).transpose(),
-                               v.reshape(v.shape[0], -1).transpose(),
+                               z.reshape(z.shape[0], -1).transpose(),
+                               v.filled(__bad_val).reshape(
+                                   v.shape[0], -1).transpose(),
                                xx.ravel(), yy.ravel(),
                                zz.reshape(zz.shape[0], -1).transpose(),
                                nx, ny, pmap, verbose)

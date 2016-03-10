@@ -1,6 +1,7 @@
 netcdf frc_tides {
 
 dimensions:
+    two = 2 ;
 	xi_rho = 111 ;
 	eta_rho = 241 ;
 	xi_u = 110 ;

@@ -108,28 +108,24 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     nrz[1:-1, :, :] = rz
     nrz[bot, :, :] = rz[bot, :, :] - 500
     nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
+
     if not gradsrc:
         # The first level is the bottom
         factor = down_factor
-        # # Fill in missing values where we have them from above (level above)
-        for k in range(data.shape[0] - 2, -1, -1):
-            if np.ma.count_masked(data[k, :, :]) == 0:
-                continue
-            idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
-                                            data.mask[k + 1, :, :]))
-            data.mask[k, idx[0], idx[1]] = data.mask[k + 1, idx[0], idx[1]]
-            data[k, idx[0], idx[1]] = data[k + 1, idx[0], idx[1]] * factor
+        levs = np.arange(data.shape[0], 0, -1) - 1
     else:
         # The first level is the top
         factor = up_factor
-        # # Fill in missing values where we have them from below (level below)
-        for k in range(data.shape[0]):
-            if np.ma.count_masked(data[k, :, :]) == 0:
-                continue
-            idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
-                                            data.mask[k - 1, :, :]))
-            data.mask[k, idx[0], idx[1]] = data.mask[k - 1, idx[0], idx[1]]
-            data[k, idx[0], idx[1]] = data[k - 1, idx[0], idx[1]] * factor
+        levs = np.arange(0, data.shape[0])
+
+    # Fill in missing values where we have them from the shallower layer
+    for k in levs[1:]:
+        if np.ma.count_masked(data[k, :, :]) == 0:
+            continue
+        idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
+                                        data.mask[k - 1, :, :]))
+        data.mask[k, idx[0], idx[1]] = data.mask[k - 1, idx[0], idx[1]]
+        data[k, idx[0], idx[1]] = data[k - 1, idx[0], idx[1]] * factor
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
