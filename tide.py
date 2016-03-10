@@ -301,17 +301,18 @@ def predict(times, tide, lat=55, tide_start=None):
     # Calculate midpoint of time series
     ctime = times[0] + (times[-1] - times[0]) / 2
 
-    # Calculate astronomical and nodal values
-    vufs = vuf(ctime, clist, lat)
+    # If given a tide_start, then the phase is relative to that datetime,
+    # and no corrections need to be applied; furthermore, the times to predict
+    # are relative to tide_start.
+    #
+    # If no tide_start is given, then everything is done as per standard.
     if tide_start:
-        vufs_ref = vuf(tide_start, clist, lat)
-        for v in vufs:
-            vufs[v] = vuf_vals(np.mod(vufs[v].v - vufs_ref[v].v, 2.0 * np.pi),
-                               np.mod(vufs[v].u - vufs_ref[v].u, 2.0 * np.pi),
-                               vufs[v].f / vufs_ref[v].f)
-
-    # Time series as hours from ctime
-    hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
+        vufs = dict((ap.upper(), vuf_vals(0, 0, 1)) for ap in clist)
+        hours = np.array(
+            [(t - tide_start).total_seconds() / 3600.0 for t in times])
+    else:
+        vufs = vuf(ctime, clist, lat)
+        hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
     # Calulate time series
     ts = np.zeros(len(times))

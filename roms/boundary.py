@@ -691,6 +691,8 @@ def detide(grid, bryfile, tidefile, tides=None):
     >>> seapy.roms.boundary.detide("mygrid.nc", "bry_detide.nc", "tide_out.nc")
 
     """
+    import datetime
+
     if not tides:
         tides = seapy.tide.default_tides
     else:
@@ -704,6 +706,12 @@ def detide(grid, bryfile, tidefile, tides=None):
     epoch, timevar = seapy.roms.get_reftime(bry)
     time = netCDF4.num2date(bry.variables[timevar][:],
                             bry.variables[timevar].units)
+
+    # Pick the time for the tide file reference
+    tide_start = time[0] + (time[-1] - time[0]) / 2
+    tide_start = datetime.datetime(
+        tide_start.year, tide_start.month, tide_start.day)
+
     try:
         s_rho = len(bry.dimensions['s_rho'])
     except:
@@ -738,10 +746,14 @@ def detide(grid, bryfile, tidefile, tides=None):
         size = grid.xi_rho if sides[side].slice else grid.eta_rho
         if lvar in bry.variables:
             print(lvar)
-            zeta = bry.variables[lvar][:]
+            zeta = np.ma.array(bry.variables[lvar][:])
+            mask = zeta.getmaskarray()
             # Detide
             for i in seapy.progressbar.progress(range(size)):
-                out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i])
+                if np.any(zeta.mask[:, i]):
+                    continue
+                out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
+                                     tide_start=tide_start)
                 zeta[:, i] -= out['fit']
 
                 # Save the amp/phase in the tide file
@@ -767,26 +779,28 @@ def detide(grid, bryfile, tidefile, tides=None):
             print(uvar, vvar)
             ubar = np.zeros((len(time), size))
             vbar = np.zeros((len(time), size))
+            bubar = np.ma.array(bry.variables[uvar][:]).filled(0)
+            bvbar = np.ma.array(bry.variables[vvar][:]).filled(0)
 
             # Load data, put onto rho-grid, and rotate
             if sides[side].slice == 0:
-                vbar[:, 1:-1] = 0.5 * (bry.variables[vvar][:, 1:] +
-                                       bry.variables[vvar][:, :-1])
-                vbar[:, 0] = vbar[:, 1]
-                vbar[:, -1] = vbar[:, -2]
-                ubar = bry.variables[uvar][:]
+                vbar[:, 1:-1] = 0.5 * (bvbar[:, 1:] + bvbar[:, :-1])
+                vbar[:, 0] = bvbar[:, 1]
+                vbar[:, -1] = bvbar[:, -2]
+                ubar = buvar.copy()
             else:
-                ubar[:, 1:-1] = 0.5 * (bry.variables[uvar][:, 1:] +
-                                       bry.variables[uvar][:, :-1])
-                ubar[:, 0] = ubar[:, 1]
-                ubar[:, -1] = ubar[:, -2]
-                vbar = bry.variables[vvar][:]
+                ubar[:, 1:-1] = 0.5 * (bubar[:, 1:] + bubar[:, :-1])
+                ubar[:, 0] = bubar[:, 1]
+                ubar[:, -1] = bubar[:, -2]
+                vbar = bvbar.copy()
             ubar, vbar = seapy.rotate(ubar, vbar, grid.angle[idx[0], idx[1]])
 
+            pu.db
             # Detide
             for i in seapy.progressbar.progress(range(size)):
                 out = seapy.tide.fit(
-                    time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i])
+                    time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
+                    tide_start=tide_start)
                 ubar[:, i] = ubar[:, i] - np.real(out['fit'])
                 vbar[:, i] = vbar[:, i] - np.imag(out['fit'])
 
@@ -846,9 +860,9 @@ def detide(grid, bryfile, tidefile, tides=None):
     cang[:, -2, 1:-1] = cang[:, -1, 1:-1]
 
     # Set the tide reference
-    tideout.tide_ref = "Day {:5.1f} ({:s})".format((out['tide_start'] -
-                                                    epoch).total_seconds() / 86400,
-                                                   str(out['tide_start']))
+    tideout.tide_start = "Day {:5.1f} ({:s})".format((tide_start -
+                                                      epoch).total_seconds() / 86400,
+                                                     str(tide_start))
     tideout.variables['tide_Eamp'][:] = eamp
     tideout.variables['tide_Ephase'][:] = epha
     tideout.variables['tide_Cmax'][:] = cmax
