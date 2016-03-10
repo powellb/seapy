@@ -747,10 +747,10 @@ def detide(grid, bryfile, tidefile, tides=None):
         if lvar in bry.variables:
             print(lvar)
             zeta = np.ma.array(bry.variables[lvar][:])
-            mask = zeta.getmaskarray()
+            mask = np.ma.getmaskarray(zeta)
             # Detide
             for i in seapy.progressbar.progress(range(size)):
-                if np.any(zeta.mask[:, i]):
+                if np.any(mask[:, i]):
                     continue
                 out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
                                      tide_start=tide_start)
@@ -787,7 +787,7 @@ def detide(grid, bryfile, tidefile, tides=None):
                 vbar[:, 1:-1] = 0.5 * (bvbar[:, 1:] + bvbar[:, :-1])
                 vbar[:, 0] = bvbar[:, 1]
                 vbar[:, -1] = bvbar[:, -2]
-                ubar = buvar.copy()
+                ubar = bubar.copy()
             else:
                 ubar[:, 1:-1] = 0.5 * (bubar[:, 1:] + bubar[:, :-1])
                 ubar[:, 0] = bubar[:, 1]
@@ -795,7 +795,6 @@ def detide(grid, bryfile, tidefile, tides=None):
                 vbar = bvbar.copy()
             ubar, vbar = seapy.rotate(ubar, vbar, grid.angle[idx[0], idx[1]])
 
-            pu.db
             # Detide
             for i in seapy.progressbar.progress(range(size)):
                 out = seapy.tide.fit(
