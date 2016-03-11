@@ -16,6 +16,8 @@ from collections import namedtuple
 
 # Define a named tuple to store raw data for the gridder
 forcing_data = namedtuple('forcing_data', 'field ratio offset')
+fields = ("Tair", "Qair", "Pair", "rain",
+          "Uwind", "Vwind", "lwrad_down", "swrad")
 
 gfs_url = "http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd"
 

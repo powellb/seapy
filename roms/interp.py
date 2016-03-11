@@ -752,9 +752,8 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
                                              title="interpolated from " + src_file)
         src_time = netCDF4.num2date(ncsrc.variables[time][records],
                                     ncsrc.variables[time].units)
-        for dtime in ("zeta", "v2d", "v3d", "temp", "salt"):
-            ncout.variables[dtime + "_time"][:] = netCDF4.date2num(src_time,
-                                                                   ncout.variables[dtime + "_time"].units)
+        ncout.variables["time"][:] = netCDF4.date2num(
+            src_time, ncout.variables[dtime + "_time"].units)
         ncsrc.close()
     else:
         raise AttributeError(

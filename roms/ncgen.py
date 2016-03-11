@@ -333,7 +333,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 
-def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
+def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
                 reftime=default_epoch, clobber=False, title="My CLIM"):
     """
     Create a climatology forcing file
@@ -348,9 +348,6 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
         number of columns in the xi direction
     s_rho: int, optional
         number of s-levels
-    ntimes: int, optional
-        number of time records (climatology files do not have unlimited
-        dimension)
     reftime: datetime, optional
         date of epoch for time origin in netcdf
     clobber: bool, optional
@@ -369,10 +366,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1, ntimes=1,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    times = ("zeta_time", "v2d_time", "v3d_time", "temp_time", "salt_time")
-    for n in times:
-        dims[n] = ntimes
-    vars = _set_time_ref(vars, times, reftime)
+    vars = _set_time_ref(vars, "clim_time", reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
