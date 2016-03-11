@@ -6,6 +6,7 @@ for all fields.
 """
 import sys
 import seapy
+import numpy as np
 
 try:
     infile = sys.argv[1]
