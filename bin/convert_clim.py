@@ -15,6 +15,7 @@ except:
     sys.exit()
 
 print("Convert {:s} to {:s}".format(infile, outfile))
+maxrecs = 15
 
 # Get the parameters
 inc = seapy.netcdf4(infile)
@@ -29,11 +30,13 @@ onc = seapy.roms.ncgen.create_clim(
 
 # Save the times
 onc.variables['clim_time'][:] = inc.variables[tvar][:]
+ntimes = len(onc.dimensions['clim_time'])
 
 # Copy the variables
 for v in seapy.roms.fields:
     print("{:s}, ".format(v), end='')
-    onc.variables[v][:] = inc.variables[v][:]
+    for l in seapy.chunker(np.arange(ntimes), maxrecs):
+        onc.variables[v][l, :] = inc.variables[v][l, :]
 print('done.')
 onc.close()
 inc.close()

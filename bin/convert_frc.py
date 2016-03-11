@@ -6,6 +6,7 @@ for all fields.
 """
 import sys
 import seapy
+import numpy as np
 
 try:
     infile = sys.argv[1]
@@ -15,6 +16,7 @@ except:
     sys.exit()
 
 print("Convert {:s} to {:s}".format(infile, outfile))
+maxrecs = 15
 
 # Get the parameters
 inc = seapy.netcdf4(infile)
@@ -28,14 +30,15 @@ onc = seapy.roms.ncgen.create_frc_bulk(
 
 # Save the times
 onc.variables['time'][:] = inc.variables[tvar][:]
+ntimes = len(onc.dimensions['time'])
+onc.variables['lat'][:] = inc.variables['lat'][:]
+onc.variables['lon'][:] = inc.variables['lon'][:]
 
 # Copy the variables
-fields = list(seapy.roms.forcing.fields)
-fields.append('lat')
-fields.append('lon')
-for v in fields:
+for v in seapy.roms.forcing.fields:
     print("{:s}, ".format(v), end='')
-    onc.variables[v][:] = inc.variables[v][:]
+    for l in seapy.chunker(np.arange(ntimes), maxrecs):
+        onc.variables[v][l, :] = inc.variables[v][l, :]
 print('done.')
 onc.close()
 inc.close()
