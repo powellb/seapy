@@ -191,22 +191,31 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     return z_w[1:, :, :] - z_w[0:-1, :, :]
 
 
-def get_time(nc):
+def get_time(nc, tvar=None, epoch=None):
     """
     Load the time vector from a netCDF file as a datetime array.
 
     Parameters
     ----------
-    nc : netCDF4.Dataset netcdf input file
+    nc : netCDF4.Dataset,
+      netcdf input file
+    tvar : string, optional
+      time variable to load. If not specified, it will find the
+      time variable from predefined
 
     Returns
     -------
     ndarray of datetime
        The times of the given netCDF file
     """
-    tvar = get_timevar(nc)
-    return netCDF4.num2date(nc.variables[tvar][:],
-                            nc.variables[tvar].units)
+    tvar = tvar if tvar else get_timevar(nc)
+    times = netCDF4.num2date(nc.variables[tvar][:],
+                             nc.variables[tvar].units)
+    if not epoch:
+        return times
+    else:
+        return ndarray([(d - epoch).total_seconds() * seapy.secs2day for
+                        d in times])
 
 
 def get_timevar(nc):

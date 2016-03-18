@@ -42,7 +42,7 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None):
         grid = seapy.model.asgrid(roms_file)
     else:
         grid = seapy.model.asgrid(grid)
-    ncroms = seapy.netcdf4(roms_file)
+    ncroms = seapy.netcdf(roms_file)
     src_ref, romstime = seapy.roms.get_reftime(ncroms)
 
     # Create the initial file and fill up the descriptive data

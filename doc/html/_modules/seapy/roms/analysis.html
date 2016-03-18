@@ -210,7 +210,7 @@
 
     <span class="c1"># Open the ROMS info</span>
     <span class="n">grid</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">asgrid</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
-    <span class="n">nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
+    <span class="n">nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
 
     <span class="c1"># Filter the fields for the ones in the ROMS file</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
@@ -279,7 +279,7 @@
 
     <span class="c1"># Open the ROMS info</span>
     <span class="n">grid</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">asgrid</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
-    <span class="n">nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
+    <span class="n">nc</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf</span><span class="p">(</span><span class="n">roms_file</span><span class="p">)</span>
 
     <span class="c1"># Filter the fields for the ones in the ROMS file</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>

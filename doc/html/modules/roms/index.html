@@ -136,13 +136,21 @@ is the timebase of the record dimension in the format:
 
 <dl class="function">
 <dt id="seapy.roms.lib.get_time">
-<code class="descclassname">seapy.roms.lib.</code><code class="descname">get_time</code><span class="sig-paren">(</span><em>nc</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.get_time" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">seapy.roms.lib.</code><code class="descname">get_time</code><span class="sig-paren">(</span><em>nc</em>, <em>tvar=None</em>, <em>epoch=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/lib.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.lib.get_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the time vector from a netCDF file as a datetime array.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nc</strong> : netCDF4.Dataset netcdf input file</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nc</strong> : netCDF4.Dataset,</p>
+<blockquote>
+<div><p>netcdf input file</p>
+</div></blockquote>
+<p><strong>tvar</strong> : string, optional</p>
+<blockquote>
+<div><p>time variable to load. If not specified, it will find the
+time variable from predefined</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray of datetime</p>
@@ -523,7 +531,7 @@ forcing file for the grid. This method will update the given boundary file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<p>Make a long time-series boundary conditions from a group of boundary files, 
+<p>Make a long time-series boundary conditions from a group of boundary files,
 skipping the last record of each file to prevent overlap (if there are 100 records
 in each file). Afterwards, detide the resulting file.</p>
 <div class="highlight-python"><div class="highlight"><pre>&gt;&gt;&gt; !ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
@@ -736,39 +744,6 @@ performed).</p>
 <div><p>A dictionary prescribing the climatology file interpolated for each
 boundary side.
 {&#8220;west&#8221;:filename, &#8220;south&#8221;:filename}, ...}</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="seapy.roms.clim.nc_concat">
-<code class="descclassname">seapy.roms.clim.</code><code class="descname">nc_concat</code><span class="sig-paren">(</span><em>clim_files</em>, <em>out_file</em>, <em>maxrecs=20</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/clim.html#nc_concat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.clim.nc_concat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Since climatology files have multiple non-record dimensions, they are
-difficult to work with using standard netcdf operations. This routine
-takes a list of climatology files and creates a new one with the list
-concatenated together.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>clim_files: list,</strong></p>
-<blockquote>
-<div><p>List of climatology files to concatenate</p>
-</div></blockquote>
-<p><strong>out_file: string,</strong></p>
-<blockquote>
-<div><p>Name of output file</p>
-</div></blockquote>
-<p><strong>maxrecs: int,</strong></p>
-<blockquote>
-<div><p>For large records, we can only deal with so many at each chunk.
-Define how many to grab in one pass.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -1591,7 +1566,7 @@ the existing file definition</p>
 
 <dl class="function">
 <dt id="seapy.roms.ncgen.create_clim">
-<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_clim</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>ntimes=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My CLIM'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_clim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_clim" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">seapy.roms.ncgen.</code><code class="descname">create_clim</code><span class="sig-paren">(</span><em>filename</em>, <em>eta_rho=10</em>, <em>xi_rho=10</em>, <em>s_rho=1</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>clobber=False</em>, <em>title='My CLIM'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/ncgen.html#create_clim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.ncgen.create_clim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a climatology forcing file</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1612,11 +1587,6 @@ the existing file definition</p>
 <p><strong>s_rho: int, optional</strong></p>
 <blockquote>
 <div><p>number of s-levels</p>
-</div></blockquote>
-<p><strong>ntimes: int, optional</strong></p>
-<blockquote>
-<div><p>number of time records (climatology files do not have unlimited
-dimension)</p>
 </div></blockquote>
 <p><strong>reftime: datetime, optional</strong></p>
 <blockquote>
@@ -2902,7 +2872,7 @@ make as part of same survey</p>
 </div>
 <div class="section" id="module-seapy.roms.obsgen">
 <span id="obsgen-generate-roms-observations-from-raw-data"></span><h3><code class="xref py py-mod docutils literal"><span class="pre">obsgen</span></code> &#8211; Generate ROMS observations from raw data<a class="headerlink" href="#module-seapy.roms.obsgen" title="Permalink to this headline">¶</a></h3>
-<p>genobs.py</p>
+<p>obsgen.py</p>
 <p>State Estimation and Analysis for PYthon</p>
 <dl class="docutils">
 <dt>Module to process observations:</dt>
@@ -3000,6 +2970,140 @@ the loading of the data.</p>
 <dt id="seapy.roms.obsgen.aviso_sla_map.convert_file">
 <code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='AVISO Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aviso_sla_map.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aviso_sla_map.convert_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load an AVISO file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.aviso_sla_track">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">aviso_sla_track</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>ssh_mean=None</em>, <em>ssh_error=None</em>, <em>repeat=3</em>, <em>provenance='SSH'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aviso_sla_track"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aviso_sla_track" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process AVISO SLA track netcdf files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data. THIS COVERS ALL SATELLITES/INSTRUMENTS FROM AVISO TRACK:
+al, c2, e1, e2, en, enn, g2, h2, j1, j1g, j1n, j2, tp and tpn.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ssh_mean</strong> : ndarray,</p>
+<blockquote>
+<div><p>Spatial map of rho-grid shape that contains the model mean SSH</p>
+</div></blockquote>
+<p><strong>ssh_error: dict, optional</strong></p>
+<blockquote>
+<div><p>Dictionary of the minimum errors for each satellite. The default
+uses the errors defined in _aviso_sla_errors</p>
+</div></blockquote>
+<p><strong>repeat: int</strong></p>
+<blockquote class="last">
+<div><p>Number of hours to repeat the track before and after its initial
+pass</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.aviso_sla_track.convert_file" title="seapy.roms.obsgen.aviso_sla_track.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an AVISO file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.aviso_sla_track.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='AVISO SLA Track Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#aviso_sla_track.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.aviso_sla_track.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an AVISO file and convert into an obs structure</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.roms.obsgen.error_profile">
+<code class="descclassname">seapy.roms.obsgen.</code><code class="descname">error_profile</code><span class="sig-paren">(</span><em>obs</em>, <em>depth</em>, <em>error</em>, <em>provenance=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#error_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.error_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a vertical error profile to a given observation structure.
+This allows for error minimums to vary by depth and observation
+type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>obs</strong> : seapy.roms.obs.obs,</p>
+<blockquote>
+<div><p>The observations to enforce the error profile upon.</p>
+</div></blockquote>
+<p><strong>depth</strong> : ndarray,</p>
+<blockquote>
+<div><p>Array of depths for the errors provided</p>
+</div></blockquote>
+<p><strong>error</strong> : dict,</p>
+<blockquote>
+<div><p>Dictionary of the errors, where the key is the type of observation
+(as defined by seapy.roms.obs.obs_types) and the value is
+an ndarray of same length as depth with the error [in squared units]
+of the observation profile.</p>
+</div></blockquote>
+<p><strong>provenance</strong> : int or string,</p>
+<blockquote>
+<div><p>The provenance to apply the errors to (ignore other observations
+of the same type, but different instrument)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None:</p>
+<blockquote class="last">
+<div><p>The obs structure is mutable is changed in place</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">obs</span><span class="p">(</span><span class="s1">&#39;observation_file.nc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">depth</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">error</span><span class="p">[</span><span class="s1">&#39;temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">error_profile</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The resulting &#8216;obs&#8217; class will have had its error profiles
+modified.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.roms.obsgen.modis_sst_map">
+<em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">modis_sst_map</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_error=0.5</em>, <em>temp_limits=None</em>, <em>provenance='SST_MODIS_AQUA'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#modis_sst_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.modis_sst_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
+<p>class to process MODIS SST map netcdf files into ROMS observation
+files. This is a subclass of seapy.roms.genobs.genobs, and handles
+the loading of the data.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">batch_files</span></code>(in_files,&nbsp;out_files[,&nbsp;clobber])</td>
+<td>Given a list of input files, process each one and save each result into the given output file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.roms.obsgen.modis_sst_map.convert_file" title="seapy.roms.obsgen.modis_sst_map.convert_file"><code class="xref py py-obj docutils literal"><span class="pre">convert_file</span></code></a>(file[,&nbsp;title])</td>
+<td>Load an MODIS file and convert into an obs structure</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="seapy.roms.obsgen.modis_sst_map.convert_file">
+<code class="descname">convert_file</code><span class="sig-paren">(</span><em>file</em>, <em>title='MODIS SST Obs'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#modis_sst_map.convert_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.modis_sst_map.convert_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load an MODIS file and convert into an obs structure</p>
 </dd></dl>
 
 </dd></dl>
@@ -3189,7 +3293,7 @@ the loading of the data.</p>
 <em class="property">class </em><code class="descclassname">seapy.roms.obsgen.</code><code class="descname">remss</code><span class="sig-paren">(</span><em>grid</em>, <em>dt</em>, <em>reftime=datetime.datetime(2000</em>, <em>1</em>, <em>1</em>, <em>0</em>, <em>0)</em>, <em>temp_error=0.4</em>, <em>temp_limits=None</em>, <em>provenance='SST_REMSS'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seapy/roms/obsgen.html#remss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.roms.obsgen.remss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#seapy.roms.obsgen.obsgen" title="seapy.roms.obsgen.obsgen"><code class="xref py py-class docutils literal"><span class="pre">seapy.roms.obsgen.obsgen</span></code></a></p>
 <p>class to process REMSS SST netcdf files into ROMS observation
-files. The files may be AMSRE, TMI, etc. This is a subclass of 
+files. The files may be AMSRE, TMI, etc. This is a subclass of
 seapy.roms.genobs.genobs, and handles the loading of the data.</p>
 <p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">

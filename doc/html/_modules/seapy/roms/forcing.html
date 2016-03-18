@@ -66,6 +66,8 @@
 
 <span class="c1"># Define a named tuple to store raw data for the gridder</span>
 <span class="n">forcing_data</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;forcing_data&#39;</span><span class="p">,</span> <span class="s1">&#39;field ratio offset&#39;</span><span class="p">)</span>
+<span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Tair&quot;</span><span class="p">,</span> <span class="s2">&quot;Qair&quot;</span><span class="p">,</span> <span class="s2">&quot;Pair&quot;</span><span class="p">,</span> <span class="s2">&quot;rain&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;Uwind&quot;</span><span class="p">,</span> <span class="s2">&quot;Vwind&quot;</span><span class="p">,</span> <span class="s2">&quot;lwrad_down&quot;</span><span class="p">,</span> <span class="s2">&quot;swrad&quot;</span><span class="p">)</span>
 
 <span class="n">gfs_url</span> <span class="o">=</span> <span class="s2">&quot;http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd&quot;</span>
 
@@ -197,7 +199,7 @@
     <span class="n">grid</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">asgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
 
     <span class="c1"># Open the Forcing data</span>
-    <span class="n">forcing</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf4</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="n">forcing</span> <span class="o">=</span> <span class="n">seapy</span><span class="o">.</span><span class="n">netcdf</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
 
     <span class="c1"># Gather the information about the forcing</span>
     <span class="n">frc_time</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">forcing</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;frc_time&#39;</span><span class="p">]][:],</span>

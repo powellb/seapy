@@ -16,10 +16,10 @@ except:
     sys.exit()
 
 print("Convert {:s} to {:s}".format(infile, outfile))
-maxrecs = 15
+maxrecs = 30
 
 # Get the parameters
-inc = seapy.netcdf4(infile)
+inc = seapy.netcdf(infile)
 lat = len(inc.dimensions['lat'])
 lon = len(inc.dimensions['lon'])
 epoch, tvar = seapy.roms.get_reftime(inc)
@@ -36,7 +36,7 @@ onc.variables['lon'][:] = inc.variables['lon'][:]
 
 # Copy the variables
 for v in seapy.roms.forcing.fields:
-    print("{:s}, ".format(v), end='')
+    print("{:s}, ".format(v), end='', flush=True)
     for l in seapy.chunker(np.arange(ntimes), maxrecs):
         onc.variables[v][l, :] = inc.variables[v][l, :]
 print('done.')

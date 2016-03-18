@@ -20,9 +20,9 @@ from warnings import warn
 _up_scaling = {"zeta": 1.0, "u": 1.0, "v": 1.0, "temp": 1.0, "salt": 1.0}
 _down_scaling = {"zeta": 1.0, "u": 0.95, "v": 0.95, "temp": 0.98, "salt": 1.02}
 _ksize_range = (7, 15)
-_max_memory = 768 * 1024 * 1024    # Limit amount of memory to process in a single
-# read. This determines how to divide up the
-# time-records in interpolation
+# Limit amount of memory to process in a single read. This determines how to
+# divide up the time-records in interpolation
+_max_memory = 768 * 1024 * 1024
 
 
 def __mask_z_grid(z_data, src_depth, z_depth):
@@ -246,7 +246,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             pmap = {"pmaprho": pmaprho, "pmapu": pmapu, "pmapv": pmapv}
 
     # Get the time field
-    ncsrc = seapy.netcdf4(src_grid.filename)
+    ncsrc = seapy.netcdf(src_grid.filename)
     time = seapy.roms.get_timevar(ncsrc)
 
     # Interpolate the depths from the source to final grid
@@ -287,9 +287,12 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                 ncout.variables[dest][outr, :, :] = ndata
                 ncout.sync()
         else:
-            maxrecs = np.maximum(1, np.minimum(len(records),
-                                               np.int(_max_memory / (child_grid.lon_rho.nbytes * child_grid.n +
-                                                                     src_grid.lon_rho.nbytes * src_grid.n))))
+            maxrecs = np.maximum(1, np.minimum(
+                len(records), np.int(_max_memory /
+                                     (child_grid.lon_rho.nbytes *
+                                      child_grid.n +
+                                      src_grid.lon_rho.nbytes *
+                                      src_grid.n))))
             for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[
                     rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
@@ -322,9 +325,12 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
 
     srcangle = src_grid.angle if src_grid.cgrid else None
     dstangle = child_grid.angle if child_grid.cgrid else None
-    maxrecs = np.minimum(len(records), np.int(_max_memory /
-                                              (2 * (child_grid.lon_rho.nbytes * child_grid.n +
-                                                    src_grid.lon_rho.nbytes * src_grid.n))))
+    maxrecs = np.minimum(len(records),
+                         np.int(_max_memory /
+                                (2 * (child_grid.lon_rho.nbytes *
+                                      child_grid.n +
+                                      src_grid.lon_rho.nbytes *
+                                      src_grid.n))))
     for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
         vel = Parallel(n_jobs=threads, verbose=2) \
             (delayed(__interp3_vel_thread)(
@@ -417,8 +423,10 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     if dest_mask is None:
         dest_mask = np.ones(dest_lat.shape)
     records = np.arange(0, src_field.shape[0])
-    maxrecs = np.maximum(1, np.minimum(records.size,
-                                       np.int(_max_memory / (dest_lon.nbytes + src_lon.nbytes))))
+    maxrecs = np.maximum(1,
+                         np.minimum(records.size,
+                                    np.int(_max_memory /
+                                           (dest_lon.nbytes + src_lon.nbytes))))
     for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
         nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
                              (delayed(__interp2_thread)(
@@ -482,9 +490,13 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     if dest_mask is None:
         dest_mask = np.ones(dest_lat.shape)
     records = np.arange(0, src_field.shape[0])
-    maxrecs = np.maximum(1, np.minimum(records.size,
-                                       np.int(_max_memory / (dest_lon.nbytes * dest_depth.shape[0] +
-                                                             src_lon.nbytes * src_depth.shape[0]))))
+    maxrecs = np.maximum(1,
+                         np.minimum(records.size,
+                                    np.int(_max_memory /
+                                           (dest_lon.nbytes *
+                                               dest_depth.shape[0] +
+                                               src_lon.nbytes *
+                                               src_depth.shape[0]))))
     for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
         nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
                              (delayed(__interp3_thread)(
@@ -545,7 +557,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
 
     """
     roms_grid = seapy.model.asgrid(roms_file)
-    ncroms = seapy.netcdf4(roms_file)
+    ncroms = seapy.netcdf(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
     if reftime is not None:
         src_ref = reftime
@@ -661,15 +673,18 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
         destg = seapy.model.asgrid(dest_grid)
 
         if not os.path.isfile(dest_file):
-            ncsrc = seapy.netcdf4(src_file)
+            ncsrc = seapy.netcdf(src_file)
             src_ref, time = seapy.roms.get_reftime(ncsrc)
             if reftime is not None:
                 src_ref = reftime
             records = np.arange(0, ncsrc.variables[time].shape[0]) \
                 if records is None else np.atleast_1d(records)
             ncout = seapy.roms.ncgen.create_ini(dest_file,
-                                                eta_rho=destg.eta_rho, xi_rho=destg.xi_rho, s_rho=destg.n,
-                                                reftime=src_ref, title="interpolated from " + src_file)
+                                                eta_rho=destg.eta_rho,
+                                                xi_rho=destg.xi_rho,
+                                                s_rho=destg.n,
+                                                reftime=src_ref,
+                                                title="interpolated from " + src_file)
             destg.to_netcdf(ncout)
             ncout.variables["ocean_time"][:] = netCDF4.date2num(
                 netCDF4.num2date(ncsrc.variables[time][records],
@@ -740,15 +755,18 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
         src_grid = seapy.model.asgrid(src_file)
-        ncsrc = seapy.netcdf4(src_file)
+        ncsrc = seapy.netcdf(src_file)
         src_ref, time = seapy.roms.get_reftime(ncsrc)
         if reftime is not None:
             src_ref = reftime
         records = np.arange(0, ncsrc.variables[time].shape[0]) \
             if records is None else np.atleast_1d(records)
         ncout = seapy.roms.ncgen.create_clim(dest_file,
-                                             eta_rho=destg.ln, xi_rho=destg.lm, s_rho=destg.n,
-                                             ntimes=records.size, reftime=src_ref,
+                                             eta_rho=destg.ln,
+                                             xi_rho=destg.lm,
+                                             s_rho=destg.n,
+                                             ntimes=records.size,
+                                             reftime=src_ref,
                                              title="interpolated from " + src_file)
         src_time = netCDF4.num2date(ncsrc.variables[time][records],
                                     ncsrc.variables[time].units)

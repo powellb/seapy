@@ -400,7 +400,7 @@
     <span class="k">return</span> <span class="n">files</span></div>
 
 
-<div class="viewcode-block" id="netcdf4"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.netcdf4">[docs]</a><span class="k">def</span> <span class="nf">netcdf4</span><span class="p">(</span><span class="nb">file</span><span class="p">):</span>
+<div class="viewcode-block" id="netcdf"><a class="viewcode-back" href="../../modules/seapy.html#seapy.lib.netcdf">[docs]</a><span class="k">def</span> <span class="nf">netcdf</span><span class="p">(</span><span class="nb">file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper around netCDF4 to open a file as either a Dataset or an</span>
 <span class="sd">    MFDataset.</span>
@@ -418,8 +418,12 @@
     <span class="kn">import</span> <span class="nn">netCDF4</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">error</span><span class="p">(</span><span class="s2">&quot;{:s} cannot be found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">file</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">None</span>
     <span class="k">return</span> <span class="n">nc</span></div>
 
 

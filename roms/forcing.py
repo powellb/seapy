@@ -149,7 +149,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     grid = seapy.model.asgrid(grid)
 
     # Open the Forcing data
-    forcing = seapy.netcdf4(infile)
+    forcing = seapy.netcdf(infile)
 
     # Gather the information about the forcing
     frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],

@@ -72,11 +72,18 @@ obs_provenance = {
     341: "SST_AMSRE",
     400: "SSH",
     410: "SSH_AVISO_MAP",
-    411: "SSH_AVISO_ENVISAT",
+    411: "SSH_AVISO_TOPEX_POSEIDON",
     412: "SSH_AVISO_JASON1",
     413: "SSH_AVISO_JASON2",
-    414: "SSH_AVISO_GFO",
-    415: "SSH_HYCOM",
+    414: "SSH_AVISO_JASON3",
+    420: "SSH_AVISO_GFO",
+    421: "SSH_AVISO_ENVISAT",
+    422: "SSH_AVISO_ERS1",
+    423: "SSH_AVISO_ERS2",
+    430: "SSH_AVISO_ALTIKA",
+    431: "SSH_AVISO_CRYOSAT2",
+    432: "SSH_AVISO_HAIYANG",
+    450: "SSH_HYCOM",
     460: "SSS_AQUARIUS",
     500: "DRIFTERS",
     600: "RADAR",
@@ -219,7 +226,7 @@ class obs:
         """
         self.title = title
         if filename is not None:
-            nc = seapy.netcdf4(filename)
+            nc = seapy.netcdf(filename)
             # Construct an array from the data in the file. If obs_meta
             # exists in the file, then load it; otherwise, fill with zeros
             self.time = nc.variables["obs_time"][:]
@@ -233,6 +240,14 @@ class obs:
             self.error = nc.variables["obs_error"][:]
             self.type = nc.variables["obs_type"][:]
             self.provenance = nc.variables["obs_provenance"][:]
+            # Update the provenance definitions
+            try:
+                obs_provenance.update(dict((int(k.strip()), v.strip())
+                                           for v, k in
+                                           (it.split(':') for it in
+                                            nc.obs_provenance.split(','))))
+            except (KeyError, ValueError):
+                pass
             try:
                 self.meta = nc.variables["obs_meta"][:]
             except KeyError:
@@ -820,7 +835,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     sdays = list()
     edays = list()
     for file in obs_files:
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         fdays = nc.variables['survey_time'][:]
         nc.close()
         l = np.where(np.logical_and(fdays >= np.min(days),

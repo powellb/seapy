@@ -383,7 +383,7 @@
     <span class="k">return</span> <span class="n">_nc</span></div>
 
 
-<div class="viewcode-block" id="create_clim"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.ncgen.create_clim">[docs]</a><span class="k">def</span> <span class="nf">create_clim</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">eta_rho</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">xi_rho</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">s_rho</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ntimes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<div class="viewcode-block" id="create_clim"><a class="viewcode-back" href="../../../modules/roms/index.html#seapy.roms.ncgen.create_clim">[docs]</a><span class="k">def</span> <span class="nf">create_clim</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">eta_rho</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">xi_rho</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">s_rho</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">reftime</span><span class="o">=</span><span class="n">default_epoch</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;My CLIM&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a climatology forcing file</span>
@@ -398,9 +398,6 @@
 <span class="sd">        number of columns in the xi direction</span>
 <span class="sd">    s_rho: int, optional</span>
 <span class="sd">        number of s-levels</span>
-<span class="sd">    ntimes: int, optional</span>
-<span class="sd">        number of time records (climatology files do not have unlimited</span>
-<span class="sd">        dimension)</span>
 <span class="sd">    reftime: datetime, optional</span>
 <span class="sd">        date of epoch for time origin in netcdf</span>
 <span class="sd">    clobber: bool, optional</span>
@@ -419,10 +416,7 @@
 
     <span class="c1"># Fill in the appropriate dimension values</span>
     <span class="n">dims</span> <span class="o">=</span> <span class="n">_set_grid_dimensions</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">eta_rho</span><span class="p">,</span> <span class="n">xi_rho</span><span class="p">,</span> <span class="n">s_rho</span><span class="p">)</span>
-    <span class="n">times</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;zeta_time&quot;</span><span class="p">,</span> <span class="s2">&quot;v2d_time&quot;</span><span class="p">,</span> <span class="s2">&quot;v3d_time&quot;</span><span class="p">,</span> <span class="s2">&quot;temp_time&quot;</span><span class="p">,</span> <span class="s2">&quot;salt_time&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span>
-        <span class="n">dims</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ntimes</span>
-    <span class="nb">vars</span> <span class="o">=</span> <span class="n">_set_time_ref</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">reftime</span><span class="p">)</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="n">_set_time_ref</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="s2">&quot;clim_time&quot;</span><span class="p">,</span> <span class="n">reftime</span><span class="p">)</span>
 
     <span class="c1"># Create the file</span>
     <span class="n">_nc</span> <span class="o">=</span> <span class="n">ncgen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="nb">vars</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="n">clobber</span><span class="p">,</span>

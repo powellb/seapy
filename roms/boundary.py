@@ -48,7 +48,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
         grid = seapy.model.asgrid(roms_file)
     else:
         grid = seapy.model.asgrid(grid)
-    ncroms = seapy.netcdf4(roms_file)
+    ncroms = seapy.netcdf(roms_file)
     src_ref, time = seapy.roms.get_reftime(ncroms)
     records = np.arange(0, len(ncroms.variables[time][:])) \
         if records is None else records
@@ -226,7 +226,7 @@ def from_std(std_filename, bry_std_file, fields=None):
     -------
     None
     """
-    ncstd = seapy.netcdf4(std_filename)
+    ncstd = seapy.netcdf(std_filename)
     eta_rho = len(ncstd.dimensions["eta_rho"])
     xi_rho = len(ncstd.dimensions["xi_rho"])
     s_rho = len(ncstd.dimensions["s_rho"])
@@ -700,7 +700,7 @@ def detide(grid, bryfile, tidefile, tides=None):
 
     # Load Files
     grid = seapy.model.asgrid(grid)
-    bry = netCDF4.Dataset(bryfile, "a")
+    bry = seapy.netcdf(bryfile, "a")
 
     # Get the definitions of the boundary file
     epoch, timevar = seapy.roms.get_reftime(bry)
@@ -761,11 +761,11 @@ def detide(grid, bryfile, tidefile, tides=None):
                     if sides[side].slice == 0:
                         eamp[n, i, idx[1]] = out['major'][t].amp
                         epha[n, i, idx[1]] = np.degrees(
-                            np.mod(out['major'][t].pha, 2 * np.pi))
+                            np.mod(out['major'][t].phase, 2 * np.pi))
                     else:
                         eamp[n, idx[0], i] = out['major'][t].amp
                         epha[n, idx[0], i] = np.degrees(
-                            np.mod(out['major'][t].pha, 2 * np.pi))
+                            np.mod(out['major'][t].phase, 2 * np.pi))
 
             # Save out the detided information
             bry.variables[lvar][:] = zeta
@@ -779,10 +779,10 @@ def detide(grid, bryfile, tidefile, tides=None):
             print(uvar, vvar)
             ubar = np.zeros((len(time), size))
             vbar = np.zeros((len(time), size))
-            bubar = np.ma.array(bry.variables[uvar][:]).filled(0)
-            bvbar = np.ma.array(bry.variables[vvar][:]).filled(0)
 
             # Load data, put onto rho-grid, and rotate
+            bubar = np.ma.array(bry.variables[uvar][:]).filled(0)
+            bvbar = np.ma.array(bry.variables[vvar][:]).filled(0)
             if sides[side].slice == 0:
                 vbar[:, 1:-1] = 0.5 * (bvbar[:, 1:] + bvbar[:, :-1])
                 vbar[:, 0] = bvbar[:, 1]
@@ -794,43 +794,38 @@ def detide(grid, bryfile, tidefile, tides=None):
                 ubar[:, -1] = bubar[:, -2]
                 vbar = bvbar.copy()
             ubar, vbar = seapy.rotate(ubar, vbar, grid.angle[idx[0], idx[1]])
+            bubar = bvbar = []
 
             # Detide
             for i in seapy.progressbar.progress(range(size)):
                 out = seapy.tide.fit(
                     time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
                     tide_start=tide_start)
-                ubar[:, i] = ubar[:, i] - np.real(out['fit'])
-                vbar[:, i] = vbar[:, i] - np.imag(out['fit'])
+                ubar[:, i] -= np.real(out['fit'])
+                vbar[:, i] -= np.imag(out['fit'])
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
                     if sides[side].slice == 0:
                         cmax[n, i, idx[1]] = out['major'][t].amp
                         cmin[n, i, idx[1]] = out['minor'][t].amp
-                        cpha[n, i, idx[1]] = np.degrees(
-                            np.mod(out['major'][t].pha, 2 * np.pi))
-                        cang[n, i, idx[1]] = np.degrees(
-                            np.mod(out['minor'][t].pha, 2 * np.pi))
+                        cpha[n, i, idx[1]] = np.degrees(out['major'][t].phase)
+                        cang[n, i, idx[1]] = np.degrees(out['minor'][t].phase)
                     else:
                         cmax[n, idx[0], i] = out['major'][t].amp
                         cmin[n, idx[0], i] = out['minor'][t].amp
-                        cpha[n, idx[0], i] = np.degrees(
-                            np.mod(out['major'][t].pha, 2 * np.pi))
-                        cang[n, idx[0], i] = np.degrees(
-                            np.mod(out['minor'][t].pha, 2 * np.pi))
+                        cpha[n, idx[0], i] = np.degrees(out['major'][t].phase)
+                        cang[n, idx[0], i] = np.degrees(out['minor'][t].phase)
 
             ubar, vbar = seapy.rotate(ubar, vbar, -grid.angle[idx[0], idx[1]])
             if sides[side].slice == 0:
-                bry.variables[vvar][:] = 0.5 * \
-                    (vbar[:, 1:] + vbar[:, :-1])
+                bry.variables[vvar][:] = 0.5 * (vbar[:, 1:] + vbar[:, :-1])
                 bry.variables[uvar][:] = ubar
             else:
-                bry.variables[uvar][:] = 0.5 * \
-                    (ubar[:, 1:] + ubar[:, :-1])
+                bry.variables[uvar][:] = 0.5 * (ubar[:, 1:] + ubar[:, :-1])
                 bry.variables[vvar][:] = vbar
             bry.sync()
-            ubar = vbar = [0]
+            ubar = vbar = []
 
     # Have to duplicate the boundary tide info into the inner row/column
     eamp[:, 1:-1, 1] = eamp[:, 1:-1, 0]

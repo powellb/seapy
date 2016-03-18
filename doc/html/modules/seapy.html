@@ -415,8 +415,8 @@ return only the filename</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="seapy.lib.netcdf4">
-<code class="descclassname">seapy.lib.</code><code class="descname">netcdf4</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#netcdf4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.netcdf4" title="Permalink to this definition">¶</a></dt>
+<dt id="seapy.lib.netcdf">
+<code class="descclassname">seapy.lib.</code><code class="descname">netcdf</code><span class="sig-paren">(</span><em>file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/lib.html#netcdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.lib.netcdf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper around netCDF4 to open a file as either a Dataset or an
 MFDataset.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1284,8 +1284,8 @@ to execute.</p>
 <p>Written by Glenn Carter and Dale Partridge
 Copyright (c)2016 University of Hawaii under the BSD-License.</p>
 <dl class="class">
-<dt id="seapy.tide.amp_pha">
-<em class="property">class </em><code class="descclassname">seapy.tide.</code><code class="descname">amp_pha</code><span class="sig-paren">(</span><em>amp</em>, <em>pha</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.tide.amp_pha" title="Permalink to this definition">¶</a></dt>
+<dt id="seapy.tide.amp_phase">
+<em class="property">class </em><code class="descclassname">seapy.tide.</code><code class="descname">amp_phase</code><span class="sig-paren">(</span><em>amp</em>, <em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.tide.amp_phase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
 <p class="rubric">Attributes</p>
 <table border="1" class="longtable docutils">
@@ -1294,10 +1294,10 @@ Copyright (c)2016 University of Hawaii under the BSD-License.</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.amp_pha.amp" title="seapy.tide.amp_pha.amp"><code class="xref py py-obj docutils literal"><span class="pre">amp</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.amp_phase.amp" title="seapy.tide.amp_phase.amp"><code class="xref py py-obj docutils literal"><span class="pre">amp</span></code></a></td>
 <td>Alias for field number 0</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.amp_pha.pha" title="seapy.tide.amp_pha.pha"><code class="xref py py-obj docutils literal"><span class="pre">pha</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.amp_phase.phase" title="seapy.tide.amp_phase.phase"><code class="xref py py-obj docutils literal"><span class="pre">phase</span></code></a></td>
 <td>Alias for field number 1</td>
 </tr>
 </tbody>
@@ -1318,14 +1318,14 @@ Copyright (c)2016 University of Hawaii under the BSD-License.</p>
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="seapy.tide.amp_pha.amp">
-<code class="descname">amp</code><a class="headerlink" href="#seapy.tide.amp_pha.amp" title="Permalink to this definition">¶</a></dt>
+<dt id="seapy.tide.amp_phase.amp">
+<code class="descname">amp</code><a class="headerlink" href="#seapy.tide.amp_phase.amp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 0</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="seapy.tide.amp_pha.pha">
-<code class="descname">pha</code><a class="headerlink" href="#seapy.tide.amp_pha.pha" title="Permalink to this definition">¶</a></dt>
+<dt id="seapy.tide.amp_phase.phase">
+<code class="descname">phase</code><a class="headerlink" href="#seapy.tide.amp_phase.phase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
@@ -1333,7 +1333,7 @@ Copyright (c)2016 University of Hawaii under the BSD-License.</p>
 
 <dl class="function">
 <dt id="seapy.tide.fit">
-<code class="descclassname">seapy.tide.</code><code class="descname">fit</code><span class="sig-paren">(</span><em>times</em>, <em>xin</em>, <em>tides=None</em>, <em>lat=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">seapy.tide.</code><code class="descname">fit</code><span class="sig-paren">(</span><em>times</em>, <em>xin</em>, <em>tides=None</em>, <em>lat=55</em>, <em>tide_start=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a harmonic fit of tidal constituents to a time-series of data. The
 series can be unevenly spaced in time, but every time must be specified.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1358,6 +1358,11 @@ specified, the dominant 11 consituents are used:
 <blockquote>
 <div><p>latitude of the nodal correction</p>
 </div></blockquote>
+<p><strong>tide_start</strong> : datetime, optional,</p>
+<blockquote>
+<div><p>If specified, the phases of the fit will be relative to the
+given tide_start day.</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict :</p>
@@ -1368,13 +1373,13 @@ specified, the dominant 11 consituents are used:
 &#8216;percent&#8217;: percentage of the signal explained by the tides
 &#8216;major&#8217;: dictionary of the major axis fit comprised of:</p>
 <blockquote>
-<div><p>tidename: amp_ph namedtuple
+<div><p>tidename: amp_phase namedtuple
 Providing the amplitude and phase of each fit constituent</p>
 </div></blockquote>
 <dl class="docutils">
 <dt>&#8216;minor&#8217;: dictionary of the minor axis fit comprised of:</dt>
-<dd><p class="first last">tidename: amp_ph namedtuple
-Providing the amplitude and phase of each fit constituent</p>
+<dd><p class="first last">tidename: amp_phase namedtuple
+Providing the minimum axis amplitude and angle of each fit constituent</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -1394,7 +1399,7 @@ Providing the amplitude and phase of each fit constituent</p>
 <dl class="function">
 <dt id="seapy.tide.frequency">
 <code class="descclassname">seapy.tide.</code><code class="descname">frequency</code><span class="sig-paren">(</span><em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#frequency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.frequency" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns array of the frequency in cycles per hour for the requested 
+<dd><p>Returns array of the frequency in cycles per hour for the requested
 tidal constituents.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1423,23 +1428,41 @@ tidal constituents.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="seapy.tide.make_amp_ph">
-<code class="descclassname">seapy.tide.</code><code class="descname">make_amp_ph</code><span class="sig-paren">(</span><em>tides</em>, <em>amp</em>, <em>pha</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#make_amp_ph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.make_amp_ph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes a dictionary of amp_pha named tuples given arrays of names, amplitudes and phases
-Inputs:-</p>
+<dt id="seapy.tide.pack_amp_phase">
+<code class="descclassname">seapy.tide.</code><code class="descname">pack_amp_phase</code><span class="sig-paren">(</span><em>tides</em>, <em>amp</em>, <em>phase</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#pack_amp_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.pack_amp_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pack together the tides, amplitudes, and phases into a dictionary of
+tide names as keys and amp_phase namedtuples as values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tides</strong> : ndarray of strings,</p>
 <blockquote>
-<div>tides - List of constituent strings
-amp - array of amplitudes for each constituent 
-pha - array of phases (rad) for each constituent</div></blockquote>
-<dl class="docutils">
-<dt>Outputs:-</dt>
-<dd>amp_ph - dictionary of amp_ph named tuples, with constiutents as keys</dd>
-</dl>
+<div><p>List of constituent strings</p>
+</div></blockquote>
+<p><strong>amp</strong> : ndarray,</p>
+<blockquote>
+<div><p>Amplitudes for each constituent</p>
+</div></blockquote>
+<p><strong>phase</strong> : ndarray,</p>
+<blockquote>
+<div><p>phases (rad) for each constituent</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict:  amplitudes and phases</p>
+<blockquote class="last">
+<div><p>constituent name as key and amp_phase namedtuple as value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="seapy.tide.predict">
-<code class="descclassname">seapy.tide.</code><code class="descname">predict</code><span class="sig-paren">(</span><em>times</em>, <em>tide</em>, <em>lat=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.predict" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">seapy.tide.</code><code class="descname">predict</code><span class="sig-paren">(</span><em>times</em>, <em>tide</em>, <em>lat=55</em>, <em>tide_start=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a tidal time-series for the given tides. Nodal correction
 is applied for the time as well as the given latitude (if specified).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1452,12 +1475,17 @@ is applied for the time as well as the given latitude (if specified).</p>
 </div></blockquote>
 <p><strong>tide</strong> : dict,</p>
 <blockquote>
-<div><p>Dictionary of the tides to predict with the constituent name as 
-the key, and the value is an amp_ph namedtuple.</p>
+<div><p>Dictionary of the tides to predict with the constituent name as
+the key, and the value is an amp_phase namedtuple.</p>
 </div></blockquote>
 <p><strong>lat</strong> : float optional,</p>
 <blockquote>
 <div><p>latitude of the nodal correction</p>
+</div></blockquote>
+<p><strong>tide_start</strong> : datetime optional,</p>
+<blockquote>
+<div><p>If specified, the nodal correction are applied to adjust from
+the tide_start to the center of the times record</p>
 </div></blockquote>
 </td>
 </tr>
@@ -1473,11 +1501,298 @@ the key, and the value is an amp_ph namedtuple.</p>
 <p>Generate a time series every hour for the month of April, 2014 for
 a specific phase and amplitude of M2 and K1.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span> <span class="o">=</span> <span class="p">[</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="mi">24</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">31</span><span class="o">*</span><span class="mi">24</span><span class="p">)</span> <span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tide</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;M2&#39;</span><span class="p">:</span> <span class="n">amp_pha</span><span class="p">(</span><span class="mf">2.3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">22</span><span class="p">)),</span> 
-<span class="go">            &#39;K1&#39;: amp_pha(0.4, np.radians(227))}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tide</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;M2&#39;</span><span class="p">:</span> <span class="n">amp_phase</span><span class="p">(</span><span class="mf">2.3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">22</span><span class="p">)),</span>
+<span class="go">            &#39;K1&#39;: amp_phase(0.4, np.radians(227))}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">tide</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.tide.tellipse">
+<em class="property">class </em><code class="descclassname">seapy.tide.</code><code class="descname">tellipse</code><span class="sig-paren">(</span><em>major</em>, <em>minor</em>, <em>angle</em>, <em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.tide.tellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.tellipse.angle" title="seapy.tide.tellipse.angle"><code class="xref py py-obj docutils literal"><span class="pre">angle</span></code></a></td>
+<td>Alias for field number 2</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.tellipse.major" title="seapy.tide.tellipse.major"><code class="xref py py-obj docutils literal"><span class="pre">major</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.tellipse.minor" title="seapy.tide.tellipse.minor"><code class="xref py py-obj docutils literal"><span class="pre">minor</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.tellipse.phase" title="seapy.tide.tellipse.phase"><code class="xref py py-obj docutils literal"><span class="pre">phase</span></code></a></td>
+<td>Alias for field number 3</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="seapy.tide.tellipse.angle">
+<code class="descname">angle</code><a class="headerlink" href="#seapy.tide.tellipse.angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.tellipse.major">
+<code class="descname">major</code><a class="headerlink" href="#seapy.tide.tellipse.major" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.tellipse.minor">
+<code class="descname">minor</code><a class="headerlink" href="#seapy.tide.tellipse.minor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.tellipse.phase">
+<code class="descname">phase</code><a class="headerlink" href="#seapy.tide.tellipse.phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.unpack_amp_phase">
+<code class="descclassname">seapy.tide.</code><code class="descname">unpack_amp_phase</code><span class="sig-paren">(</span><em>amp_ph</em>, <em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#unpack_amp_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.unpack_amp_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a dictionary of amplitude and phase parameters, unpack the dictionary
+and return an amp_phase namedtuple with arrays for each element that
+are in the order of the tides array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>amp_ph</strong> : dict,</p>
+<blockquote>
+<div><p>amp_phase dictionary returned by fit or pack_amp_phase</p>
+</div></blockquote>
+<p><strong>tides: list of strings,</strong></p>
+<blockquote>
+<div><p>List of strings to provide the order of the arrays</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>amp_phase</strong> : namedtuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.unpack_ellipse">
+<code class="descclassname">seapy.tide.</code><code class="descname">unpack_ellipse</code><span class="sig-paren">(</span><em>ellipse</em>, <em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#unpack_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.unpack_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a dictionary of tidal ellipse parameters, unpack the dictionary
+and return an ellipse namedtuple with arrays for each element that
+are in the order of the tides array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ellipse</strong> : dict,</p>
+<blockquote>
+<div><p>Ellipse dictionary returned by tidal_ellipse</p>
+</div></blockquote>
+<p><strong>tides: list of strings,</strong></p>
+<blockquote>
+<div><p>List of strings to provide the order of the arrays</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>tellipse</strong> : namedtuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.unpack_vuf">
+<code class="descclassname">seapy.tide.</code><code class="descname">unpack_vuf</code><span class="sig-paren">(</span><em>vuf</em>, <em>tides=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#unpack_vuf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.unpack_vuf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a dictionary of vuf parameters, unpack the dictionary
+and return a vuf_vals namedtuple with arrays for each element that
+are in the order of the tides array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vuf</strong> : dict,</p>
+<blockquote>
+<div><p>vuf_vals dictionary returned by vuf</p>
+</div></blockquote>
+<p><strong>tides: list of strings,</strong></p>
+<blockquote>
+<div><p>List of strings to provide the order of the arrays</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>vuf_vals</strong> : namedtuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.vel_ellipse">
+<code class="descclassname">seapy.tide.</code><code class="descname">vel_ellipse</code><span class="sig-paren">(</span><em>u</em>, <em>v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#vel_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.vel_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate ellipse parameters from the U and V amplitude and phases</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>u</strong> : dict,</p>
+<blockquote>
+<div><p>Dictionary of the u-component of velocity tides with the
+constituent name as a key, and the value is an amp_phase namedtuple.</p>
+</div></blockquote>
+<p><strong>v</strong> : dict,</p>
+<blockquote>
+<div><p>Dictionary of the v-component of velocity tides with the
+constituent name as a key, and the value is an amp_phase namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ellipse: dict,</p>
+<blockquote class="last">
+<div><p>Dictionary of the tidal ellipses with the constituent name as the
+keys and the values are the parameters of the tellipse namedtuple.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>With a set of u and v amplitude and phases, generate the ellipse
+parameters:
+&gt;&gt;&gt; u = {&#8220;M2&#8221;:amp_phase(4.3, np.radians(231.4))}
+&gt;&gt;&gt; v = {&#8220;M2&#8221;:amp_phase(0.7, np.radians(10.1))}
+&gt;&gt;&gt; ell = vel_ellipse(u, v)
+&gt;&gt;&gt; print(ell)
+{&#8216;M2&#8217;: tellipse(major=4.3324053381635519, minor=0.45854551121121889,</p>
+<blockquote>
+<div>angle=6.1601050372480319, phase=4.0255995338808006)}</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="seapy.tide.vuf">
+<code class="descclassname">seapy.tide.</code><code class="descname">vuf</code><span class="sig-paren">(</span><em>time</em>, <em>tides=None</em>, <em>lat=55</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seapy/tide.html#vuf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seapy.tide.vuf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the astronomical phase V, the nodal phase modulation U, and
+the nodal amplitude correction F at ctime for the requested
+constituents and latitude.</p>
+<dl class="docutils">
+<dt>Note, there are differences compared to t_tide:</dt>
+<dd><ul class="first last simple">
+<li>That V and U are returned as radians, not cycles.</li>
+<li>Shallow water constituents are not supported.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : datetime,</p>
+<blockquote>
+<div><p>Time for the nodal correction</p>
+</div></blockquote>
+<p><strong>tides</strong> : string or list of strings, optional,</p>
+<blockquote>
+<div><p>Names of tidal constituents</p>
+</div></blockquote>
+<p><strong>lat</strong> : float</p>
+<blockquote>
+<div><p>Latitude for nodal correction</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict :</p>
+<blockquote class="last">
+<div><p>dictionary of vuf corrections with the tide names as keys</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="seapy.tide.vuf_vals">
+<em class="property">class </em><code class="descclassname">seapy.tide.</code><code class="descname">vuf_vals</code><span class="sig-paren">(</span><em>v</em>, <em>u</em>, <em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#seapy.tide.vuf_vals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.vuf_vals.f" title="seapy.tide.vuf_vals.f"><code class="xref py py-obj docutils literal"><span class="pre">f</span></code></a></td>
+<td>Alias for field number 2</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#seapy.tide.vuf_vals.u" title="seapy.tide.vuf_vals.u"><code class="xref py py-obj docutils literal"><span class="pre">u</span></code></a></td>
+<td>Alias for field number 1</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#seapy.tide.vuf_vals.v" title="seapy.tide.vuf_vals.v"><code class="xref py py-obj docutils literal"><span class="pre">v</span></code></a></td>
+<td>Alias for field number 0</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">count</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">index</span></code>((value,&nbsp;[start,&nbsp;...)</td>
+<td>Raises ValueError if the value is not present.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="seapy.tide.vuf_vals.f">
+<code class="descname">f</code><a class="headerlink" href="#seapy.tide.vuf_vals.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.vuf_vals.u">
+<code class="descname">u</code><a class="headerlink" href="#seapy.tide.vuf_vals.u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="seapy.tide.vuf_vals.v">
+<code class="descname">v</code><a class="headerlink" href="#seapy.tide.vuf_vals.v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>

@@ -160,7 +160,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Open the ROMS info
     grid = seapy.model.asgrid(roms_file)
-    nc = seapy.netcdf4(roms_file)
+    nc = seapy.netcdf(roms_file)
 
     # Filter the fields for the ones in the ROMS file
     fields = set(nc.variables).intersection(fields)
@@ -229,7 +229,7 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Open the ROMS info
     grid = seapy.model.asgrid(roms_file)
-    nc = seapy.netcdf4(roms_file)
+    nc = seapy.netcdf(roms_file)
 
     # Filter the fields for the ones in the ROMS file
     fields = set(nc.variables).intersection(fields)

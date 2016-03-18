@@ -147,7 +147,7 @@ class grid:
                  }
 
         # Open the file
-        self._nc = seapy.netcdf4(self.filename)
+        self._nc = seapy.netcdf(self.filename)
         try:
             self.name = re.search("[^\.]*",
                                   os.path.basename(self.filename)).group()
@@ -366,7 +366,7 @@ class grid:
             return
         if fld is None and self.filename is not None:
             if self._nc is None:
-                self._nc = seapy.netcdf4(self.filename)
+                self._nc = seapy.netcdf(self.filename)
 
             # Try to load a field from the file
             for f in ["temp", "temperature", "water_temp"]:

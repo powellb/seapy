@@ -350,7 +350,7 @@ def list_files(path=".", regex=None, full_path=True):
     return files
 
 
-def netcdf4(file):
+def netcdf(file):
     """
     Wrapper around netCDF4 to open a file as either a Dataset or an
     MFDataset.
@@ -368,8 +368,12 @@ def netcdf4(file):
     import netCDF4
     try:
         nc = netCDF4.Dataset(file)
-    except:
-        nc = netCDF4.MFDataset(file)
+    except RuntimeError:
+        try:
+            nc = netCDF4.MFDataset(file)
+        except IndexError:
+            error("{:s} cannot be found.".format(file))
+            return None
     return nc
 
 
