@@ -700,7 +700,7 @@ def detide(grid, bryfile, tidefile, tides=None):
 
     # Load Files
     grid = seapy.model.asgrid(grid)
-    bry = seapy.netcdf(bryfile, "a")
+    bry = netCDF4.Dataset(bryfile, "a")
 
     # Get the definitions of the boundary file
     epoch, timevar = seapy.roms.get_reftime(bry)
