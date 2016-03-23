@@ -489,7 +489,7 @@ class grid:
             warn("could not compute grid thicknesses.")
             pass
 
-    def plot_trace(self, basemap, **kwargs):
+    def plot_trace(self, basemap=None, *args):
         """
         Trace the boundary of the grid onto a map projection
 
@@ -508,8 +508,12 @@ class grid:
                               self.lon_rho[-1, ::-1], self.lon_rho[::-1, 0]])
         lat = np.concatenate([self.lat_rho[0, :], self.lat_rho[:, -1],
                               self.lat_rho[-1, ::-1], self.lat_rho[::-1, 0]])
-        x, y = basemap(lon, lat)
-        basemap.plot(x, y, **kwargs)
+        if basemap:
+            x, y = basemap(lon, lat)
+            basemap.plot(x, y, *args)
+        else:
+            from matplotlib import pyplot
+            pyplot.plot(lon, lat, *args)
 
     def to_netcdf(self, nc):
         """
@@ -714,6 +718,31 @@ class grid:
         r[-1, :] = r[-2, :]
         hx = hy = 0
         return r * self.mask_rho
+
+    def dHdxy(self):
+        """
+        Calculate the spatial derivative of water depth in each direction
+        (xi and eta).
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dHdxi : ndarray,
+          Slope in x-direction
+        dHdeta : ndarray,
+          Slope in eta-direction
+        """
+        dHdxi = np.zeros(self.h.shape)
+        dHdeta = np.zeros(self.h.shape)
+        dHdxi[:, :-1] = -np.diff(self.h, axis=1) * self.pm[:, 1:]
+        dHdxi[:, -1] = dHdxi[:, -2]
+        dHdeta[:-1, :] = -np.diff(self.h, axis=0) * self.pn[1:, :]
+        dHdeta[-1, :] = dHdeta[-2, :]
+
+        return dHdxi, dHdeta
 
     def mask_poly(self, vertices, lat_lon=False, radius=0.0):
         """

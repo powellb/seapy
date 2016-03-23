@@ -321,9 +321,7 @@ class aviso_sla_track(obsgen):
 
     def __init__(self, grid, dt, reftime=seapy.default_epoch, ssh_mean=None,
                  ssh_error=None, repeat=3, provenance="SSH"):
-
-        self.provenance = provenance
-        self.reftime = reftime
+        self.provenance = provenance.upper()
         self.repeat = repeat
         self.ssh_error = ssh_error if ssh_error else _aviso_sla_errors
         if ssh_mean is not None:
@@ -341,14 +339,14 @@ class aviso_sla_track(obsgen):
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
         dat = nc.variables["SLA"][:]
-        raw_time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
+        time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
         nc.close()
 
         # make them into vectors
         lat = lat.ravel()
         lon = lon.ravel()
         dat = dat.ravel()
-        err = np.ones(dat.shape) * dict.get(self.ssh_error, 0.1)
+        err = np.ones(dat.shape) * _aviso_sla_errors.get(self.provenance, 0.1)
 
         if not self.grid.east():
             lon[lon > 180] -= 360
@@ -437,9 +435,7 @@ class modis_sst_map(obsgen):
                  temp_limits=None, provenance="SST_MODIS_AQUA"):
 
         self.temp_error = temp_error
-        self.provenance = provenance
-        self.reftime = reftime
-
+        self.provenance = provenance.upper()
         if temp_limits is None:
             self.temp_limits = (2, 35)
         else:
@@ -451,6 +447,8 @@ class modis_sst_map(obsgen):
         Load an MODIS file and convert into an obs structure
         """
         # Load MODIS Data
+        import re
+
         nc = netCDF4.Dataset(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
@@ -458,8 +456,9 @@ class modis_sst_map(obsgen):
                                    self.temp_limits[0], self.temp_limits[1])
         err = np.ones(dat.shape) * self.temp_error
 
-        time = datetime.datetime.strptime(nc.time_coverage_end.rstrip(".[0-9]Z"),
-                                          "%Y-%m-%dT%I:%M:%S")
+        time = datetime.datetime.strptime(re.sub('\.[0-9]+Z$', '',
+                                                 nc.time_coverage_end),
+                                          "%Y-%m-%dT%H:%M:%S")
 
         # Check the data flags
         flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:],
@@ -481,9 +480,9 @@ class modis_sst_map(obsgen):
                                       data, self.dt, title)
 
 
-class remss(obsgen):
+class remss_swath(obsgen):
     """
-    class to process REMSS SST netcdf files into ROMS observation
+    class to process REMSS SST swath netcdf files into ROMS observation
     files. The files may be AMSRE, TMI, etc. This is a subclass of
     seapy.roms.genobs.genobs, and handles the loading of the data.
     """
@@ -491,6 +490,7 @@ class remss(obsgen):
     def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
                  temp_limits=None, provenance="SST_REMSS"):
         self.temp_error = temp_error
+        self.provenance = provenance.upper()
         if temp_limits is None:
             self.temp_limits = (2, 35)
         else:
@@ -499,9 +499,9 @@ class remss(obsgen):
 
     def convert_file(self, file, title="REMSS SST Obs"):
         """
-        Load an AMSRE file and convert into an obs structure
+        Load an REMSS file and convert into an obs structure
         """
-        # Load AMSRE Data
+        # Load REMSS Data
         nc = netCDF4.Dataset(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
@@ -524,12 +524,11 @@ class remss(obsgen):
         # Grab the observation time
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
-        dtime = netCDF4.variables["sst_dtime"][:]
+        dtime = nc.variables["sst_dtime"][:]
         time = (time.total_seconds() + dtime) * seapy.secs2day
         nc.close()
         if self.grid.east():
             lon[lon < 0] += 360
-        lon, lat = np.meshgrid(lon, lat)
         good = dat.nonzero()
         lat = lat[good]
         lon = lon[good]
@@ -538,6 +537,72 @@ class remss(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
+                                      data, self.dt, title)
+
+
+class remss_map(obsgen):
+    """
+    class to process REMSS SST map netcdf files into ROMS observation
+    files. The files may be AMSRE, TMI, etc. This is a subclass of
+    seapy.roms.genobs.genobs, and handles the loading of the data.
+    """
+
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
+                 temp_limits=None, provenance="SST_REMSS"):
+        self.temp_error = temp_error
+        self.provenance = provenance.upper()
+        if temp_limits is None:
+            self.temp_limits = (2, 35)
+        else:
+            self.temp_limits = temp_limits
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="REMSS SST Obs"):
+        """
+        Load an REMSS file and convert into an obs structure
+        """
+        # Load REMSS Data
+        nc = netCDF4.Dataset(file)
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(np.squeeze(
+            nc.variables["sea_surface_temperature"][:]) - 273.15,
+            self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.masked_outside(np.squeeze(
+            nc.variables["SSES_standard_deviation_error"][:]), 0.01, 2.0)
+        dat[err.mask] = np.ma.masked
+
+        # Check the data flags
+        flags = np.ma.masked_not_equal(
+            np.squeeze(nc.variables["rejection_flag"][:]), 0)
+        dat[flags.mask] = np.ma.masked
+        err[flags.mask] = np.ma.masked
+
+        # Grab the observation time
+        time = netCDF4.num2date(nc.variables["time"][:],
+                                nc.variables["time"].units)
+        time = np.array([(t - self.epoch).total_seconds() * seapy.secs2day
+                         for t in time])
+        sst_time = nc.variables["sst_dtime"][:] * seapy.secs2day
+        for n, i in enumerate(time):
+            sst_time[n, :, :] += i
+        sst_time[dat.mask] = np.ma.masked
+
+        # Set up the coordinate
+        lon, lat = np.meshgrid(lon, lat)
+        lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
+        lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
+
+        nc.close()
+
+        if self.grid.east():
+            lon[lon < 0] += 360
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
+                                        dat.compressed(),
+                                        err.compressed(), self.temp_error)]
+        # Grid it
+        return seapy.roms.obs.gridder(self.grid, sst_time.compressed(),
+                                      lon.compressed(), lat.compressed(), None,
                                       data, self.dt, title)
 
 ##############################################################################
@@ -665,7 +730,7 @@ class mooring(obsgen):
         if provenance is None:
             self.provenance = seapy.roms.obs.asprovenance("MOORING")
         else:
-            self.provenance = provenance
+            self.provenance = provenance.upper()
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error

@@ -70,6 +70,7 @@ obs_provenance = {
     331: "SST_MODIS_TERRA",
     340: "SST_REMSS",
     341: "SST_AMSRE",
+    342: "SST_TMI",
     400: "SSH",
     410: "SSH_AVISO_MAP",
     411: "SSH_AVISO_TOPEX_POSEIDON",
