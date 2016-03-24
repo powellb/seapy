@@ -456,9 +456,9 @@ class modis_sst_map(obsgen):
                                    self.temp_limits[0], self.temp_limits[1])
         err = np.ones(dat.shape) * self.temp_error
 
-        time = datetime.datetime.strptime(re.sub('\.[0-9]+Z$', '',
-                                                 nc.time_coverage_end),
-                                          "%Y-%m-%dT%H:%M:%S")
+        time = seapy.date2day(datetime.datetime.strptime(
+            re.sub('\.[0-9]+Z$', '', nc.time_coverage_end),
+            "%Y-%m-%dT%H:%M:%S"), self.epoch)
 
         # Check the data flags
         flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:],
@@ -602,7 +602,7 @@ class remss_map(obsgen):
                                         err.compressed(), self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, sst_time.compressed(),
-                                      lon.compressed(), lat.compressed(), None,
+                                      lon.compressed(), lat.compressed, None,
                                       data, self.dt, title)
 
 ##############################################################################
