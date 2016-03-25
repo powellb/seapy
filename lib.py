@@ -20,6 +20,7 @@ import re
 import datetime
 import itertools
 
+
 secs2day = 1.0 / 86400.0
 default_epoch = datetime.datetime(2000, 1, 1)
 _default_timeref = "days since " + default_epoch.strftime("%Y-%m-%m %H:%M:%S")
@@ -372,8 +373,7 @@ def netcdf(file):
         try:
             nc = netCDF4.MFDataset(file)
         except IndexError:
-            error("{:s} cannot be found.".format(file))
-            return None
+            raise FileNotFoundError("{:s} cannot be found.".format(file))
     return nc
 
 

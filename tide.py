@@ -41,7 +41,7 @@ default_tides = ['M4', 'K2', 'S2', 'M2', 'N2',
                  'K1', 'P1', 'O1', 'Q1', 'MF', 'MM']
 
 
-def __set_tides(tides=None):
+def _set_tides(tides=None):
     """
     Private method: make sure that tides passed in are a proper array
     and in uppercase
@@ -72,7 +72,7 @@ def frequency(tides=None):
     array([ 12.4206012,  12.       ])
 
     """
-    return np.array([__const[x].freq for x in __set_tides(tides)])
+    return np.array([__const[x].freq for x in _set_tides(tides)])
 
 
 def __astron(ctime):
@@ -160,7 +160,7 @@ def vuf(time, tides=None, lat=55):
     except:
         pass
 
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
 
     # Calculate astronomical arguments at the requested time (mid-point of
     # timeseries).
@@ -383,7 +383,7 @@ def fit(times, xin, tides=None, lat=55, tide_start=None):
     xin = np.atleast_1d(xin).flatten()
     if len(xin) != len(times):
         raise ValueError("The times and input data must be of same size.")
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
     ctime = times[0] + (times[-1] - times[0]) / 2
 
     # Nodal Corrections values
@@ -416,8 +416,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None):
 
     # Calculate amplitude & phase
     num = len(tides)
-    ap = np.squeeze((coef[1:1 + num] - 1j * coef[1 + num:]) / 2.0)
-    am = np.squeeze((coef[1:1 + num] + 1j * coef[1 + num:]) / 2.0)
+    ap = (coef[1:1 + num] - 1j * coef[1 + num:]) / 2.0
+    am = (coef[1:1 + num] + 1j * coef[1 + num:]) / 2.0
 
     # Compute major/minor axis amplitude and phase
     maj_amp = np.empty((len(tides),))
@@ -460,7 +460,7 @@ def pack_amp_phase(tides, amp, phase):
        dict:  amplitudes and phases
         constituent name as key and amp_phase namedtuple as value
     """
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
     amp = np.atleast_1d(amp)
     phase = np.atleast_1d(phase)
 
@@ -489,7 +489,7 @@ def unpack_amp_phase(amp_ph, tides=None):
       amp_phase : namedtuple
 
     """
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
     am = np.zeros((len(tides),))
     ph = am.copy()
 
@@ -520,7 +520,7 @@ def unpack_vuf(vuf, tides=None):
       vuf_vals : namedtuple
 
     """
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
     v = np.zeros((len(tides),))
     u = v.copy()
     f = v.copy()
@@ -553,7 +553,7 @@ def unpack_ellipse(ellipse, tides=None):
       tellipse : namedtuple
 
     """
-    tides = __set_tides(tides)
+    tides = _set_tides(tides)
     mj = np.zeros((len(tides),))
     mn = mj.copy()
     ph = mj.copy()

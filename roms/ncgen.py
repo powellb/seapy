@@ -96,7 +96,10 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
         # Add global attributes
         for a in attr:
             setattr(_nc, a, attr[a])
-        _nc.author = os.getlogin()
+        try:
+            _nc.author = os.getlogin()
+        except FileNotFoundError:
+            _nc.author = "UNKNOWN"
         _nc.history = datetime.now().strftime(
             "Created on %a, %B %d, %Y at %H:%M")
         if title is not None:
