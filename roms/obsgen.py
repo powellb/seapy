@@ -177,7 +177,7 @@ class obsgen(object):
                 else:
                     for i in "abcdefgh":
                         if os.path.isfile(ofile):
-                            ofile = re.sub("[a-h]{0}\.nc", i + ".nc", ofile)
+                            ofile = re.sub("[a-h]{0,1}\.nc", i + ".nc", ofile)
                         else:
                             break
                     obs.to_netcdf(ofile, False)
