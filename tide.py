@@ -415,17 +415,17 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
                        np.ones((len(hours), 1))])
 
     # Calculate coefficients
-    num = len(tides)
+    ntides = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout = np.dot(A[:, :2 * num], coef[:2 * num])
+    xout = np.dot(A[:, :2 * ntides], coef[:2 * ntides])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \
         (np.cov(np.real(xin)) + np.cov(np.imag(xin)))
 
     # Calculate amplitude & phase
-    ap = (coef[:num] - 1j * coef[num:2 * num]) / 2.0
-    am = (coef[:num] + 1j * coef[num:2 * num]) / 2.0
+    ap = (coef[:ntides] - 1j * coef[ntides:2 * ntides]) / 2.0
+    am = (coef[:ntides] + 1j * coef[ntides:2 * ntides]) / 2.0
 
     # Compute major/minor axis amplitude and phase
     maj_amp = np.empty((len(tides),))
