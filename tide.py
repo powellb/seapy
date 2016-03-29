@@ -336,7 +336,7 @@ def predict(times, tide, lat=55, tide_start=None):
     return ts
 
 
-def fit(times, xin, tides=None, lat=55, tide_start=None):
+def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
@@ -356,6 +356,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None):
     tide_start : datetime, optional,
         If specified, the phases of the fit will be relative to the
         given tide_start day.
+    trend : boolean, optional,
+        If True (default), adjust the fit for a linear time trend
 
     Returns
     -------
@@ -402,22 +404,28 @@ def fit(times, xin, tides=None, lat=55, tide_start=None):
     freq = frequency(tides)
 
     # Generate cosines and sines for all the requested constitutents.
-    A = np.hstack([np.ones((len(hours), 1)),
-                   np.cos(2 * np.pi * np.outer(hours, freq)),
-                   np.sin(2 * np.pi * np.outer(hours, freq))])
+    if trend:
+        A = np.hstack([np.cos(2 * np.pi * np.outer(hours, freq)),
+                       np.sin(2 * np.pi * np.outer(hours, freq)),
+                       np.atleast_2d(hours).T,
+                       np.ones((len(hours), 1))])
+    else:
+        A = np.hstack([np.cos(2 * np.pi * np.outer(hours, freq)),
+                       np.sin(2 * np.pi * np.outer(hours, freq)),
+                       np.ones((len(hours), 1))])
 
     # Calculate coefficients
+    num = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout = np.dot(A[:, 1:], coef[1:])
+    xout = np.dot(A[:, :2 * num], coef[:2 * num])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \
         (np.cov(np.real(xin)) + np.cov(np.imag(xin)))
 
     # Calculate amplitude & phase
-    num = len(tides)
-    ap = (coef[1:1 + num] - 1j * coef[1 + num:]) / 2.0
-    am = (coef[1:1 + num] + 1j * coef[1 + num:]) / 2.0
+    ap = (coef[:num] - 1j * coef[num:2 * num]) / 2.0
+    am = (coef[:num] + 1j * coef[num:2 * num]) / 2.0
 
     # Compute major/minor axis amplitude and phase
     maj_amp = np.empty((len(tides),))
