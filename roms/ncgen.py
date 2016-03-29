@@ -103,7 +103,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
                 os.getenv('USERNAME') or \
                 os.getlogin() or \
                 'nobody'
-        except (AttributeError, IOError, OSError) as e:
+        except (AttributeError, IOError, OSError, FileNotFoundError) as e:
             _nc.author = 'nobody'
 
         _nc.history = datetime.now().strftime(

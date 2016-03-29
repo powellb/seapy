@@ -153,6 +153,7 @@ class obsgen(object):
         None
         """
         import re
+        import os
 
         outtime = False
         if isinstance(out_files, str):
@@ -166,11 +167,22 @@ class obsgen(object):
                 if obs is None:
                     continue
                 if outtime:
-                    obs.to_netcdf(time.sub("{:05d}".format(int(obs.time[0])),
-                                           out_files), clobber)
+                    ofile = time.sub("{:05d}".format(int(obs.time[0])),
+                                     out_files)
                 else:
-                    obs.to_netcdf(out_files[n], clobber)
-            except BaseException as e:
+                    ofile = out_files[n]
+
+                if clobber:
+                    obs.to_netcdf(ofile, True)
+                else:
+                    for i in "abcdefgh":
+                        if os.path.isfile(ofile):
+                            ofile = re.sub("[a-h]{0}\.nc", i + ".nc", ofile)
+                        else:
+                            break
+                    obs.to_netcdf(ofile, False)
+
+            except (BaseException, UserWarning) as e:
                 warn("WARNING: {:s} cannot be processed.\nError: {:}".format(
                     file, e.args))
         pass

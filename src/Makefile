@@ -5,6 +5,7 @@ test: bri_fortran_test.F
 
 oalib: oalib.F
 	f2py3 --noopt -c oalib.F --f77flags="-O -fPIC" --f90flags="-O -fPIC" -m oalib
+	cp oalib.*.so ../oalib.so
 
 .PHONY: clean
 
