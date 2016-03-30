@@ -28,7 +28,7 @@ def error_profile(obs, depth, error, provenance=None):
 
     Parameters
     ----------
-    obs : seapy.roms.obs.obs,
+    obs : seapy.roms.obs.obs or string,
       The observations to enforce the error profile upon.
     depth : ndarray,
       Array of depths for the errors provided
@@ -37,7 +37,7 @@ def error_profile(obs, depth, error, provenance=None):
       (as defined by seapy.roms.obs.obs_types) and the value is
       an ndarray of same length as depth with the error [in squared units]
       of the observation profile.
-    provenance : int or string,
+    provenance : int or string, optional,
       The provenance to apply the errors to (ignore other observations
       of the same type, but different instrument)
 
@@ -57,16 +57,16 @@ def error_profile(obs, depth, error, provenance=None):
     modified.
     """
     from scipy.interpolate import interp1d
+    obs = seapy.roms.obs.asobs(obs)
     depth = np.atleast_1d(depth)
     depth = -np.abs(depth)
     fint = interp1d(depth, np.zeros(depth.shape))
-    pro = seapy.roms.obs._provenance_from_string(
-        provenance) if provenance else None
+    pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
 
     # Loop over all of the profiles in the error dictionary and
     # apply them to the observations
     for var in error:
-        typ = seapy.roms.obs._type_from_string(var)
+        typ = seapy.roms.obs.astype(var)
         try:
             fint.y = error[var]
             if pro:
@@ -79,6 +79,96 @@ def error_profile(obs, depth, error, provenance=None):
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
             continue
+    pass
+
+
+def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
+                  reftime=seapy.default_epoch):
+    """
+    Apply predicted barotropic tides to the SSH values of given observations
+    using the tide_file given. 
+
+    Parameters
+    ----------
+    obs : seapy.roms.obs.obs or string,
+      The observations to enforce the error profile upon.
+    tide_file : string,
+      The name of the ROMS tidal forcing file to use for predicting the
+      barotropic tides.
+    tide_error : ndarray,
+      A two dimensional array of the tidal fit errors to apply to
+      the ssh errors when adding the tides. This should be the same size
+      as the rho-grid. The units of the error must be in meters.
+    tide_start : bool, optional,
+      If given, the tide_start of the tide file. If not specified,
+      will read the attribute of the tidal forcing file
+    provenance : int or string, optional,
+      The provenance to apply the tides to (ignore other observations
+      of the same type, but different instrument)
+    reftime: datetime,
+      Reference time for the observation times
+
+    Returns
+    -------
+    None:
+      The obs structure is mutable is changed in place
+
+    Examples
+    --------
+    >>> obs = obs('observation_file.nc')
+    >>> error_profile(obs, 'tide_frc.nc', errmap)
+
+    The resulting 'obs' variable will have modified data.
+    """
+    # Load the tide information
+    import re
+
+    # Load the tidal information from the tide_file
+    nc = seapy.netcdf(tide_file)
+    amp = nc.variables['tide_Eamp'][:]
+    phase = nc.variables['tide_Ephase'][:]
+    tides = nc.tidal_constituents.upper().split(", ")
+    start_str = getattr(nc, 'tide_start', None) or \
+        getattr(nc, 'base_date', None)
+    nc.close()
+    if start_str and tide_start is None:
+        try:
+            tide_start = datetime.datetime.strptime(
+                re.sub('^.*since\s*', '', start_str),
+                "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            tide_start = None
+
+    # Make sure that the sizes are the same
+    if amp.shape[1:] != tide_error.shape:
+        raise ValueError(
+            "The error array is not the same size as the tidal grid")
+
+    # Gather the observations that need tidal information
+    obs = seapy.roms.obs.asobs(obs)
+    pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
+    if pro:
+        l = np.where(np.logical_and(
+            o.type == 1, o.provenance == pro))
+    else:
+        l = np.where(o.type == 1)
+
+    # If we have any, then do tidal predictions and add the signal
+    # and error to the observations
+    if l[0].any():
+        ox = np.int(obs.x[l])
+        oy = np.int(obs.y[l])
+        idx = seapy.unique_rows((ox, oy))
+        for cur in seapy.progressbar.progress(idx):
+            pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
+            time = [reftime + datetime.timedelta(t) for t in obs.time[pts]]
+            amppha = seapy.tide.pack_amp_phase(
+                tides, amp[:, oy[cur], ox[cur]], phase[:, oy[cur], ox[cur]])
+            zpred = seapy.tide.predict(time, amppha, tide_start=tide_start)
+
+            # Add the information to the observations
+            obs.value[pts] += zpred
+            obs.error[pts] += tide_error(oy[cur], ox[cur])**2
     pass
 
 
@@ -473,8 +563,7 @@ class modis_sst_map(obsgen):
             "%Y-%m-%dT%H:%M:%S"), self.epoch)
 
         # Check the data flags
-        flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:],
-                                       0)
+        flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:], 0)
         dat[flags.mask] = np.ma.masked
 
         nc.close()

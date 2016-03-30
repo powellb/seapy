@@ -470,10 +470,16 @@ def unique_rows(x):
 
     Returns
     -------
-    vals : ndarray,
-        unique values
     idx : ndarray,
         Indices of the unique values
+
+    Examples
+    --------
+    >>> a = np.array([3, 3, 5, 5, 6])
+    >>> b = np.array([2, 3, 3, 3, 3])
+    >>> idx = unique_rows((a, b))
+    >>> idx
+    array([0, 1, 2, 4])
     """
     if isinstance(x, tuple):
         x = np.vstack(x).T
@@ -481,7 +487,7 @@ def unique_rows(x):
         x = np.atleast_1d(x)
     vals, idx = np.unique(godelnumber(x), return_index=True)
 
-    return vals, idx
+    return idx
 
 
 def vecfind(a, b, tolerance=0):

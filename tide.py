@@ -309,9 +309,6 @@ def predict(times, tide, lat=55, tide_start=None):
     clist = list(tide.keys())
     freq = frequency(clist)
 
-    # Calculate midpoint of time series
-    ctime = times[0] + (times[-1] - times[0]) / 2
-
     # If given a tide_start, then the phase is relative to that datetime,
     # and no corrections need to be applied; furthermore, the times to predict
     # are relative to tide_start.
@@ -322,6 +319,7 @@ def predict(times, tide, lat=55, tide_start=None):
         hours = np.array(
             [(t - tide_start).total_seconds() / 3600.0 for t in times])
     else:
+        ctime = times[0] + (times[-1] - times[0]) / 2
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 

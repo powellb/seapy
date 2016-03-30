@@ -642,7 +642,7 @@ class grid:
         good = np.where(~np.logical_or(i.mask, j.mask))[0]
         ii = np.floor(i[good])
         jj = np.floor(j[good])
-        rows, idx = seapy.unique_rows((jj, ii))
+        idx = seapy.unique_rows((jj, ii))
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
             pts = np.where(np.logical_and(jj == jj[n], ii == ii[n]))
