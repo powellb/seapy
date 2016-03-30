@@ -728,7 +728,7 @@ def detide(grid, bryfile, tidefile, tides=None):
                                            title="Tides from " + bryfile)
     # Set the tide periods and attributes
     tideout.variables['tide_period'][:] = 1.0 / seapy.tide.frequency(tides)
-    tideout.tides = ", ".join(tides)
+    tideout.tidal_constituents = ", ".join(tides)
     bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
 
     # Detide the free-surface
@@ -857,6 +857,7 @@ def detide(grid, bryfile, tidefile, tides=None):
     tideout.tide_start = "Day {:5.1f} ({:s})".format((tide_start -
                                                       epoch).total_seconds() / 86400,
                                                      str(tide_start))
+    tideout.base_date = "days since {:s}".format(str(tide_start))
     tideout.variables['tide_Eamp'][:] = eamp
     tideout.variables['tide_Ephase'][:] = epha
     tideout.variables['tide_Cmax'][:] = cmax

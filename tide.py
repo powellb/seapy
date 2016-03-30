@@ -309,9 +309,6 @@ def predict(times, tide, lat=55, tide_start=None):
     clist = list(tide.keys())
     freq = frequency(clist)
 
-    # Calculate midpoint of time series
-    ctime = times[0] + (times[-1] - times[0]) / 2
-
     # If given a tide_start, then the phase is relative to that datetime,
     # and no corrections need to be applied; furthermore, the times to predict
     # are relative to tide_start.
@@ -322,6 +319,7 @@ def predict(times, tide, lat=55, tide_start=None):
         hours = np.array(
             [(t - tide_start).total_seconds() / 3600.0 for t in times])
     else:
+        ctime = times[0] + (times[-1] - times[0]) / 2
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
@@ -415,17 +413,17 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
                        np.ones((len(hours), 1))])
 
     # Calculate coefficients
-    num = len(tides)
+    ntides = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout = np.dot(A[:, :2 * num], coef[:2 * num])
+    xout = np.dot(A[:, :2 * ntides], coef[:2 * ntides])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \
         (np.cov(np.real(xin)) + np.cov(np.imag(xin)))
 
     # Calculate amplitude & phase
-    ap = (coef[:num] - 1j * coef[num:2 * num]) / 2.0
-    am = (coef[:num] + 1j * coef[num:2 * num]) / 2.0
+    ap = (coef[:ntides] - 1j * coef[ntides:2 * ntides]) / 2.0
+    am = (coef[:ntides] + 1j * coef[ntides:2 * ntides]) / 2.0
 
     # Compute major/minor axis amplitude and phase
     maj_amp = np.empty((len(tides),))
