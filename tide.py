@@ -270,7 +270,7 @@ def vel_ellipse(u, v):
     return ell
 
 
-def predict(times, tide, lat=55, tide_start=None):
+def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     """
     Generate a tidal time-series for the given tides. Nodal correction
     is applied for the time as well as the given latitude (if specified).
@@ -282,6 +282,9 @@ def predict(times, tide, lat=55, tide_start=None):
     tide : dict,
         Dictionary of the tides to predict with the constituent name as
         the key, and the value is an amp_phase namedtuple.
+    tide_minor : dict optional,
+        Dictionary of the minor axis amplitude and angle to predict with 
+        the constituent name as the key, and the value is an amp_phase namedtuple.
     lat : float optional,
         latitude of the nodal correction
     tide_start : datetime optional,
@@ -301,7 +304,7 @@ def predict(times, tide, lat=55, tide_start=None):
     >>> times = [ datetime(2014,4,1) + timedelta(t/24) for t in range(31*24) ]
     >>> tide = {'M2': amp_phase(2.3, np.radians(22)),
                 'K1': amp_phase(0.4, np.radians(227))}
-    >>> z = predict(times, tide, 23)
+    >>> z = predict(times, tide, lat=23)
 
 
     """
@@ -328,9 +331,17 @@ def predict(times, tide, lat=55, tide_start=None):
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
-        ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                          + (vufs[ap].v + vufs[ap].u) - c.phase)
 
+        if tide_minor:
+            m = tide[ap]
+            ts += np.exp(1j*m.phase)*(
+                                c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
+                                          + (vufs[ap].v + vufs[ap].u) - c.phase) 
+                            + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
+                                          + (vufs[ap].v + vufs[ap].u) - c.phase))
+        else:
+            ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
+                                          + (vufs[ap].v + vufs[ap].u) - c.phase)
     return ts
 
 
