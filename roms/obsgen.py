@@ -126,7 +126,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     # Load the tidal information from the tide_file
     nc = seapy.netcdf(tide_file)
     amp = nc.variables['tide_Eamp'][:]
-    phase = nc.variables['tide_Ephase'][:]
+    phase = np.radians(nc.variables['tide_Ephase'][:])
     tides = nc.tidal_constituents.upper().split(", ")
     start_str = getattr(nc, 'tide_start', None) or \
         getattr(nc, 'base_date', None)
