@@ -120,7 +120,6 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
     The resulting 'obs' variable will have modified data.
     """
-    # Load the tide information
     import re
 
     # Load the tidal information from the tide_file

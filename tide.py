@@ -11,6 +11,7 @@ import numpy as np
 import datetime
 from collections import namedtuple
 import os
+from warnings import warn
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
@@ -480,6 +481,8 @@ def pack_amp_phase(tides, amp, phase):
     tides = _set_tides(tides)
     amp = np.atleast_1d(amp)
     phase = np.atleast_1d(phase)
+    if np.any(phase > 2 * np.pi):
+        warn("Phases appear to be degrees. Beware of results.")
 
     amp_ph = {}
     for i, c in enumerate(tides):

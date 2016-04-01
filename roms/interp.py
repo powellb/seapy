@@ -276,7 +276,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[
                     rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
                                     (delayed(__interp2_thread)(
                                      src_grid.lon_rho, src_grid.lat_rho,
                                      ncsrc.variables[src][i, :, :],
@@ -296,7 +296,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[
                     rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
                                     (delayed(__interp3_thread)(
                                         src_grid.lon_rho, src_grid.lat_rho,
                                         src_grid.depth_rho,
@@ -332,7 +332,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                                       src_grid.lon_rho.nbytes *
                                       src_grid.n))))
     for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
-        vel = Parallel(n_jobs=threads, verbose=2) \
+        vel = Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory) \
             (delayed(__interp3_vel_thread)(
                 src_grid.lon_rho, src_grid.lat_rho,
                 src_grid.depth_rho, srcangle,
@@ -765,13 +765,12 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
                                              eta_rho=destg.ln,
                                              xi_rho=destg.lm,
                                              s_rho=destg.n,
-                                             ntimes=records.size,
                                              reftime=src_ref,
                                              title="interpolated from " + src_file)
         src_time = netCDF4.num2date(ncsrc.variables[time][records],
                                     ncsrc.variables[time].units)
-        ncout.variables["time"][:] = netCDF4.date2num(
-            src_time, ncout.variables[dtime + "_time"].units)
+        ncout.variables["clim_time"][:] = netCDF4.date2num(
+            src_time, ncout.variables["clim_time"].units)
         ncsrc.close()
     else:
         raise AttributeError(

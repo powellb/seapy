@@ -602,7 +602,7 @@ def from_stations(station_file, bry_file, grid=None):
         sta_x = seapy.adddim(x, len(sta_s_rho))
         x = seapy.adddim(x, len(grid.s_rho))
 
-        for n, t in seapy.progress(enumerate(statime), statime.size):
+        for n, t in seapy.progressbar.progress(enumerate(statime), statime.size):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                                          sta_s_rho, sta_cs_r, sta_zeta[n, bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],

@@ -7,11 +7,11 @@ etags:
 oalib.so: src/oalib.F
 	cd src; $(MAKE) $(MFLAGS)
 
-docs: force_build
+doc: force_build
 	cd doc; $(MAKE) $(MFLAGS) html && ln -fs _build/html html
 
 force_build:
 	true
 
-all: etags oalib.so docs
+all: etags oalib.so doc
 
