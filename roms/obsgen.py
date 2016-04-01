@@ -71,11 +71,11 @@ def error_profile(obs, depth, error, provenance=None):
             fint.y = error[var]
             if pro:
                 l = np.where(np.logical_and(
-                    o.type == typ, o.provenance == pro))
+                    obs.type == typ, obs.provenance == pro))
             else:
-                l = np.where(o.type == typ)
-            nerr = fint(o.depth[l])
-            o.error[l] = np.maximum(o.error[l], nerr)
+                l = np.where(obs.type == typ)
+            nerr = fint(obs.depth[l])
+            obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
             continue
@@ -125,7 +125,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     # Load the tidal information from the tide_file
     nc = seapy.netcdf(tide_file)
     amp = nc.variables['tide_Eamp'][:]
-    phase = nc.variables['tide_Ephase'][:]
+    phase = np.radians(nc.variables['tide_Ephase'][:])
     tides = nc.tidal_constituents.upper().split(", ")
     start_str = getattr(nc, 'tide_start', None) or \
         getattr(nc, 'base_date', None)
@@ -148,26 +148,26 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
     if pro:
         l = np.where(np.logical_and(
-            o.type == 1, o.provenance == pro))
+            obs.type == 1, obs.provenance == pro))
     else:
-        l = np.where(o.type == 1)
+        l = np.where(obs.type == 1)
 
     # If we have any, then do tidal predictions and add the signal
     # and error to the observations
     if l[0].any():
-        ox = np.int(obs.x[l])
-        oy = np.int(obs.y[l])
+        ox = np.rint(obs.x[l]).astype(int)
+        oy = np.rint(obs.y[l]).astype(int)
         idx = seapy.unique_rows((ox, oy))
         for cur in seapy.progressbar.progress(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             time = [reftime + datetime.timedelta(t) for t in obs.time[pts]]
             amppha = seapy.tide.pack_amp_phase(
                 tides, amp[:, oy[cur], ox[cur]], phase[:, oy[cur], ox[cur]])
-            zpred = seapy.tide.predict(time, amppha, tide_start=tide_start)
+            zpred = seapy.tide.predict(time, amppha, lat = obs.lat[l][cur], tide_start=tide_start)
 
             # Add the information to the observations
             obs.value[pts] += zpred
-            obs.error[pts] += tide_error(oy[cur], ox[cur])**2
+            obs.error[pts] += tide_error[oy[cur], ox[cur]]**2
     pass
 
 
