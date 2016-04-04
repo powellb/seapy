@@ -11,6 +11,7 @@
 import numpy as np
 from seapy.lib import default_epoch
 import netCDF4
+import seapy
 
 fields = {"zeta": {"grid": "rho", "dims": 2},
           "ubar": {"grid": "u", "dims": 2, "rotate": "vbar"},
@@ -214,8 +215,8 @@ def get_time(nc, tvar=None, epoch=None):
     if not epoch:
         return times
     else:
-        return ndarray([(d - epoch).total_seconds() * seapy.secs2day for
-                        d in times])
+        return np.asarray([seapy.day2date( (d - epoch).total_seconds() * seapy.secs2day ) 
+		for d in times])
 
 
 def get_timevar(nc):

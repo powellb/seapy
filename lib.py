@@ -159,7 +159,10 @@ def date2day(date=default_epoch, epoch=default_epoch):
     -------
     numdays : scalar
     """
-    return (date - epoch).total_seconds() * secs2day
+    if type(date) == list or type(date) == np.ndarray:
+        return [ (t - epoch).total_seconds() * secs2day for t in date ]
+    else:
+        return (date - epoch).total_seconds() * secs2day
 
 
 def day2date(day=0, epoch=default_epoch):
@@ -177,7 +180,10 @@ def day2date(day=0, epoch=default_epoch):
     -------
     date : datetime
     """
-    return epoch + datetime.timedelta(days=day)
+    if type(day) == list or type(day) == np.ndarray:
+        return [ epoch + datetime.timedelta(days=t) for t in day ]
+    else:
+        return epoch + datetime.timedelta(days=day)
 
 
 def earth_angle(lon1, lat1, lon2, lat2):
