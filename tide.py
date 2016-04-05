@@ -8,10 +8,13 @@
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 import numpy as np
+import numpy.ma as ma
 import datetime
 from collections import namedtuple
 import os
+import re
 from warnings import warn
+import seapy
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
@@ -284,7 +287,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         Dictionary of the tides to predict with the constituent name as
         the key, and the value is an amp_phase namedtuple.
     tide_minor : dict optional,
-        Dictionary of the minor axis amplitude and angle to predict with 
+        Dictionary of the minor axis amplitude and angle to predict with
         the constituent name as the key, and the value is an amp_phase namedtuple.
     lat : float optional,
         latitude of the nodal correction
@@ -332,14 +335,9 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
-
         if tide_minor:
             m = tide[ap]
             ts += np.exp(1j*m.phase)*(
-                                c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                          + (vufs[ap].v + vufs[ap].u) - c.phase) 
-                            + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
-                                          + (vufs[ap].v + vufs[ap].u) - c.phase))
         else:
             ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                           + (vufs[ap].v + vufs[ap].u) - c.phase)
@@ -588,4 +586,5 @@ def unpack_ellipse(ellipse, tides=None):
         except KeyError:
             continue
     return tellipse(mj, mn, ag, ph)
+
 
