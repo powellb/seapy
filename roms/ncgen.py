@@ -121,22 +121,26 @@ def _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho):
     """
         internal method: Set grid dimensions
     """
-    dims["xi_rho"] = xi_rho
-    dims["xi_u"] = xi_rho - 1
-    dims["xi_v"] = xi_rho
-    dims["xi_psi"] = xi_rho - 1
-    dims["eta_rho"] = eta_rho
-    dims["eta_u"] = eta_rho
-    dims["eta_v"] = eta_rho - 1
-    dims["eta_psi"] = eta_rho - 1
-    dims["N"] = s_rho
-
-    # Fill in the appropriate dimension values
-    try:
+    if "xi_rho" in dims.keys():
+        dims["xi_rho"] = xi_rho
+    if "xi_u" in dims.keys():
+        dims["xi_u"] = xi_rho - 1
+    if "xi_v" in dims.keys():
+        dims["xi_v"] = xi_rho
+    if "xi_psi" in dims.keys():
+        dims["xi_psi"] = xi_rho - 1
+    if "eta_rho" in dims.keys():
+        dims["eta_rho"] = eta_rho
+    if "eta_u" in dims.keys():
+        dims["eta_u"] = eta_rho
+    if "eta_v" in dims.keys():
+        dims["eta_v"] = eta_rho - 1
+    if "eta_psi" in dims.keys():
+        dims["eta_psi"] = eta_rho - 1
+    if "s_rho" in dims.keys():
         dims["s_rho"] = s_rho
+    if "s_w" in dims.keys():
         dims["s_w"] = s_rho + 1
-    except KeyError:
-        pass
 
     return dims
 
