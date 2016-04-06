@@ -8,13 +8,10 @@
   Copyright (c)2016 University of Hawaii under the BSD-License.
 """
 import numpy as np
-import numpy.ma as ma
 import datetime
 from collections import namedtuple
 import os
-import re
 from warnings import warn
-import seapy
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
