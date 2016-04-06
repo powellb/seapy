@@ -16,6 +16,58 @@ import datetime
 from warnings import warn
 
 
+def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_epoch):
+    """
+    Create a tidal forcing file from the given tidal values.
+
+    Parameters
+    ----------
+    filename: string,
+      File name of the tidal forcing to create
+    tide: dict,
+      Dictionary of the tidal forcing containing the following keys:
+       Eamp : SSH amplitdue
+       Ephase : SSH phase (radians)
+       Cmajor : velocity major ellipse
+       Cminor : velocity minor ellipse
+       Cphase : velocity ellipse phase (radians)
+       Cangle : velocity ellipse angle (radians)
+       tide_start : datetime of the tide reference
+       tides  : list of the tides
+    title: string, optional,
+      NetCDF title string to use
+    epoch: datetime, optional,
+      Epoch date for time reference
+
+    Returns
+    -------
+    None
+    """
+    # Create the tide forcing file
+    eta_rho, xi_rho = tide['Eamp'].shape
+
+    tideout = seapy.roms.ncgen.create_tide(tidefile, eta_rho=eta_rho,
+                                           xi_rho=xi_rho,
+                                           reftime=epoch,
+                                           ntides=len(tide['tides']),
+                                           clobber=True, title=title)
+    # Set the tide periods and attributes
+    tideout.variables['tide_period'][:] = 1.0 / \
+        seapy.tide.frequency(tide['tides'])
+    tideout.tidal_constituents = ", ".join(tides)
+    tideout.tide_start = "Day {:5.1f} ({:s})".format((tide['tide_start'] -
+                                                      epoch).total_seconds() / 86400,
+                                                     str(tide['tide_start']))
+    tideout.base_date = "days since {:s}".format(str(tide['tide_start']))
+    tideout.variables['tide_Eamp'][:] = tide['Eamp']
+    tideout.variables['tide_Ephase'][:] = tide['Ephase']
+    tideout.variables['tide_Cmax'][:] = tide['Cmajor']
+    tideout.variables['tide_Cmin'][:] = tide['Cminor']
+    tideout.variables['tide_Cphase'][:] = tide['Cphase']
+    tideout.variables['tide_Cangle'][:] = tide['Cangle']
+    tideout.close()
+
+
 def load_forcing(filename):
     """
     Load a tidal forcing file into a dictionary
@@ -85,33 +137,33 @@ def tide_error(his_file, tide_file, grid=None):
         Array containing the tidal error at each point, with land points masked 
 
     """
-    if grid is None:
-        grid = seapy.model.asgrid(his_file)
-    else:
+    if grid:
         grid = seapy.model.asgrid(grid)
-        
+    else:
+        grid = seapy.model.asgrid(his_file)
+
     # Load tidal file data
     frc = load_forcing(tide_file)
-    
-    #Calculate tidal error for each point
+
+    # Calculate tidal error for each point
     nc = seapy.netcdf(his_file)
     times = seapy.roms.get_time(nc)
     tide_error = ma.masked_array(np.zeros((grid.mask_rho.shape)),
-                                 mask=np.abs(grid.mask_rho-1))
+                                 mask=np.abs(grid.mask_rho - 1))
     for i in seapy.progressbar.progress(range(grid.ln)):
         for j in range(grid.lm):
-            if not tide_error.mask[i,j]:
-                z = nc.variables['zeta'][:,i,j]
+            if not tide_error.mask[i, j]:
+                z = nc.variables['zeta'][:, i, j]
                 t_ap = pack_amp_phase(frc['tides'],
-                                      frc['Eamp'][:,i,j], frc['Ephase'][:, i,j])
-                mout = fit(times,z,tides=tfile_tides,
-                           lat=grid.lat_rho[i,j],tide_start=tide_start)
+                                      frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
+                mout = fit(times, z, tides=tfile_tides,
+                           lat=grid.lat_rho[i, j], tide_start=tide_start)
                 for c in t_ap:
                     m = mout['major'][c]
                     t = t_ap[c]
-                    tide_error[i,j] += 0.5*(m.amp**2 + t.amp**2) - \
-                                       m.amp*t.amp*np.cos(m.phase-t.phase)
-                tide_error[i,j] = np.sqrt(tide_error[i,j])
+                    tide_error[i, j] += 0.5 * (m.amp**2 + t.amp**2) - \
+                        m.amp * t.amp * np.cos(m.phase - t.phase)
+                tide_error[i, j] = np.sqrt(tide_error[i, j])
     nc.close()
-    
+
     return tide_error

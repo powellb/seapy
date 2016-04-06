@@ -721,14 +721,6 @@ def detide(grid, bryfile, tidefile, tides=None):
     detide_vars = ['zeta', 'ubar', 'vbar']
 
     # Create the tide forcing file
-    tideout = seapy.roms.ncgen.create_tide(tidefile, eta_rho=grid.eta_rho,
-                                           xi_rho=grid.xi_rho,
-                                           s_rho=s_rho, ntides=len(tides),
-                                           reftime=epoch, clobber=True,
-                                           title="Tides from " + bryfile)
-    # Set the tide periods and attributes
-    tideout.variables['tide_period'][:] = 1.0 / seapy.tide.frequency(tides)
-    tideout.tidal_constituents = ", ".join(tides)
     bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
 
     # Detide the free-surface
@@ -854,17 +846,18 @@ def detide(grid, bryfile, tidefile, tides=None):
     cang[:, -2, 1:-1] = cang[:, -1, 1:-1]
 
     # Set the tide reference
-    tideout.tide_start = "Day {:5.1f} ({:s})".format((tide_start -
-                                                      epoch).total_seconds() / 86400,
-                                                     str(tide_start))
-    tideout.base_date = "days since {:s}".format(str(tide_start))
-    tideout.variables['tide_Eamp'][:] = eamp
-    tideout.variables['tide_Ephase'][:] = epha
-    tideout.variables['tide_Cmax'][:] = cmax
-    tideout.variables['tide_Cmin'][:] = cmin
-    tideout.variables['tide_Cphase'][:] = cpha
-    tideout.variables['tide_Cangle'][:] = cang
-    tideout.close()
+    tideout = {}
+    tideout['tides'] = tides
+    tideout['tide_start'] = tide_start
+    tideout['Eamp'][:] = eamp
+    tideout['Ephase'][:] = epha
+    tideout['Cmajor'][:] = cmax
+    tideout['Cminor'][:] = cmin
+    tideout['Cphase'][:] = cpha
+    tideout['Cangle'][:] = cang
+
+    seapy.roms.tide.create_forcing(tidefile, tideout,
+                                   title="Tides from " + bryfile, epoch=epoch)
     bry.close()
 
     pass
