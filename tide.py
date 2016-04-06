@@ -338,9 +338,13 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         if tide_minor:
             m = tide[ap]
             ts += np.exp(1j*m.phase)*(
+                    c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
+                                                + (vufs[ap].v + vufs[ap].u) - c.phase)
+                    + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
+                                                + (vufs[ap].v + vufs[ap].u) - c.phase))
         else:
             ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                          + (vufs[ap].v + vufs[ap].u) - c.phase)
+                                            + (vufs[ap].v + vufs[ap].u) - c.phase)
     return ts
 
 
@@ -587,4 +591,54 @@ def unpack_ellipse(ellipse, tides=None):
             continue
     return tellipse(mj, mn, ag, ph)
 
+def tide_error(his_file, tide_file):
+    """
+    Calculates the tidal error for each point given a model history and the
+    tidal file used 
 
+    Parameters
+    ----------
+    his_file : string,
+      String of history file location. Can be multiple files using wildcard
+    tide_file: string,
+      String of tidal file location
+
+    Returns
+    -------
+      tide_error : masked_array,
+        Array containing the tidal error at each point, with land points masked 
+
+    """
+    g = seapy.model.asgrid(his_file)
+       
+    #Load tidal file data
+    nc = seapy.netcdf(tide_file)
+    if hasattr(nc,'tidal_constituents'): #TPXO files
+        tfile_tides = nc.tidal_constituents.upper().split(", ")
+        d = re.search(r'\d{4}-\d{2}-\d{2}',nc.base_date)
+    elif hasattr(nc,'tides'): #Tidal files from seapy.roms.boundary.detide
+        tfile_tides = nc.tides.upper().split(", ")
+        d = re.search(r'\d{4}-\d{2}-\d{2}',nc.tide_start)
+    tide_start = datetime.datetime.strptime(d.group(), '%Y-%m-%d')    
+    tfile_amp = nc.variables['tide_Eamp'][:]
+    tfile_phase = np.radians(nc.variables['tide_Ephase'][:])
+    nc.close()
+    
+    #Calculate tidal error for each point
+    nc = seapy.netcdf(his_file)
+    times = seapy.roms.get_time(nc)
+    tide_error = ma.masked_array(np.zeros((g.mask_rho.shape)),mask=np.abs(g.mask_rho-1))
+    for i in seapy.progressbar.progress(range(g.ln)):
+        for j in range(g.lm):
+            if not tide_error.mask[i,j]:
+                z = nc.variables['zeta'][:,i,j]
+                t_ap = pack_amp_phase(tfile_tides, tfile_amp[:,i,j], tfile_phase[:, i,j])
+                mout = fit(times,z,tides=tfile_tides,lat=g.lat_rho[i,j],tide_start=tide_start)
+                for c in t_ap:
+                    m = mout['major'][c]
+                    t = t_ap[c]
+                    tide_error[i,j] += 0.5*(m.amp**2 + t.amp**2) - m.amp*t.amp*np.cos(m.phase-t.phase)
+                tide_error[i,j] = np.sqrt(tide_error[i,j])
+    nc.close()
+    
+    return tide_error
