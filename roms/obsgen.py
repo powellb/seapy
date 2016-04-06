@@ -122,22 +122,11 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     """
     import re
 
-    # Load the tidal information from the tide_file
-    nc = seapy.netcdf(tide_file)
-    amp = nc.variables['tide_Eamp'][:]
-    phase = np.radians(nc.variables['tide_Ephase'][:])
-    tides = nc.tidal_constituents.upper().split(", ")
-    start_str = getattr(nc, 'tide_start', None) or \
-        getattr(nc, 'base_date', None)
-    nc.close()
-    if start_str and tide_start is None:
-        try:
-            tide_start = datetime.datetime.strptime(
-                re.sub('^.*since\s*', '', start_str),
-                "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            tide_start = None
-
+    # Load tidal file data
+    frc = load_forcing(tide_file)
+    if not tide_start:
+        tide_start = frc['tide_start']
+        
     # Make sure that the sizes are the same
     if amp.shape[1:] != tide_error.shape:
         raise ValueError(
@@ -162,7 +151,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             time = [reftime + datetime.timedelta(t) for t in obs.time[pts]]
             amppha = seapy.tide.pack_amp_phase(
-                tides, amp[:, oy[cur], ox[cur]], phase[:, oy[cur], ox[cur]])
+                frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]], frc['Ephase'][:, oy[cur], ox[cur]])
             zpred = seapy.tide.predict(time, amppha, lat = obs.lat[l][cur], tide_start=tide_start)
 
             # Add the information to the observations

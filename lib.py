@@ -89,6 +89,57 @@ def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
+def smooth(data, ksize=3, kernel=None, copy=True):
+    """
+    Smooth the data field using a specified convolution kernel 
+    or a default averaging kernel.
+
+    Parameters
+    ----------
+    data : masked array_like
+        Input field.
+    ksize : int, optional
+        Size of square kernel
+    kernel : ndarray, optional
+        Define a convolution kernel. Default is averaging
+    copy : bool, optional
+        If true, a copy of input array is made
+
+    Returns
+    -------
+    fld : masked array
+    """
+    fld = np.ma.array(data, copy=copy)
+    mask = np.ma.getmaskarray(fld).copy()
+    
+    # Make sure ksize is odd
+    ksize = int(ksize + 1) if int(ksize) % 2 == 0 else int(ksize)
+    if fld.ndim > 3 or fld.ndim < 2:
+        raise AttributeError("Can only convolve 2- or 3-D fields")
+    if ksize < 3:
+        raise ValueError("ksize must be greater than or equal to 3")
+    
+    if kernel is None:
+        kernel = np.ones((ksize, ksize))/(ksize*ksize)
+    else:
+        ksize = kernel.shape[0]
+
+    # First, convole over any masked values
+    fld = convolve_mask(fld, ksize=ksize, copy=False)
+
+    # Next, perform the convolution
+    if fld.ndim == 2:
+        fld = ndimage.convolve(fld.data, kernel,
+                                mode="reflect", cval=0.0)
+    else:
+        kernel = np.expand_dims(kernel, axis=3)
+        fld = np.transpose(ndimage.convolve(
+            fld.filled(0).transpose(1, 2, 0), kernel,
+            mode="reflect", cval=0.0), (2, 0, 1))
+
+    # Apply the initial mask
+    return np.ma.array(fld, mask=mask)
+    
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
     Convolve data over the missing regions of a mask
@@ -120,6 +171,8 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         center = np.round(ksize / 2)
         kernel = np.ones([ksize, ksize])
         kernel[center, center] = 0.0
+    else:
+        ksize = kernel.shape[0]
 
     # Convolve the mask
     msk = np.ma.getmaskarray(fld)
