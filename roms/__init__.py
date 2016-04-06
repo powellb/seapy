@@ -24,4 +24,5 @@ from . import interp
 from . import ncgen
 from . import obs
 from . import obsgen
+from . import tide
 from .lib import *
