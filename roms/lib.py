@@ -11,7 +11,6 @@
 import numpy as np
 from seapy.lib import default_epoch
 import netCDF4
-import seapy
 
 fields = {"zeta": {"grid": "rho", "dims": 2},
           "ubar": {"grid": "u", "dims": 2, "rotate": "vbar"},
