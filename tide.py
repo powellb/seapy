@@ -284,7 +284,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         Dictionary of the tides to predict with the constituent name as
         the key, and the value is an amp_phase namedtuple.
     tide_minor : dict optional,
-        Dictionary of the minor axis amplitude and angle to predict with 
+        Dictionary of the minor axis amplitude and angle to predict with
         the constituent name as the key, and the value is an amp_phase namedtuple.
     lat : float optional,
         latitude of the nodal correction
@@ -332,9 +332,9 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
-
         if tide_minor:
             m = tide[ap]
+
             ts += np.exp(1j * m.phase) * (
                 c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                             + (vufs[ap].v + vufs[ap].u) - c.phase)
@@ -343,6 +343,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         else:
             ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                               + (vufs[ap].v + vufs[ap].u) - c.phase)
+
     return ts
 
 

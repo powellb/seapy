@@ -210,10 +210,10 @@ def date2day(date=default_epoch, epoch=default_epoch):
 
     Returns
     -------
-    numdays : scalar
+    numdays : list
     """
-    return (date - epoch).total_seconds() * secs2day
-
+    date = np.atleast_1d(date)
+    return [ (t - epoch).total_seconds() * secs2day for t in date ]
 
 def day2date(day=0, epoch=default_epoch):
     """
@@ -228,10 +228,10 @@ def day2date(day=0, epoch=default_epoch):
 
     Returns
     -------
-    date : datetime
+    date : list of datetime(s)
     """
-    return epoch + datetime.timedelta(days=day)
-
+    day = np.atleast_1d(day)
+    return [ epoch + datetime.timedelta(days=t) for t in day ]
 
 def earth_angle(lon1, lat1, lon2, lat2):
     """

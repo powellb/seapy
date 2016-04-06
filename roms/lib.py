@@ -205,8 +205,9 @@ def get_time(nc, tvar=None, epoch=None):
 
     Returns
     -------
-    ndarray of datetime
-       The times of the given netCDF file
+    ndarray,
+       Array of datetimes if no epoch is supplied. If epoch, array
+       is in days since epoch
     """
     tvar = tvar if tvar else get_timevar(nc)
     times = netCDF4.num2date(nc.variables[tvar][:],
@@ -214,8 +215,7 @@ def get_time(nc, tvar=None, epoch=None):
     if not epoch:
         return times
     else:
-        return ndarray([(d - epoch).total_seconds() * seapy.secs2day for
-                        d in times])
+        return np.asarray([ (t - epoch).total_seconds() * secs2day for t in times ])
 
 
 def get_timevar(nc):
