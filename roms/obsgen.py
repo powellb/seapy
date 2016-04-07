@@ -14,6 +14,7 @@
 
 
 import numpy as np
+import numpy.ma as ma
 import netCDF4
 import seapy
 import datetime
@@ -778,14 +779,27 @@ class seaglider_profile(obsgen):
         salt = np.ma.masked_outside(pro["salt"], self.salt_limits[0],
                                     self.salt_limits[1])
         depth = np.ma.masked_greater(-pro["depth"], self.depth_limit)
-
+           
+        if not depth.mask.any():
+            depth = depth.data
+            lon = pro["lon"]
+            lat = pro["lat"]
+            time = pro["time"] / 86400 + dtime
+        else:
+            temp = temp[~depth.mask]
+            salt = salt[~depth.mask]
+            lon = pro["lon"][~depth.mask]
+            lat = pro["lat"][~depth.mask]
+            time = (pro["time"] / 86400 + dtime)[~depth.mask]     
+            depth = depth[~depth.mask].data    
+                        
         # Grid it
         data = [seapy.roms.obs.raw_data("TEMP", provenance, temp,
                                         None, self.temp_error),
                 seapy.roms.obs.raw_data("SALT", provenance, salt,
                                         None, self.salt_error)]
-        return seapy.roms.obs.gridder(self.grid, pro["time"] / 86400 + dtime,
-                                      pro["lon"], pro["lat"], depth,
+        return seapy.roms.obs.gridder(self.grid, time,
+                                      lon, lat, depth,
                                       data, self.dt, title)
 
 
