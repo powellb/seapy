@@ -247,7 +247,7 @@ class obs:
                                            for v, k in
                                            (it.split(':') for it in
                                             nc.obs_provenance.split(','))))
-            except (KeyError, ValueError):
+            except (AttributeError, ValueError):
                 pass
             try:
                 self.meta = nc.variables["obs_meta"][:]

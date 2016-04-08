@@ -588,13 +588,12 @@ class grid:
         >>> idx = g.ij(a)
         """
 
+        from seapy.model.hindices import hindices
+
         # Interpolate the lat/lons onto the I, J
-        xgrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                                               self.lat_rho.ravel()),
-                                              self.I.ravel(), points, method="linear"))
-        ygrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                                               self.lat_rho.ravel()),
-                                              self.J.ravel(), points, method="linear"))
+        xgrid, ygrid = np.ma.masked_equal(hindices(self.angle.T,
+                                                   self.lon_rho.T, self.lat_rho.T,
+                                                   points[0], points[1]), -999.0)
         mask = self.mask_rho[(ygrid.filled(0).astype(int),
                               xgrid.filled(0).astype(int))]
         xgrid[mask == 0] = np.ma.masked
