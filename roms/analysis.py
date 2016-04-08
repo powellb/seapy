@@ -194,7 +194,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     nc.close()
 
 
-def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
+def gen_std_f(roms_file, std_file, records=None, fields=None):
     """
     Create a std file for the given atmospheric forcing fields. This std
     file can be used for the forcing constraint in 4D-Var. This requires a
@@ -207,14 +207,9 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
         it is a list of strings, a netCDF4.MFDataset is opened instead.
     std_file: string,
         The name of the file to store the standard deviations fields
-    std_window: int,
-        The size of the window (in number of records) to compute the std over
-    pad: int,
-        How much to pad each side of the window for overlap. For example,
-        std_window=10 and pad=2 would give a total window of 14 with 2 records
-        used in the prior window and 2 in the post window as well.
-    skip: int,
-        How many records to skip at the beginning of the file
+    records: ndarray,
+        List of records to perform the std over. These records are used to
+        avoid the solar diurnal cycles in the fields.
     fields: list of str,
         The fields to compute std for. Default is to use the ROMS atmospheric
         variables (sustr, svstr, shflux, ssflux).
@@ -243,6 +238,13 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
                                                reftime=epoch, title="std from " + str(roms_file))
     grid.to_netcdf(ncout)
 
+    # Set the records
+    if records is None:
+        records = np.arange(len(time))
+    else:
+        records = np.atleast_1d(records)
+        records = records[records <= len(time)]
+
     # If there are any fields that are not part of the standard, add them
     # to the output file
     for f in fields.difference(ncout.variables):
@@ -250,14 +252,11 @@ def gen_std_f(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
                              ('ocean_time', "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
-    for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                                               len(time) - std_window + pad, std_window))):
-        idx = np.arange(t - pad, t + std_window + pad)
-        ncout.variables[time_var][n] = np.mean(time[idx])
-        for v in fields:
-            dat = np.std(nc.variables[v][idx, :], axis=0)
-            dat[dat > 10] = 0.0
-            ncout.variables[v][n, :] = dat
+    ncout.variables[time_var][:] = np.mean(time[records])
+    for v in fields:
+        dat = np.std(nc.variables[v][records, :], axis=0)
+        dat[dat > 10] = 0.0
+        ncout.variables[v][0, :] = dat
         ncout.sync()
     ncout.close()
     nc.close()
