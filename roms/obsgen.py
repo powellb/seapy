@@ -14,7 +14,6 @@
 
 
 import numpy as np
-import numpy.ma as ma
 import netCDF4
 import seapy
 import datetime
@@ -127,7 +126,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     frc = load_forcing(tide_file)
     if not tide_start:
         tide_start = frc['tide_start']
-        
+
     # Make sure that the sizes are the same
     if amp.shape[1:] != tide_error.shape:
         raise ValueError(
@@ -153,7 +152,8 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
             time = [reftime + datetime.timedelta(t) for t in obs.time[pts]]
             amppha = seapy.tide.pack_amp_phase(
                 frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]], frc['Ephase'][:, oy[cur], ox[cur]])
-            zpred = seapy.tide.predict(time, amppha, lat = obs.lat[l][cur], tide_start=tide_start)
+            zpred = seapy.tide.predict(time, amppha, lat=obs.lat[l][
+                                       cur], tide_start=tide_start)
 
             # Add the information to the observations
             obs.value[pts] += zpred
@@ -779,27 +779,17 @@ class seaglider_profile(obsgen):
         salt = np.ma.masked_outside(pro["salt"], self.salt_limits[0],
                                     self.salt_limits[1])
         depth = np.ma.masked_greater(-pro["depth"], self.depth_limit)
-           
-        if not depth.mask.any():
-            depth = depth.data
-            lon = pro["lon"]
-            lat = pro["lat"]
-            time = pro["time"] / 86400 + dtime
-        else:
-            temp = temp[~depth.mask]
-            salt = salt[~depth.mask]
-            lon = pro["lon"][~depth.mask]
-            lat = pro["lat"][~depth.mask]
-            time = (pro["time"] / 86400 + dtime)[~depth.mask]     
-            depth = depth[~depth.mask].data    
-                        
+        good = ~np.ma.getmaskarray(depth)
+
         # Grid it
-        data = [seapy.roms.obs.raw_data("TEMP", provenance, temp,
+        data = [seapy.roms.obs.raw_data("TEMP", provenance, temp[good],
                                         None, self.temp_error),
-                seapy.roms.obs.raw_data("SALT", provenance, salt,
+                seapy.roms.obs.raw_data("SALT", provenance, salt[good],
                                         None, self.salt_error)]
-        return seapy.roms.obs.gridder(self.grid, time,
-                                      lon, lat, depth,
+        return seapy.roms.obs.gridder(self.grid, pro["time"][good] / 86400 + dtime,
+                                      pro["lon"][good],
+                                      pro["lat"][good],
+                                      depth.compressed(),
                                       data, self.dt, title)
 
 
