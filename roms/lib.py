@@ -9,7 +9,7 @@
 """
 
 import numpy as np
-from seapy.lib import default_epoch
+from seapy.lib import default_epoch, secs2day
 import netCDF4
 
 fields = {"zeta": {"grid": "rho", "dims": 2},
@@ -154,25 +154,26 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
     N = scoord.size
     hinv = 1 / h
     h = np.asanyarray(h)
-    r = np.arange(0, N)
+    wk = 0
+    r = range(N)
     if w_grid:
         N = N + 1
+        wk = 1
     z = np.zeros(np.hstack((N, h.shape)))
 
     if vtransform == 1:
         cff = hc * (scoord - stretching)
         for k in r:
             z0 = cff[k] + stretching[k] * h
-            z[k, :] = z0 + zeta * (1.0 + z0 * hinv)
+            z[k + wk, :] = z0 + zeta * (1.0 + z0 * hinv)
     elif vtransform == 2:
         cff = 1 / (hc + h)
         for k in r:
             cff1 = hc * scoord[k] + h * stretching[k]
-            z[k, :] = zeta + (zeta + h) * cff * cff1
+            z[k + wk, :] = zeta + (zeta + h) * cff * cff1
     else:
         raise ValueError("transform value must be between 1 and 2")
     if w_grid:
-        z[1:-1, :] = z[0:-2, :]
         z[0, :] = -h
 
     return z
@@ -181,12 +182,31 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
 def thickness(vtransform=1, h=None, hc=100, scoord=None,
               stretching=None, zeta=0):
     """
-     Given the transform method, the bathyemtry, the sea surface height
-     [optional], the critical depth, the s-coordinates, and stretching
-     function (returned by the roms.utils.stretching function), determine
-     the thickness of the grid cells
+    Get the thickness of the grid cells for the given sigma-parameters.
+
+    Parameters
+    ----------
+    vtransform : int, optional
+        transform algorithm type
+    h: array, optional
+        value of bottom depths
+    hc: int, optional
+        critical depth
+    scoord: array
+        s coordinates from stretching method
+    stretching: array
+        stretching values from stretching method
+    zeta: array
+        sea surface height to add to bottom
+    w_grid: bool, optional
+        solve stretching on the w-grid
+
+    Returns
+    -------
+    hz : array,
+      thickness
     """
-    # We need the w-coordinate depths
+    # Get the w-coordinate depths and return the differenc
     z_w = depth(vtransform, h, hc, scoord, stretching, zeta, True)
     return z_w[1:, :, :] - z_w[0:-1, :, :]
 
@@ -215,7 +235,7 @@ def get_time(nc, tvar=None, epoch=None):
     if not epoch:
         return times
     else:
-        return np.asarray([ (t - epoch).total_seconds() * secs2day for t in times ])
+        return np.asarray([(t - epoch).total_seconds() * secs2day for t in times])
 
 
 def get_timevar(nc):
