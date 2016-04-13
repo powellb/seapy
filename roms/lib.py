@@ -9,7 +9,7 @@
 """
 
 import numpy as np
-from seapy.lib import default_epoch
+from seapy.lib import default_epoch,secs2day
 import netCDF4
 
 fields = {"zeta": {"grid": "rho", "dims": 2},
