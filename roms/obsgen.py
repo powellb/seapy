@@ -450,7 +450,7 @@ class aviso_sla_track(obsgen):
                                      data, self.dt, title)
 
         # Apply the model mean ssh to the sla data
-        if self.ssh_mean is not None:
+        if self.ssh_mean is not None and obs is not None:
             m, p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
                                 obs.x, obs.y, nx=1, ny=1, weight=7)
             obs.value += m

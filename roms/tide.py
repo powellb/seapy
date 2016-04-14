@@ -91,6 +91,8 @@ def load_forcing(filename):
        tide_start : datetime of the tide reference
        tides  : list of the tides
     """
+    import re
+
     nc = seapy.netcdf(filename)
     frc = {}
     frc['Eamp'] = nc.variables['tide_Eamp'][:]
@@ -149,17 +151,19 @@ def tide_error(his_file, tide_file, grid=None):
     # Calculate tidal error for each point
     nc = seapy.netcdf(his_file)
     times = seapy.roms.get_time(nc)
-    tide_error = ma.masked_array(np.zeros((grid.mask_rho.shape)),
-                                 mask=np.abs(grid.mask_rho - 1))
+
+    tide_error = np.ma.masked_where(
+        grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
     zeta = nc.variables['zeta'][:]
     for i in seapy.progressbar.progress(range(grid.ln)):
         for j in range(grid.lm):
             if not tide_error.mask[i, j]:
-                z = zeta[:,i,j]
+                z = zeta[:, i, j]
                 t_ap = seapy.tide.pack_amp_phase(frc['tides'],
-                                      frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
+                                                 frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
                 mout = seapy.tide.fit(times, z, tides=frc['tides'],
-                           lat=grid.lat_rho[i, j], tide_start=frc['tide_start'])
+                                      lat=grid.lat_rho[i, j], tide_start=tide_start)
+
                 for c in t_ap:
                     m = mout['major'][c]
                     t = t_ap[c]
