@@ -62,8 +62,8 @@ def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_ep
     tideout.base_date = "days since {:s}".format(str(tide['tide_start']))
     tideout.variables['tide_Eamp'][:] = tide['Eamp']
     tideout.variables['tide_Ephase'][:] = np.degrees(tide['Ephase'])
-    tideout.variables['tide_Cmax'][:] = tide['Cmajor']
-    tideout.variables['tide_Cmin'][:] = tide['Cminor']
+    tideout.variables['tide_Cmax'][:] = tide['Cmax']
+    tideout.variables['tide_Cmin'][:] = tide['Cmin']
     tideout.variables['tide_Cphase'][:] = np.degrees(tide['Cphase'])
     tideout.variables['tide_Cangle'][:] = np.degrees(tide['Cangle'])
     tideout.close()
@@ -97,8 +97,8 @@ def load_forcing(filename):
     frc = {}
     frc['Eamp'] = nc.variables['tide_Eamp'][:]
     frc['Ephase'] = np.radians(nc.variables['tide_Ephase'][:])
-    frc['Cmajor'] = nc.variables['tide_Cmax'][:]
-    frc['Cminor'] = nc.variables['tide_Cmin'][:]
+    frc['Cmax'] = nc.variables['tide_Cmax'][:]
+    frc['Cmin'] = nc.variables['tide_Cmin'][:]
     frc['Cphase'] = np.radians(nc.variables['tide_Cphase'][:])
     frc['Cangle'] = np.radians(nc.variables['tide_Cangle'][:])
     start_str = getattr(nc, 'tide_start', None) or \
@@ -154,15 +154,16 @@ def tide_error(his_file, tide_file, grid=None):
 
     tide_error = np.ma.masked_where(
         grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
+    zeta = nc.variables['zeta'][:]
     for i in seapy.progressbar.progress(range(grid.ln)):
         for j in range(grid.lm):
             if not tide_error.mask[i, j]:
-                z = nc.variables['zeta'][:, i, j]
-
+                z = zeta[:, i, j]
                 t_ap = seapy.tide.pack_amp_phase(frc['tides'],
                                                  frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
                 mout = seapy.tide.fit(times, z, tides=frc['tides'],
                                       lat=grid.lat_rho[i, j], tide_start=tide_start)
+
                 for c in t_ap:
                     m = mout['major'][c]
                     t = t_ap[c]
