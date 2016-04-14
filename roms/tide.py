@@ -14,7 +14,8 @@ import netCDF4
 import seapy
 import datetime
 from warnings import warn
-
+import re
+import numpy.ma as ma
 
 def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_epoch):
     """
@@ -150,12 +151,14 @@ def tide_error(his_file, tide_file, grid=None):
     # Calculate tidal error for each point
     nc = seapy.netcdf(his_file)
     times = seapy.roms.get_time(nc)
+
     tide_error = np.ma.masked_where(
         grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
     for i in seapy.progressbar.progress(range(grid.ln)):
         for j in range(grid.lm):
             if not tide_error.mask[i, j]:
                 z = nc.variables['zeta'][:, i, j]
+
                 t_ap = seapy.tide.pack_amp_phase(frc['tides'],
                                                  frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
                 mout = seapy.tide.fit(times, z, tides=frc['tides'],
