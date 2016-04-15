@@ -231,7 +231,7 @@ def day2date(day=0, epoch=default_epoch):
     date : list of datetime(s)
     """
     day = np.atleast_1d(day)
-    return [ epoch + datetime.timedelta(days=t) for t in day ]
+    return [ epoch + datetime.timedelta(days=float(t)) for t in day ]
 
 def earth_angle(lon1, lat1, lon2, lat2):
     """
