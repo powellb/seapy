@@ -450,7 +450,7 @@ class aviso_sla_track(obsgen):
                                      data, self.dt, title)
 
         # Apply the model mean ssh to the sla data
-        if self.ssh_mean is not None:
+        if self.ssh_mean is not None and obs is not None:
             m, p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
                                 obs.x, obs.y, nx=1, ny=1, weight=7)
             obs.value += m
@@ -605,7 +605,7 @@ class remss_swath(obsgen):
         # Check the data flags
         try:
             flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["l2p_flags"][:]), 0)
+                np.squeeze(nc.variables["quality_level"][:]), 5)
         except:
             flags = np.ma.masked_not_equal(
                 np.squeeze(nc.variables["rejection_flag"][:]), 0)
@@ -615,19 +615,17 @@ class remss_swath(obsgen):
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
         dtime = nc.variables["sst_dtime"][:]
-        time = (time.total_seconds() + dtime) * seapy.secs2day
+        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
         nc.close()
         if self.grid.east():
             lon[lon < 0] += 360
         good = dat.nonzero()
-        lat = lat[good]
-        lon = lon[good]
         data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
                                         dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                      data, self.dt, title)
+        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good], 
+                                        None, data, self.dt, title)
 
 
 class remss_map(obsgen):

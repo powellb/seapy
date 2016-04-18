@@ -14,7 +14,8 @@ import netCDF4
 import seapy
 import datetime
 from warnings import warn
-
+import re
+import numpy.ma as ma
 
 def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_epoch):
     """
@@ -151,21 +152,21 @@ def tide_error(his_file, tide_file, grid=None):
     nc = seapy.netcdf(his_file)
     times = seapy.roms.get_time(nc)
     tide_error = np.ma.masked_where(
-        grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
+                grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
+    zeta = nc.variables['zeta'][:]
+    nc.close()
     for i in seapy.progressbar.progress(range(grid.ln)):
         for j in range(grid.lm):
             if not tide_error.mask[i, j]:
-                z = nc.variables['zeta'][:, i, j]
+                z = zeta[:, i, j]
                 t_ap = seapy.tide.pack_amp_phase(frc['tides'],
-                                                 frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
+                                frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
                 mout = seapy.tide.fit(times, z, tides=frc['tides'],
-                                      lat=grid.lat_rho[i, j], tide_start=tide_start)
+                                    lat=grid.lat_rho[i, j], tide_start=frc['tide_start'])
                 for c in t_ap:
                     m = mout['major'][c]
                     t = t_ap[c]
-                    tide_error[i, j] += 0.5 * (m.amp**2 + t.amp**2) - \
-                        m.amp * t.amp * np.cos(m.phase - t.phase)
-                tide_error[i, j] = np.sqrt(tide_error[i, j])
-    nc.close()
-
+                    tide_error[i,j] += 0.5 * (m.amp**2 + t.amp**2) - \
+                                    m.amp * t.amp * np.cos(m.phase - t.phase)
+                tide_error[i,j] = np.sqrt(tide_error[i,j])
     return tide_error
