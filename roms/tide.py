@@ -149,7 +149,7 @@ def tide_error(his_file, tide_file, grid=None):
     frc = load_forcing(tide_file)
 
     # Calculate tidal error for each point
-    nc = seapy.netcdf(f)
+    nc = seapy.netcdf(his_file)
     times = seapy.roms.get_time(nc)
     tide_error = np.ma.masked_where(
                 grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
