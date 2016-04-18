@@ -149,30 +149,24 @@ def tide_error(his_file, tide_file, grid=None):
     frc = load_forcing(tide_file)
 
     # Calculate tidal error for each point
-    files = seapy.list_files(his_file)
-    for f in files:
-        print(f)
-        nc = seapy.netcdf(f)
-        times = seapy.roms.get_time(nc)
-        tide_error = np.ma.masked_where(
-                    grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
-        zeta = nc.variables['zeta'][:]
-        nc.close()
-        for i in seapy.progressbar.progress(range(grid.ln)):
-            for j in range(grid.lm):
-                if not tide_error.mask[i, j]:
-                    z = zeta[:, i, j]
-                    t_ap = seapy.tide.pack_amp_phase(frc['tides'],
-                                    frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
-                    mout = seapy.tide.fit(times, z, tides=frc['tides'],
+    nc = seapy.netcdf(f)
+    times = seapy.roms.get_time(nc)
+    tide_error = np.ma.masked_where(
+                grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
+    zeta = nc.variables['zeta'][:]
+    nc.close()
+    for i in seapy.progressbar.progress(range(grid.ln)):
+        for j in range(grid.lm):
+            if not tide_error.mask[i, j]:
+                z = zeta[:, i, j]
+                t_ap = seapy.tide.pack_amp_phase(frc['tides'],
+                                frc['Eamp'][:, i, j], frc['Ephase'][:, i, j])
+                mout = seapy.tide.fit(times, z, tides=frc['tides'],
                                     lat=grid.lat_rho[i, j], tide_start=frc['tide_start'])
-                    terror = 0.0
-                    for c in t_ap:
-                        m = mout['major'][c]
-                        t = t_ap[c]
-                        terror += 0.5 * (m.amp**2 + t.amp**2) - \
-                                    m.amp * t.amp * np.cos(m.phase - t.phase)
-                    tide_error[i, j] = np.sqrt(terror)/len(files)
-
+                for c in t_ap:
+                    m = mout['major'][c]
+                    t = t_ap[c]
+                        tide_error[i,j] += np.sqrt(0.5 * (m.amp**2 + t.amp**2) - \
+                                    m.amp * t.amp * np.cos(m.phase - t.phase))
 
     return tide_error
