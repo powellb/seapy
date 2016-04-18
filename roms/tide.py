@@ -166,7 +166,7 @@ def tide_error(his_file, tide_file, grid=None):
                 for c in t_ap:
                     m = mout['major'][c]
                     t = t_ap[c]
-                        tide_error[i,j] += np.sqrt(0.5 * (m.amp**2 + t.amp**2) - \
-                                    m.amp * t.amp * np.cos(m.phase - t.phase))
-
+                        tide_error[i,j] += 0.5 * (m.amp**2 + t.amp**2) - \
+                                    m.amp * t.amp * np.cos(m.phase - t.phase)
+                tide_error[i,j] = np.sqrt(tide_error[i,j])
     return tide_error
