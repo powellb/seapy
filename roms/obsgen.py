@@ -123,12 +123,12 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     import re
 
     # Load tidal file data
-    frc = load_forcing(tide_file)
+    frc = seapy.roms.tide.load_forcing(tide_file)
     if not tide_start:
         tide_start = frc['tide_start']
 
     # Make sure that the sizes are the same
-    if amp.shape[1:] != tide_error.shape:
+    if frc['Eamp'].shape[1:] != tide_error.shape:
         raise ValueError(
             "The error array is not the same size as the tidal grid")
 
