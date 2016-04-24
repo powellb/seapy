@@ -9,7 +9,7 @@ SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
 1) Clone the Repository into your local structure
 2) Build the components (you must have gfortran installed):
 
-        % cd seapy && make
+        % cd seapy && make all
 
    This will build the FORTRAN library, the TAGS file, and the documentation. (you must have sphinx along with the numpydoc extension installed). The documentation contains examples and references for the package routines. The HTML documentation will be linked to doc/html.
 

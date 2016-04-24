@@ -35,11 +35,11 @@ _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii"
 
 class hawaii(map):
 
-    def __init__(self, figsize=(8., 6.), llcrnrlon=-164.5, llcrnrlat=16.6,
-                 urcrnrlon=-152.0, urcrnrlat=24.2, dlat=1, dlon=2):
-        super().__init__(llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
-                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize,
-                         dlat=dlat, dlon=dlon)
+    def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
+                 urcrnrlat=40, figsize=(8., 6.), dlat=1, dlon=2):
+        super().__init__(grid=grid, llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
+                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
+                         figsize=figsize, dlat=dlat, dlon=dlon)
 
     def land(self, color="black"):
         """
