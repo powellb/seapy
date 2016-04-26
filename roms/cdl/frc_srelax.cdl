@@ -1,0 +1,19 @@
+netcdf frc_srelax {
+
+dimensions:
+	xi_rho = 386 ;
+	eta_rho = 130 ;
+	sss_time = UNLIMITED ; // (0 currently)
+
+variables:
+	float sss_time(sss_time) ;
+		sss_time:long_name = "sea surface salinity" ;
+		sss_time:units = "days since 1900-01-01" ;
+	float SSS(sss_time, eta_rho, xi_rho) ;
+		SSS:long_name = "sea surface salinity" ;
+		SSS:time = "sss_time" ;
+
+// global attributes:
+		:type = "ROMS FORCING file" ;
+
+}

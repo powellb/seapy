@@ -484,6 +484,52 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
     return _nc
 
 
+def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
+                      reftime=default_epoch, clobber=False,
+                      title="My Srelaxation"):
+    """
+    Create a Salt Relaxation forcing file
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    eta_rho: int, optional
+        number of rows in the eta direction
+    xi_rho: int, optional
+        number of columns in the xi direction
+    s_rho: int, optional
+        number of s-levels
+    cycle: int or None, optional
+        The number of days before cycling the forcing records
+    reftime: datetime, optional
+        date of epoch for time origin in netcdf
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    title: string, optional
+        netcdf attribute title
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    """
+    # Generate the Structure
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_srelax.cdl")
+
+    # Fill in the appropriate dimension values
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
+    vars = _set_time_ref(vars, "sss_time", reftime, cycle)
+
+    # Create the file
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
+                title=title)
+
+    # Return the new file
+    return _nc
+
+
 def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
                      reftime=default_epoch, clobber=False,
                      title="My Qcorrection"):

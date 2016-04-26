@@ -111,16 +111,16 @@ def smooth(data, ksize=3, kernel=None, copy=True):
     """
     fld = np.ma.array(data, copy=copy)
     mask = np.ma.getmaskarray(fld).copy()
-    
+
     # Make sure ksize is odd
     ksize = int(ksize + 1) if int(ksize) % 2 == 0 else int(ksize)
     if fld.ndim > 3 or fld.ndim < 2:
         raise AttributeError("Can only convolve 2- or 3-D fields")
     if ksize < 3:
         raise ValueError("ksize must be greater than or equal to 3")
-    
+
     if kernel is None:
-        kernel = np.ones((ksize, ksize))/(ksize*ksize)
+        kernel = np.ones((ksize, ksize)) / (ksize * ksize)
     else:
         ksize = kernel.shape[0]
 
@@ -130,7 +130,7 @@ def smooth(data, ksize=3, kernel=None, copy=True):
     # Next, perform the convolution
     if fld.ndim == 2:
         fld = ndimage.convolve(fld.data, kernel,
-                                mode="reflect", cval=0.0)
+                               mode="reflect", cval=0.0)
     else:
         kernel = np.expand_dims(kernel, axis=3)
         fld = np.transpose(ndimage.convolve(
@@ -139,7 +139,8 @@ def smooth(data, ksize=3, kernel=None, copy=True):
 
     # Apply the initial mask
     return np.ma.array(fld, mask=mask)
-    
+
+
 def convolve_mask(data, ksize=3, kernel=None, copy=True):
     """
     Convolve data over the missing regions of a mask
@@ -213,7 +214,8 @@ def date2day(date=default_epoch, epoch=default_epoch):
     numdays : list
     """
     date = np.atleast_1d(date)
-    return [ (t - epoch).total_seconds() * secs2day for t in date ]
+    return [(t - epoch).total_seconds() * secs2day for t in date]
+
 
 def day2date(day=0, epoch=default_epoch):
     """
@@ -231,7 +233,8 @@ def day2date(day=0, epoch=default_epoch):
     date : list of datetime(s)
     """
     day = np.atleast_1d(day)
-    return [ epoch + datetime.timedelta(days=float(t)) for t in day ]
+    return [epoch + datetime.timedelta(days=float(t)) for t in day]
+
 
 def earth_angle(lon1, lat1, lon2, lat2):
     """
@@ -568,8 +571,8 @@ def vecfind(a, b, tolerance=0):
 
     # If the tolerance is zero, we can use built-in methods
     if tolerance == 0:
-        index_a = np.in1d(a, b)
-        index_b = np.in1d(b, a)
+        index_a = np.where(np.in1d(a, b))[0]
+        index_b = np.where(np.in1d(b, a))[0]
     # Otherwise, slow method
     else:
         index_a = []
@@ -577,9 +580,11 @@ def vecfind(a, b, tolerance=0):
         for i, c in enumerate(b):
             d = np.abs(a - c)
             x = np.nonzero(d < tolerance)[0]
-            if x:
-                index_a.append(np.where(d == np.min(d))[0][0])
+            if np.any(x):
+                index_a.append(np.where(d == np.min(d))[0])
                 index_b.append(i)
+        index_a = np.array(index_a).flatten()
+        index_b = np.array(index_b)
     return index_a, index_b
 
 
