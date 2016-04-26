@@ -3,7 +3,7 @@ netcdf frc_srelax {
 dimensions:
 	xi_rho = 386 ;
 	eta_rho = 130 ;
-	sss_time = 12 ;
+	sss_time = UNLIMITED ; // (0 currently)
 
 variables:
 	float sss_time(sss_time) ;

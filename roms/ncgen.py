@@ -520,7 +520,7 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
-    vars = _set_time_ref(vars, "sst_time", reftime, cycle)
+    vars = _set_time_ref(vars, "sss_time", reftime, cycle)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
