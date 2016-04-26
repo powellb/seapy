@@ -37,7 +37,7 @@ def error_profile(obs, depth, error, provenance=None):
       (as defined by seapy.roms.obs.obs_types) and the value is
       an ndarray of same length as depth with the error [in squared units]
       of the observation profile.
-    provenance : int or string, optional,
+    provenance : list of int or string, optional,
       The provenance to apply the errors to (ignore other observations
       of the same type, but different instrument)
 
@@ -70,10 +70,10 @@ def error_profile(obs, depth, error, provenance=None):
         try:
             fint.y = error[var]
             if pro:
-                l = np.where(np.logical_and(
-                    obs.type == typ, obs.provenance == pro))
+                l = np.where(np.logical_and(obs.type == type,
+                                            np.in1d(obs.provenance, pro)))
             else:
-                l = np.where(obs.type == typ)
+                l = np.where(obs.type[rng] == typ)
             nerr = fint(obs.depth[l])
             obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
@@ -102,7 +102,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     tide_start : bool, optional,
       If given, the tide_start of the tide file. If not specified,
       will read the attribute of the tidal forcing file
-    provenance : int or string, optional,
+    provenance : list of int or string, optional,
       The provenance to apply the tides to (ignore other observations
       of the same type, but different instrument)
     reftime: datetime,
@@ -136,8 +136,8 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     obs = seapy.roms.obs.asobs(obs)
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
     if pro:
-        l = np.where(np.logical_and(
-            obs.type == 1, obs.provenance == pro))
+        l = np.where(np.logical_and(obs.type == 1,
+                                    np.in1d(obs.provenance, pro)))
     else:
         l = np.where(obs.type == 1)
 
@@ -624,8 +624,8 @@ class remss_swath(obsgen):
                                         dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
-        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good], 
-                                        None, data, self.dt, title)
+        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
+                                      None, data, self.dt, title)
 
 
 class remss_map(obsgen):
