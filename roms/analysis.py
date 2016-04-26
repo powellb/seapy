@@ -9,6 +9,7 @@
 """
 
 import numpy as np
+import numpy.ma as ma
 from joblib import Parallel, delayed
 import seapy
 import netCDF4
@@ -182,11 +183,11 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
 
     # Loop over the time with the variance window:
     for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                                               len(time) - std_window + pad, std_window))):
+                                                               len(time) - std_window - pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
-        ncout.variables[time_var][n] = np.mean(time[idx])
+        ncout.variables[time_var][n] = ma.mean(time[idx])
         for v in fields:
-            dat = np.std(nc.variables[v][idx, :], axis=0)
+            dat = ma.std(nc.variables[v][idx, :], axis=0)
             dat[dat > 10] = 0.0
             ncout.variables[v][n, :] = dat
         ncout.sync()
@@ -252,9 +253,9 @@ def gen_std_f(roms_file, std_file, records=None, fields=None):
                              ('ocean_time', "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
-    ncout.variables[time_var][:] = np.mean(time[records])
+    ncout.variables[time_var][:] = ma.mean(time[records])
     for v in fields:
-        dat = np.std(nc.variables[v][records, :], axis=0)
+        dat = ma.std(nc.variables[v][records, :], axis=0)
         dat[dat > 10] = 0.0
         ncout.variables[v][0, :] = dat
         ncout.sync()
