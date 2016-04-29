@@ -577,10 +577,11 @@ class remss_swath(obsgen):
     seapy.roms.genobs.genobs, and handles the loading of the data.
     """
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
+    def __init__(self, grid, dt, check_qc_flags=True, reftime=seapy.default_epoch, temp_error=0.4,
                  temp_limits=None, provenance="SST_REMSS"):
         self.temp_error = temp_error
         self.provenance = provenance.upper()
+        self.check_qc_flags = check_qc_flags
         if temp_limits is None:
             self.temp_limits = (2, 35)
         else:
@@ -603,13 +604,13 @@ class remss_swath(obsgen):
         dat[err.mask] = np.ma.masked
 
         # Check the data flags
-        try:
+        if self.check_qc_flags:
             flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["quality_level"][:]), 5)
-        except:
-            flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["rejection_flag"][:]), 0)
-        dat[flags.mask] = np.ma.masked
+                    np.squeeze(nc.variables["quality_level"][:]), 5)
+            dat[flags.mask] = np.ma.masked
+        else:
+            dat = np.ma.masked_where(
+                    np.squeeze(nc.variables["quality_level"][:]).data==1, dat)
 
         # Grab the observation time
         time = netCDF4.num2date(nc.variables["time"][0],
