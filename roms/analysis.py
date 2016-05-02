@@ -293,16 +293,16 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
     obs = seapy.roms.obs.asobs(obs)
     otype = seapy.roms.obs.astype(type)
     if prov is not None:
-        prov = seapy.roms.obs.asprov(prov)
+        prov = seapy.roms.obs.asprovenance(prov)
     if time is not None:
         time = np.atleast_1d(time)
 
     # Search the obs for the user
     if prov is not None:
-        idx = np.where(np.logical_and.reduce(
+        idx = np.where(np.logical_and.reduce((
             obs.type == otype,
             obs.provenance == prov,
-            np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+            np.logical_or(obs.z == 0, obs.depth == 0))))[0]
 
     else:
         idx = np.where(np.logical_and(
@@ -362,16 +362,16 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
     obs = seapy.roms.obs.asobs(obs)
     otype = seapy.roms.obs.astype(type)
     if prov is not None:
-        prov = seapy.roms.obs.asprov(prov)
+        prov = seapy.roms.obs.asprovenance(prov)
     if time is not None:
         time = np.atleast_1d(time)
 
     # Search the obs for the user
     if prov is not None:
-        idx = np.where(np.logical_and.reduce(
+        idx = np.where(np.logical_and.reduce((
             obs.type == otype,
             obs.provenance == prov,
-            np.logical_or(obs.z < 0, obs.depth < 0)))[0]
+            np.logical_or(obs.z < 0, obs.depth < 0))))[0]
 
     else:
         idx = np.where(np.logical_and(
