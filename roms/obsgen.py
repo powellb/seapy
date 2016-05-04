@@ -118,7 +118,9 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     >>> obs = obs('observation_file.nc')
     >>> error_profile(obs, 'tide_frc.nc', errmap)
 
-    The resulting 'obs' variable will have modified data.
+    The resulting 'obs' variable will have modified data. To save it:
+
+    >>> obs.to_netcdf()
     """
     import re
 
@@ -606,11 +608,11 @@ class remss_swath(obsgen):
         # Check the data flags
         if self.check_qc_flags:
             flags = np.ma.masked_not_equal(
-                    np.squeeze(nc.variables["quality_level"][:]), 5)
+                np.squeeze(nc.variables["quality_level"][:]), 5)
             dat[flags.mask] = np.ma.masked
         else:
             dat = np.ma.masked_where(
-                    np.squeeze(nc.variables["quality_level"][:]).data==1, dat)
+                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
 
         # Grab the observation time
         time = netCDF4.num2date(nc.variables["time"][0],

@@ -230,6 +230,7 @@ class obs:
             nc = seapy.netcdf(filename)
             # Construct an array from the data in the file. If obs_meta
             # exists in the file, then load it; otherwise, fill with zeros
+            self.filename = filename
             self.time = nc.variables["obs_time"][:]
             self.x = nc.variables["obs_Xgrid"][:]
             self.y = nc.variables["obs_Ygrid"][:]
@@ -256,6 +257,7 @@ class obs:
             finally:
                 nc.close()
         else:
+            self.filename = None
             if time is not None:
                 self.time = np.atleast_1d(time)
             if x is not None:
@@ -481,14 +483,15 @@ class obs:
         self.survey_time = times
         self.nobs = counts
 
-    def to_netcdf(self, filename, dt=0, clobber=True):
+    def to_netcdf(self, filename=None, dt=0, clobber=True):
         """
         Write out the observations into the specified netcdf file
 
         Parameters
         ----------
-        filename : string,
-            name of file to save
+        filename : string, optional
+            name of file to save. If obs were loaded from a file and filename
+            is not specified, then write to the same.
         dt : float,
             ensure data are at least separated in time by dt; otherwise,
             make as part of same survey
@@ -496,6 +499,12 @@ class obs:
             if True, any existing file is overwritten
         """
         import os
+
+        # Check filename
+        if filename is None and self.filename is not None:
+            filename = self.filename
+        if filename is None:
+            error("No filename given")
 
         # Save out the observations by survey
         self._consistent()
