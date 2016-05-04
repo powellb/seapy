@@ -255,7 +255,6 @@ def gen_std_f(roms_file, std_file, records=None, fields=None):
     ncout.variables[time_var][:] = np.mean(time[records])
     for v in fields:
         dat = nc.variables[v][records, :].std(axis=0)
-        dat[dat > 10] = 0.0
         ncout.variables[v][0, :] = dat
         ncout.sync()
     ncout.close()
