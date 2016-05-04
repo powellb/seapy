@@ -281,7 +281,7 @@ class aquarius_sss(obsgen):
     """
 
     def __init__(self, grid, dt, reftime=seapy.default_epoch, salt_limits=None,
-                 salt_error=0.1):
+                 salt_error=0.2):
         if salt_limits is None:
             self.salt_limits = (10, 36)
         else:
@@ -872,7 +872,7 @@ class mooring(obsgen):
         if not error:
             error = {}
 
-        if not data:
+        if not ta:
             warn("No data is provided")
             return
 
