@@ -44,17 +44,20 @@ def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_ep
     None
     """
     # Create the tide forcing file
-    eta_rho, xi_rho = tide['Eamp'].shape
+    ntides, eta_rho, xi_rho = tide['Eamp'].shape
+    if ntides != len(tide['tides']):
+        raise ValueError(
+            "The number of tidal data are different than the tides.")
 
-    tideout = seapy.roms.ncgen.create_tide(tidefile, eta_rho=eta_rho,
+    tideout = seapy.roms.ncgen.create_tide(filename, eta_rho=eta_rho,
                                            xi_rho=xi_rho,
                                            reftime=epoch,
-                                           ntides=len(tide['tides']),
+                                           ntides=ntides,
                                            clobber=True, title=title)
     # Set the tide periods and attributes
     tideout.variables['tide_period'][:] = 1.0 / \
         seapy.tide.frequency(tide['tides'])
-    tideout.tidal_constituents = ", ".join(tides)
+    tideout.tidal_constituents = ", ".join(tide['tides'])
     tideout.tide_start = "Day {:5.1f} ({:s})".format((tide['tide_start'] -
                                                       epoch).total_seconds() / 86400,
                                                      str(tide['tide_start']))
