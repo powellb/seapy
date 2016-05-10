@@ -58,8 +58,8 @@ def error_profile(obs, depth, error, provenance=None):
     """
     from scipy.interpolate import interp1d
     obs = seapy.roms.obs.asobs(obs)
-    depth = np.atleast_1d(depth)
-    depth = -np.abs(depth)
+    depth = np.atleast_1d(depth).flatten()
+    depth = np.abs(depth)
     fint = interp1d(depth, np.zeros(depth.shape))
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
 
@@ -68,13 +68,13 @@ def error_profile(obs, depth, error, provenance=None):
     for var in error:
         typ = seapy.roms.obs.astype(var)
         try:
-            fint.y = error[var]
+            fint.y = error[var].flatten()
             if pro:
                 l = np.where(np.logical_and(obs.type == type,
                                             np.in1d(obs.provenance, pro)))
             else:
-                l = np.where(obs.type[rng] == typ)
-            nerr = fint(obs.depth[l])
+                l = np.where(np.logical_and(obs.type == typ, obs.z < 0))
+            nerr = fint(np.abs(obs.z[l]))
             obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
