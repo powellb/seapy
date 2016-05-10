@@ -752,10 +752,12 @@ def detide(grid, bryfile, tidefile, tides=None):
                 for n, t in enumerate(tides):
                     if sides[side].slice == 0:
                         eamp[n, i, idx[1]] = out['major'][t].amp
-                        epha[n, i, idx[1]] = np.mod(out['major'][t].phase, 2 * np.pi)
+                        epha[n, i, idx[1]] = np.mod(
+                            out['major'][t].phase, 2 * np.pi)
                     else:
                         eamp[n, idx[0], i] = out['major'][t].amp
-                        epha[n, idx[0], i] = np.mod(out['major'][t].phase, 2 * np.pi)
+                        epha[n, idx[0], i] = np.mod(
+                            out['major'][t].phase, 2 * np.pi)
 
             # Save out the detided information
             bry.variables[lvar][:] = zeta
@@ -847,12 +849,12 @@ def detide(grid, bryfile, tidefile, tides=None):
     tideout = {}
     tideout['tides'] = tides
     tideout['tide_start'] = tide_start
-    tideout['Eamp'][:] = eamp
-    tideout['Ephase'][:] = epha
-    tideout['Cmajor'][:] = cmax
-    tideout['Cminor'][:] = cmin
-    tideout['Cphase'][:] = cpha
-    tideout['Cangle'][:] = cang
+    tideout['Eamp'] = eamp
+    tideout['Ephase'] = epha
+    tideout['Cmajor'] = cmax
+    tideout['Cminor'] = cmin
+    tideout['Cphase'] = cpha
+    tideout['Cangle'] = cang
 
     seapy.roms.tide.create_forcing(tidefile, tideout,
                                    title="Tides from " + bryfile, epoch=epoch)

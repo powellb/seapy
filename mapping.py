@@ -100,9 +100,9 @@ class map(object):
         figsize: list, optional
             dimensions to use for creation of figure
         dlat: float, optional
-            how often to mark latitude lines
+            interval to mark latitude lines (e.g., if dlat=0.5 every 0.5deg mark)
         dlon: float, optional
-            how often to mark longitude lines
+            interval to mark longitude lines (e.g., if dlon=0.5 every 0.5deg mark)
 
 
         Returns
@@ -141,31 +141,33 @@ class map(object):
         self.fig = plt.figure(figsize=self.figsize)
         self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
         self.basemap.drawmapboundary(fill_color=fill_color)
-        # Create the lat/lon lines
-        delta = self.basemap.urcrnrlon - self.basemap.llcrnrlon
-        nticks = int(delta / self.dlon)
-        if delta / nticks > 1:
-            lon_lines = np.linspace(int(self.basemap.llcrnrlon - self.dlon),
-                                    int(self.basemap.urcrnrlon + self.dlon), nticks + 2)
+        # Create the longitude lines
+        nticks = int((self.basemap.urcrnrlon - self.basemap.llcrnrlon) /
+                     self.dlon)
+        md = np.mod(self.basemap.llcrnrlon, self.dlon)
+        if md:
+            slon = self.basemap.llcrnrlon + self.dlon - md
         else:
-            lon_lines = np.linspace(self.basemap.llcrnrlon - self.dlon,
-                                    self.basemap.urcrnrlon + self.dlon, nticks + 2)
-        # lon_lines = np.arange(self.basemap.llcrnrlon,
-        #     self.basemap.urcrnrlon, self.dlon)
+            slon = self.basemap.llcrnrlon
+            nticks += 1
+        lon_lines = np.arange(nticks) * self.dlon + slon
         self.basemap.drawmeridians(lon_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1], labels=[0, 0, 0, 1], fontsize=12)
-        delta = self.basemap.urcrnrlat - self.basemap.llcrnrlat
-        nticks = int(delta / self.dlat)
-        if delta / nticks > 1:
-            lat_lines = np.linspace(int(self.basemap.llcrnrlat - self.dlat),
-                                    int(self.basemap.urcrnrlat + self.dlat), nticks + 2)
+                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
+                                   labels=[0, 0, 0, 1], fontsize=12)
+
+        # Create the latitude lines
+        nticks = int((self.basemap.urcrnrlat - self.basemap.llcrnrlat) /
+                     self.dlat)
+        md = np.mod(self.basemap.llcrnrlat, self.dlat)
+        if md:
+            slat = self.basemap.llcrnrlat + self.dlat - md
         else:
-            lat_lines = np.linspace(self.basemap.llcrnrlat - self.dlat,
-                                    self.basemap.urcrnrlat + self.dlat, nticks + 2)
-        # lat_lines = np.arange(self.basemap.llcrnrlat,
-        #     self.basemap.urcrnrlat, self.dlat)
+            slon = self.basemap.llcrnrlat
+            nticks += 1
+        lat_lines = np.arange(nticks) * self.dlat + slat
         self.basemap.drawparallels(lat_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1], labels=[1, 0, 0, 0], fontsize=12)
+                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
+                                   labels=[1, 0, 0, 0], fontsize=12)
 
     def land(self, color="black"):
         """
