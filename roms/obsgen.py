@@ -561,14 +561,13 @@ class navo_sst_map(obsgen):
         nc.close()
 
         # here we set the depth to be 4 m below the surface
-        depth = self.depth * np.ones(np.shape(dat))
         if self.grid.east():
             lon[lon < 0] += 360
         lon, lat = np.meshgrid(lon, lat)
         good = dat.nonzero()
         lat = lat[good]
         lon = lon[good]
-        depth = np.ones(good.shape) * depth
+        depth = self.depth*np.ones(dat.shape)[good]
         data = [seapy.roms.obs.raw_data("TEMP", self.provenance, dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
