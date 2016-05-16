@@ -517,6 +517,66 @@ class ostia_sst_map(obsgen):
                                       data, self.dt, title)
 
 
+class navo_sst_map(obsgen):
+    """
+    class to process MODIS SST map netcdf files into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+
+    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch, temp_error=0.5,
+                 temp_limits=None, provenance="SST_NAVO_MAP"):
+
+        self.temp_error = temp_error
+        self.provenance = provenance.upper()
+        if temp_limits is None:
+            self.temp_limits = (2, 35)
+        else:
+            self.temp_limits = temp_limits
+        if depth is None:
+            self.depth = -4
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="AVHRR SST Obs"):
+        """
+        Load an MODIS file and convert into an obs structure
+        """
+        # Load MODIS Data
+        import re
+        import sys
+
+        nc = netCDF4.Dataset(file)
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(nc.variables["analysed_sst"][:] - 273.15,
+                                   self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.array(nc.variables["analysis_error"][:], mask=dat.mask)
+
+        # this is an analyzed product and provides errors as a function of space and time directly
+        # the temperature is the bulk temperature (ie at around 4m depth, below the e-folding depths of sunlight in
+        # the ocean so the product does not have a diuranl cycle (ie you don;t
+        # have to worry about hourly variations)
+        time = netCDF4.num2date(nc.variables["time"][0],
+                                nc.variables["time"].units) - self.epoch
+        time = time.total_seconds() * seapy.secs2day
+        nc.close()
+
+        # here we set the depth to be 4 m below the surface
+        depth = self.depth * np.ones(np.shape(dat))
+        if self.grid.east():
+            lon[lon < 0] += 360
+        lon, lat = np.meshgrid(lon, lat)
+        good = dat.nonzero()
+        lat = lat[good]
+        lon = lon[good]
+        depth = np.ones(good.shape) * depth
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance, dat.compressed(),
+                                        err[good], self.temp_error)]
+        # Grid it
+        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+                                      data, self.dt, title)
+
+
 class modis_sst_map(obsgen):
     """
     class to process MODIS SST map netcdf files into ROMS observation
