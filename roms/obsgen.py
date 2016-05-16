@@ -519,7 +519,7 @@ class ostia_sst_map(obsgen):
 
 class navo_sst_map(obsgen):
     """
-    class to process MODIS SST map netcdf files into ROMS observation
+    class to process NAVO SST map netcdf files into ROMS observation
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
@@ -537,20 +537,19 @@ class navo_sst_map(obsgen):
             self.depth = -4
         super().__init__(grid, dt, reftime)
 
-    def convert_file(self, file, title="AVHRR SST Obs"):
+    def convert_file(self, file, title="NAVO SST Obs"):
         """
-        Load an MODIS file and convert into an obs structure
+        Load a NAVO map file and convert into an obs structure
         """
-        # Load MODIS Data
         import re
         import sys
 
         nc = netCDF4.Dataset(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
-        dat = np.ma.masked_outside(nc.variables["analysed_sst"][:] - 273.15,
+        dat = np.ma.masked_outside(np.squeeze(nc.variables["analysed_sst"][:]) - 273.15,
                                    self.temp_limits[0], self.temp_limits[1])
-        err = np.ma.array(nc.variables["analysis_error"][:], mask=dat.mask)
+        err = np.ma.array(np.squeeze(nc.variables["analysis_error"][:]), mask=dat.mask)
 
         # this is an analyzed product and provides errors as a function of space and time directly
         # the temperature is the bulk temperature (ie at around 4m depth, below the e-folding depths of sunlight in
