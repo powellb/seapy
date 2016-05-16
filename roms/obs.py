@@ -64,6 +64,7 @@ obs_provenance = {
     220: "CTD_ARGO",
     300: "SST",
     301: "SST_OSTIA",
+    315: "SST_NAVO_MAP",
     317: "SST_AVHRR_17",
     318: "SST_AVHRR_18",
     330: "SST_MODIS_AQUA",
