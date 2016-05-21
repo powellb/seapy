@@ -151,15 +151,15 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
         idx = seapy.unique_rows((ox, oy))
         for cur in seapy.progressbar.progress(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
-            time = [reftime + datetime.timedelta(t) for t in obs.time[pts]]
+            time = [reftime + datetime.timedelta(t) for t in obs.time[l][pts]]
             amppha = seapy.tide.pack_amp_phase(
                 frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]], frc['Ephase'][:, oy[cur], ox[cur]])
             zpred = seapy.tide.predict(time, amppha, lat=obs.lat[l][
                                        cur], tide_start=tide_start)
 
             # Add the information to the observations
-            obs.value[pts] += zpred
-            obs.error[pts] += tide_error[oy[cur], ox[cur]]**2
+            obs.value[l[0][pts]] += zpred
+            obs.error[l[0][pts]] += tide_error[oy[cur], ox[cur]]**2
     pass
 
 
@@ -549,7 +549,8 @@ class navo_sst_map(obsgen):
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(nc.variables["analysed_sst"][:]) - 273.15,
                                    self.temp_limits[0], self.temp_limits[1])
-        err = np.ma.array(np.squeeze(nc.variables["analysis_error"][:]), mask=dat.mask)
+        err = np.ma.array(np.squeeze(
+            nc.variables["analysis_error"][:]), mask=dat.mask)
 
         # this is an analyzed product and provides errors as a function of space and time directly
         # the temperature is the bulk temperature (ie at around 4m depth, below the e-folding depths of sunlight in
@@ -567,7 +568,7 @@ class navo_sst_map(obsgen):
         good = dat.nonzero()
         lat = lat[good]
         lon = lon[good]
-        depth = self.depth*np.ones(dat.shape)[good]
+        depth = self.depth * np.ones(dat.shape)[good]
         data = [seapy.roms.obs.raw_data("TEMP", self.provenance, dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
