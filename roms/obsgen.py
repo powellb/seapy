@@ -116,13 +116,12 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     Examples
     --------
     >>> obs = obs('observation_file.nc')
-    >>> error_profile(obs, 'tide_frc.nc', errmap)
+    >>> add_ssh_tides(obs, 'tide_frc.nc', errmap)
 
     The resulting 'obs' variable will have modified data. To save it:
 
     >>> obs.to_netcdf()
     """
-    import re
 
     # Load tidal file data
     frc = seapy.roms.tide.load_forcing(tide_file)
@@ -153,13 +152,16 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             time = [reftime + datetime.timedelta(t) for t in obs.time[l][pts]]
             amppha = seapy.tide.pack_amp_phase(
-                frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]], frc['Ephase'][:, oy[cur], ox[cur]])
-            zpred = seapy.tide.predict(time, amppha, lat=obs.lat[l][
-                                       cur], tide_start=tide_start)
+                frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]],
+                frc['Ephase'][:, oy[cur], ox[cur]])
+            zpred = seapy.tide.predict(time, amppha,
+                                       lat=obs.lat[l][cur],
+                                       tide_start=tide_start)
 
             # Add the information to the observations
             obs.value[l[0][pts]] += zpred
-            obs.error[l[0][pts]] += tide_error[oy[cur], ox[cur]]**2
+            obs.error[l[0][pts]] = np.maximum(
+                obs.error[l[0][pts]], tide_error[oy[cur], ox[cur]]**2)
     pass
 
 
