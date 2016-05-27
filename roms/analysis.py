@@ -325,7 +325,7 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
     else:
         x = obs.lon
         y = obs.lat
-    val = obs.value if not error else obs.error
+    val = obs.value if not error else np.sqrt(obs.error)
     plt.scatter(x[idx], y[idx], c=val[idx], **kwargs)
     plt.colorbar()
 
@@ -390,7 +390,7 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
         dep = obs.z if np.mean(obs.z[idx] > 0) else obs.depth
     else:
         dep = obs.z if np.mean(obs.z[idx] < 0) else obs.depth
-    val = obs.value if not error else obs.error
+    val = obs.value if not error else np.sqrt(obs.error)
     plt.plot(val[idx], dep[idx], 'k+', **kwargs)
 
 
