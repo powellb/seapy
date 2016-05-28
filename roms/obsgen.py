@@ -531,12 +531,8 @@ class navo_sst_map(obsgen):
 
         self.temp_error = temp_error
         self.provenance = provenance.upper()
-        if temp_limits is None:
-            self.temp_limits = (2, 35)
-        else:
-            self.temp_limits = temp_limits
-        if depth is None:
-            self.depth = -4
+        self.temp_limits = (2, 35) if temp_limits is None else temp_limits
+        self.depth = -4 if depth is None else depth
         super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="NAVO SST Obs"):
