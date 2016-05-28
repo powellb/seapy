@@ -571,7 +571,7 @@ class navo_sst_map(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
-                                      data, self.dt, title)
+                                      data, self.dt, depth_adjust=True, title=title)
 
 
 class modis_sst_map(obsgen):

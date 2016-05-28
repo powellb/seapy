@@ -546,7 +546,8 @@ class obs:
         nc.close()
 
 
-def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
+def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
+            title='ROMS Observations'):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.
@@ -650,7 +651,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         # Get the grid locations from the data locations
         subsurface_values = True
         depth = np.atleast_1d(depth)[region_list]
-        (k, j, i) = grid.ijk((lon, lat, depth))
+        (k, j, i) = grid.ijk((lon, lat, depth), depth_adjust)
 
     # Sub-select only the points that lie on our grid
     valid_list = np.where((~i.mask * ~j.mask * ~k.mask) == True)
