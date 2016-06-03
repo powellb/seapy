@@ -19,7 +19,6 @@ import os
 import re
 import seapy
 import numpy as np
-from scipy.interpolate import griddata, interp1d
 import scipy.spatial
 import matplotlib.path
 from warnings import warn
@@ -601,8 +600,7 @@ class grid:
         return (ygrid, xgrid)
 
     def ijk(self, points, depth_adjust=False):
-        """
-        Compute the fractional i, j, k indices of the grid from a
+        """Compute the fractional i, j, k indices of the grid from a
         set of lon, lat, depth points.
 
         Parameters
@@ -611,9 +609,9 @@ class grid:
             longitude, latitude, depth points to compute i, j, k indicies.
             NOTE: depth is in meters (defaults to negative)
         depth_adjust : bool,
-            If True, depths that are deeper than the grid are set to the
-            bottom layer, 0. If False, a nan value is used for values
-            beyond the grid depth. Default is False.
+            If True, depths that are deeper (shallower) than the grid are set
+            to the bottom (top) layer, 0 (N). If False, a nan value is used for
+            values beyond the grid depth. Default is False.
 
         Returns
         -------
@@ -624,11 +622,14 @@ class grid:
         --------
         >>> a = ([-158, -160.5, -155.5], [20, 22.443, 19.5], [-10 -200 0])
         >>> idx = g.ijk(a)
+
         """
         # NOTE: Attempted to use a 3D griddata, but it took over 2 minutes
         # for each call, resulting in a 6minute runtime for this method
         # Reverted to 2D i,j indices, then looping a 1-D interpolation
         # to get depths for increased-speed (though this method is still slow)
+
+        from scipy.interpolate import interp1d
 
         # Get the i,j points
         (j, i) = self.ij((points[0], points[1]))
@@ -645,8 +646,10 @@ class grid:
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
             pts = np.where(np.logical_and(jj == jj[n], ii == ii[n]))
-            fi = interp1d(self.depth_rho[:, jj[n], ii[n]], grid_k,
-                          bounds_error=False, fill_value=fill_value)
+            griddep = self.depth_rho[:, jj[n], ii[n]]
+            griddep[-1] = 0.0
+            fi = interp1d(griddep, grid_k, bounds_error=False,
+                          fill_value=fill_value)
             k[good[pts]] = fi(depth[good][pts])
 
         # Mask bad points
