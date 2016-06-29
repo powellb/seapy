@@ -35,8 +35,8 @@ _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii"
 
 class hawaii(map):
 
-    def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
-                 urcrnrlat=40, figsize=(8., 6.), dlat=1, dlon=2):
+    def __init__(self, grid=None, llcrnrlon=-163, llcrnrlat=17, urcrnrlon=-153,
+                 urcrnrlat=24, figsize=(8., 6.), dlat=1, dlon=2):
         super().__init__(grid=grid, llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
                          urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
                          figsize=figsize, dlat=dlat, dlon=dlon)

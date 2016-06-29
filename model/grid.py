@@ -488,7 +488,7 @@ class grid:
             warn("could not compute grid thicknesses.")
             pass
 
-    def plot_trace(self, basemap=None, *args):
+    def plot_trace(self, basemap=None, **kwargs):
         """
         Trace the boundary of the grid onto a map projection
 
@@ -509,16 +509,16 @@ class grid:
                               self.lat_rho[-1, ::-1], self.lat_rho[::-1, 0]])
         if basemap:
             x, y = basemap(lon, lat)
-            basemap.plot(x, y, *args)
+            basemap.plot(x, y, **kwargs)
         else:
             from matplotlib import pyplot
-            pyplot.plot(lon, lat, *args)
+            pyplot.plot(lon, lat, **kwargs)
 
     def to_netcdf(self, nc):
         """
-        Write all available grid information into the records present in the netcdf file.
-        This is used to pre-fill boundary, initial, etc. files that require some of the
-        grid information.
+        Write all available grid information into the records present in the
+        netcdf file.  This is used to pre-fill boundary, initial, etc. files
+        that require some of the grid information.
 
         Parameters
         ----------
@@ -528,6 +528,7 @@ class grid:
         Returns
         -------
         None
+
         """
         for var in nc.variables:
             if hasattr(self, var.lower()):
@@ -647,7 +648,11 @@ class grid:
         for n in idx:
             pts = np.where(np.logical_and(jj == jj[n], ii == ii[n]))
             griddep = self.depth_rho[:, jj[n], ii[n]]
-            griddep[-1] = 0.0
+            if griddep[0] < griddep[-1]:
+                griddep[-1] = 0.0
+            else:
+                griddep[0] = 0.0
+
             fi = interp1d(griddep, grid_k, bounds_error=False,
                           fill_value=fill_value)
             k[good[pts]] = fi(depth[good][pts])

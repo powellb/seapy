@@ -162,7 +162,7 @@ class map(object):
         if md:
             slat = self.basemap.llcrnrlat + self.dlat - md
         else:
-            slon = self.basemap.llcrnrlat
+            slat = self.basemap.llcrnrlat
             nticks += 1
         lat_lines = np.arange(nticks) * self.dlat + slat
         self.basemap.drawparallels(lat_lines, color="0.5",
@@ -232,10 +232,12 @@ class map(object):
             Colorbar label title
         cticks: array, optional
             Where to place the tick marks and values for the colorbar
+        **kwargs: arguments, optional
+            additional arguments to pass to colorbar
         """
         self.cax = self.fig.add_axes([0.25, 0.16, 0.5, 0.03])
         self.cb = plt.colorbar(self.pc, cax=self.cax, orientation="horizontal",
-                               ticks=cticks)
+                               ticks=cticks, **kwargs)
         self.basemap.set_axes_limits(ax=self.ax)
         if label is not None:
             self.cb.set_label(label)
