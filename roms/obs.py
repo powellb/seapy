@@ -655,9 +655,9 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
 
     # Sub-select only the points that lie on our grid
     valid_list = np.where((~i.mask * ~j.mask * ~k.mask) == True)
-    i = i.compressed()
-    j = j.compressed()
-    k = k[valid_list]
+    i = i[valid_list].compressed()
+    j = j[valid_list].compressed()
+    k = k[valid_list].compressed()
     depth = depth[valid_list]
 
     # Make sure the times are consistent and in dt-space
