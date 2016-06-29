@@ -1041,7 +1041,7 @@ class argo_ctd(obsgen):
                  salt_limits=None, temp_error=0.25,
                  salt_error=0.1):
         if temp_limits is None:
-            self.temp_limits = (5, 35)
+            self.temp_limits = (2, 35)
         else:
             self.temp_limits = temp_limits
         if salt_limits is None:
