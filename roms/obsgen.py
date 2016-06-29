@@ -532,7 +532,7 @@ class navo_sst_map(obsgen):
         self.temp_error = temp_error
         self.provenance = provenance.upper()
         self.temp_limits = (2, 35) if temp_limits is None else temp_limits
-        self.depth = -4 if depth is None else depth
+        self.depth = 4 if depth is None else np.abs(depth)
         super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="NAVO SST Obs"):
@@ -566,12 +566,14 @@ class navo_sst_map(obsgen):
         good = dat.nonzero()
         lat = lat[good]
         lon = lon[good]
-        depth = self.depth * np.ones(dat.shape)[good]
         data = [seapy.roms.obs.raw_data("TEMP", self.provenance, dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
-                                      data, self.dt, depth_adjust=True, title=title)
+        obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
+                                     data, self.dt, depth_adjust=True, title=title)
+        obs.z *= 0
+        obs.depth -= self.depth
+        return obs
 
 
 class modis_sst_map(obsgen):
