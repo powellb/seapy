@@ -526,7 +526,7 @@ class navo_sst_map(obsgen):
     the loading of the data.
     """
 
-    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch, temp_error=0.5,
+    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch, temp_error=0.25,
                  temp_limits=None, provenance="SST_NAVO_MAP"):
 
         self.temp_error = temp_error
@@ -1047,6 +1047,7 @@ class argo_ctd(obsgen):
         else:
             self.temp_limits = temp_limits
         if salt_limits is None:
+
             self.salt_limits = (10, 35.5)
         else:
             self.salt_limits = salt_limits
