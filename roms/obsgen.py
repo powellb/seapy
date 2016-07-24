@@ -73,8 +73,8 @@ def error_profile(obs, depth, error, provenance=None):
                 l = np.where(np.logical_and(obs.type == typ,
                                             np.in1d(obs.provenance, pro)))
             else:
-                l = np.where(np.logical_and(obs.type == typ, obs.z < 0))
-            nerr = fint(np.abs(obs.z[l]))
+                l = np.where(np.logical_and(obs.type == typ, obs.depth < 0))
+            nerr = fint(np.abs(obs.depth[l]))
             obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
