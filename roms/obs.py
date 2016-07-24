@@ -645,7 +645,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
         # Get the grid locations from the data locations
         subsurface_values = False
         (j, i) = grid.ij((lon, lat))
-        depth = np.zeros(i.size)
+        depth = grid.n*np.ones(i.size)
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
