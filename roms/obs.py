@@ -645,7 +645,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
         # Get the grid locations from the data locations
         subsurface_values = False
         (j, i) = grid.ij((lon, lat))
-        depth = grid.n*np.ones(i.size)
+        depth = grid.n * np.ones(i.size)
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
@@ -745,7 +745,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
                 kk = kk[binned].ravel() + 1
             else:
                 kk = np.resize(grid.n, Nd)
-                dd = np.zeros(ii.shape)
+                dd = kk
 
             # Put all of the data from this time into our lists
             ot.append(np.resize(mtime, Nd))

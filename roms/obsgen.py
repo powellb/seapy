@@ -95,10 +95,12 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     tide_file : string,
       The name of the ROMS tidal forcing file to use for predicting the
       barotropic tides.
-    tide_error : ndarray,
+    tide_error : np.masked_array
       A two dimensional array of the tidal fit errors to apply to
       the ssh errors when adding the tides. This should be the same size
-      as the rho-grid. The units of the error must be in meters.
+      as the rho-grid. The units of the error must be in meters. If it is
+      masked, the mask will be honored and obs that are in the mask will
+      be removed. This allows you to filter on regions of high error.
     tide_start : bool, optional,
       If given, the tide_start of the tide file. If not specified,
       will read the attribute of the tidal forcing file
@@ -144,24 +146,33 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
     # If we have any, then do tidal predictions and add the signal
     # and error to the observations
+    bad = []
     if l[0].any():
         ox = np.rint(obs.x[l]).astype(int)
         oy = np.rint(obs.y[l]).astype(int)
         idx = seapy.unique_rows((ox, oy))
         for cur in seapy.progressbar.progress(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
-            time = [reftime + datetime.timedelta(t) for t in obs.time[l][pts]]
-            amppha = seapy.tide.pack_amp_phase(
-                frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]],
-                frc['Ephase'][:, oy[cur], ox[cur]])
-            zpred = seapy.tide.predict(time, amppha,
-                                       lat=obs.lat[l][cur],
-                                       tide_start=tide_start)
+            # If this point is masked, remove from the observations
+            if not tide_error[oy[cur], ox[cur]]:
+                bad.append(l[0][pts].tolist())
+            else:
+                time = [reftime + datetime.timedelta(t) for t in
+                        obs.time[l][pts]]
+                amppha = seapy.tide.pack_amp_phase(
+                    frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]],
+                    frc['Ephase'][:, oy[cur], ox[cur]])
+                zpred = seapy.tide.predict(time, amppha,
+                                           lat=obs.lat[l][cur],
+                                           tide_start=tide_start)
+                # Add the information to the observations
+                obs.value[l[0][pts]] += zpred
+                obs.error[l[0][pts]] = np.maximum(
+                    obs.error[l[0][pts]], tide_error[oy[cur], ox[cur]]**2)
 
-            # Add the information to the observations
-            obs.value[l[0][pts]] += zpred
-            obs.error[l[0][pts]] = np.maximum(
-                obs.error[l[0][pts]], tide_error[oy[cur], ox[cur]]**2)
+    # If any were bad, then remove them
+    if bad:
+        obs.delete(seapy.flatten(bad))
     pass
 
 
