@@ -60,7 +60,6 @@ def error_profile(obs, depth, error, provenance=None):
     obs = seapy.roms.obs.asobs(obs)
     depth = np.atleast_1d(depth).flatten()
     depth = np.abs(depth)
-    fint = interp1d(depth, np.zeros(depth.shape))
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
 
     # Loop over all of the profiles in the error dictionary and
@@ -68,7 +67,7 @@ def error_profile(obs, depth, error, provenance=None):
     for var in error:
         typ = seapy.roms.obs.astype(var)
         try:
-            fint.y = error[var].flatten()
+            fint = interp1d(depth, error[var].flatten(), copy=False)
             if pro.any():
                 l = np.where(np.logical_and(obs.type == typ,
                                             np.in1d(obs.provenance, pro)))
