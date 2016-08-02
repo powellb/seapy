@@ -645,11 +645,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
         # Get the grid locations from the data locations
         subsurface_values = False
         (j, i) = grid.ij((lon, lat))
-<<<<<<< HEAD
-        depth = grid.n*np.ones(i.size)
-=======
         depth = grid.n * np.ones(i.size)
->>>>>>> powellb/master
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
