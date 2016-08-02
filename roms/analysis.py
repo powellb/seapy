@@ -261,7 +261,7 @@ def gen_std_f(roms_file, std_file, records=None, fields=None):
     nc.close()
 
 
-def plot_obs_surface(obs, type='zeta', prov=None, time=None,
+def plot_obs_spatial(obs, type='zeta', prov=None, time=None, depth=0,
                      gridcoord=False, error=False, **kwargs):
     """
     Create a surface plot of the observations.
@@ -276,6 +276,8 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
         The provenance of the observations to plot
     time: ndarray,
         The times of the observations to plot
+    depth: float,
+        The depth of the obs to plot over the spatial region
     gridcoord: bool,
         If True, plot on grid coordinates. If False [default] plot on lat/lon
     error: bool,
@@ -301,12 +303,12 @@ def plot_obs_surface(obs, type='zeta', prov=None, time=None,
         idx = np.where(np.logical_and.reduce((
             obs.type == otype,
             obs.provenance == prov,
-            np.logical_or(obs.z == 0, obs.depth == 0))))[0]
+            np.logical_or(obs.z == 0, obs.depth == depth))))[0]
 
     else:
         idx = np.where(np.logical_and(
             obs.type == otype,
-            np.logical_or(obs.z == 0, obs.depth == 0)))[0]
+            np.logical_or(obs.z == 0, obs.depth == depth)))[0]
 
     # If there is a time specific condition, find the sets
     if time is not None:
