@@ -406,6 +406,7 @@ class grid:
         None : sets depth attributes in grid
         """
         try:
+            pu.db
             if self._isroms:
                 if "s_rho" not in self.__dict__:
                     self.s_rho, self.cs_r = seapy.roms.stretching(
