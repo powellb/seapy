@@ -54,8 +54,8 @@ def adddim(fld, size=1):
 
     """
     fld = np.atleast_1d(fld)
-    s = np.ones(fld.ndim + 1)
-    s[0] = size
+    s = np.ones(fld.ndim + 1).astype(int)
+    s[0] = int(size)
     return np.tile(fld, s)
 
 
