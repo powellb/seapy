@@ -54,8 +54,8 @@ def adddim(fld, size=1):
 
     """
     fld = np.atleast_1d(fld)
-    s = np.ones(fld.ndim + 1)
-    s[0] = size
+    s = np.ones(fld.ndim + 1).astype(int)
+    s[0] = int(size)
     return np.tile(fld, s)
 
 
@@ -160,6 +160,8 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     fld : masked array
     """
     fld = np.ma.array(data, copy=copy)
+    if not copy: fld._sharedmask = False
+    
     # Make sure ksize is odd
     ksize = int(ksize + 1) if int(ksize) % 2 == 0 else int(ksize)
     if fld.ndim > 3 or fld.ndim < 2:
@@ -168,7 +170,7 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         raise ValueError("ksize must be greater than or equal to 3")
 
     if kernel is None:
-        center = np.round(ksize / 2)
+        center = np.round(ksize / 2).astype(int)
         kernel = np.ones([ksize, ksize])
         kernel[center, center] = 0.0
     else:
@@ -191,7 +193,7 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
             mode="constant", cval=0.0), (2, 0, 1))
 
     lst = np.nonzero(np.logical_and(msk, count > 0))
-    msk[lst] = False
+    fld[lst] = np.ma.nomask
     fld[lst] = nfld[lst] / count[lst]
     return fld
 
