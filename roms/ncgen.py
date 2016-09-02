@@ -422,7 +422,55 @@ def create_frc_bulk(filename, lat=10, lon=10,
     # Fill in the appropriate dimension values
     dims["lat"] = lat
     dims["lon"] = lon
-    vars = _set_time_ref(vars, "time", reftime)
+    vars = _set_time_ref(vars, "frc_time", reftime)
+
+    # Create the file
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
+                title=title)
+
+    # Return the new file
+    return _nc
+
+
+def create_frc_direct(filename, eta_rho=10, xi_rho=10,
+                      reftime=default_epoch, clobber=False,
+                      title="My Forcing"):
+    """
+    Create a direct surface forcing file
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    eta_rho: int, optional
+        number of rows in the eta direction
+    xi_rho: int, optional
+        number of columns in the xi direction
+    reftime: datetime, optional
+        date of epoch for time origin in netcdf
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    title: string, optional
+        netcdf attribute title
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    """
+    # Generate the Structure
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_direct.cdl")
+
+    # Fill in the appropriate dimension values
+    dims = {'y_rho': eta_rho,
+            'y_u': eta_rho,
+            'y_v': eta_rho - 1,
+            'x_rho': xi_rho,
+            'x_u': xi_rho - 1,
+            'x_v': xi_rho,
+            'frc_time': 0}
+    vars = _set_time_ref(vars, 'frc_time', reftime)
 
     # Create the file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
