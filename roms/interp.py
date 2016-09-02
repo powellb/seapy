@@ -106,7 +106,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # Now fill vertically
     nrz = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
     nrz[1:-1, :, :] = rz
-    nrz[bot, :, :] = rz[bot, :, :] - 500
+    nrz[bot, :, :] = rz[bot, :, :] - 1000
     nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
 
     if not gradsrc:
