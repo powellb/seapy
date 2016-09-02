@@ -582,7 +582,7 @@ class navo_sst_map(obsgen):
         obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                      data, self.dt, depth_adjust=True, title=title)
         obs.z *= 0
-        obs.depth -= self.depth
+        obs.depth = -self.depth*np.ones(len(obs.depth))
         return obs
 
 
