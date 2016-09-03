@@ -1,0 +1,81 @@
+netcdf frc_direct {
+
+dimensions:
+	x_rho = 386 ;
+	x_u = 385 ;
+	x_v = 386 ;
+	y_rho = 130 ;
+	y_u = 130 ;
+	y_v = 129 ;
+	frc_time = UNLIMITED ; // (0 currently)
+
+
+variables:
+    double lat_rho(y_rho, x_rho) ;
+        lat_rho:long_name = "latitude of RHO-points" ;
+        lat_rho:units = "degree_north" ;
+        lat_rho:standard_name = "latitude" ;
+    double lon_rho(y_rho, x_rho) ;
+        lon_rho:long_name = "longitude of RHO-points" ;
+        lon_rho:units = "degree_east" ;
+        lon_rho:standard_name = "longitude" ;
+    double lat_u(y_u, x_u) ;
+        lat_u:long_name = "latitude of U-points" ;
+        lat_u:units = "degree_north" ;
+        lat_u:standard_name = "latitude" ;
+    double lon_u(y_u, x_u) ;
+        lon_u:long_name = "longitude of U-points" ;
+        lon_u:units = "degree_east" ;
+        lon_u:standard_name = "longitude" ;
+    double lat_v(y_v, x_v) ;
+        lat_v:long_name = "latitude of V-points" ;
+        lat_v:units = "degree_north" ;
+        lat_v:standard_name = "latitude" ;
+    double lon_v(y_v, x_v) ;
+        lon_v:long_name = "longitude of V-points" ;
+        lon_v:units = "degree_east" ;
+        lon_v:standard_name = "longitude" ;
+	float frc_time(frc_time) ;
+		frc_time:long_name = "atmospheric direct forcing frc_time" ;
+		frc_time:units = "days since 2000-01-01" ;
+	float shflux(frc_time, y_rho, x_rho) ;
+		shflux:long_name = "surface net heat flux" ;
+		shflux:units = "Watts meter-2" ;
+		shflux:positive_value = "downward flux, heating" ;
+		shflux:negative_value = "upward flux, cooling" ;
+		shflux:time = "frc_time" ;
+        shflux:coordinates = "lon_rho lat_rho frc_time" ;
+	float swflux(frc_time, y_rho, x_rho) ;
+		swflux:long_name = "surface freshwater flux (E-P)" ;
+		swflux:units = "cenfrc_timeter day-1" ;
+		swflux:positive_value = "net evaporation" ;
+		swflux:negative_value = "net precipitation" ;
+		swflux:time = "frc_time" ;
+        swflux:coordinates = "lon_rho lat_rho frc_time" ;
+	float swrad(frc_time, y_rho, x_rho) ;
+        swrad:units = "Watts meter-2" ;
+        swrad:positive_value = "downward flux, heating" ;
+        swrad:long_name = "solar shortwave radiation" ;
+        swrad:time = "frc_time" ;
+        swrad:negative_value = "upward flux, cooling" ;
+        swrad:coordinates = "lon_rho lat_rho time" ;
+	float SSS(frc_time, y_rho, x_rho) ;
+		SSS:long_name = "sea surface salinity" ;
+        SSS:units = "ppt" ;
+		SSS:time = "frc_time" ;
+        SSS:coordinates = "lon_rho lat_rho frc_time" ;
+	float sustr(frc_time, y_u, x_u) ;
+		sustr:long_name = "surface u-momentum stress" ;
+		sustr:units = "Newton meter-2" ;
+		sustr:time = "frc_time" ;
+        sustr:coordinates = "lon_u lat_u frc_time" ;
+	float svstr(frc_time, y_v, x_v) ;
+		svstr:long_name = "surface v-momentum stress" ;
+		svstr:units = "Newton meter-2" ;
+		svstr:time = "frc_time" ;
+        svstr:coordinates = "lon_v lat_v frc_time" ;
+
+// global attributes:
+		:type = "ROMS FORCING file" ;
+
+}
