@@ -130,15 +130,15 @@ class grid:
                  "mask_v": ["mask_v"],
                  "angle": ["angle"],
                  "h": ["h"],
-                 "n": ["N"],
+                 "n": ["n"],
                  "theta_s": ["theta_s"],
                  "theta_b": ["theta_b"],
-                 "tcline": ["Tcline"],
+                 "tcline": ["tcline"],
                  "hc": ["hc"],
-                 "vtransform": ["Vtransform"],
-                 "vstretching": ["Vstretching"],
+                 "vtransform": ["vtransform"],
+                 "vstretching": ["vstretching"],
                  "s_rho": ["s_rho"],
-                 "cs_r": ["Cs_r"],
+                 "cs_r": ["cs_r"],
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
@@ -153,11 +153,12 @@ class grid:
         except:
             self.name = "untitled"
         self.key = {}
+        ncvars = {v.lower(): v for v in self._nc.variables.keys()}
         for var in gvars:
             for inp in gvars[var]:
-                if inp in self._nc.variables:
+                if inp in ncvars:
                     self.key[var] = inp
-                    self.__dict__[var] = self._nc.variables[inp][:]
+                    self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 
         # Close the file
@@ -601,7 +602,8 @@ class grid:
         return (ygrid, xgrid)
 
     def ijk(self, points, depth_adjust=False):
-        """Compute the fractional i, j, k indices of the grid from a
+        """
+        Compute the fractional i, j, k indices of the grid from a
         set of lon, lat, depth points.
 
         Parameters

@@ -255,10 +255,10 @@ def gen_direct_forcing(his_file, frc_file):
         infile.variables['ocean_time'][:],
         infile.variables['ocean_time'].units), nc.variables['frc_time'].units)
 
-    for f in ("sustr", "svstr", "shflux", "swrad", "lat_rho", "lat_u", "lat_v",
-              "lon_rho", "lon_u", "lon_v"):
+    for f in seapy.progressbar.progress("sustr", "svstr", "shflux", "swrad",
+                                        "lat_rho", "lat_u", "lat_v",
+                                        "lon_rho", "lon_u", "lon_v"):
         if f in infile.variables:
-            print(f)
             nc.variables[f][:] = seapy.convolve_mask(
                 infile.variables[f][:], copy=False)
 
