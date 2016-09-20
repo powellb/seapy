@@ -192,19 +192,75 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     out = seapy.roms.ncgen.create_frc_bulk(outfile, lat=frc_lat.shape[0],
                                            lon=frc_lon.shape[1], reftime=epoch,
                                            clobber=clobber)
-    out.variables['time'][:] = netCDF4.date2num(frc_time[time_list],
-                                                out.variables['time'].units)
+    out.variables['frc_time'][:] = netCDF4.date2num(frc_time[time_list],
+                                                    out.variables['frc_time'].units)
     out.variables['lat'][:] = frc_lat
     out.variables['lon'][:] = frc_lon
 
     # Loop over the fields and fill out the output file
     for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
-        out.variables[f][:] = \
-            forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
-            fields[f].ratio + fields[f].offset
-        out.sync()
+        if hasattr(fields[f], 'field'):
+            out.variables[f][:] = \
+                forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
+                fields[f].ratio + fields[f].offset
+            out.sync()
 
     out.close()
 
 
+def gen_direct_forcing(his_file, frc_file):
+    """
+    Generate a direct forcing file from a history (or other ROMS output) file. It requires
+    that sustr, svstr, shflux, and ssflux (or swflux) with salt be available. This will
+    generate a forcing file that contains: sustr, svstr, swflux, and ssflux.
+
+    Parameters
+    ----------
+    his_file: string,
+      The ROMS history (or other) file(s) (can use wildcards) that contains the fields to
+      make forcing from
+    frc_file: string,
+      The output forcing file
+
+    Returns
+    -------
+    None: Generates an output file of bulk forcings
+    """
+    import os
+
+    infile = seapy.netcdf(his_file)
+    ref, _ = seapy.roms.get_reftime(infile)
+
+    # Create the output file
+    nc = seapy.roms.ncgen.create_frc_direct(frc_file,
+                                            eta_rho=infile.dimensions[
+                                                'eta_rho'].size,
+                                            xi_rho=infile.dimensions[
+                                                'xi_rho'].size,
+                                            reftime=ref,
+                                            clobber=True,
+                                            title="Forcing from " +
+                                            os.path.basename(his_file))
+
+    # Copy the data over
+    nc.variables['SSS'][:] = infile.variables['salt'][:, -1, :, :]
+    if 'EminusP' in infile.variables:
+        nc.variables['swflux'][:] = infile.variables['EminusP'][:]
+    elif 'swflux' in infile.variables:
+        nc.variables['swflux'][:] = infile.variables['swflux'][:]
+    else:
+        nc.variables['swflux'][:] = infile.variables['ssflux'][:] \
+            / nc.variables['SSS'][:]
+    nc.variables['frc_time'][:] = netCDF4.date2num(netCDF4.num2date(
+        infile.variables['ocean_time'][:],
+        infile.variables['ocean_time'].units), nc.variables['frc_time'].units)
+
+    for f in seapy.progressbar.progress("sustr", "svstr", "shflux", "swrad",
+                                        "lat_rho", "lat_u", "lat_v",
+                                        "lon_rho", "lon_u", "lon_v"):
+        if f in infile.variables:
+            nc.variables[f][:] = seapy.convolve_mask(
+                infile.variables[f][:], copy=False)
+
+    nc.close()
 

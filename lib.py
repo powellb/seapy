@@ -160,8 +160,9 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     fld : masked array
     """
     fld = np.ma.array(data, copy=copy)
-    if not copy: fld._sharedmask = False
-    
+    if not copy:
+        fld._sharedmask = False
+
     # Make sure ksize is odd
     ksize = int(ksize + 1) if int(ksize) % 2 == 0 else int(ksize)
     if fld.ndim > 3 or fld.ndim < 2:
@@ -237,6 +238,129 @@ def day2date(day=0, epoch=default_epoch):
     return [epoch + datetime.timedelta(days=float(t)) for t in day]
 
 
+def _distq(lon1, lat1, lon2, lat2):
+    """
+    Compute the geodesic distance between lat/lon points. This code is
+    taken from the dist.f routine and the Matlab version distg.m passed
+    around WHOI and APL. This was stripped down to use the WGS84 ellipsoid.
+
+    Parameters
+    ----------
+    lon1 : array_like or scalar
+        Input array of source longitude(s)
+    lat1 : array_like or scalar
+        Input array of source latitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+    lat2 : array_like or scalar
+        Input array of destination latitude(s)
+
+    Returns
+    -------
+    distance : array or scalar of distance in meters
+    angle: array or scalar of angle in radians
+
+    """
+    lon1 = np.asanyarray(np.radians(lon1))
+    lat1 = np.asanyarray(np.radians(lat1))
+    lon2 = np.asanyarray(np.radians(lon2))
+    lat2 = np.asanyarray(np.radians(lat2))
+
+    # Set the WGS84 parameters
+    A = 6378137.
+    E = 0.081819191
+    B = np.sqrt(A * A - (A * E)**2)
+    EPS = E * E / (1.0 - E * E)
+
+    # Move any latitudes off of the equator
+    lat1[lat1 == 0] = np.finfo(float).eps
+    lat2[lat2 == 0] = -np.finfo(float).eps
+
+    # COMPUTE THE RADIUS OF CURVATURE IN THE PRIME VERTICAL FOR EACH POINT
+    xnu1 = A / np.sqrt(1.0 - (E * np.sin(lat1))**2)
+    xnu2 = A / np.sqrt(1.0 - (E * np.sin(lat2))**2)
+
+    TPSI2 = (1.0 - E * E) * np.tan(lat2) + E * E * xnu1 * np.sin(lat1) / \
+        (xnu2 * np.cos(lat2))
+    PSI2 = np.arctan(TPSI2)
+
+    DPHI2 = lat2 - PSI2
+    DLAM = (lon2 - lon1) + np.finfo(float).eps
+    CTA12 = np.sin(DLAM) / (np.cos(lat1) * TPSI2 - np.sin(lat1) * np.cos(DLAM))
+    A12 = np.arctan(CTA12)
+    CTA21P = np.sin(DLAM) / (np.sin(PSI2) * np.cos(DLAM) -
+                             np.cos(PSI2) * np.tan(lat1))
+    A21P = np.arctan(CTA21P)
+
+    # C    GET THE QUADRANT RIGHT
+    DLAM2 = (np.abs(DLAM) < np.pi).astype(int) * DLAM + \
+        (DLAM >= np.pi).astype(int) * (-2 * np.pi + DLAM) + \
+        (DLAM <= -np.pi).astype(int) * (2 * np.pi + DLAM)
+    A12 = A12 + (A12 < -np.pi).astype(int) * 2 * np.pi - \
+        (A12 >= np.pi).astype(int) * 2 * np.pi
+    A12 = A12 + np.pi * np.sign(-A12) * \
+        (np.sign(A12).astype(int) != np.sign(DLAM2))
+    A21P = A21P + (A21P < -np.pi).astype(int) * 2 * np.pi - \
+        (A21P >= np.pi).astype(int) * 2 * np.pi
+    A21P = A21P + np.pi * np.sign(-A21P) * \
+        (np.sign(A21P).astype(int) != np.sign(-DLAM2))
+
+    SSIG = np.sin(DLAM) * np.cos(PSI2) / np.sin(A12)
+
+    dd1 = np.array([np.cos(lon1) * np.cos(lat1),
+                    np.sin(lon1) * np.cos(lat1), np.sin(lat1)])
+    dd2 = np.array([np.cos(lon2) * np.cos(lat2),
+                    np.sin(lon2) * np.cos(lat2), np.sin(lat2)])
+    dd2 = np.sum((dd2 - dd1)**2, axis=0)
+    bigbrnch = (dd2 > 2).astype(int)
+
+    SIG = np.arcsin(SSIG) * (bigbrnch == 0).astype(int) + \
+        (np.pi - np.arcsin(SSIG)) * bigbrnch
+
+    SSIGC = -np.sin(DLAM) * np.cos(lat1) / np.sin(A21P)
+    SIGC = np.arcsin(SSIGC)
+    A21 = A21P - DPHI2 * np.sin(A21P) * np.tan(SIG / 2.0)
+
+    # C   COMPUTE RANGE
+    G2 = EPS * (np.sin(lat1))**2
+    G = np.sqrt(G2)
+    H2 = EPS * (np.cos(lat1) * np.cos(A12))**2
+    H = np.sqrt(H2)
+    SIG2 = SIG * SIG
+    TERM1 = -H2 * (1.0 - H2) / 6.0
+    TERM2 = G * H * (1.0 - 2.0 * H2) / 8.0
+    TERM3 = (H2 * (4.0 - 7.0 * H2) - 3.0 * G2 * (1.0 - 7.0 * H2)) / 120.0
+    TERM4 = -G * H / 48.0
+    rng = xnu1 * SIG * (1.0 + SIG2 * (TERM1 + SIG * TERM2 + SIG2 * TERM3 +
+                                      SIG2 * SIG * TERM4))
+
+    return rng, A12
+
+
+def earth_distance(lon1, lat1, lon2, lat2):
+    """
+    Compute the geodesic distance between lat/lon points. 
+
+    Parameters
+    ----------
+    lon1 : array_like or scalar
+        Input array of source longitude(s)
+    lat1 : array_like or scalar
+        Input array of source latitude(s)
+    lon2 : array_like or scalar
+        Input array of destination longitude(s)
+    lat2 : array_like or scalar
+        Input array of destination latitude(s)
+
+    Returns
+    -------
+    distance : array or scalar of distance in meters
+
+    """
+    rng, _ = _distq(lon1, lat1, lon2, lat2)
+    return rng
+
+
 def earth_angle(lon1, lat1, lon2, lat2):
     """
     Compute the angle between lat/lon points. NOTE: The bearing angle
@@ -251,66 +375,16 @@ def earth_angle(lon1, lat1, lon2, lat2):
         Input array of source latitude(s)
     lon2 : array_like or scalar
         Input array of destination longitude(s)
-    lon2 : array_like or scalar
-        Input array of destination longitude(s)
+    lat2 : array_like or scalar
+        Input array of destination latitude(s)
 
     Returns
     -------
     angle : array or scalar of bearing in radians
 
     """
-    lon1 = np.asanyarray(lon1)
-    lon2 = np.asanyarray(lon2)
-    lat1 = np.radians(np.asanyarray(lat1))
-    lat2 = np.radians(np.asanyarray(lat2))
-
-    dlon = np.radians(lon2 - lon1)
-    angle = np.arctan2(np.sin(dlon) * np.cos(lat2),
-                       np.cos(lat1) * np.sin(lat2) -
-                       np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
+    _, angle = _distq(lon1, lat1, lon2, lat2)
     return (np.pi / 2.0 - angle)
-
-
-def earth_distance(lon1, lat1, lon2, lat2):
-    """
-    Compute the distance between lat/lon points
-
-    Parameters
-    ----------
-    lon1 : array_like or scalar
-        Input array of source longitude(s)
-    lat1 : array_like or scalar
-        Input array of source latitude(s)
-    lon2 : array_like or scalar
-        Input array of destination longitude(s)
-    lon2 : array_like or scalar
-        Input array of destination longitude(s)
-
-    Returns
-    -------
-    distance : array or scalar of distance in meters
-
-    """
-    epsilon = 0.99664718940443  # This is Sqrt(1-epsilon^2)
-    radius = 6378137  # Radius in meters
-    d2r = np.pi / 180.0
-
-    lon1 = np.asanyarray(lon1)
-    lat1 = np.asanyarray(lat1)
-    lon2 = np.asanyarray(lon2)
-    lat2 = np.asanyarray(lat2)
-
-    # Using trig identities of tan(atan(b)), cos(atan(b)), sin(atan(b)) for
-    # working with geocentric where lat_gc = atan(epsilon * tan(lat))
-    tan_lat = epsilon * np.tan(d2r * lat1.astype(np.float64))
-    cos_lat = 1.0 / np.sqrt(1.0 + tan_lat**2)
-    sin_lat = tan_lat / np.sqrt(1.0 + tan_lat**2)
-    tan_lat = epsilon * np.tan(d2r * lat2.astype(np.float64))
-    cos_latj = 1.0 / np.sqrt(1.0 + tan_lat**2)
-    sin_latj = tan_lat / np.sqrt(1.0 + tan_lat**2)
-
-    return radius * np.sqrt(2.0 * (1.0 - cos_lat * cos_latj *
-                                   np.cos(d2r * (lon1 - lon2)) - sin_lat * sin_latj))
 
 
 def flatten(l, ltypes=(list, tuple, set)):
