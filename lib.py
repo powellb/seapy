@@ -90,7 +90,7 @@ def chunker(seq, size):
 
 def smooth(data, ksize=3, kernel=None, copy=True):
     """
-    Smooth the data field using a specified convolution kernel 
+    Smooth the data field using a specified convolution kernel
     or a default averaging kernel.
 
     Parameters
@@ -339,7 +339,7 @@ def _distq(lon1, lat1, lon2, lat2):
 
 def earth_distance(lon1, lat1, lon2, lat2):
     """
-    Compute the geodesic distance between lat/lon points. 
+    Compute the geodesic distance between lat/lon points.
 
     Parameters
     ----------
@@ -621,7 +621,7 @@ def unique_rows(x):
     return idx
 
 
-def vecfind(a, b, tolerance=0):
+def vecfind(a, b, tolerance=0, sort=False):
     """
     Find all occurences of b in a within the given tolerance and return
     the indices into a and b that correspond.
@@ -634,6 +634,8 @@ def vecfind(a, b, tolerance=0):
         Input vector
     tolerance : float, optional
         Input tolerance for how close a==b
+    sort : bool, optional
+        If True, the indices returned will sort the values
 
     Returns
     -------
@@ -644,23 +646,17 @@ def vecfind(a, b, tolerance=0):
     a = np.asanyarray(a)
     b = np.asanyarray(b)
 
-    # If the tolerance is zero, we can use built-in methods
-    if tolerance == 0:
-        index_a = np.where(np.in1d(a, b))[0]
-        index_b = np.where(np.in1d(b, a))[0]
-    # Otherwise, slow method
+    if tolerance:
+        idx = np.where(np.abs(
+            np.tile(a, (b.size, 1)).T - np.tile(b, (a.size, 1))) < tolerance)
     else:
-        index_a = []
-        index_b = []
-        for i, c in enumerate(b):
-            d = np.abs(a - c)
-            x = np.nonzero(d < tolerance)[0]
-            if np.any(x):
-                index_a.append(np.where(d == np.min(d))[0])
-                index_b.append(i)
-        index_a = np.array(index_a).flatten()
-        index_b = np.array(index_b)
-    return index_a, index_b
+        idx = np.where(np.tile(a, (b.size, 1)).T == np.tile(b, (a.size, 1)))
+
+    if sort:
+        srt = a[idx[0]].argsort(kind='mergesort')
+        return idx[0][srt], idx[1][srt]
+    else:
+        return idx[0], idx[1]
 
 
 def godelnumber(x):
