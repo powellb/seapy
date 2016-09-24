@@ -621,10 +621,13 @@ def unique_rows(x):
     return idx
 
 
-def vecfind(a, b, tolerance=0, sort=False):
+def vecfind(a, b, tolerance=None):
     """
     Find all occurences of b in a within the given tolerance and return
-    the indices into a and b that correspond.
+    the sorted indices of a and b that yield the corresponding values.
+    The indices are of equal length, such that 
+
+    Written by Eric Firing, University of Hawaii.
 
     Parameters
     ----------
@@ -632,31 +635,64 @@ def vecfind(a, b, tolerance=0, sort=False):
         Input vector
     b : array
         Input vector
-    tolerance : float, optional
+    tolerance : same type as the values of a and b, optional
         Input tolerance for how close a==b
-    sort : bool, optional
-        If True, the indices returned will sort the values
 
     Returns
     -------
     index_a, index_b : arrays of indices for each vector where values are equal,
             such that a[index_a] == b[index_b]
 
+    Examples
+    --------
+    >>> a = np.array([3,4,1,8,9])
+    >>> b = np.array([4,7,1])
+    >>> ia, ib = vecfind(a, b)
+
+    By definition,
+
+    >>> len(ia) == len(ib)
+    True
+    >>> a[ia] == b[ib]
+    True
+
     """
-    a = np.asanyarray(a)
-    b = np.asanyarray(b)
+    a = np.asanyarray(a).flatten()
+    b = np.asanyarray(b).flatten()
 
+    dmin = 0.499999 * min(np.abs(np.diff(a)).min(), np.abs(np.diff(b)).min())
     if tolerance:
-        idx = np.where(np.abs(
-            np.tile(a, (b.size, 1)).T - np.tile(b, (a.size, 1))) < tolerance)
+        tolerance = min(dmin, tolerance)
     else:
-        idx = np.where(np.tile(a, (b.size, 1)).T == np.tile(b, (a.size, 1)))
+        tolerance = dmin
 
-    if sort:
-        srt = a[idx[0]].argsort(kind='mergesort')
-        return idx[0][srt], idx[1][srt]
-    else:
-        return idx[0], idx[1]
+    na = len(a)
+    t = np.hstack((a, b))
+    is_a = np.zeros(t.shape, dtype=np.int8)
+    is_a[:na] = 1
+    isorted = np.argsort(t)
+    tsorted = t[isorted]
+    is_a_sorted = is_a[isorted]
+
+    dt = np.diff(tsorted)
+    mixed = np.abs(np.diff(is_a_sorted)) == 1
+    ipair = np.nonzero((np.abs(dt) <= tolerance) & mixed)[0]
+
+    # Now ipair should be the indices of the first elements
+    # of consecutive pairs in tsorted for which the two items
+    # are from different arrays, and differ by less than tolerance.
+    # The problem is that they could be in either order.
+
+    iswap = np.nonzero(is_a_sorted[ipair] == 0)[0]  # b is first, so swap
+
+    temp = isorted[ipair[iswap] + 1]
+    isorted[ipair[iswap] + 1] = isorted[ipair[iswap]]
+    isorted[ipair[iswap]] = temp
+
+    isorted_a = isorted[ipair]
+    isorted_b = isorted[ipair + 1] - na
+
+    return isorted_a, isorted_b
 
 
 def godelnumber(x):
