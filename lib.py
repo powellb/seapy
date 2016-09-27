@@ -635,8 +635,9 @@ def vecfind(a, b, tolerance=None):
         Input vector
     b : array
         Input vector
-    tolerance : same type as the values of a and b, optional
-        Input tolerance for how close a==b
+    tolerance : same type as stored values of a and b, optional
+        Input tolerance for how close a is to b. If not specified,
+        then elements of a and b must be equal.
 
     Returns
     -------
@@ -660,11 +661,9 @@ def vecfind(a, b, tolerance=None):
     a = np.asanyarray(a).flatten()
     b = np.asanyarray(b).flatten()
 
-    dmin = 0.499999 * min(np.abs(np.diff(a)).min(), np.abs(np.diff(b)).min())
-    if tolerance:
-        tolerance = min(dmin, tolerance)
-    else:
-        tolerance = dmin
+    # if no tolerance, compute a zero distance of the proper type
+    if tolerance is None:
+        tolerance = a[0] - a[0]
 
     na = len(a)
     t = np.hstack((a, b))
