@@ -661,12 +661,14 @@ def vecfind(a, b, tolerance=None):
     a = np.asanyarray(a).flatten()
     b = np.asanyarray(b).flatten()
 
-    # if no tolerance, compute a zero distance of the proper type
+    # if no tolerance, compute a zero distance  the proper type
     if tolerance is None:
         tolerance = a[0] - a[0]
 
-    na = len(a)
-    t = np.hstack((a, b))
+    _, uniq_a = np.unique(a, return_index=True)
+    _, uniq_b = np.unique(b, return_index=True)
+    na = len(uniq_a)
+    t = np.hstack((a[uniq_a], b[uniq_b]))
     is_a = np.zeros(t.shape, dtype=np.int8)
     is_a[:na] = 1
     isorted = np.argsort(t)
@@ -691,7 +693,7 @@ def vecfind(a, b, tolerance=None):
     isorted_a = isorted[ipair]
     isorted_b = isorted[ipair + 1] - na
 
-    return isorted_a, isorted_b
+    return uniq_a[isorted_a], uniq_b[isorted_b]
 
 
 def godelnumber(x):
