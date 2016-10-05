@@ -140,9 +140,10 @@ def smooth(data, ksize=3, kernel=None, copy=True):
     return np.ma.array(fld, mask=mask)
 
 
-def convolve_mask(data, ksize=3, kernel=None, copy=True):
+def smoother(data, ksize=3, kernel=None, copy=True, only_mask=False):
     """
-    Convolve data over the missing regions of a mask
+    Convolve the kernel across the data to smooth or highlight
+    the field.
 
     Parameters
     ----------
@@ -154,6 +155,9 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         Define a convolution kernel. Default is averaging
     copy : bool, optional
         If true, a copy of input array is made
+    only_mask : bool, optional
+        If true, only consider the smoothing over the masked
+        region
 
     Returns
     -------
@@ -193,10 +197,36 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
             (fld.data * (~msk).view(np.int8)).transpose(1, 2, 0), kernel,
             mode="constant", cval=0.0), (2, 0, 1))
 
-    lst = np.nonzero(np.logical_and(msk, count > 0))
-    fld[lst] = np.ma.nomask
-    fld[lst] = nfld[lst] / count[lst]
+    if only_mask:
+        lst = np.nonzero(np.logical_and(msk, count > 0))
+        fld[lst] = np.ma.nomask
+        fld[lst] = nfld[lst] / count[lst]
+    else:
+        lst = np.nonzero(~msk)
+        fld[lst] = nfld[lst] / count[lst]
     return fld
+
+
+def convolve_mask(data, ksize=3, kernel=None, copy=True):
+    """
+    Convolve data over the missing regions of a mask
+
+    Parameters
+    ----------
+    data : masked array_like
+        Input field.
+    ksize : int, optional
+        Size of square kernel
+    kernel : ndarray, optional
+        Define a convolution kernel. Default is averaging
+    copy : bool, optional
+        If true, a copy of input array is made
+
+    Returns
+    -------
+    fld : masked array
+    """
+    return smoother(data, ksize, kernel, copy, True)
 
 
 def date2day(date=default_epoch, epoch=default_epoch):
