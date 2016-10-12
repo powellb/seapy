@@ -90,7 +90,7 @@ def chunker(seq, size):
 
 def smooth(data, ksize=3, kernel=None, copy=True):
     """
-    Smooth the data field using a specified convolution kernel 
+    Smooth the data field using a specified convolution kernel
     or a default averaging kernel.
 
     Parameters
@@ -140,9 +140,10 @@ def smooth(data, ksize=3, kernel=None, copy=True):
     return np.ma.array(fld, mask=mask)
 
 
-def convolve_mask(data, ksize=3, kernel=None, copy=True):
+def smoother(data, ksize=3, kernel=None, copy=True, only_mask=False):
     """
-    Convolve data over the missing regions of a mask
+    Convolve the kernel across the data to smooth or highlight
+    the field.
 
     Parameters
     ----------
@@ -154,6 +155,9 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
         Define a convolution kernel. Default is averaging
     copy : bool, optional
         If true, a copy of input array is made
+    only_mask : bool, optional
+        If true, only consider the smoothing over the masked
+        region
 
     Returns
     -------
@@ -193,10 +197,36 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
             (fld.data * (~msk).view(np.int8)).transpose(1, 2, 0), kernel,
             mode="constant", cval=0.0), (2, 0, 1))
 
-    lst = np.nonzero(np.logical_and(msk, count > 0))
-    fld[lst] = np.ma.nomask
-    fld[lst] = nfld[lst] / count[lst]
+    if only_mask:
+        lst = np.nonzero(np.logical_and(msk, count > 0))
+        fld[lst] = np.ma.nomask
+        fld[lst] = nfld[lst] / count[lst]
+    else:
+        lst = np.nonzero(~msk)
+        fld[lst] = nfld[lst] / count[lst]
     return fld
+
+
+def convolve_mask(data, ksize=3, kernel=None, copy=True):
+    """
+    Convolve data over the missing regions of a mask
+
+    Parameters
+    ----------
+    data : masked array_like
+        Input field.
+    ksize : int, optional
+        Size of square kernel
+    kernel : ndarray, optional
+        Define a convolution kernel. Default is averaging
+    copy : bool, optional
+        If true, a copy of input array is made
+
+    Returns
+    -------
+    fld : masked array
+    """
+    return smoother(data, ksize, kernel, copy, True)
 
 
 def date2day(date=default_epoch, epoch=default_epoch):
@@ -339,7 +369,7 @@ def _distq(lon1, lat1, lon2, lat2):
 
 def earth_distance(lon1, lat1, lon2, lat2):
     """
-    Compute the geodesic distance between lat/lon points. 
+    Compute the geodesic distance between lat/lon points.
 
     Parameters
     ----------
@@ -621,10 +651,13 @@ def unique_rows(x):
     return idx
 
 
-def vecfind(a, b, tolerance=0):
+def vecfind(a, b, tolerance=None):
     """
     Find all occurences of b in a within the given tolerance and return
-    the indices into a and b that correspond.
+    the sorted indices of a and b that yield the corresponding values.
+    The indices are of equal length, such that 
+
+    Written by Eric Firing, University of Hawaii.
 
     Parameters
     ----------
@@ -632,35 +665,65 @@ def vecfind(a, b, tolerance=0):
         Input vector
     b : array
         Input vector
-    tolerance : float, optional
-        Input tolerance for how close a==b
+    tolerance : same type as stored values of a and b, optional
+        Input tolerance for how close a is to b. If not specified,
+        then elements of a and b must be equal.
 
     Returns
     -------
     index_a, index_b : arrays of indices for each vector where values are equal,
             such that a[index_a] == b[index_b]
 
-    """
-    a = np.asanyarray(a)
-    b = np.asanyarray(b)
+    Examples
+    --------
+    >>> a = np.array([3,4,1,8,9])
+    >>> b = np.array([4,7,1])
+    >>> ia, ib = vecfind(a, b)
 
-    # If the tolerance is zero, we can use built-in methods
-    if tolerance == 0:
-        index_a = np.where(np.in1d(a, b))[0]
-        index_b = np.where(np.in1d(b, a))[0]
-    # Otherwise, slow method
-    else:
-        index_a = []
-        index_b = []
-        for i, c in enumerate(b):
-            d = np.abs(a - c)
-            x = np.nonzero(d < tolerance)[0]
-            if np.any(x):
-                index_a.append(np.where(d == np.min(d))[0])
-                index_b.append(i)
-        index_a = np.array(index_a).flatten()
-        index_b = np.array(index_b)
-    return index_a, index_b
+    By definition,
+
+    >>> len(ia) == len(ib)
+    True
+    >>> a[ia] == b[ib]
+    True
+
+    """
+    a = np.asanyarray(a).flatten()
+    b = np.asanyarray(b).flatten()
+
+    # if no tolerance, compute a zero distance  the proper type
+    if tolerance is None:
+        tolerance = a[0] - a[0]
+
+    _, uniq_a = np.unique(a, return_index=True)
+    _, uniq_b = np.unique(b, return_index=True)
+    na = len(uniq_a)
+    t = np.hstack((a[uniq_a], b[uniq_b]))
+    is_a = np.zeros(t.shape, dtype=np.int8)
+    is_a[:na] = 1
+    isorted = np.argsort(t)
+    tsorted = t[isorted]
+    is_a_sorted = is_a[isorted]
+
+    dt = np.diff(tsorted)
+    mixed = np.abs(np.diff(is_a_sorted)) == 1
+    ipair = np.nonzero((np.abs(dt) <= tolerance) & mixed)[0]
+
+    # Now ipair should be the indices of the first elements
+    # of consecutive pairs in tsorted for which the two items
+    # are from different arrays, and differ by less than tolerance.
+    # The problem is that they could be in either order.
+
+    iswap = np.nonzero(is_a_sorted[ipair] == 0)[0]  # b is first, so swap
+
+    temp = isorted[ipair[iswap] + 1]
+    isorted[ipair[iswap] + 1] = isorted[ipair[iswap]]
+    isorted[ipair[iswap]] = temp
+
+    isorted_a = isorted[ipair]
+    isorted_b = isorted[ipair + 1] - na
+
+    return uniq_a[isorted_a], uniq_b[isorted_b]
 
 
 def godelnumber(x):
