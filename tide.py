@@ -328,10 +328,9 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
     # Calulate time series
+    ts = np.zeros(len(times))
     if tide_minor:
-        ts = np.zeros(len(times))+1j*np.zeros(len(times))
-    else:    
-        ts = np.zeros(len(times))
+        ts = ts.astype(np.complex,copy=False)
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
