@@ -169,7 +169,10 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     frc_lon = forcing.variables[fields['frc_lon']][:]
     frc_lat = forcing.variables[fields['frc_lat']][:]
     # Make the forcing lat/lon on 2D grid
-    if frc_lon.ndim != 2:
+    if frc_lon.ndim == 3:
+        frc_lon = np.squeeze(frc_lon[0,:,:])
+        frc_lat = np.squeeze(frc_lat[0,:,:])
+    elif frc_lon.ndim == 1:
         frc_lon, frc_lat = np.meshgrid(frc_lon, frc_lat)
 
     # Find the values in our region
