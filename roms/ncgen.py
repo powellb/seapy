@@ -759,6 +759,45 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 
+def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False, title="My Nudging"):
+    """
+    Create a nudging coefficients file
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    eta_rho: int, optional
+        number of rows in the eta direction
+    xi_rho: int, optional
+        number of columns in the xi direction
+    s_rho: int, optional
+        number of s-levels
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    title: string, optional
+        netcdf attribute title
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    """
+    # Generate the Structure
+    dims, vars, attr = cdl_parser(_cdl_dir + "nudge_coef.cdl")
+
+    # Fill in the appropriate dimension values
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
+
+    # Create the file
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
+                title=title)
+
+    # Return the new file
+    return _nc
+
+
 def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
                   clobber=False, title="My Observations"):
     """
