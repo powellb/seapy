@@ -229,6 +229,24 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     return smoother(data, ksize, kernel, copy, True)
 
 
+def matlab2date(daynum):
+    """
+    Given a day number from matlab, convert into a datetime
+
+    Parameters
+    ----------
+    daynum: float
+      Scalar or array of matlab day numbers
+
+    Returns
+    -------
+    datetime : list
+    """
+    daynum = np.atleast_1d(daynum)
+    return [datetime.datetime.fromordinal(d.astype(np.int)) +
+            datetime.timedelta(days=(d % 1 - 366)) for d in daynum]
+
+
 def date2day(date=default_epoch, epoch=default_epoch):
     """
     Compute the fractional number of days elapsed since the epoch to the date

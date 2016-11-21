@@ -673,10 +673,8 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
     ----------
     grid : seapy.model.grid or string,
        The grid that defines the boundaries shape and mask
-    infile : string,
-       The input boundary file with tides
-    outfile : string,
-       The output boundary file to create without tides
+    bryfile : string,
+       The boundary file to detide
     tidefile : string,
        The output tidal forcing file with the tide spectral forcing
     tides : string array, optional
