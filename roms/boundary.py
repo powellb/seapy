@@ -664,7 +664,7 @@ def from_stations(station_file, bry_file, grid=None):
     pass
 
 
-def detide(grid, bryfile, tidefile, tides=None):
+def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
     """
     Given a boundary file, detide the barotropic components and create tidal
     forcing file for the grid. This method will update the given boundary file.
@@ -672,10 +672,17 @@ def detide(grid, bryfile, tidefile, tides=None):
     Parameters
     ----------
     grid : seapy.model.grid or string,
-    infile : string,
-    outfile : string,
+       The grid that defines the boundaries shape and mask
+    bryfile : string,
+       The boundary file to detide
     tidefile : string,
-    tides : string array,
+       The output tidal forcing file with the tide spectral forcing
+    tides : string array, optional
+       Array of strings defining which tides to extract. Defaults to the
+       standard 11 constituents.
+    tide_start : datetime, optional
+       The reference date to use for the tide forcing. If None, the
+       center of the time period is used.
 
     Returns
     -------
@@ -708,9 +715,10 @@ def detide(grid, bryfile, tidefile, tides=None):
                             bry.variables[timevar].units)
 
     # Pick the time for the tide file reference
-    tide_start = time[0] + (time[-1] - time[0]) / 2
-    tide_start = datetime.datetime(
-        tide_start.year, tide_start.month, tide_start.day)
+    if not tide_start:
+        tide_start = time[0] + (time[-1] - time[0]) / 2
+        tide_start = datetime.datetime(
+            tide_start.year, tide_start.month, tide_start.day)
 
     try:
         s_rho = len(bry.dimensions['s_rho'])
