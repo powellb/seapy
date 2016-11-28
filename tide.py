@@ -201,8 +201,8 @@ def vuf(time, tides=None, lat=55):
                     2: __const[s].sat.amprat[k] * 2.59808 * slat
                 }.get(__const[s].sat.ilatfac[k], 0)
                 fsum += rr * np.exp(1j * 2 * np.pi * uu)
-                ftemp = np.absolute(fsum)
-                utemp = np.angle(fsum)
+            ftemp = np.absolute(fsum)
+            utemp = np.angle(fsum)
 
             if __const[c].shallow.isshallow:
                 v += vtemp * __const[c].shallow.coef[i]
