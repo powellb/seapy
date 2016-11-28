@@ -327,10 +327,10 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
-    # Calulate time series
+    # Calculate time series
     ts = np.zeros(len(times))
     if tide_minor:
-        ts.dtype=np.complex
+        ts.dtype = np.complex
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
