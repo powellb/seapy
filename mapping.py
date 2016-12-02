@@ -73,7 +73,7 @@ class map(object):
 
     def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
                  urcrnrlat=40, proj='lcc', resolution='c', figsize=(8., 6.),
-                 dlat=1, dlon=2, fig=None, ax=None):
+                 dlat=1, dlon=2, fig=None, ax=None, fill_color="aqua"):
         """
         map class for abstracting the basemap methods for quick and easy creation
         of geographically referenced data figures
@@ -109,6 +109,8 @@ class map(object):
         ax: matplotlib.pyplot.axis object, optional
             If you want to plot on a pre-configured figure, pass the axis object
             along with the figure object.
+        fill_color: string, optional
+            The color to use for the axis background
 
         Returns
         -------
@@ -134,10 +136,11 @@ class map(object):
         self.dlat = dlat
         self.fig = fig
         self.ax = ax
+        self.fill_color = fill_color
         reset = True if fig is None else False
         self.new_figure(reset=reset)
 
-    def new_figure(self, fill_color="aqua", reset=False):
+    def new_figure(self, fill_color=None, reset=False):
         """
         Create or update a figure for plotting
 
@@ -155,6 +158,9 @@ class map(object):
         if self.fig is None or self.ax is None:
             self.fig = plt.figure(figsize=self.figsize)
             self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+
+        if fill_color is None:
+            fill_color = self.fill_color
 
         self.basemap.drawmapboundary(fill_color=fill_color)
         # Create the longitude lines
