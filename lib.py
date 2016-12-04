@@ -59,6 +59,75 @@ def adddim(fld, size=1):
     return np.tile(fld, s)
 
 
+def fill(x, max_gap=None, kind='linear'):
+    """
+    Fill missing data from a 1-D vector. When data are missing from a
+    vector, this method will interpolate to fill gaps that are less than
+    the specified max (or ignored).
+
+    Parameters
+    ----------
+    x : array
+      The array to be filled. It will be cast as a masked array for
+      invalid values. If already a masked array, then that mask will
+      persist.
+    max_gap : int, optional
+      The maximum number of continuous values to interpolate (e.g.,
+      if this value is 10 and there are 12 continuous missing values,
+      they will be left unfilled). Default is to fill everything.
+    kind : str, optional
+      The kind of interpolant to use (see scipy.interpolate.interp1d). 
+      Default is 'linear'
+
+    Returns
+    -------
+    x : array
+      The filled array
+    """
+    from scipy.interpolate import interp1d
+    x = np.ma.masked_invalid(np.atleast_1d(x).flatten(), copy=False)
+    # If no gaps or empty data, do nothing
+    if not np.any(x.mask) or len(x.compressed()) < 3:
+        return x
+    f = interp1d(x.nonzero()[0], x.compressed())
+    nx = x.copy()
+    if max_gap is not None:
+        regions = contiguous(x)
+        for r in regions:
+            if ((r.stop - r.start) <= max_gap) and \
+                    (r.stop < f.x.max()) and (r.start > f.x.min()):
+                nx[r] = f(np.arange(r.start, r.stop))
+    else:
+        bad = np.nonzero(x.mask)[0]
+        bad = np.delete(bad, np.nonzero(
+            np.logical_or(bad <= f.x.min(), bad >= f.x.max())))
+        nx[bad] = f(bad)
+    return nx
+
+
+def contiguous(x):
+    """
+    Find the contiguous indices of a numpy.masked_array.
+    NOTE: this casts as 1-D.
+
+    Parameters
+    ----------
+    x : np.array or np.ma.array
+      The data to find the contiguous regions
+
+    Returns
+    -------
+    idx : array of slices
+      Array of slices for each contiguous region
+    """
+    x = np.ma.array(np.atleast_1d(x).flatten(), copy=False)
+    idx = x.nonzero()[0]
+    d = idx[np.nonzero(np.diff(idx) - 1)[0]]
+    return np.array([np.s_[r[0]:r[1]] for r in
+                     zip(np.hstack((idx.min(), d + 1)),
+                         np.hstack((d, idx.max() + 1)))])
+
+
 def chunker(seq, size):
     """
     Iterate over an iterable in 'chunks' of a given size
@@ -673,7 +742,7 @@ def vecfind(a, b, tolerance=None):
     """
     Find all occurences of b in a within the given tolerance and return
     the sorted indices of a and b that yield the corresponding values.
-    The indices are of equal length, such that 
+    The indices are of equal length, such that
 
     Written by Eric Firing, University of Hawaii.
 

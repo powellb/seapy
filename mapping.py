@@ -73,7 +73,7 @@ class map(object):
 
     def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
                  urcrnrlat=40, proj='lcc', resolution='c', figsize=(8., 6.),
-                 dlat=1, dlon=2):
+                 dlat=1, dlon=2, fig=None, ax=None, fill_color="aqua"):
         """
         map class for abstracting the basemap methods for quick and easy creation
         of geographically referenced data figures
@@ -103,7 +103,14 @@ class map(object):
             interval to mark latitude lines (e.g., if dlat=0.5 every 0.5deg mark)
         dlon: float, optional
             interval to mark longitude lines (e.g., if dlon=0.5 every 0.5deg mark)
-
+        fig: matplotlib.pyplot.figure object, optional
+            If you want to plot on a pre-configured figure, pass the figure object
+            along with the axis object.
+        ax: matplotlib.pyplot.axis object, optional
+            If you want to plot on a pre-configured figure, pass the axis object
+            along with the figure object.
+        fill_color: string, optional
+            The color to use for the axis background
 
         Returns
         -------
@@ -122,24 +129,39 @@ class map(object):
                                projection=proj,
                                lat_0=urcrnrlat - (urcrnrlat - llcrnrlat) / 2.,
                                lon_0=urcrnrlon - (urcrnrlon - llcrnrlon) / 2.,
-                               resolution=resolution, area_thresh=0.0)
+                               resolution=resolution, area_thresh=0.0, ax=ax)
 
         self.figsize = figsize
         self.dlon = dlon
         self.dlat = dlat
-        self.fig = None
-        self.new_figure()
+        self.fig = fig
+        self.ax = ax
+        self.fill_color = fill_color
+        reset = True if fig is None else False
+        self.new_figure(reset=reset)
 
-    def new_figure(self, fill_color="aqua"):
+    def new_figure(self, fill_color=None, reset=False):
         """
-        Create a new figure for plotting
+        Create or update a figure for plotting
+
+        Parameters
+        ----------
+        fill_color: string, optional
+           Color to fill the background of the axes with
+        reset: bool, optional
+           Reset the figure
         """
-        if self.fig is not None:
+        if reset:
             self.ax.set_axis_off()
             plt.close(self.fig)
 
-        self.fig = plt.figure(figsize=self.figsize)
-        self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+        if self.fig is None or self.ax is None:
+            self.fig = plt.figure(figsize=self.figsize)
+            self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+
+        if fill_color is None:
+            fill_color = self.fill_color
+
         self.basemap.drawmapboundary(fill_color=fill_color)
         # Create the longitude lines
         nticks = int((self.basemap.urcrnrlon - self.basemap.llcrnrlon) /
