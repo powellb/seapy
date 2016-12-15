@@ -209,10 +209,10 @@ def smooth(data, ksize=3, kernel=None, copy=True):
     return np.ma.array(fld, mask=mask)
 
 
-def smoother(data, ksize=3, kernel=None, copy=True, only_mask=False):
+def convolve(data, ksize=3, kernel=None, copy=True, only_mask=False):
     """
     Convolve the kernel across the data to smooth or highlight
-    the field.
+    the field across the masked region.
 
     Parameters
     ----------
@@ -295,7 +295,7 @@ def convolve_mask(data, ksize=3, kernel=None, copy=True):
     -------
     fld : masked array
     """
-    return smoother(data, ksize, kernel, copy, True)
+    return convolve(data, ksize, kernel, copy, True)
 
 
 def matlab2date(daynum):

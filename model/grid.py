@@ -515,6 +515,81 @@ class grid:
             from matplotlib import pyplot
             pyplot.plot(lon, lat, **kwargs)
 
+    def plot_depths(self, row=None, col=None, ax=None):
+        """
+        Plot the depths of a model grid along a row or column transect.
+        If the bathymetry is known, it is plotted also.
+
+        Parameters
+        ----------
+        row : int, optional
+          The row number to plot
+        col : int, optional
+          The column number to plot
+        ax : matplotlib.axes, optional
+          The axes to use for the figure
+
+        Returns
+        -------
+        ax : matplotlib.axes
+          The axes containing the plot
+        """
+        import matplotlib.pyplot as plt
+
+        # Create the axes if we don't have any
+        if not ax:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # ax.set_bg_color('darkseagreen')
+
+        # Get the data
+        if row:
+            sz = np.s_[:, row, :]
+            s = np.s_[row, :]
+            x = self.lon_rho[s]
+            label = "Longitude"
+        elif col:
+            sz = np.s_[:, :, col]
+            s = np.s_[:, col]
+            x = self.lat_rho[s]
+            label = "Latitude"
+        else:
+            warn("You must specify a row or column")
+            return
+
+        # If it is ROMS, we should plot the top and bottom of the cells
+        if self._isroms:
+            sr, csr = seapy.roms.stretching(
+                self.vstretching, self.theta_s, self.theta_b,
+                self.hc, self.n, w_grid=True)
+            dep = np.ma.masked_where(seapy.adddim(self.mask_rho[s],
+                                                  self.n + 1) == 0,
+                                     seapy.roms.depth(self.vtransform,
+                                                      self.h[s], self.hc,
+                                                      sr, csr,
+                                                      w_grid=True))
+        else:
+            dep = np.ma.masked_where(seapy.adddim(self.mask_rho[s],
+                                                  self.n) == 0,
+                                     self.depth_rho[sz])
+        h = -self.h[s]
+
+        # Begin with the bathymetric data
+        ax.fill_between(x, h, np.min(h), facecolor="darkseagreen",
+                        interpolate=True)
+
+        # Plot the layers
+        ax.plot(x, dep.T, color="grey")
+
+        # Labels
+        ax.set_xlabel(label + " [deg]")
+        ax.set_ylabel("Depth [m]")
+
+        # Make it tight
+        plt.autoscale(ax, tight=True)
+
+        return ax
+
     def to_netcdf(self, nc):
         """
         Write all available grid information into the records present in the
