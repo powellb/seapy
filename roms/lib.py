@@ -211,6 +211,79 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     return z_w[1:, :, :] - z_w[0:-1, :, :]
 
 
+def gen_boundary_region(shp, north=None, east=None, west=None, south=None,
+                        kind='linear'):
+    """
+    Generate a masked field varying from 1 at the boundary to 0 in the
+    middle along each of the specified boundaries. This is used to create
+    nudging and sponge fields to save into the respective ROMS files.
+
+    Parameters
+    ----------
+    shp : tuple,
+      The shape of the grid to use
+    north : int, optional,
+      The size of the region in the north boundary
+    south : int, optional,
+      The size of the region in the south boundary
+    east : int, optional,
+      The size of the region in the east boundary
+    west : int, optional,
+      The size of the region in the west boundary
+    kind : string, optional,
+      The type of transition:
+         'linear' (default)
+         'cosine'
+
+    Returns
+    -------
+    fld : np.ma.array,
+      array containing boundary values ranging from 0 to 1. masked values
+      were not set by the routine, but the fill_value is set to 0.
+    """
+    fld = np.ma.zeros(shp, fill_value=0)
+    fld[:] = np.ma.masked
+
+    # Set up a dictionary to define how to deal with each boundary.
+    # The tuple is (dimension, array_end, rotate)
+    dirs = {"north": (shp[1], True, True),
+            "south": (shp[1], False, True),
+            "east": (shp[0], True, False),
+            "west": (shp[0], False, False)}
+    ref = locals()
+    for d in dirs:
+        # Set the factor to generate the values
+        nx = ref[d]
+        if nx is None or nx == 0:
+            continue
+        x = np.arange(nx)
+        if kind == "cosine":
+            x = np.cos(np.pi / (2.0 * nx) * x)
+        else:
+            x = 1.0 / nx * x
+        x = np.tile(x[::-1], [dirs[d][0], 1])
+        # If the boundary is the end, flip it
+        sl = np.array([slice(None, None, None), slice(None, nx, None)])
+        if dirs[d][1]:
+            x = np.fliplr(x)
+            sl[1] = slice(-nx, None, None)
+        # If the dimensions are rotated, transpose
+        if dirs[d][2]:
+            x = np.transpose(x)
+            sl = sl[::-1]
+        sl = (sl[0], sl[1])
+        fld[sl] = np.maximum(fld.filled()[sl], x)
+
+    return fld
+
+
+def tester(a=None, b=None, c=None):
+    ref = locals()
+    for i in ('a', 'b', 'c'):
+        if ref[i]:
+            print(i, ref[i])
+
+
 def get_time(nc, tvar=None, epoch=None):
     """
     Load the time vector from a netCDF file as a datetime array.

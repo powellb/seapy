@@ -242,7 +242,7 @@ def vel_ellipse(u, v):
     >>> v = {"M2":amp_phase(0.7, np.radians(10.1))}
     >>> ell = vel_ellipse(u, v)
     >>> print(ell)
-    {'M2': tellipse(major=4.3324053381635519, minor=0.45854551121121889,
+    {'M2': ellipse(major=4.3324053381635519, minor=0.45854551121121889,
      angle=6.1601050372480319, phase=4.0255995338808006)}
     """
     ell = {}
