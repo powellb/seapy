@@ -330,7 +330,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     # Calculate time series
     ts = np.zeros(len(times))
     if tide_minor:
-        ts.dtype = np.complex
+        ts = np.zeros(len(times),dtype=np.complex)
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
