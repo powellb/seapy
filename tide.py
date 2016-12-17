@@ -335,7 +335,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         c = tide[ap]
         ap = ap.upper()
         if tide_minor:
-            m = tide[ap]
+            m = tide_minor[ap]
 
             ts += np.exp(1j * m.phase) * (
                 c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
