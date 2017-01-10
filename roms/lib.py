@@ -5,7 +5,7 @@
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 import numpy as np

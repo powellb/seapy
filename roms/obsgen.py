@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -582,7 +582,7 @@ class navo_sst_map(obsgen):
         obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                      data, self.dt, depth_adjust=True, title=title)
         obs.z *= 0
-        obs.depth = -self.depth*np.ones(len(obs.depth))
+        obs.depth = -self.depth * np.ones(len(obs.depth))
         return obs
 
 

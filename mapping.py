@@ -25,7 +25,7 @@
 
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import matplotlib.pyplot as plt

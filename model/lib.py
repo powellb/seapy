@@ -6,7 +6,7 @@
   when importing the model module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import seapy
@@ -27,7 +27,8 @@ def _cgrid_rho_vel(rho, dim, fill):
         rho = seapy.convolve_mask(rho, copy=True)
     shp = np.array(rho.shape)
     fore = np.product([shp[i] for i in np.arange(0, dim)]).astype(int)
-    aft = np.product([shp[i] for i in np.arange(dim + 1, rho.ndim)]).astype(int)
+    aft = np.product([shp[i]
+                      for i in np.arange(dim + 1, rho.ndim)]).astype(int)
     nfld = 0.5 * (rho.reshape([fore, shp[dim], aft])[:, 0:-1, :].filled(np.nan) +
                   rho.reshape([fore, shp[dim], aft])[:, 1:, :].filled(np.nan))
     shp[dim] = shp[dim] - 1

@@ -5,7 +5,7 @@
   Functions for working with tidal time-series
 
   Written by Glenn Carter and Dale Partridge
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import datetime
@@ -330,7 +330,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     # Calculate time series
     ts = np.zeros(len(times))
     if tide_minor:
-        ts = np.zeros(len(times),dtype=np.complex)
+        ts = np.zeros(len(times), dtype=np.complex)
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
