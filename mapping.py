@@ -152,8 +152,10 @@ class map(object):
            Reset the figure
         """
         if reset:
-            self.ax.set_axis_off()
-            plt.close(self.fig)
+            if self.ax:
+                self.ax.set_axis_off()
+            if self.fig:
+                plt.close(self.fig)
 
         if self.fig is None or self.ax is None:
             self.fig = plt.figure(figsize=self.figsize)
@@ -243,6 +245,24 @@ class map(object):
         dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
         x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
         self.pc = self.ax.pcolormesh(x, y, data, **kwargs)
+
+    def scatter(self, lon, lat, data, **kwargs):
+        """
+        scatter plot data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        data: array
+            data to pcolor
+        **kwargs: arguments, optional
+            additional arguments to pass to pcolor
+        """
+        x, y = self.basemap(lon, lat)
+        self.pc = self.ax.scatter(x, y, c=data, **kwargs)
 
     def colorbar(self, label=None, cticks=None, **kwargs):
         """
