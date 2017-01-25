@@ -9,6 +9,7 @@
 """
 
 import numpy as np
+import seapy
 from seapy.lib import default_epoch, secs2day
 import netCDF4
 
@@ -277,13 +278,6 @@ def gen_boundary_region(shp, north=None, east=None, west=None, south=None,
     return fld
 
 
-def tester(a=None, b=None, c=None):
-    ref = locals()
-    for i in ('a', 'b', 'c'):
-        if ref[i]:
-            print(i, ref[i])
-
-
 def get_time(nc, tvar=None, epoch=None):
     """
     Load the time vector from a netCDF file as a datetime array.
@@ -357,6 +351,43 @@ def get_reftime(nc, epoch=default_epoch):
         return netCDF4.num2date(0, nc.variables[time].units), time
     except AttributeError:
         return epoch, None
+
+
+def omega(grid, u, v, zeta=0, scale=False):
+    """
+    Compute the vertical velocity on s-grid.
+
+    Parameters
+    ----------
+    grid : seapy.model.grid,
+      The grid to use for the calculations
+    u : ndarray,
+      The u-field at a given time
+    v : ndarray,
+      The v-field at a given time
+    zeta : ndarray, optional,
+      The zeta-field at a given time
+    scale : bool, optional,
+      If True, return omega in [m s**-1];
+      If [False], return omega in [m**3 s**-1]
+
+    Returns
+    -------
+    omega : ndarray,
+      Vertical Velocity on s-grid
+    """
+    Huon = grid.thick_u * u / seapy.model.rho2u(grid.pn)
+    Hvon = grid.thick_v * v / seapy.model.rho2v(grid.pm)
+    z_w = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
+                grid.cs_r, zeta=zeta, w_grid=True)
+    W = np.zeros((grid.n + 1, grid.eta_rho, grid.xi_rho))
+    W[:-1, 1:-1, 1:-1] = np.cumsum((Huon[:, 1:-1, :-1] - Huon[:, 1:-1, 1:]) +
+                                   (Hvon[:, :-1, 1:-1] - Hvon[:, 1:, 1:-1]), axis=0)
+    W -= ((z_w - z_w[0, :, :]) / (z_w[-1, :, :] - z_w[0, :, :])) * W[-1, :, :]
+    if scale:
+        return W * grid.pn * grid.pm
+    return W
+
 
 pass
 
