@@ -5,7 +5,7 @@
 
     Module for working with oceanographic data and models
 
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 
   Requires the following packages: joblib
 

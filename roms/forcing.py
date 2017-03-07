@@ -6,7 +6,7 @@
   rivers, etc.)
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 from datetime import datetime
@@ -170,8 +170,8 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     frc_lat = forcing.variables[fields['frc_lat']][:]
     # Make the forcing lat/lon on 2D grid
     if frc_lon.ndim == 3:
-        frc_lon = np.squeeze(frc_lon[0,:,:])
-        frc_lat = np.squeeze(frc_lat[0,:,:])
+        frc_lon = np.squeeze(frc_lon[0, :, :])
+        frc_lat = np.squeeze(frc_lat[0, :, :])
     elif frc_lon.ndim == 1:
         frc_lon, frc_lat = np.meshgrid(frc_lon, frc_lat)
 

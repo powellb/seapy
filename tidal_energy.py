@@ -7,7 +7,7 @@ State Estimation and Analysis for PYthon
 Module to compute tidal energy from a column of data.
 
 Written by Brian Powell on 03/30/16
-Copyright (c)2016 University of Hawaii under the BSD-License.
+Copyright (c)2017 University of Hawaii under the BSD-License.
 
 Notes
 -----

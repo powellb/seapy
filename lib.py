@@ -8,7 +8,7 @@
   when importing the seapy module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -107,8 +107,8 @@ def fill(x, max_gap=None, kind='linear'):
 
 def contiguous(x):
     """
-    Find the contiguous indices of a numpy.masked_array.
-    NOTE: this casts as 1-D.
+    Find the indices that provide contiguous regions of a numpy.masked_array. 
+    This will find all regions of valid data. NOTE: this casts as 1-D.
 
     Parameters
     ----------
@@ -119,13 +119,25 @@ def contiguous(x):
     -------
     idx : array of slices
       Array of slices for each contiguous region
+
+    Examples
+    --------
+    >>> a = np.array([4, 3, 2, np.nan, 6, 7, 2])
+    >>> r = contiguous(a)
+    [slice(0, 2, None), slice(4, 6, None)]
+
+    If no contiguous regions are available, an empty array is returned.
+
     """
-    x = np.ma.array(np.atleast_1d(x).flatten(), copy=False)
+    x = np.ma.masked_invalid(np.atleast_1d(x).flatten(), copy=False)
     idx = x.nonzero()[0]
-    d = idx[np.nonzero(np.diff(idx) - 1)[0]]
-    return np.array([np.s_[r[0]:r[1]] for r in
-                     zip(np.hstack((idx.min(), d + 1)),
-                         np.hstack((d, idx.max() + 1)))])
+    try:
+        d = idx[np.nonzero(np.diff(idx) - 1)[0] + 1]
+        return np.array([np.s_[r[0]:r[1]] for r in
+                         zip(np.hstack((idx.min(), d)),
+                             np.hstack((d - 1, idx.max() + 1)))])
+    except:
+        return []
 
 
 def chunker(seq, size):

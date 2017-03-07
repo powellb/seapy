@@ -5,7 +5,7 @@
   Methods to interpolate ROMS fields onto other grids
 
   Written by Brian Powell on 11/02/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -18,7 +18,7 @@ from joblib import Parallel, delayed
 from warnings import warn
 
 _up_scaling = {"zeta": 1.0, "u": 1.0, "v": 1.0, "temp": 1.0, "salt": 1.0}
-_down_scaling = {"zeta": 1.0, "u": 0.95, "v": 0.95, "temp": 0.98, "salt": 1.02}
+_down_scaling = {"zeta": 1.0, "u": 0.9, "v": 0.9, "temp": 0.95, "salt": 1.05}
 _ksize_range = (7, 15)
 # Limit amount of memory to process in a single read. This determines how to
 # divide up the time-records in interpolation
@@ -106,7 +106,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # Now fill vertically
     nrz = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
     nrz[1:-1, :, :] = rz
-    nrz[bot, :, :] = rz[bot, :, :] - 2000
+    nrz[bot, :, :] = rz[bot, :, :] - 5000
     nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
 
     if not gradsrc:

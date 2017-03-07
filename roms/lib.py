@@ -5,10 +5,11 @@
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 import numpy as np
+import seapy
 from seapy.lib import default_epoch, secs2day
 import netCDF4
 
@@ -143,7 +144,8 @@ def depth(vtransform=1, h=None, hc=100, scoord=None,
 
     Returns
     -------
-    s, cs: array
+    z: ndarray,
+      depth of grid cells
 
     """
     if h is None or scoord is None or stretching is None:
@@ -277,13 +279,6 @@ def gen_boundary_region(shp, north=None, east=None, west=None, south=None,
     return fld
 
 
-def tester(a=None, b=None, c=None):
-    ref = locals()
-    for i in ('a', 'b', 'c'):
-        if ref[i]:
-            print(i, ref[i])
-
-
 def get_time(nc, tvar=None, epoch=None):
     """
     Load the time vector from a netCDF file as a datetime array.
@@ -357,6 +352,142 @@ def get_reftime(nc, epoch=default_epoch):
         return netCDF4.num2date(0, nc.variables[time].units), time
     except AttributeError:
         return epoch, None
+
+
+def omega(grid, u, v, zeta=0, scale=False):
+    """
+    Compute the vertical velocity on s-grid.
+
+    Parameters
+    ----------
+    grid : seapy.model.grid,
+      The grid to use for the calculations
+    u : ndarray,
+      The u-field at a given time
+    v : ndarray,
+      The v-field at a given time
+    zeta : ndarray, optional,
+      The zeta-field at a given time
+    scale : bool, optional,
+      If True, return omega in [m s**-1];
+      If [False], return omega in [m**3 s**-1]
+
+    Returns
+    -------
+    omega : ndarray,
+      Vertical Velocity on s-grid
+    """
+    u = np.ma.array(u, fill_value=0, copy=False).filled()
+    v = np.ma.array(v, fill_value=0, copy=False).filled()
+    zeta = np.ma.array(zeta, fill_value=0, copy=False).filled()
+
+    z_w = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
+                grid.cs_r, zeta=zeta, w_grid=True)
+    thick = z_w[1:, :, :] - z_w[0:-1, :, :]
+    Huon = u * seapy.model.rho2u(thick / grid.pn)
+    Hvon = v * seapy.model.rho2v(thick / grid.pm)
+    W = np.zeros((grid.n + 1, grid.eta_rho, grid.xi_rho))
+    W[:-1, 1:-1, 1:-1] = np.cumsum((Huon[:, 1:-1, :-1] - Huon[:, 1:-1, 1:]) +
+                                   (Hvon[:, :-1, 1:-1] - Hvon[:, 1:, 1:-1]), axis=0)
+    W -= ((z_w - z_w[0, :, :]) / (z_w[-1, :, :] - z_w[0, :, :])) * W[-1, :, :]
+    if scale:
+        return W * grid.pn * grid.pm
+    return W
+
+
+def wvelocity(grid, u, v, zeta=0, scale=False):
+    """
+    Compute "true" vertical velocity
+
+    Parameters
+    ----------
+    grid : seapy.model.grid,
+      The grid to use for the calculations
+    u : ndarray,
+      The u-field at a given time
+    v : ndarray,
+      The v-field at a given time
+    zeta : ndarray, optional,
+      The zeta-field at a given time
+    scale : bool, optional,
+      If True, return omega in [m s**-1];
+      If [False], return omega in [m**3 s**-1]
+
+    Returns
+    -------
+    w : ndarray,
+      Vertical Velocity
+    """
+    u = np.ma.array(u, fill_value=0, copy=False).filled()
+    v = np.ma.array(v, fill_value=0, copy=False).filled()
+    zeta = np.ma.array(zeta, fill_value=0, copy=False).filled()
+
+    z_r = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
+                grid.cs_r, zeta=zeta)
+    z_w = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
+                grid.cs_r, zeta=zeta, w_grid=True)
+    thick = z_w[1:, :, :] - z_w[0:-1, :, :]
+    totdep = z_w[-1, :, :] - z_w[0, :, :]
+
+    # Get omega
+    sw = omega(grid, u, v, zeta)
+
+    # Compute quasi-horizontal motions (Ui + Vj)*GRAD s(z)
+    udel = u * seapy.model.rho2u(z_r * grid.pm)
+    vdel = v * seapy.model.rho2v(z_r * grid.pn)
+    vert = 0.25 * (udel[:, 1:-1, 1:] + udel[:, 1:-1, :-1] +
+                   vdel[:, 1:, 1:-1] + vdel[:, :-1, 1:-1])
+
+    # Compute barotropic velocity
+    ubar = np.sum(u * seapy.model.rho2u(thick), axis=0) / \
+        seapy.model.rho2u(totdep)
+    vbar = np.sum(v * seapy.model.rho2v(thick), axis=0) / \
+        seapy.model.rho2v(totdep)
+    wrk = (ubar[1:-1, :-1] - ubar[1:-1, 1:] + vbar[:-1, 1:-1] -
+           vbar[1:, 1:-1]) / totdep[1:-1, 1:-1]
+
+    # Cubic interpolation
+    cff1 = 0.375
+    cff2 = 0.75
+    cff3 = 0.125
+    cff4 = 0.5625
+    cff5 = 0.0625
+
+    w = np.zeros((grid.n + 1, grid.eta_rho, grid.xi_rho))
+
+    # Do the bottom two layers
+    slope = (z_r[0, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1]) / \
+        (z_r[1, 1:-1, 1:-1] - z_r[0, 1:-1, 1:-1])
+    w[0, 1:-1, 1:-1] = cff1 * (vert[0, :, :] -
+                               slope * (vert[1, :, :] - vert[0, :, :])) + \
+        cff2 * vert[0, :, :] + cff3 * vert[1, :, :]
+    w[1, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
+        (sw[1, 1:-1, 1:-1] + wrk[:, :] *
+         (z_w[1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
+        cff1 * vert[0, :, :] + cff2 * vert[1, :, :] + cff3 * vert[2, :, :]
+
+    # Do the middle bit
+    w[2:-2, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
+        (sw[2:-2, 1:-1, 1:-1] + wrk[:, :] *
+         (z_w[2:-2, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
+        cff4 * (vert[1:-2, :, :] + vert[2:-1, :, :]) + \
+        cff5 * (vert[:-3, :, :] + vert[3:, :, :])
+
+    # Do the upper two layers
+    slope = (z_w[-1, 1:-1, 1:-1] - z_r[0, 1:-1, 1:-1]) / \
+        (z_r[-1, 1:-1, 1:-1] - z_r[-2, 1:-1, 1:-1])
+    w[-2, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
+        (sw[-2, 1:-1, 1:-1] + wrk[:, :] *
+         (z_w[-1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
+        cff1 * vert[-1, :, :] + cff2 * vert[-2, :, :] + cff3 * vert[-3, :, :]
+    w[-1, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
+        wrk[:, :] * (z_w[-1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1]) + \
+        cff1 * (vert[-1, :, :] + slope * (vert[-1, :, :] - vert[-2, :, :])) + \
+        cff2 * vert[-1, :, :] - cff3 * vert[-2, :, :]
+
+    # Done
+    return w
+
 
 pass
 

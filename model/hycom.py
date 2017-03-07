@@ -5,7 +5,7 @@
   Functions for dealing with the HYCOM model for importation into ROMS
 
   Written by Brian Powell on 07/24/15
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
