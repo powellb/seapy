@@ -119,7 +119,14 @@ def depth_average(field, grid, depth, zeta=None):
         thickness = seapy.model.rho2v(thickness)
 
     # Figure out the relevant layers
-    thickness[np.where(depths < depth)] = 0
+    # 1. Get rid of points that are too shallow
+    # thickness[np.where(depths < depth)] = 0
+
+    # 2. pick all of the points nearest the depth and above
+    k_ones = np.arange(grid.n, dtype=int)
+    thickness *= np.array(k_ones[:, np.newaxis, np.newaxis] >=
+                          np.argmin(np.abs(depths + depth), axis=0),
+                          dtype=int)
 
     # Do the integration
     return np.sum(field * thickness, axis=0) / np.sum(thickness, axis=0)
