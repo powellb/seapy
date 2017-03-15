@@ -779,7 +779,7 @@ class seaglider_profile(obsgen):
     the loading of the data.
     """
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, dtype=None, temp_limits=None,
                  salt_limits=None, depth_limit=-15, temp_error=0.2,
                  salt_error=0.05):
         if temp_limits is None:
@@ -790,6 +790,12 @@ class seaglider_profile(obsgen):
             self.salt_limits = (31, 35.5)
         else:
             self.salt_limits = salt_limits
+        if dtype is None:
+            self.dtype={'names': ('time', 'pres', 'depth', 'temp', 'cond',
+                               'salt', 'sigma', 'lat', 'lon'),
+                     'formats': ['f4'] * 9}
+        else:
+            self.dtype = dtype
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error
@@ -801,15 +807,11 @@ class seaglider_profile(obsgen):
         """
         import re
 
-        dtype = {'names': ('time', 'pres', 'depth', 'temp', 'cond',
-                           'salt', 'sigma', 'lat', 'lon'),
-                 'formats': ['f4'] * 9}
-
         # Load the text file. All data goes into the pro dictionary
         # as defined by dtype. The header information needs to be parsed
         with open(file) as myfile:
             header = [myfile.readline() for i in range(19)]
-            pro = np.loadtxt(myfile, dtype, delimiter=',', comments='%')
+            pro = np.loadtxt(myfile, self.dtype, delimiter=',', comments='%')
 
         # Parse the header information
         parser = re.compile('^%(\w+): (.*)$')
