@@ -670,6 +670,47 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     return _nc
 
 
+def create_frc_wave(filename, eta_rho=10, xi_rho=10, reftime=default_epoch,
+                    clobber=False, title="My Waves"):
+    """
+    Create a surface wave forcing file
+
+    Parameters
+    ----------
+    filename : string
+        name and path of file to create
+    eta_rho: int, optional
+        number of rows in the eta direction
+    xi_rho: int, optional
+        number of columns in the xi direction
+    reftime: datetime, optional
+        date of epoch for time origin in netcdf
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    title: string, optional
+        netcdf attribute title
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    """
+    # Generate the Structure
+    dims, vars, attr = cdl_parser(_cdl_dir + "frc_wave.cdl")
+
+    # Fill in the appropriate dimension values
+    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho=1)
+    vars = _set_time_ref(vars, "wave_time", reftime)
+
+    # Create the file
+    _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
+                title=title)
+
+    # Return the new file
+    return _nc
+
+
 def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
                 reftime=default_epoch, clobber=False,
                 title="My Tides"):

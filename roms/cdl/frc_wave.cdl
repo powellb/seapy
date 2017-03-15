@@ -1,0 +1,28 @@
+netcdf wave_forcing {
+dimensions:
+	eta_rho = 74 ;
+	xi_rho = 189 ;
+	wave_time = UNLIMITED ; // (0 currently)
+variables:
+	double wave_time(wave_time) ;
+		wave_time:long_name = "wave time" ;
+		wave_time:units = "days since 1940-01-01 00:00:00" ;
+	double Dwave(wave_time, eta_rho, xi_rho) ;
+		Dwave:long_name = "wave direction" ;
+		Dwave:units = "degrees from N" ;
+	double Pwave_top(wave_time, eta_rho, xi_rho) ;
+		Pwave_top:long_name = "wave period" ;
+		Pwave_top:units = "seconds" ;
+	double Hwave(wave_time, eta_rho, xi_rho) ;
+		Hwave:long_name = "wave heigtht" ;
+		Hwave:units = "meters" ;
+	double Lwave(wave_time, eta_rho, xi_rho) ;
+		Lwave:long_name = "wave length obtained from the deep water dispersion relation" ;
+		Lwave:units = "meters" ;
+
+// global attributes:
+		:title = "Waves input file from SWAM" ;
+		:author = "ROMS" ;
+		:type = "Wave input file" ;
+		:Conventions = "CF-1.0" ;
+}
