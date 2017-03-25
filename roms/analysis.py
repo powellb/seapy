@@ -125,7 +125,7 @@ def depth_average(field, grid, depth, zeta=None):
     # 2. pick all of the points nearest the depth and above
     k_ones = np.arange(grid.n, dtype=int)
     thickness *= np.array(k_ones[:, np.newaxis, np.newaxis] >=
-                          np.argmin(np.abs(depths + depth), axis=0),
+                          np.argmin(np.abs(depths - depth), axis=0),
                           dtype=int)
 
     # Do the integration
