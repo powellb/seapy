@@ -335,6 +335,9 @@ class obs:
         # Set the shape parameter
         self.shape = self.value.shape
 
+        # Ensure consistency in depth and z
+        self.z[self.depth > 0] = self.depth[self.depth > 0]
+
     def __len__(self):
         self.shape = self.value.shape
         return self.value.size

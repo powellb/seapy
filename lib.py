@@ -685,7 +685,7 @@ def rotate(u, v, angle):
     v : array like
         Input v component
     angle : array like
-        Input angle of rotation
+        Input angle of rotation in radians
 
     Returns
     -------
