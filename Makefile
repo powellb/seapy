@@ -1,8 +1,11 @@
 # Build seapy modules, tag file, and documentation
-.PHONY: etags
+.PHONY: gtags
 etags:
 	rm -f TAGS
 	find . '!' '('  -name __init__.py ')' -name "*\.py" | xargs etags -a --language=python
+
+gtags:
+	gtags -i --gtagslabel=pygments --statistics
 
 oalib.so: src/oalib.F
 	cd src; $(MAKE) $(MFLAGS) oalib
@@ -17,7 +20,7 @@ force_build:
 	true
 
 clean:
-	rm -f TAGS oalib.so model/hindices.so doc/html
+	rm -f TAGS GPATH GRTAGS GTAGS oalib.so model/hindices.so doc/html
 
-all: etags oalib.so hindices.so doc
+all: oalib.so hindices.so doc
 

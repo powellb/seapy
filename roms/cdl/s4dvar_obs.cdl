@@ -54,19 +54,9 @@ variables:
     obs_value:long_name = "observation value" ;
     obs_value:units = "state variable units" ;
   double obs_meta(datum) ;
-    obs_value:long_name = "observation meta value" ;
-    obs_value:units = "state variable units" ;
+    obs_meta:long_name = "observation meta value" ;
+    obs_meta:units = "observational secondary units" ;
 
 // global attributes:
     :type = "ROMS Observations" ;
-    :state_variables = "\n",
-      "1: free-surface (m)",
-      "2: vertically integrated u-momentum component (m/s)",
-      "3: vertically integrated v-momentum component (m/s)",
-      "4: u-momentum component (m/s)",
-      "5: v-momentum component (m/s)",
-      "6: potential temperature (Celsius)",
-      "7: salinity (nondimensional)",
-      "19: acoustic travel time (s)" ;
-      "20: radial velocity (m/s)" ;
 }

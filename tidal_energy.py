@@ -270,9 +270,9 @@ def tidal_energy(time, hz, u, v, w, pressure, bvf=None, tides=None,
 
             # Calculate Energy Flux
             energy[n, d, 0] = 0.5 * t_u[t].amp * \
-                t_pres[t].amp * np.cos(t_u[t].phase)
+                t_pres[t].amp * np.cos(t_u[t].phase - t_pres[t].phase)
             energy[n, d, 1] = 0.5 * t_v[t].amp * \
-                t_pres[t].amp * np.cos(t_v[t].phase)
+                t_pres[t].amp * np.cos(t_v[t].phase - t_pres[t].phase)
 
             # Calculate Displacement
             energy[n, d, 2] = t_w[t].amp * 3600 * period[t] / np.pi
