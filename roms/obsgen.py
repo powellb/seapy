@@ -765,6 +765,66 @@ class remss_map(obsgen):
                                       lon.compressed(), lat.compressed, None,
                                       data, self.dt, title)
 
+class viirs_swath(seapy.roms.obsgen.obsgen):
+    """
+    class to process VIIRS SST swath netcdf files into ROMS observation
+    files.  This is a subclass of
+    seapy.roms.obsgen.obsgen, and handles the loading of the data.
+    """
+
+    def __init__(self, grid, dt, check_qc_flags=True, reftime=seapy.default_epoch,
+                 temp_error=0.4, temp_limits=None, provenance="SST_VIIRS"):
+        self.temp_error = temp_error
+        self.provenance = provenance.upper()
+        self.check_qc_flags = check_qc_flags
+        if temp_limits is None:
+            self.temp_limits = (2, 35)
+        else:
+            self.temp_limits = temp_limits
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="VIIRS SST Obs"):
+        """
+        Load a VIIRS file and convert into an obs structure
+        """
+        # Load VIIRS Data
+        nc = netCDF4.Dataset(file)
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(np.squeeze(
+            nc.variables["sea_surface_temperature"][:]) - 273.15,
+            self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.masked_outside(np.squeeze(
+            nc.variables["sses_standard_deviation"][:]), 0.01, 2.0)
+        dat[err.mask] = np.ma.masked
+
+        # Check the data flags
+        if self.check_qc_flags:
+            flags = np.ma.masked_not_equal(
+                np.squeeze(nc.variables["quality_level"][:]), 5)
+            dat[flags.mask] = np.ma.masked
+        else:
+            dat = np.ma.masked_where(
+                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
+
+        # Grab the observation time
+        time = netCDF4.num2date(nc.variables["time"][0],
+                                nc.variables["time"].units) - self.epoch
+        dtime = nc.variables["sst_dtime"][:]
+        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
+        nc.close()
+        if self.grid.east():
+            lon[lon < 0] += 360
+        good = dat.nonzero()
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
+                                        dat.compressed(),
+                                        err[good], self.temp_error)]
+        # Grid it
+        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
+                                      None, data, self.dt, title)
+
+
+
 ##############################################################################
 #
 # IN SITU DATA
