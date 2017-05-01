@@ -765,7 +765,8 @@ class remss_map(obsgen):
                                       lon.compressed(), lat.compressed, None,
                                       data, self.dt, title)
 
-class viirs_swath(seapy.roms.obsgen.obsgen):
+
+class viirs_swath(obsgen):
     """
     class to process VIIRS SST swath netcdf files into ROMS observation
     files.  This is a subclass of
@@ -824,7 +825,6 @@ class viirs_swath(seapy.roms.obsgen.obsgen):
                                       None, data, self.dt, title)
 
 
-
 ##############################################################################
 #
 # IN SITU DATA
@@ -851,9 +851,9 @@ class seaglider_profile(obsgen):
         else:
             self.salt_limits = salt_limits
         if dtype is None:
-            self.dtype={'names': ('time', 'pres', 'depth', 'temp', 'cond',
-                               'salt', 'sigma', 'lat', 'lon'),
-                     'formats': ['f4'] * 9}
+            self.dtype = {'names': ('time', 'pres', 'depth', 'temp', 'cond',
+                                    'salt', 'sigma', 'lat', 'lon'),
+                          'formats': ['f4'] * 9}
         else:
             self.dtype = dtype
         self.depth_limit = depth_limit
