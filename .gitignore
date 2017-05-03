@@ -3,7 +3,3 @@ TAGS
 GPATH
 GRTAGS
 GTAGS
-
-*.pyc
-
-*.so
