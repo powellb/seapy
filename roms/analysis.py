@@ -70,7 +70,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
     return nfield
 
 
-def depth_average(field, grid, depth, zeta=None):
+def depth_average(field, grid, depth, top_depth=0, zeta=None):
     """
     Compute the depth-averaged field down to the depth specified. NOTE:
     This just finds the nearest layer, so at every grid cell, it may not be
@@ -84,6 +84,8 @@ def depth_average(field, grid, depth, zeta=None):
     grid : seapy.model.grid or string or list,
         Grid that defines the depths and stretching for the field given
     depth : float,
+        Depth (in meters) to integrate from
+    top_depth : float,
         Depth (in meters) to integrate to
     zeta : ndarray, optional,
         ROMS zeta field corresponding to field if you wish to apply the SSH
@@ -96,19 +98,27 @@ def depth_average(field, grid, depth, zeta=None):
     """
     grid = seapy.model.asgrid(grid)
     depth = depth if depth < 0 else -depth
+    top_depth = top_depth if top_depth < 0 else -top_depth
+    if depth > top_depth:
+        depth, top_depth = top_depth, depth
+    drange = top_depth - depth
 
     # If we have zeta, we need to compute thickness
     if zeta is not None:
         s_w, cs_w = seapy.roms.stretching(grid.vstretching, grid.theta_s,
                                           grid.theta_b, grid.hc,
                                           grid.n, w_grid=True)
-        depths = seapy.roms.depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
-                                  grid.cs_r)
-        thickness = seapy.roms.thickness(grid.vtransform, grid.h, grid.hc,
-                                         s_w, cs_w, zeta)
+        depths = np.ma.maskwed_equal(seapy.roms.depth(
+            grid.vtransform, grid.h, grid.hc, grid.s_rho, grid.cs_r) *
+            grid.mask_rho, 0)
+
+        thickness = np.ma.array(seapy.roms.thickness(
+            grid.vtransform, grid.h, grid.hc, s_w, cs_w, zeta) *
+            grid.mask_rho, 0)
+
     else:
-        depths = grid.depth_rho
-        thickness = grid.thick_rho
+        depths = np.ma.masked_equal(grid.depth_rho * grid.mask_rho, 0)
+        thickness = np.ma.masked_equal(grid.thick_rho * grid.mask_rho, 0)
 
     # If we are on u- or v-grid, transform
     if field.shape == grid.thick_u.shape:
@@ -118,18 +128,21 @@ def depth_average(field, grid, depth, zeta=None):
         depths = seapy.model.rho2v(depths)
         thickness = seapy.model.rho2v(thickness)
 
-    # Figure out the relevant layers
-    # 1. Get rid of points that are too shallow
-    # thickness[np.where(depths < depth)] = 0
-
-    # 2. pick all of the points nearest the depth and above
+    # 1. pick all of the points that are deeper and shallower than the limits
     k_ones = np.arange(grid.n, dtype=int)
-    thickness *= np.array(k_ones[:, np.newaxis, np.newaxis] >=
-                          np.argmin(np.abs(depths - depth), axis=0),
-                          dtype=int)
+    top_depth = depths[-1, :, :] if top_depth == 0 else top_depth
+    upper = depths - top_depth
+    upper[np.where(upper < 0)] = np.float('inf')
+    lower = depths - depth
+    lower[np.where(lower > 0)] = -np.float('inf')
+    thickness *= np.ma.masked_equal(np.logical_and(
+        k_ones[:, np.newaxis, np.newaxis] <= np.argmin(upper, axis=0),
+        k_ones[:, np.newaxis, np.newaxis] >=
+        np.argmax(lower, axis=0)).astype(int), 0)
 
     # Do the integration
-    return np.sum(field * thickness, axis=0) / np.sum(thickness, axis=0)
+    return np.sum(field * thickness, axis=0) / \
+        np.sum(thickness, axis=0)
 
 
 def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
