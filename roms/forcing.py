@@ -67,6 +67,8 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
          "frc_lat":STRING name of latitude field in forcing file
          "frc_lon":STRING name of longitude field in forcing file
          "frc_time":STRING name of time field in forcing file
+         "frc_time_units":STRING optional, supply units of frc time 
+                                field in forcing file
          keys of ROMS bulk forcing field names (Tair, Pair, Qair,
          rain, Uwind, Vwind, lwrad_down, swrad) each with an 
          array of values of a named tuple (forcing_data) with the 
@@ -152,7 +154,11 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     forcing = seapy.netcdf(infile)
 
     # Gather the information about the forcing
-    frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],
+    if 'frc_time_units' in fields:
+        frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],
+                                    fields['frc_time_units'])
+    else:
+        frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],
                                 forcing.variables[fields['frc_time']].units)
 
     # Figure out the time records that are required
