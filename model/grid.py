@@ -6,7 +6,7 @@
   other models; however, it is mostly geared towards ROMS
 
   Written by Brian Powell on 10/09/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 
   **Examples**
 
@@ -19,7 +19,6 @@ import os
 import re
 import seapy
 import numpy as np
-from scipy.interpolate import griddata, interp1d
 import scipy.spatial
 import matplotlib.path
 from warnings import warn
@@ -131,15 +130,15 @@ class grid:
                  "mask_v": ["mask_v"],
                  "angle": ["angle"],
                  "h": ["h"],
-                 "n": ["N"],
+                 "n": ["n"],
                  "theta_s": ["theta_s"],
                  "theta_b": ["theta_b"],
-                 "tcline": ["Tcline"],
+                 "tcline": ["tcline"],
                  "hc": ["hc"],
-                 "vtransform": ["Vtransform"],
-                 "vstretching": ["Vstretching"],
+                 "vtransform": ["vtransform"],
+                 "vstretching": ["vstretching"],
                  "s_rho": ["s_rho"],
-                 "cs_r": ["Cs_r"],
+                 "cs_r": ["cs_r"],
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
@@ -154,11 +153,12 @@ class grid:
         except:
             self.name = "untitled"
         self.key = {}
+        ncvars = {v.lower(): v for v in self._nc.variables.keys()}
         for var in gvars:
             for inp in gvars[var]:
-                if inp in self._nc.variables:
+                if inp in ncvars:
                     self.key[var] = inp
-                    self.__dict__[var] = self._nc.variables[inp][:]
+                    self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 
         # Close the file
@@ -489,7 +489,7 @@ class grid:
             warn("could not compute grid thicknesses.")
             pass
 
-    def plot_trace(self, basemap=None, *args):
+    def plot_trace(self, basemap=None, **kwargs):
         """
         Trace the boundary of the grid onto a map projection
 
@@ -510,16 +510,91 @@ class grid:
                               self.lat_rho[-1, ::-1], self.lat_rho[::-1, 0]])
         if basemap:
             x, y = basemap(lon, lat)
-            basemap.plot(x, y, *args)
+            basemap.plot(x, y, **kwargs)
         else:
             from matplotlib import pyplot
-            pyplot.plot(lon, lat, *args)
+            pyplot.plot(lon, lat, **kwargs)
+
+    def plot_depths(self, row=None, col=None, ax=None):
+        """
+        Plot the depths of a model grid along a row or column transect.
+        If the bathymetry is known, it is plotted also.
+
+        Parameters
+        ----------
+        row : int, optional
+          The row number to plot
+        col : int, optional
+          The column number to plot
+        ax : matplotlib.axes, optional
+          The axes to use for the figure
+
+        Returns
+        -------
+        ax : matplotlib.axes
+          The axes containing the plot
+        """
+        import matplotlib.pyplot as plt
+
+        # Create the axes if we don't have any
+        if not ax:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            # ax.set_bg_color('darkseagreen')
+
+        # Get the data
+        if row:
+            sz = np.s_[:, row, :]
+            s = np.s_[row, :]
+            x = self.lon_rho[s]
+            label = "Longitude"
+        elif col:
+            sz = np.s_[:, :, col]
+            s = np.s_[:, col]
+            x = self.lat_rho[s]
+            label = "Latitude"
+        else:
+            warn("You must specify a row or column")
+            return
+
+        # If it is ROMS, we should plot the top and bottom of the cells
+        if self._isroms:
+            sr, csr = seapy.roms.stretching(
+                self.vstretching, self.theta_s, self.theta_b,
+                self.hc, self.n, w_grid=True)
+            dep = np.ma.masked_where(seapy.adddim(self.mask_rho[s],
+                                                  self.n + 1) == 0,
+                                     seapy.roms.depth(self.vtransform,
+                                                      self.h[s], self.hc,
+                                                      sr, csr,
+                                                      w_grid=True))
+        else:
+            dep = np.ma.masked_where(seapy.adddim(self.mask_rho[s],
+                                                  self.n) == 0,
+                                     self.depth_rho[sz])
+        h = -self.h[s]
+
+        # Begin with the bathymetric data
+        ax.fill_between(x, h, np.min(h), facecolor="darkseagreen",
+                        interpolate=True)
+
+        # Plot the layers
+        ax.plot(x, dep.T, color="grey")
+
+        # Labels
+        ax.set_xlabel(label + " [deg]")
+        ax.set_ylabel("Depth [m]")
+
+        # Make it tight
+        plt.autoscale(ax, tight=True)
+
+        return ax
 
     def to_netcdf(self, nc):
         """
-        Write all available grid information into the records present in the netcdf file.
-        This is used to pre-fill boundary, initial, etc. files that require some of the
-        grid information.
+        Write all available grid information into the records present in the
+        netcdf file.  This is used to pre-fill boundary, initial, etc. files
+        that require some of the grid information.
 
         Parameters
         ----------
@@ -529,6 +604,7 @@ class grid:
         Returns
         -------
         None
+
         """
         for var in nc.variables:
             if hasattr(self, var.lower()):
@@ -588,13 +664,12 @@ class grid:
         >>> idx = g.ij(a)
         """
 
+        from seapy.model.hindices import hindices
+
         # Interpolate the lat/lons onto the I, J
-        xgrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                                               self.lat_rho.ravel()),
-                                              self.I.ravel(), points, method="linear"))
-        ygrid = np.ma.masked_invalid(griddata((self.lon_rho.ravel(),
-                                               self.lat_rho.ravel()),
-                                              self.J.ravel(), points, method="linear"))
+        xgrid, ygrid = np.ma.masked_equal(hindices(self.angle.T,
+                                                   self.lon_rho.T, self.lat_rho.T,
+                                                   points[0], points[1]), -999.0)
         mask = self.mask_rho[(ygrid.filled(0).astype(int),
                               xgrid.filled(0).astype(int))]
         xgrid[mask == 0] = np.ma.masked
@@ -612,9 +687,9 @@ class grid:
             longitude, latitude, depth points to compute i, j, k indicies.
             NOTE: depth is in meters (defaults to negative)
         depth_adjust : bool,
-            If True, depths that are deeper than the grid are set to the
-            bottom layer, 0. If False, a nan value is used for values
-            beyond the grid depth. Default is False.
+            If True, depths that are deeper (shallower) than the grid are set
+            to the bottom (top) layer, 0 (N). If False, a nan value is used for
+            values beyond the grid depth. Default is False.
 
         Returns
         -------
@@ -625,11 +700,14 @@ class grid:
         --------
         >>> a = ([-158, -160.5, -155.5], [20, 22.443, 19.5], [-10 -200 0])
         >>> idx = g.ijk(a)
+
         """
         # NOTE: Attempted to use a 3D griddata, but it took over 2 minutes
         # for each call, resulting in a 6minute runtime for this method
         # Reverted to 2D i,j indices, then looping a 1-D interpolation
         # to get depths for increased-speed (though this method is still slow)
+
+        from scipy.interpolate import interp1d
 
         # Get the i,j points
         (j, i) = self.ij((points[0], points[1]))
@@ -642,12 +720,18 @@ class grid:
         good = np.where(~np.logical_or(i.mask, j.mask))[0]
         ii = np.floor(i[good])
         jj = np.floor(j[good])
-        rows, idx = seapy.unique_rows((jj, ii))
+        idx = seapy.unique_rows((jj, ii))
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
             pts = np.where(np.logical_and(jj == jj[n], ii == ii[n]))
-            fi = interp1d(self.depth_rho[:, jj[n], ii[n]], grid_k,
-                          bounds_error=False, fill_value=fill_value)
+            griddep = self.depth_rho[:, jj[n], ii[n]]
+            if griddep[0] < griddep[-1]:
+                griddep[-1] = 0.0
+            else:
+                griddep[0] = 0.0
+
+            fi = interp1d(griddep, grid_k, bounds_error=False,
+                          fill_value=fill_value)
             k[good[pts]] = fi(depth[good][pts])
 
         # Mask bad points

@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -28,7 +28,7 @@ def error_profile(obs, depth, error, provenance=None):
 
     Parameters
     ----------
-    obs : seapy.roms.obs.obs,
+    obs : seapy.roms.obs.obs or string,
       The observations to enforce the error profile upon.
     depth : ndarray,
       Array of depths for the errors provided
@@ -37,7 +37,7 @@ def error_profile(obs, depth, error, provenance=None):
       (as defined by seapy.roms.obs.obs_types) and the value is
       an ndarray of same length as depth with the error [in squared units]
       of the observation profile.
-    provenance : int or string,
+    provenance : list of int or string, optional,
       The provenance to apply the errors to (ignore other observations
       of the same type, but different instrument)
 
@@ -57,28 +57,121 @@ def error_profile(obs, depth, error, provenance=None):
     modified.
     """
     from scipy.interpolate import interp1d
-    depth = np.atleast_1d(depth)
-    depth = -np.abs(depth)
-    fint = interp1d(depth, np.zeros(depth.shape))
-    pro = seapy.roms.obs._provenance_from_string(
-        provenance) if provenance else None
+    obs = seapy.roms.obs.asobs(obs)
+    depth = np.atleast_1d(depth).flatten()
+    depth = np.abs(depth)
+    pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
 
     # Loop over all of the profiles in the error dictionary and
     # apply them to the observations
     for var in error:
-        typ = seapy.roms.obs._type_from_string(var)
+        typ = seapy.roms.obs.astype(var)
         try:
-            fint.y = error[var]
-            if pro:
-                l = np.where(np.logical_and(
-                    o.type == typ, o.provenance == pro))
+            fint = interp1d(depth, error[var].flatten(), copy=False)
+            if pro.any():
+                l = np.where(np.logical_and(obs.type == typ,
+                                            np.in1d(obs.provenance, pro)))
             else:
-                l = np.where(o.type == typ)
-            nerr = fint(o.depth[l])
-            o.error[l] = np.maximum(o.error[l], nerr)
+                l = np.where(np.logical_and(obs.type == typ, obs.depth < 0))
+            nerr = fint(np.abs(obs.depth[l]))
+            obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
             continue
+    pass
+
+
+def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
+                  reftime=seapy.default_epoch):
+    """
+    Apply predicted barotropic tides to the SSH values of given observations
+    using the tide_file given. 
+
+    Parameters
+    ----------
+    obs : seapy.roms.obs.obs or string,
+      The observations to enforce the error profile upon.
+    tide_file : string,
+      The name of the ROMS tidal forcing file to use for predicting the
+      barotropic tides.
+    tide_error : np.masked_array
+      A two dimensional array of the tidal fit errors to apply to
+      the ssh errors when adding the tides. This should be the same size
+      as the rho-grid. The units of the error must be in meters. If it is
+      masked, the mask will be honored and obs that are in the mask will
+      be removed. This allows you to filter on regions of high error.
+    tide_start : bool, optional,
+      If given, the tide_start of the tide file. If not specified,
+      will read the attribute of the tidal forcing file
+    provenance : list of int or string, optional,
+      The provenance to apply the tides to (ignore other observations
+      of the same type, but different instrument)
+    reftime: datetime,
+      Reference time for the observation times
+
+    Returns
+    -------
+    None:
+      The obs structure is mutable is changed in place
+
+    Examples
+    --------
+    >>> obs = obs('observation_file.nc')
+    >>> add_ssh_tides(obs, 'tide_frc.nc', errmap)
+
+    The resulting 'obs' variable will have modified data. To save it:
+
+    >>> obs.to_netcdf()
+    """
+
+    # Load tidal file data
+    frc = seapy.roms.tide.load_forcing(tide_file)
+    if not tide_start:
+        tide_start = frc['tide_start']
+
+    # Make sure that the sizes are the same
+    if frc['Eamp'].shape[1:] != tide_error.shape:
+        raise ValueError(
+            "The error array is not the same size as the tidal grid")
+
+    # Gather the observations that need tidal information
+    obs = seapy.roms.obs.asobs(obs)
+    pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
+    if pro:
+        l = np.where(np.logical_and(obs.type == 1,
+                                    np.in1d(obs.provenance, pro)))
+    else:
+        l = np.where(obs.type == 1)
+
+    # If we have any, then do tidal predictions and add the signal
+    # and error to the observations
+    bad = []
+    if l[0].any():
+        ox = np.rint(obs.x[l]).astype(int)
+        oy = np.rint(obs.y[l]).astype(int)
+        idx = seapy.unique_rows((ox, oy))
+        for cur in seapy.progressbar.progress(idx):
+            pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
+            # If this point is masked, remove from the observations
+            if not tide_error[oy[cur], ox[cur]]:
+                bad.append(l[0][pts].tolist())
+            else:
+                time = [reftime + datetime.timedelta(t) for t in
+                        obs.time[l][pts]]
+                amppha = seapy.tide.pack_amp_phase(
+                    frc['tides'], frc['Eamp'][:, oy[cur], ox[cur]],
+                    frc['Ephase'][:, oy[cur], ox[cur]])
+                zpred = seapy.tide.predict(time, amppha,
+                                           lat=obs.lat[l][cur],
+                                           tide_start=tide_start)
+                # Add the information to the observations
+                obs.value[l[0][pts]] += zpred
+                obs.error[l[0][pts]] = np.maximum(
+                    obs.error[l[0][pts]], tide_error[oy[cur], ox[cur]]**2)
+
+    # If any were bad, then remove them
+    if bad:
+        obs.delete(seapy.flatten(bad))
     pass
 
 
@@ -202,7 +295,7 @@ class aquarius_sss(obsgen):
     """
 
     def __init__(self, grid, dt, reftime=seapy.default_epoch, salt_limits=None,
-                 salt_error=0.1):
+                 salt_error=0.2):
         if salt_limits is None:
             self.salt_limits = (10, 36)
         else:
@@ -269,7 +362,7 @@ class aviso_sla_map(obsgen):
         Load an AVISO file and convert into an obs structure
         """
         # Load AVISO Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.squeeze(nc.variables["sla"][:])
@@ -347,7 +440,7 @@ class aviso_sla_track(obsgen):
         Load an AVISO file and convert into an obs structure
         """
         # Load AVISO Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
         dat = nc.variables["SLA"][:]
@@ -371,7 +464,7 @@ class aviso_sla_track(obsgen):
                                      data, self.dt, title)
 
         # Apply the model mean ssh to the sla data
-        if self.ssh_mean is not None:
+        if self.ssh_mean is not None and obs is not None:
             m, p = seapy.oasurf(self.grid.I, self.grid.J, self.ssh_mean,
                                 obs.x, obs.y, nx=1, ny=1, weight=7)
             obs.value += m
@@ -410,7 +503,7 @@ class ostia_sst_map(obsgen):
         Load an OSTIA file and convert into an obs structure
         """
         # Load OSTIA Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -434,6 +527,64 @@ class ostia_sst_map(obsgen):
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                       data, self.dt, title)
+
+
+class navo_sst_map(obsgen):
+    """
+    class to process NAVO SST map netcdf files into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+
+    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch, temp_error=0.25,
+                 temp_limits=None, provenance="SST_NAVO_MAP"):
+
+        self.temp_error = temp_error
+        self.provenance = provenance.upper()
+        self.temp_limits = (2, 35) if temp_limits is None else temp_limits
+        self.depth = 4 if depth is None else np.abs(depth)
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="NAVO SST Obs"):
+        """
+        Load a NAVO map file and convert into an obs structure
+        """
+        import re
+        import sys
+
+        nc = seapy.netcdf(file)
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(np.squeeze(nc.variables["analysed_sst"][:]) - 273.15,
+                                   self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.array(np.squeeze(
+            nc.variables["analysis_error"][:]), mask=dat.mask)
+
+        # this is an analyzed product and provides errors as a function
+        # of space and time directly the temperature is the bulk
+        # temperature (ie at around 4m depth, below the e-folding depths of
+        # sunlight in the ocean so the product does not have a diuranl cycle
+        # (ie you don;t have to worry about hourly variations)
+        time = netCDF4.num2date(nc.variables["time"][0],
+                                nc.variables["time"].units) - self.epoch
+        time = time.total_seconds() * seapy.secs2day
+        nc.close()
+
+        # here we set the depth to be 4 m below the surface
+        if self.grid.east():
+            lon[lon < 0] += 360
+        lon, lat = np.meshgrid(lon, lat)
+        good = dat.nonzero()
+        lat = lat[good]
+        lon = lon[good]
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance, dat.compressed(),
+                                        err[good], self.temp_error)]
+        # Grid it
+        obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
+                                     data, self.dt, depth_adjust=True, title=title)
+        obs.z *= 0
+        obs.depth = -self.depth * np.ones(len(obs.depth))
+        return obs
 
 
 class modis_sst_map(obsgen):
@@ -461,7 +612,7 @@ class modis_sst_map(obsgen):
         # Load MODIS Data
         import re
 
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(nc.variables["sst"][:],
@@ -473,8 +624,7 @@ class modis_sst_map(obsgen):
             "%Y-%m-%dT%H:%M:%S"), self.epoch)
 
         # Check the data flags
-        flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:],
-                                       0)
+        flags = np.ma.masked_not_equal(nc.variables["qual_sst"][:], 0)
         dat[flags.mask] = np.ma.masked
 
         nc.close()
@@ -499,10 +649,11 @@ class remss_swath(obsgen):
     seapy.roms.genobs.genobs, and handles the loading of the data.
     """
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_error=0.4,
+    def __init__(self, grid, dt, check_qc_flags=True, reftime=seapy.default_epoch, temp_error=0.4,
                  temp_limits=None, provenance="SST_REMSS"):
         self.temp_error = temp_error
         self.provenance = provenance.upper()
+        self.check_qc_flags = check_qc_flags
         if temp_limits is None:
             self.temp_limits = (2, 35)
         else:
@@ -514,7 +665,7 @@ class remss_swath(obsgen):
         Load an REMSS file and convert into an obs structure
         """
         # Load REMSS Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -525,31 +676,29 @@ class remss_swath(obsgen):
         dat[err.mask] = np.ma.masked
 
         # Check the data flags
-        try:
+        if self.check_qc_flags:
             flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["l2p_flags"][:]), 0)
-        except:
-            flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["rejection_flag"][:]), 0)
-        dat[flags.mask] = np.ma.masked
+                np.squeeze(nc.variables["quality_level"][:]), 5)
+            dat[flags.mask] = np.ma.masked
+        else:
+            dat = np.ma.masked_where(
+                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
 
         # Grab the observation time
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
         dtime = nc.variables["sst_dtime"][:]
-        time = (time.total_seconds() + dtime) * seapy.secs2day
+        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
         nc.close()
         if self.grid.east():
             lon[lon < 0] += 360
         good = dat.nonzero()
-        lat = lat[good]
-        lon = lon[good]
         data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
                                         dat.compressed(),
                                         err[good], self.temp_error)]
         # Grid it
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                      data, self.dt, title)
+        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
+                                      None, data, self.dt, title)
 
 
 class remss_map(obsgen):
@@ -574,7 +723,7 @@ class remss_map(obsgen):
         Load an REMSS file and convert into an obs structure
         """
         # Load REMSS Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -617,6 +766,66 @@ class remss_map(obsgen):
                                       lon.compressed(), lat.compressed, None,
                                       data, self.dt, title)
 
+
+class viirs_swath(obsgen):
+    """
+    class to process VIIRS SST swath netcdf files into ROMS observation
+    files.  This is a subclass of
+    seapy.roms.obsgen.obsgen, and handles the loading of the data.
+    """
+
+    def __init__(self, grid, dt, check_qc_flags=True, reftime=seapy.default_epoch,
+                 temp_error=0.4, temp_limits=None, provenance="SST_VIIRS"):
+        self.temp_error = temp_error
+        self.provenance = provenance.upper()
+        self.check_qc_flags = check_qc_flags
+        if temp_limits is None:
+            self.temp_limits = (2, 35)
+        else:
+            self.temp_limits = temp_limits
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="VIIRS SST Obs"):
+        """
+        Load a VIIRS file and convert into an obs structure
+        """
+        # Load VIIRS Data
+        nc = seapy.netcdf(file, aggdim="time")
+        lon = nc.variables["lon"][:]
+        lat = nc.variables["lat"][:]
+        dat = np.ma.masked_outside(np.squeeze(
+            nc.variables["sea_surface_temperature"][:]) - 273.15,
+            self.temp_limits[0], self.temp_limits[1])
+        err = np.ma.masked_outside(np.squeeze(
+            nc.variables["sses_standard_deviation"][:]), 0.01, 2.0)
+        dat[err.mask] = np.ma.masked
+
+        # Check the data flags
+        if self.check_qc_flags:
+            flags = np.ma.masked_not_equal(
+                np.squeeze(nc.variables["quality_level"][:]), 5)
+            dat[flags.mask] = np.ma.masked
+        else:
+            dat = np.ma.masked_where(
+                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
+
+        # Grab the observation time
+        time = netCDF4.num2date(nc.variables["time"][0],
+                                nc.variables["time"].units) - self.epoch
+        dtime = nc.variables["sst_dtime"][:]
+        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
+        nc.close()
+        if self.grid.east():
+            lon[lon < 0] += 360
+        good = dat.nonzero()
+        data = [seapy.roms.obs.raw_data("TEMP", self.provenance,
+                                        dat.compressed(),
+                                        err[good], self.temp_error)]
+        # Grid it
+        return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
+                                      None, data, self.dt, title)
+
+
 ##############################################################################
 #
 # IN SITU DATA
@@ -631,7 +840,7 @@ class seaglider_profile(obsgen):
     the loading of the data.
     """
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, dtype=None, temp_limits=None,
                  salt_limits=None, depth_limit=-15, temp_error=0.2,
                  salt_error=0.05):
         if temp_limits is None:
@@ -642,6 +851,12 @@ class seaglider_profile(obsgen):
             self.salt_limits = (31, 35.5)
         else:
             self.salt_limits = salt_limits
+        if dtype is None:
+            self.dtype = {'names': ('time', 'pres', 'depth', 'temp', 'cond',
+                                    'salt', 'sigma', 'lat', 'lon'),
+                          'formats': ['f4'] * 9}
+        else:
+            self.dtype = dtype
         self.depth_limit = depth_limit
         self.temp_error = temp_error
         self.salt_error = salt_error
@@ -653,15 +868,11 @@ class seaglider_profile(obsgen):
         """
         import re
 
-        dtype = {'names': ('time', 'pres', 'depth', 'temp', 'cond',
-                           'salt', 'sigma', 'lat', 'lon'),
-                 'formats': ['f4'] * 9}
-
         # Load the text file. All data goes into the pro dictionary
         # as defined by dtype. The header information needs to be parsed
         with open(file) as myfile:
             header = [myfile.readline() for i in range(19)]
-            pro = np.loadtxt(myfile, dtype, delimiter=',', comments='%')
+            pro = np.loadtxt(myfile, self.dtype, delimiter=',', comments='%')
 
         # Parse the header information
         parser = re.compile('^%(\w+): (.*)$')
@@ -701,14 +912,17 @@ class seaglider_profile(obsgen):
         salt = np.ma.masked_outside(pro["salt"], self.salt_limits[0],
                                     self.salt_limits[1])
         depth = np.ma.masked_greater(-pro["depth"], self.depth_limit)
+        good = ~np.ma.getmaskarray(depth)
 
         # Grid it
-        data = [seapy.roms.obs.raw_data("TEMP", provenance, temp,
+        data = [seapy.roms.obs.raw_data("TEMP", provenance, temp[good],
                                         None, self.temp_error),
-                seapy.roms.obs.raw_data("SALT", provenance, salt,
+                seapy.roms.obs.raw_data("SALT", provenance, salt[good],
                                         None, self.salt_error)]
-        return seapy.roms.obs.gridder(self.grid, pro["time"] / 86400 + dtime,
-                                      pro["lon"], pro["lat"], depth,
+        return seapy.roms.obs.gridder(self.grid, pro["time"][good] / 86400 + dtime,
+                                      pro["lon"][good],
+                                      pro["lat"][good],
+                                      depth.compressed(),
                                       data, self.dt, title)
 
 
@@ -792,7 +1006,7 @@ class mooring(obsgen):
         if not error:
             error = {}
 
-        if not data:
+        if not ta:
             warn("No data is provided")
             return
 
@@ -838,7 +1052,7 @@ class tao_mooring(mooring):
                 "salt": ["S_41", "QS_5041"],
                 "u": ["U_320", "QS_5300"],
                 "v": ["V_321", "QS_5300"]}
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lat = nc.variables["lat"][:]
         lon = nc.variables["lon"][:]
         if not self.grid.east():
@@ -902,10 +1116,11 @@ class argo_ctd(obsgen):
                  salt_limits=None, temp_error=0.25,
                  salt_error=0.1):
         if temp_limits is None:
-            self.temp_limits = (5, 35)
+            self.temp_limits = (2, 35)
         else:
             self.temp_limits = temp_limits
         if salt_limits is None:
+
             self.salt_limits = (10, 35.5)
         else:
             self.salt_limits = salt_limits
@@ -917,7 +1132,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]

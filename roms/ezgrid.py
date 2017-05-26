@@ -4,7 +4,7 @@
 
   Functions for generating ROMS grid files
 
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 from datetime import datetime
@@ -172,6 +172,8 @@ def create_grid(grid_file, lat, lon):
     nc.variables["angle"][:] = angle
     nc.variables["rdrag"][:] = np.ones(lon.shape) * 0.0003
     nc.variables["rdrag2"][:] = np.ones(lon.shape) * 0.003
+    nc.variables["visc_factor"][:] = np.ones(lon.shape)
+    nc.variables["diff_factor"][:] = np.ones(lon.shape)
     nc.variables["ZoBot"][:] = np.ones(lon.shape) * 0.02
     nc.sync()
 

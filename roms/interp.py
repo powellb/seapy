@@ -5,7 +5,7 @@
   Methods to interpolate ROMS fields onto other grids
 
   Written by Brian Powell on 11/02/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -18,7 +18,7 @@ from joblib import Parallel, delayed
 from warnings import warn
 
 _up_scaling = {"zeta": 1.0, "u": 1.0, "v": 1.0, "temp": 1.0, "salt": 1.0}
-_down_scaling = {"zeta": 1.0, "u": 0.95, "v": 0.95, "temp": 0.98, "salt": 1.02}
+_down_scaling = {"zeta": 1.0, "u": 0.9, "v": 0.9, "temp": 0.95, "salt": 1.05}
 _ksize_range = (7, 15)
 # Limit amount of memory to process in a single read. This determines how to
 # divide up the time-records in interpolation
@@ -106,7 +106,7 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     # Now fill vertically
     nrz = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
     nrz[1:-1, :, :] = rz
-    nrz[bot, :, :] = rz[bot, :, :] - 500
+    nrz[bot, :, :] = rz[bot, :, :] - 5000
     nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
 
     if not gradsrc:
@@ -276,7 +276,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[
                     rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
                                     (delayed(__interp2_thread)(
                                      src_grid.lon_rho, src_grid.lat_rho,
                                      ncsrc.variables[src][i, :, :],
@@ -296,7 +296,7 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
             for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                 outr = np.s_[
                     rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
                                     (delayed(__interp3_thread)(
                                         src_grid.lon_rho, src_grid.lat_rho,
                                         src_grid.depth_rho,
@@ -332,16 +332,15 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                                       src_grid.lon_rho.nbytes *
                                       src_grid.n))))
     for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
-        vel = Parallel(n_jobs=threads, verbose=2) \
-            (delayed(__interp3_vel_thread)(
-                src_grid.lon_rho, src_grid.lat_rho,
-                src_grid.depth_rho, srcangle,
-                ncsrc.variables[velmap["u"]][i, :, :, :],
-                ncsrc.variables[velmap["v"]][i, :, :, :],
-                child_grid.lon_rho, child_grid.lat_rho,
-                child_grid.depth_rho, dstangle,
-                pmap["pmaprho"], weight, nx, ny,
-                child_grid.mask_rho) for i in recs)
+        vel = Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)(delayed(__interp3_vel_thread)(
+            src_grid.lon_rho, src_grid.lat_rho,
+            src_grid.depth_rho, srcangle,
+            ncsrc.variables[velmap["u"]][i, :, :, :],
+            ncsrc.variables[velmap["v"]][i, :, :, :],
+            child_grid.lon_rho, child_grid.lat_rho,
+            child_grid.depth_rho, dstangle,
+            pmap["pmaprho"], weight, nx, ny,
+            child_grid.mask_rho) for i in recs)
 
         for j in range(len(vel)):
             vel_u = np.ma.array(vel[j][0], copy=False)
@@ -765,13 +764,12 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
                                              eta_rho=destg.ln,
                                              xi_rho=destg.lm,
                                              s_rho=destg.n,
-                                             ntimes=records.size,
                                              reftime=src_ref,
                                              title="interpolated from " + src_file)
         src_time = netCDF4.num2date(ncsrc.variables[time][records],
                                     ncsrc.variables[time].units)
-        ncout.variables["time"][:] = netCDF4.date2num(
-            src_time, ncout.variables[dtime + "_time"].units)
+        ncout.variables["clim_time"][:] = netCDF4.date2num(
+            src_time, ncout.variables["clim_time"].units)
         ncsrc.close()
     else:
         raise AttributeError(
@@ -790,4 +788,6 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
         # Clean up
         ncout.close()
     return pmap
+
+
 pass

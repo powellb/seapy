@@ -5,12 +5,13 @@
   Functions for working with tidal time-series
 
   Written by Glenn Carter and Dale Partridge
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import datetime
 from collections import namedtuple
 import os
+from warnings import warn
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
@@ -200,8 +201,8 @@ def vuf(time, tides=None, lat=55):
                     2: __const[s].sat.amprat[k] * 2.59808 * slat
                 }.get(__const[s].sat.ilatfac[k], 0)
                 fsum += rr * np.exp(1j * 2 * np.pi * uu)
-                ftemp = np.absolute(fsum)
-                utemp = np.angle(fsum)
+            ftemp = np.absolute(fsum)
+            utemp = np.angle(fsum)
 
             if __const[c].shallow.isshallow:
                 v += vtemp * __const[c].shallow.coef[i]
@@ -241,7 +242,7 @@ def vel_ellipse(u, v):
     >>> v = {"M2":amp_phase(0.7, np.radians(10.1))}
     >>> ell = vel_ellipse(u, v)
     >>> print(ell)
-    {'M2': tellipse(major=4.3324053381635519, minor=0.45854551121121889,
+    {'M2': ellipse(major=4.3324053381635519, minor=0.45854551121121889,
      angle=6.1601050372480319, phase=4.0255995338808006)}
     """
     ell = {}
@@ -270,7 +271,7 @@ def vel_ellipse(u, v):
     return ell
 
 
-def predict(times, tide, lat=55, tide_start=None):
+def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
     """
     Generate a tidal time-series for the given tides. Nodal correction
     is applied for the time as well as the given latitude (if specified).
@@ -282,6 +283,9 @@ def predict(times, tide, lat=55, tide_start=None):
     tide : dict,
         Dictionary of the tides to predict with the constituent name as
         the key, and the value is an amp_phase namedtuple.
+    tide_minor : dict optional,
+        Dictionary of the minor axis amplitude and angle to predict with
+        the constituent name as the key, and the value is an amp_phase namedtuple.
     lat : float optional,
         latitude of the nodal correction
     tide_start : datetime optional,
@@ -301,16 +305,13 @@ def predict(times, tide, lat=55, tide_start=None):
     >>> times = [ datetime(2014,4,1) + timedelta(t/24) for t in range(31*24) ]
     >>> tide = {'M2': amp_phase(2.3, np.radians(22)),
                 'K1': amp_phase(0.4, np.radians(227))}
-    >>> z = predict(times, tide, 23)
+    >>> z = predict(times, tide, lat=23)
 
 
     """
     times = np.atleast_1d(times)
     clist = list(tide.keys())
     freq = frequency(clist)
-
-    # Calculate midpoint of time series
-    ctime = times[0] + (times[-1] - times[0]) / 2
 
     # If given a tide_start, then the phase is relative to that datetime,
     # and no corrections need to be applied; furthermore, the times to predict
@@ -322,16 +323,28 @@ def predict(times, tide, lat=55, tide_start=None):
         hours = np.array(
             [(t - tide_start).total_seconds() / 3600.0 for t in times])
     else:
+        ctime = times[0] + (times[-1] - times[0]) / 2
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
 
-    # Calulate time series
+    # Calculate time series
     ts = np.zeros(len(times))
+    if tide_minor:
+        ts = np.zeros(len(times), dtype=np.complex)
     for i, ap in enumerate(tide):
         c = tide[ap]
         ap = ap.upper()
-        ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                          + (vufs[ap].v + vufs[ap].u) - c.phase)
+        if tide_minor:
+            m = tide_minor[ap]
+
+            ts += np.exp(1j * m.phase) * (
+                c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
+                                            + (vufs[ap].v + vufs[ap].u) - c.phase)
+                + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
+                                              + (vufs[ap].v + vufs[ap].u) - c.phase))
+        else:
+            ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
+                                              + (vufs[ap].v + vufs[ap].u) - c.phase)
 
     return ts
 
@@ -471,6 +484,8 @@ def pack_amp_phase(tides, amp, phase):
     tides = _set_tides(tides)
     amp = np.atleast_1d(amp)
     phase = np.atleast_1d(phase)
+    if np.any(phase > 2 * np.pi):
+        warn("Phases appear to be degrees. Beware of results.")
 
     amp_ph = {}
     for i, c in enumerate(tides):

@@ -1,30 +1,32 @@
 #!/usr/bin/env python
 """
-    ASCII Progress Bar that work in IPython notebooks.
+ASCII Progress Bar that work in IPython notebooks.
 
-    Code take from examples shown at:
+Code take from examples shown at:
 
-  <http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb>
+<http://nbviewer.ipython.org/github/ipython/ipython/blob/3607712653c66d63e0d7f13f073bde8c0f209ba8/docs/examples/notebooks/Animations_and_Progress.ipynb>
 
-    Modified to include a timer and added an iterator that displays a
-    progressbar as it iterates.
+Modified to include a timer and added an iterator that displays a
+progressbar as it iterates.
 
-    **Examples**
-
-    >>> for i in progressbar.progress(range(10)):
-    >>>     frobnicate(i)
-
+Examples
+--------
+>>> for i in progressbar.progress(range(10)):
+>>>     frobnicate(i)
 
 """
 
-import sys, time
+import sys
+import time
 try:
     from IPython.display import clear_output
     have_ipython = True
 except ImportError:
     have_ipython = False
 
+
 class ProgressBar:
+
     def __init__(self, iterations):
         self.iterations = iterations
         self.prog_bar = '[]'
@@ -44,15 +46,14 @@ class ProgressBar:
 
     def update_iteration(self, elapsed_iter):
         self.__update_amount((elapsed_iter / float(self.iterations)) * 100.0)
-        t=time.process_time()
-        delta=t-self.start
-        togo=(delta/elapsed_iter)*(self.iterations-elapsed_iter)
+        t = time.process_time()
+        delta = t - self.start
+        togo = (delta / elapsed_iter) * (self.iterations - elapsed_iter)
         self.prog_bar += '  [%d of %d, %.1f secs elapsed/%.1f secs ETA]' % \
             (elapsed_iter, self.iterations, delta, togo)
         if elapsed_iter > self.iterations:
-            print("\r [ COMPLETED %d ITERATIONS IN %.1f SECS ] %s" % \
-                (self.iterations, delta, " "*60))
-
+            print("\r [ COMPLETED %d ITERATIONS IN %.1f SECS ] %s" %
+                  (self.iterations, delta, " " * 60))
 
     def __update_amount(self, new_amount):
         percent_done = int(round((new_amount / 100.0) * 100.0))
@@ -68,13 +69,18 @@ class ProgressBar:
     def __str__(self):
         return str(self.prog_bar)
 
+
 class progress:
     """
     Draw a progess bar while going through the given iterator.
 
-    NOTE: If the iterator does not support the len() method, you should
+    Notes
+    -----
+    If the iterator does not support the len() method, you should
     supply the maxlen parameter.
 
+    Examples
+    --------
     >>> for i in progress(range(10)):
     >>>    frobnicate(i)
 
@@ -83,12 +89,13 @@ class progress:
     >>> for n,i in progressbar(enumerate(range(10)),10)
     >>>    frobnicate(n, i)
     """
+
     def __init__(self, iterable, maxlen=100):
         try:
             self.size = len(iterable)
         except TypeError:
             self.size = maxlen
-        self.pbar = ProgressBar(self.size+1)
+        self.pbar = ProgressBar(self.size + 1)
         self.iterator = iter(iterable)
         self.count = 0
 
@@ -96,15 +103,3 @@ class progress:
         self.count += 1
         self.pbar.animate(self.count)
         return next(self.iterator)
-
-
-## Usage
-if __name__=="__main__":
-    p = ProgressBar(100)
-    for i in range(101):
-        p.animate(i)
-        time.sleep(0.01)
-
-    print("use iterator")
-    for i in progress(range(100)):
-        time.sleep(0.01)

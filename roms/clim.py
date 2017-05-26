@@ -5,7 +5,7 @@
   ROMS climatology utilities
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 

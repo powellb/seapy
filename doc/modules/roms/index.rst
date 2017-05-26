@@ -95,6 +95,13 @@ SEAPY ROMS Package Documentation
    :undoc-members:
    :show-inheritance:
 
+:mod:`tide` -- Work with ROMS tides
+-----------------------------------
+.. automodule:: seapy.roms.tide
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 
 

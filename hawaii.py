@@ -21,7 +21,7 @@
     >>> m.fig.savefig("sst.png",dpi=100)
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -35,11 +35,13 @@ _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii"
 
 class hawaii(map):
 
-    def __init__(self, figsize=(8., 6.), llcrnrlon=-164.5, llcrnrlat=16.6,
-                 urcrnrlon=-152.0, urcrnrlat=24.2, dlat=1, dlon=2):
-        super().__init__(llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
-                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat, figsize=figsize,
-                         dlat=dlat, dlon=dlon)
+    def __init__(self, grid=None, llcrnrlon=-163, llcrnrlat=17, urcrnrlon=-153,
+                 urcrnrlat=24, figsize=(8., 6.), dlat=1, dlon=2, fig=None, ax=None,
+                 fill_color="aqua"):
+        super().__init__(grid=grid, llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
+                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
+                         figsize=figsize, dlat=dlat, dlon=dlon, fig=fig, ax=ax,
+                         fill_color=fill_color)
 
     def land(self, color="black"):
         """

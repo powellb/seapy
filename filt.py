@@ -6,7 +6,7 @@
 
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import seapy
@@ -123,19 +123,29 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
       >>>  nx = bandpass(x, dt=0.5, low_cutoff=1, hi_cutoff=48 )
       >>>  plt.plot(t, x, 'k', t, nx, 'r', label=['Raw', 'Filter'])
     """
-    x = np.atleast_1d(x).flatten()
+    x = np.ma.array(np.atleast_1d(x).flatten(), copy=False)
+    nx = np.ma.masked_all(x.shape)
 
     if low_cutoff and hi_cutoff:
-        b, a = scipy.signal.butter(
-            order, 2.0 * dt / np.array([low_cutoff, hi_cutoff]), btype='bandpass')
+        freq = 2.0 * dt / np.array([low_cutoff, hi_cutoff])
+        btype = 'bandpass'
     elif low_cutoff:
-        b, a = scipy.signal.butter(
-            order, 2.0 * dt / low_cutoff, btype='lowpass')
+        freq = 2.0 * dt / low_cutoff
+        btype = 'lowpass'
     elif hi_cutoff:
-        b, a = scipy.signal.butter(
-            order, 2.0 * dt / hi_cutoff, btype='highpass')
+        freq = 2.0 * dt / hi_cutoff
+        btype = 'highpass'
     else:
         raise AttributeError("You must specify either low or hi cutoff.")
-    return scipy.signal.filtfilt(b, a, x, axis=0)
+    padlen = int(1.0 / freq)
+    b, a = scipy.signal.butter(order, freq, btype=btype)
+
+    # Go over all contiguous regions
+    regions = seapy.contiguous(x)
+    for r in regions:
+        if ((r.stop - r.start) >= padlen):
+            nx[r] = scipy.signal.filtfilt(
+                b, a, x[r], padlen=padlen - 2, axis=0)
+    return nx
 
 

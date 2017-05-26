@@ -19,7 +19,7 @@
   easily.
 
   Written by Brian Powell on 08/05/14
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 
@@ -59,15 +59,18 @@ obs_provenance = {
     152: "GLIDER_SG512",
     153: "GLIDER_SG513",
     154: "GLIDER_SG523",
+    155: "GLIDER_SG626",
     200: "CTD",
     210: "CTD_HOT",
     220: "CTD_ARGO",
     300: "SST",
     301: "SST_OSTIA",
+    315: "SST_NAVO_MAP",
     317: "SST_AVHRR_17",
     318: "SST_AVHRR_18",
     330: "SST_MODIS_AQUA",
     331: "SST_MODIS_TERRA",
+    332: "SST_VIIRS",
     340: "SST_REMSS",
     341: "SST_AMSRE",
     342: "SST_TMI",
@@ -88,9 +91,13 @@ obs_provenance = {
     460: "SSS_AQUARIUS",
     500: "DRIFTERS",
     600: "RADAR",
-    610: "RADAR_KOKOHEAD",
-    620: "RADAR_KAKAAKO",
-    630: "RADAR_KALAELOA",
+    610: "RADAR_KOK",
+    620: "RADAR_KAK",
+    630: "RADAR_KAL",
+    640: "RADAR_KAP",
+    650: "RADAR_KNA",
+    660: "RADAR_KKH",
+    670: "RADAR_PPK",
     700: "ADCP",
     800: "MOORING",
     810: "TAO_ARRAY"
@@ -230,6 +237,7 @@ class obs:
             nc = seapy.netcdf(filename)
             # Construct an array from the data in the file. If obs_meta
             # exists in the file, then load it; otherwise, fill with zeros
+            self.filename = filename
             self.time = nc.variables["obs_time"][:]
             self.x = nc.variables["obs_Xgrid"][:]
             self.y = nc.variables["obs_Ygrid"][:]
@@ -247,7 +255,7 @@ class obs:
                                            for v, k in
                                            (it.split(':') for it in
                                             nc.obs_provenance.split(','))))
-            except (KeyError, ValueError):
+            except (AttributeError, ValueError):
                 pass
             try:
                 self.meta = nc.variables["obs_meta"][:]
@@ -256,6 +264,7 @@ class obs:
             finally:
                 nc.close()
         else:
+            self.filename = None
             if time is not None:
                 self.time = np.atleast_1d(time)
             if x is not None:
@@ -331,6 +340,9 @@ class obs:
 
         # Set the shape parameter
         self.shape = self.value.shape
+
+        # Ensure consistency in depth and z
+        self.z[self.depth > 0] = self.depth[self.depth > 0]
 
     def __len__(self):
         self.shape = self.value.shape
@@ -481,14 +493,15 @@ class obs:
         self.survey_time = times
         self.nobs = counts
 
-    def to_netcdf(self, filename, dt=0, clobber=True):
+    def to_netcdf(self, filename=None, dt=0, clobber=True):
         """
         Write out the observations into the specified netcdf file
 
         Parameters
         ----------
-        filename : string,
-            name of file to save
+        filename : string, optional
+            name of file to save. If obs were loaded from a file and filename
+            is not specified, then write to the same.
         dt : float,
             ensure data are at least separated in time by dt; otherwise,
             make as part of same survey
@@ -496,6 +509,12 @@ class obs:
             if True, any existing file is overwritten
         """
         import os
+
+        # Check filename
+        if filename is None and self.filename is not None:
+            filename = self.filename
+        if filename is None:
+            error("No filename given")
 
         # Save out the observations by survey
         self._consistent()
@@ -536,7 +555,8 @@ class obs:
         nc.close()
 
 
-def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
+def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
+            title='ROMS Observations'):
     """
     Construct an observations set from raw observations by placing them
     onto a grid.
@@ -634,19 +654,19 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
         # Get the grid locations from the data locations
         subsurface_values = False
         (j, i) = grid.ij((lon, lat))
-        depth = np.zeros(i.size)
+        depth = grid.n * np.ones(i.size)
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
         subsurface_values = True
         depth = np.atleast_1d(depth)[region_list]
-        (k, j, i) = grid.ijk((lon, lat, depth))
+        (k, j, i) = grid.ijk((lon, lat, depth), depth_adjust)
 
     # Sub-select only the points that lie on our grid
     valid_list = np.where((~i.mask * ~j.mask * ~k.mask) == True)
-    i = i.compressed()
-    j = j.compressed()
-    k = k[valid_list]
+    i = i[valid_list].compressed()
+    j = j[valid_list].compressed()
+    k = k[valid_list].compressed()
     depth = depth[valid_list]
 
     # Make sure the times are consistent and in dt-space
@@ -734,7 +754,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
                 kk = kk[binned].ravel() + 1
             else:
                 kk = np.resize(grid.n, Nd)
-                dd = np.zeros(ii.shape)
+                dd = kk
 
             # Put all of the data from this time into our lists
             ot.append(np.resize(mtime, Nd))
@@ -760,10 +780,10 @@ def gridder(grid, time, lon, lat, depth, data, dt, title='ROMS Observations'):
     return seapy.roms.obs.obs(time=np.hstack(ot).ravel(),
                               x=np.hstack(ox).ravel(),
                               y=np.hstack(oy).ravel(),
-                              z=np.hstack(odep).ravel(),
+                              z=np.hstack(oz).ravel(),
                               lat=np.hstack(olat).ravel(),
                               lon=np.hstack(olon).ravel(),
-                              depth=np.hstack(oz).ravel(),
+                              depth=np.hstack(odep).ravel(),
                               value=np.hstack(oval).ravel(),
                               error=np.hstack(oerr).ravel(),
                               type=np.hstack(otype).ravel(),

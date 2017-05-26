@@ -25,7 +25,7 @@
 
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -73,7 +73,7 @@ class map(object):
 
     def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
                  urcrnrlat=40, proj='lcc', resolution='c', figsize=(8., 6.),
-                 dlat=1, dlon=2):
+                 dlat=1, dlon=2, fig=None, ax=None, fill_color="aqua"):
         """
         map class for abstracting the basemap methods for quick and easy creation
         of geographically referenced data figures
@@ -100,10 +100,17 @@ class map(object):
         figsize: list, optional
             dimensions to use for creation of figure
         dlat: float, optional
-            how often to mark latitude lines
+            interval to mark latitude lines (e.g., if dlat=0.5 every 0.5deg mark)
         dlon: float, optional
-            how often to mark longitude lines
-
+            interval to mark longitude lines (e.g., if dlon=0.5 every 0.5deg mark)
+        fig: matplotlib.pyplot.figure object, optional
+            If you want to plot on a pre-configured figure, pass the figure object
+            along with the axis object.
+        ax: matplotlib.pyplot.axis object, optional
+            If you want to plot on a pre-configured figure, pass the axis object
+            along with the figure object.
+        fill_color: string, optional
+            The color to use for the axis background
 
         Returns
         -------
@@ -122,50 +129,69 @@ class map(object):
                                projection=proj,
                                lat_0=urcrnrlat - (urcrnrlat - llcrnrlat) / 2.,
                                lon_0=urcrnrlon - (urcrnrlon - llcrnrlon) / 2.,
-                               resolution=resolution, area_thresh=0.0)
+                               resolution=resolution, area_thresh=0.0, ax=ax)
 
         self.figsize = figsize
         self.dlon = dlon
         self.dlat = dlat
-        self.fig = None
-        self.new_figure()
+        self.fig = fig
+        self.ax = ax
+        self.fill_color = fill_color
+        reset = True if fig is None else False
+        self.new_figure(reset=reset)
 
-    def new_figure(self, fill_color="aqua"):
+    def new_figure(self, fill_color=None, reset=False):
         """
-        Create a new figure for plotting
-        """
-        if self.fig is not None:
-            self.ax.set_axis_off()
-            plt.close(self.fig)
+        Create or update a figure for plotting
 
-        self.fig = plt.figure(figsize=self.figsize)
-        self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+        Parameters
+        ----------
+        fill_color: string, optional
+           Color to fill the background of the axes with
+        reset: bool, optional
+           Reset the figure
+        """
+        if reset:
+            if self.ax:
+                self.ax.set_axis_off()
+            if self.fig:
+                plt.close(self.fig)
+
+        if self.fig is None or self.ax is None:
+            self.fig = plt.figure(figsize=self.figsize)
+            self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
+
+        if fill_color is None:
+            fill_color = self.fill_color
+
         self.basemap.drawmapboundary(fill_color=fill_color)
-        # Create the lat/lon lines
-        delta = self.basemap.urcrnrlon - self.basemap.llcrnrlon
-        nticks = int(delta / self.dlon)
-        if delta / nticks > 1:
-            lon_lines = np.linspace(int(self.basemap.llcrnrlon - self.dlon),
-                                    int(self.basemap.urcrnrlon + self.dlon), nticks + 2)
+        # Create the longitude lines
+        nticks = int((self.basemap.urcrnrlon - self.basemap.llcrnrlon) /
+                     self.dlon)
+        md = np.mod(self.basemap.llcrnrlon, self.dlon)
+        if md:
+            slon = self.basemap.llcrnrlon + self.dlon - md
         else:
-            lon_lines = np.linspace(self.basemap.llcrnrlon - self.dlon,
-                                    self.basemap.urcrnrlon + self.dlon, nticks + 2)
-        # lon_lines = np.arange(self.basemap.llcrnrlon,
-        #     self.basemap.urcrnrlon, self.dlon)
+            slon = self.basemap.llcrnrlon
+            nticks += 1
+        lon_lines = np.arange(nticks) * self.dlon + slon
         self.basemap.drawmeridians(lon_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1], labels=[0, 0, 0, 1], fontsize=12)
-        delta = self.basemap.urcrnrlat - self.basemap.llcrnrlat
-        nticks = int(delta / self.dlat)
-        if delta / nticks > 1:
-            lat_lines = np.linspace(int(self.basemap.llcrnrlat - self.dlat),
-                                    int(self.basemap.urcrnrlat + self.dlat), nticks + 2)
+                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
+                                   labels=[0, 0, 0, 1], fontsize=12)
+
+        # Create the latitude lines
+        nticks = int((self.basemap.urcrnrlat - self.basemap.llcrnrlat) /
+                     self.dlat)
+        md = np.mod(self.basemap.llcrnrlat, self.dlat)
+        if md:
+            slat = self.basemap.llcrnrlat + self.dlat - md
         else:
-            lat_lines = np.linspace(self.basemap.llcrnrlat - self.dlat,
-                                    self.basemap.urcrnrlat + self.dlat, nticks + 2)
-        # lat_lines = np.arange(self.basemap.llcrnrlat,
-        #     self.basemap.urcrnrlat, self.dlat)
+            slat = self.basemap.llcrnrlat
+            nticks += 1
+        lat_lines = np.arange(nticks) * self.dlat + slat
         self.basemap.drawparallels(lat_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1], labels=[1, 0, 0, 0], fontsize=12)
+                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
+                                   labels=[1, 0, 0, 0], fontsize=12)
 
     def land(self, color="black"):
         """
@@ -220,6 +246,24 @@ class map(object):
         x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
         self.pc = self.ax.pcolormesh(x, y, data, **kwargs)
 
+    def scatter(self, lon, lat, data, **kwargs):
+        """
+        scatter plot data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        data: array
+            data to pcolor
+        **kwargs: arguments, optional
+            additional arguments to pass to pcolor
+        """
+        x, y = self.basemap(lon, lat)
+        self.pc = self.ax.scatter(x, y, c=data, **kwargs)
+
     def colorbar(self, label=None, cticks=None, **kwargs):
         """
         Display a colorbar on the figure
@@ -230,10 +274,12 @@ class map(object):
             Colorbar label title
         cticks: array, optional
             Where to place the tick marks and values for the colorbar
+        **kwargs: arguments, optional
+            additional arguments to pass to colorbar
         """
         self.cax = self.fig.add_axes([0.25, 0.16, 0.5, 0.03])
         self.cb = plt.colorbar(self.pc, cax=self.cax, orientation="horizontal",
-                               ticks=cticks)
+                               ticks=cticks, **kwargs)
         self.basemap.set_axes_limits(ax=self.ax)
         if label is not None:
             self.cb.set_label(label)

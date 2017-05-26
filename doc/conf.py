@@ -34,9 +34,11 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'numpydoc',
     'sphinx.ext.autosummary',
+    'numpydoc',
 ]
+
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'seapy'
-copyright = '2016, Powell Lab'
+copyright = '2017, University of Hawaii, BSD License'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

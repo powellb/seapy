@@ -51,7 +51,7 @@ SEAPY Documentation
 
 
 :mod:`mapping` -- Mapping toolkit for basemap
------------------------------------------
+---------------------------------------------
 .. autoclass:: seapy.mapping
    :members:
    :undoc-members:
@@ -106,6 +106,19 @@ SEAPY Documentation
    :members:
    :undoc-members:
    :show-inheritance:
+
+:mod:`tidal_energy` -- Compute Baroclinic Energy of Tides
+---------------------------------------------------------
+.. automodule:: seapy.tidal_energy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+..
+   .. autoclass:: seapy.tidal_energy
+      :members:
+      :undoc-members:
+      :show-inheritance:
 
 
 :mod:`timeout` -- Set limits to processes

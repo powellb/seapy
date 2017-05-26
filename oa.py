@@ -6,7 +6,7 @@
   fortran routines written by Emanuelle Di Lorenzo and Bruce Cornuelle
 
   Written by Brian Powell on 10/08/13
-  Copyright (c)2016 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the BSD-License.
 """
 
 import numpy as np
@@ -64,8 +64,8 @@ def oasurf(x, y, d, xx, yy, pmap=None, weight=10, nx=2, ny=2, verbose=False):
     # Call FORTRAN library to objectively map
     vv, err = seapy.oalib.oa2d(x.ravel(), y.ravel(),
                                d.filled(__bad_val).ravel(),
-                               xx.ravel(), yy.ravel(), nx, ny, pmap,
-                               verbose)
+                               xx.ravel(), yy.ravel(), nx, ny,
+                               pmap.copy(order='F'), verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.reshape(xx.shape), __bad_val, copy=False), \
@@ -134,7 +134,7 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
                                    v.shape[0], -1).transpose(),
                                xx.ravel(), yy.ravel(),
                                zz.reshape(zz.shape[0], -1).transpose(),
-                               nx, ny, pmap, verbose)
+                               nx, ny, pmap.copy(order='F'), verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.transpose().reshape(zz.shape), __bad_val,

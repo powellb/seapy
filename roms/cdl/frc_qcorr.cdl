@@ -1,26 +1,28 @@
 netcdf frc_qcorr {
 
 dimensions:
-	xi_rho = 386 ;
-	xi_u = 385 ;
-	xi_v = 386 ;
-	eta_rho = 130 ;
-	eta_u = 130 ;
-	eta_v = 129 ;
+	lon_rho = 386 ;
+	lon_u = 385 ;
+	lon_v = 386 ;
+	lat_rho = 130 ;
+	lat_u = 130 ;
+	lat_v = 129 ;
 	sst_time = UNLIMITED ; // (0 currently)
 
 variables:
 	float sst_time(sst_time) ;
 		sst_time:long_name = "sea surface temperature" ;
 		sst_time:units = "days since 1900-01-01" ;
-	float SST(sst_time, eta_rho, xi_rho) ;
+	float SST(sst_time, lat_rho, lon_rho) ;
 		SST:long_name = "sea surface temperature" ;
 		SST:units = "Celsius" ;
 		SST:time = "sst_time" ;
-	float dQdSST(sst_time, eta_rho, xi_rho) ;
+        SST:coordinates = "lon_rho lat_rho sst_time" ;
+	float dQdSST(sst_time, lat_rho, lon_rho) ;
 		dQdSST:long_name = "surface net heat flux sensitivity to SST" ;
 		dQdSST:units = "Watts meter-2 Celsius-1" ;
 		dQdSST:time = "sst_time" ;
+        dQdSST:coordinates = "lon_rho lat_rho sst_time" ;
 
 // global attributes:
 		:type = "ROMS FORCING file" ;
