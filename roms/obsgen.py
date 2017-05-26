@@ -810,11 +810,16 @@ class viirs_swath(obsgen):
                 np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
 
         # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][0],
+        time = netCDF4.num2date(nc.variables["time"][:],
                                 nc.variables["time"].units) - self.epoch
+        time = np.asarray([x.total_seconds() for x in time])[:,np.newaxis,np.newaxis]
         dtime = nc.variables["sst_dtime"][:]
-        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
+        time = (time + dtime) * seapy.secs2day
         nc.close()
+        
+        # Set up the coordinate
+        lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
+        lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
         if self.grid.east():
             lon[lon < 0] += 360
         good = dat.nonzero()
@@ -1132,7 +1137,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = seapy.netcdf(file)
+        nc = seapy.netcdf(file,aggdim="N_PROF")
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]
