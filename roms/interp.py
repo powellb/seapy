@@ -332,16 +332,15 @@ def __interp_grids(src_grid, child_grid, ncout, records=None,
                                       src_grid.lon_rho.nbytes *
                                       src_grid.n))))
     for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
-        vel = Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory) \
-            (delayed(__interp3_vel_thread)(
-                src_grid.lon_rho, src_grid.lat_rho,
-                src_grid.depth_rho, srcangle,
-                ncsrc.variables[velmap["u"]][i, :, :, :],
-                ncsrc.variables[velmap["v"]][i, :, :, :],
-                child_grid.lon_rho, child_grid.lat_rho,
-                child_grid.depth_rho, dstangle,
-                pmap["pmaprho"], weight, nx, ny,
-                child_grid.mask_rho) for i in recs)
+        vel = Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)(delayed(__interp3_vel_thread)(
+            src_grid.lon_rho, src_grid.lat_rho,
+            src_grid.depth_rho, srcangle,
+            ncsrc.variables[velmap["u"]][i, :, :, :],
+            ncsrc.variables[velmap["v"]][i, :, :, :],
+            child_grid.lon_rho, child_grid.lat_rho,
+            child_grid.depth_rho, dstangle,
+            pmap["pmaprho"], weight, nx, ny,
+            child_grid.mask_rho) for i in recs)
 
         for j in range(len(vel)):
             vel_u = np.ma.array(vel[j][0], copy=False)
@@ -789,4 +788,6 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
         # Clean up
         ncout.close()
     return pmap
+
+
 pass
