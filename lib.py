@@ -611,7 +611,7 @@ def list_files(path=".", regex=None, full_path=True):
     return files
 
 
-def netcdf(file):
+def netcdf(file, aggdim=None):
     """
     Wrapper around netCDF4 to open a file as either a Dataset or an
     MFDataset.
@@ -621,6 +621,9 @@ def netcdf(file):
     file : string or list,
         Filename(s) to open. If the string has wildcards or is a list,
         this attempts to open an MFDataset
+    aggdim : string,
+        Name of dimension to concatenate along if loading a set of files. 
+        A value of None (default) uses the unlimited dimension.
 
     Returns
     -------
@@ -629,9 +632,9 @@ def netcdf(file):
     import netCDF4
     try:
         nc = netCDF4.Dataset(file)
-    except RuntimeError:
+    except (OSError, RuntimeError):
         try:
-            nc = netCDF4.MFDataset(file)
+            nc = netCDF4.MFDataset(file, aggdim=aggdim)
         except IndexError:
             raise FileNotFoundError("{:s} cannot be found.".format(file))
     return nc

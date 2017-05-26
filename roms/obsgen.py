@@ -362,7 +362,7 @@ class aviso_sla_map(obsgen):
         Load an AVISO file and convert into an obs structure
         """
         # Load AVISO Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.squeeze(nc.variables["sla"][:])
@@ -440,7 +440,7 @@ class aviso_sla_track(obsgen):
         Load an AVISO file and convert into an obs structure
         """
         # Load AVISO Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
         dat = nc.variables["SLA"][:]
@@ -503,7 +503,7 @@ class ostia_sst_map(obsgen):
         Load an OSTIA file and convert into an obs structure
         """
         # Load OSTIA Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -552,7 +552,7 @@ class navo_sst_map(obsgen):
         import re
         import sys
 
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(nc.variables["analysed_sst"][:]) - 273.15,
@@ -560,10 +560,11 @@ class navo_sst_map(obsgen):
         err = np.ma.array(np.squeeze(
             nc.variables["analysis_error"][:]), mask=dat.mask)
 
-        # this is an analyzed product and provides errors as a function of space and time directly
-        # the temperature is the bulk temperature (ie at around 4m depth, below the e-folding depths of sunlight in
-        # the ocean so the product does not have a diuranl cycle (ie you don;t
-        # have to worry about hourly variations)
+        # this is an analyzed product and provides errors as a function
+        # of space and time directly the temperature is the bulk
+        # temperature (ie at around 4m depth, below the e-folding depths of
+        # sunlight in the ocean so the product does not have a diuranl cycle
+        # (ie you don;t have to worry about hourly variations)
         time = netCDF4.num2date(nc.variables["time"][0],
                                 nc.variables["time"].units) - self.epoch
         time = time.total_seconds() * seapy.secs2day
@@ -611,7 +612,7 @@ class modis_sst_map(obsgen):
         # Load MODIS Data
         import re
 
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(nc.variables["sst"][:],
@@ -664,7 +665,7 @@ class remss_swath(obsgen):
         Load an REMSS file and convert into an obs structure
         """
         # Load REMSS Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -722,7 +723,7 @@ class remss_map(obsgen):
         Load an REMSS file and convert into an obs structure
         """
         # Load REMSS Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -789,7 +790,7 @@ class viirs_swath(obsgen):
         Load a VIIRS file and convert into an obs structure
         """
         # Load VIIRS Data
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file, aggdim="time")
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
         dat = np.ma.masked_outside(np.squeeze(
@@ -1051,7 +1052,7 @@ class tao_mooring(mooring):
                 "salt": ["S_41", "QS_5041"],
                 "u": ["U_320", "QS_5300"],
                 "v": ["V_321", "QS_5300"]}
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
         lat = nc.variables["lat"][:]
         lon = nc.variables["lon"][:]
         if not self.grid.east():
@@ -1131,7 +1132,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = netCDF4.Dataset(file)
+        nc = seapy.netcdf(file)
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]
