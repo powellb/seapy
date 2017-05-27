@@ -793,28 +793,33 @@ class viirs_swath(obsgen):
         nc = seapy.netcdf(file, aggdim="time")
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
-        dat = np.ma.masked_outside(np.squeeze(
-            nc.variables["sea_surface_temperature"][:]) - 273.15,
+        dat = np.ma.masked_outside(
+            nc.variables["sea_surface_temperature"][:] - 273.15,
             self.temp_limits[0], self.temp_limits[1])
-        err = np.ma.masked_outside(np.squeeze(
-            nc.variables["sses_standard_deviation"][:]), 0.01, 2.0)
+        err = np.ma.masked_outside(
+            nc.variables["sses_standard_deviation"][:], 0.01, 2.0)
         dat[err.mask] = np.ma.masked
 
         # Check the data flags
         if self.check_qc_flags:
             flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["quality_level"][:]), 5)
+                nc.variables["quality_level"][:], 5)
             dat[flags.mask] = np.ma.masked
         else:
             dat = np.ma.masked_where(
-                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
+                nc.variables["quality_level"][:].data == 1, dat)
 
         # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][0],
+        time = netCDF4.num2date(nc.variables["time"][:],
                                 nc.variables["time"].units) - self.epoch
+        time = np.asarray([x.total_seconds() for x in time])[:,np.newaxis,np.newaxis]
         dtime = nc.variables["sst_dtime"][:]
-        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
+        time = (time + dtime) * seapy.secs2day
         nc.close()
+        
+        # Set up the coordinate
+        lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
+        lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
         if self.grid.east():
             lon[lon < 0] += 360
         good = dat.nonzero()
@@ -1132,7 +1137,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = seapy.netcdf(file)
+        nc = seapy.netcdf(file,aggdim="N_PROF")
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]
