@@ -40,8 +40,8 @@ class ProgressBar:
             self.animate = self.animate_noipython
 
     def animate_ipython(self, iter):
-        print('\r', self, end='')
-        sys.stdout.flush()
+        print('\r', self, end='', file=sys.stderr)
+        sys.stderr.flush()
         self.update_iteration(iter + 1)
 
     def update_iteration(self, elapsed_iter):
@@ -54,6 +54,8 @@ class ProgressBar:
         if elapsed_iter > self.iterations:
             print("\r [ COMPLETED %d ITERATIONS IN %.1f SECS ] %s" %
                   (self.iterations, delta, " " * 60))
+            print("\r [ COMPLETED %d ITERATIONS IN %.1f SECS ] %s" %
+                  (self.iterations, delta, " " * 60), file=sys.stderr)
 
     def __update_amount(self, new_amount):
         percent_done = int(round((new_amount / 100.0) * 100.0))
