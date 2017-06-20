@@ -65,7 +65,7 @@ def oasurf(x, y, d, xx, yy, pmap=None, weight=10, nx=2, ny=2, verbose=False):
     vv, err = seapy.oalib.oa2d(x.ravel(), y.ravel(),
                                d.filled(__bad_val).ravel(),
                                xx.ravel(), yy.ravel(), nx, ny,
-                               pmap.copy(order='F'), verbose)
+                               pmap, verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.reshape(xx.shape), __bad_val, copy=False), \
@@ -134,7 +134,7 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
                                    v.shape[0], -1).transpose(),
                                xx.ravel(), yy.ravel(),
                                zz.reshape(zz.shape[0], -1).transpose(),
-                               nx, ny, pmap.copy(order='F'), verbose)
+                               nx, ny, pmap, verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.transpose().reshape(zz.shape), __bad_val,
