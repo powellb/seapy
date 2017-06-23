@@ -471,7 +471,7 @@ class aviso_sla_track(obsgen):
 
         # Duplicate the observations before and after as per the repeat
         # time unless it is zero
-        if self.repeat:
+        if self.repeat and obs:
             prior = obs.copy()
             after = obs.copy()
             prior.time -= self.repeat / 24
