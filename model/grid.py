@@ -718,8 +718,8 @@ class grid:
 
         # Determine the unique points
         good = np.where(~np.logical_or(i.mask, j.mask))[0]
-        ii = np.floor(i[good])
-        jj = np.floor(j[good])
+        ii = np.floor(i[good]).astype(int)
+        jj = np.floor(j[good]).astype(int)
         idx = seapy.unique_rows((jj, ii))
         fill_value = 0 if depth_adjust else np.nan
         for n in idx:
