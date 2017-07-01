@@ -754,7 +754,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
                     continue
                 out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
                                      tide_start=tide_start)
-                zeta[:, i] -= out['fit']
+                zeta[:, i] -= out['fit'].data
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
@@ -798,6 +798,8 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
 
             # Detide
             for i in seapy.progressbar.progress(range(size)):
+                if np.any(mask[:, i]):
+                    continue
                 out = seapy.tide.fit(
                     time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
                     tide_start=tide_start)
