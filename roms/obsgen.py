@@ -402,6 +402,7 @@ _aviso_sla_errors = {
     "SSH_AVISO_ERS1": 0.06,
     "SSH_AVISO_ERS2": 0.06,
     "SSH_AVISO_TOPEX_POSEIDON": 0.05
+    "SSH_AVISO_SENTINEL3A": 0.05"
 }
 
 
@@ -443,7 +444,8 @@ class aviso_sla_track(obsgen):
         nc = seapy.netcdf(file)
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
-        dat = nc.variables["SLA"][:]
+        slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
+        dat = nc.variables[slaname][:]
         time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
         nc.close()
 
