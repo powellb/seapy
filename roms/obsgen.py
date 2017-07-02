@@ -363,8 +363,10 @@ class aviso_sla_map(obsgen):
         """
         # Load AVISO Data
         nc = seapy.netcdf(file)
-        lon = nc.variables["lon"][:]
-        lat = nc.variables["lat"][:]
+        lonname = 'lon' if 'lon' in nc.variables.keys() else 'longitude'
+        lon = nc.variables[lonname][:]
+        latname = 'lat' if 'lat' in nc.variables.keys() else 'latitude'
+        lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
