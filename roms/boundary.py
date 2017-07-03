@@ -754,7 +754,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
                     continue
                 out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
                                      tide_start=tide_start)
-                zeta[:, i] -= np.ma.asarray(out['fit']).data
+                zeta[:, i] -= out['fit'].data
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
