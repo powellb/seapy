@@ -363,8 +363,10 @@ class aviso_sla_map(obsgen):
         """
         # Load AVISO Data
         nc = seapy.netcdf(file)
-        lon = nc.variables["lon"][:]
-        lat = nc.variables["lat"][:]
+        lonname = 'lon' if 'lon' in nc.variables.keys() else 'longitude'
+        lon = nc.variables[lonname][:]
+        latname = 'lat' if 'lat' in nc.variables.keys() else 'latitude'
+        lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
@@ -401,7 +403,8 @@ _aviso_sla_errors = {
     "SSH_AVISO_HAIYANG": 0.07,
     "SSH_AVISO_ERS1": 0.06,
     "SSH_AVISO_ERS2": 0.06,
-    "SSH_AVISO_TOPEX_POSEIDON": 0.05
+    "SSH_AVISO_TOPEX_POSEIDON": 0.05,
+    "SSH_AVISO_SENTINEL3A": 0.05"
 }
 
 
@@ -443,7 +446,8 @@ class aviso_sla_track(obsgen):
         nc = seapy.netcdf(file)
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
-        dat = nc.variables["SLA"][:]
+        slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
+        dat = nc.variables[slaname][:]
         time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
         nc.close()
 
