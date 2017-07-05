@@ -404,7 +404,7 @@ _aviso_sla_errors = {
     "SSH_AVISO_ERS1": 0.06,
     "SSH_AVISO_ERS2": 0.06,
     "SSH_AVISO_TOPEX_POSEIDON": 0.05,
-    "SSH_AVISO_SENTINEL3A": 0.05"
+    "SSH_AVISO_SENTINEL3A": 0.05
 }
 
 
