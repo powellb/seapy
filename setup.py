@@ -22,6 +22,11 @@ with open('requirements.txt') as f:
     tests_require = f.readlines()
 install_requires = [t.strip() for t in tests_require]
 
+package_data = {
+    '': ['constituents.npz',
+         'hawaii_coast/*',
+         'roms/cdl/*.cdl']
+}
 
 config = Configuration('')
 config.add_extension('oalib', sources='src/oalib.F')
@@ -40,11 +45,11 @@ config = dict(
         'License :: OSI Approved :: MIT License',
         ],
     packages=find_packages(),
-    tests_require=['pytest'],
+    package_data=package_data,
+    ext_package='seapy.external',
     license=LICENSE,
     install_requires=install_requires,
     zip_safe=False,
-    ext_package='seapy.external',
     **config.todict(),
 )
 
