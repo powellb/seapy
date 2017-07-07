@@ -353,6 +353,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     """
     Perform a harmonic fit of tidal constituents to a time-series of data. The
     series can be unevenly spaced in time, but every time must be specified.
+    Note that returned amplitudes and phases are zero if time series is not long
+    enough to resolve specific tides
 
     Parameters
     ----------
@@ -399,22 +401,18 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     if len(xin) != len(times):
         raise ValueError("The times and input data must be of same size.")
     tides = _set_tides(tides)
-    ctime = times[0] + (times[-1] - times[0]) / 2
 
-    # Nodal Corrections values
-    vufs = vuf(ctime, tides, lat)
-    if tide_start:
-        vufs_ref = vuf(tide_start, tides, lat)
-        for v in vufs:
-            vufs[v] = vuf_vals(np.mod(vufs[v].v - vufs_ref[v].v, 2.0 * np.pi),
-                               np.mod(vufs[v].u - vufs_ref[v].u, 2.0 * np.pi),
-                               vufs[v].f / vufs_ref[v].f)
+    # Exclude long period tides if time series not long enough
+    freq = frequency(tides)
+    total_tides = len(tides)
+    total_hours = (times[-1]-times[0]).total_seconds()/3600
+    invalid_tides = [t for t,f in zip(tides,1/freq) if 2*f>total_hours]
+    tides = [t for t in tides if t not in invalid_tides]
+    freq = frequency(tides)
 
     # time series as hours from ctime
+    ctime = times[0] + (times[-1] - times[0]) / 2
     hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
-
-    # get frequencies
-    freq = frequency(tides)
 
     # Generate cosines and sines for all the requested constitutents.
     if trend:
@@ -430,8 +428,7 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     # Calculate coefficients
     ntides = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout_idx = A.shape[1]-1 #Select just the tidal signal and trend if applicable
-    xout = np.dot(A[:, :xout_idx], coef[:xout_idx])
+    xout = np.dot(A[:, :2*ntides], coef[:2*ntides])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \
@@ -441,8 +438,17 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     ap = (coef[:ntides] - 1j * coef[ntides:2 * ntides]) / 2.0
     am = (coef[:ntides] + 1j * coef[ntides:2 * ntides]) / 2.0
 
+    # Nodal Corrections values
+    vufs = vuf(ctime, tides, lat)
+    if tide_start:
+        vufs_ref = vuf(tide_start, tides, lat)
+        for v in vufs:
+            vufs[v] = vuf_vals(np.mod(vufs[v].v - vufs_ref[v].v, 2.0 * np.pi),
+                               np.mod(vufs[v].u - vufs_ref[v].u, 2.0 * np.pi),
+                               vufs[v].f / vufs_ref[v].f)
+
     # Compute major/minor axis amplitude and phase
-    maj_amp = np.empty((len(tides),))
+    maj_amp = np.zeros((total_tides,))
     maj_pha = maj_amp.copy()
     min_amp = maj_amp.copy()
     min_pha = maj_amp.copy()
@@ -458,8 +464,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
         'tide_start': tide_start,
         'fit': xout,
         'percent': var_exp,
-        'major': pack_amp_phase(tides, maj_amp, maj_pha),
-        'minor': pack_amp_phase(tides, min_amp, min_pha)
+        'major': pack_amp_phase(tides+invalid_tides, maj_amp, maj_pha),
+        'minor': pack_amp_phase(tides+invalid_tides, min_amp, min_pha)
     }
 
 
