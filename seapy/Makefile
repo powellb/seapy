@@ -1,4 +1,3 @@
-# Build seapy modules, tag file, and documentation
 .PHONY: gtags
 etags:
 	rm -f TAGS
@@ -13,14 +12,11 @@ oalib.so: src/oalib.F
 hindices.so: src/hindices.F
 	cd src; $(MAKE) $(MFLAGS) hindices
 
-doc: force_build
-	cd doc; $(MAKE) $(MFLAGS) html && ln -fs _build/html html
-
 force_build:
 	true
 
 clean:
-	rm -f TAGS GPATH GRTAGS GTAGS oalib.so model/hindices.so doc/html
+	rm -f TAGS GPATH GRTAGS GTAGS oalib.so model/hindices.so
 
-all: oalib.so hindices.so doc
+all: oalib.so hindices.so
 
