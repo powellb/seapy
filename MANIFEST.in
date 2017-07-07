@@ -2,6 +2,7 @@ include *.md
 include *.txt
 
 recursive-include docs *
+recursive-include bin *.py
 recursive-include seapy *.py
 
 include seapy/constituents.npz

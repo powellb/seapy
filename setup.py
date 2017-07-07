@@ -47,6 +47,7 @@ config = dict(
     packages=find_packages(),
     package_data=package_data,
     ext_package='seapy.external',
+    scripts=['bin/convert_clim.py', 'bin/convert_frc.py'],
     license=LICENSE,
     install_requires=install_requires,
     zip_safe=False,
