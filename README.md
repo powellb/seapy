@@ -1,32 +1,34 @@
-##State Estimation and Analysis in PYthon (SEAPY)##
+# State Estimation and Analysis in PYthon (SEAPY)
 
 Tools for working with ocean models and data.
 
 SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
 
-###Installation###
+## Installation
 
-As this library is in continued development with regular updates, it is easier to install in an individual location and use `git pull` rather than `python` installation.
+As this library is in continued development with regular updates,
+it is easier to install in an individual location and use `git pull` rather than `python` installation.
 
 1) Clone the Repository into your local structure
 2) Build the components (you must have gfortran installed):
 
-        % cd seapy && make all
+    cd seapy && make all
 
-   This will build the FORTRAN library, the TAGS file, and the documentation. (you must have sphinx along with the numpydoc extension installed). The documentation contains examples and references for the package routines. The HTML documentation will be linked to doc/html.
+   This will build the FORTRAN library, the TAGS file, and the documentation.
+   (You must have sphinx along with the numpydoc extension installed).
+   The documentation contains examples and references for the package routines.
+   The HTML documentation will be linked to doc/html.
 
-3) If the seapy directory is not already in your python path:
+3) If the `seapy` directory is not already in your python path:
 
-        % export PYTHONPATH=`pwd`:$PYTHONPATH
+    export PYTHONPATH=`pwd`:$PYTHONPATH
 
 You can then test the installation worked by:
 
-        % python
-        >> import seapy
+    python -c "import seapy"
 
 
-Examples
-========
+## Examples
 
 Many of the time-saving features are in generating fields for running the ROMS model.
 

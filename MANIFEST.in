@@ -1,0 +1,11 @@
+include *.md
+include *.txt
+
+recursive-include docs *
+recursive-include bin *.py
+recursive-include seapy *.py
+
+include seapy/constituents.npz
+recursive-include seapy/hawaii_coast *
+recursive-include seapy/roms/cdl *
+recursive-include seapy/src *
