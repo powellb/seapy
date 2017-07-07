@@ -430,7 +430,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     # Calculate coefficients
     ntides = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout = np.dot(A[:, :2 * ntides], coef[:2 * ntides])
+    xout_idx = A.shape[1]-1 #Select just the tidal signal and trend if applicable
+    xout = np.dot(A[:, :xout_idx], coef[:xout_idx])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \

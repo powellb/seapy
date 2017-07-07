@@ -108,7 +108,7 @@ def depth_average(field, grid, depth, top_depth=0, zeta=None):
         s_w, cs_w = seapy.roms.stretching(grid.vstretching, grid.theta_s,
                                           grid.theta_b, grid.hc,
                                           grid.n, w_grid=True)
-        depths = np.ma.maskwed_equal(seapy.roms.depth(
+        depths = np.ma.masked_equal(seapy.roms.depth(
             grid.vtransform, grid.h, grid.hc, grid.s_rho, grid.cs_r) *
             grid.mask_rho, 0)
 

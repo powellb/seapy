@@ -87,6 +87,7 @@ obs_provenance = {
     430: "SSH_AVISO_ALTIKA",
     431: "SSH_AVISO_CRYOSAT2",
     432: "SSH_AVISO_HAIYANG",
+    433: "SSH_AVISO_SENTINEL3A",
     450: "SSH_HYCOM",
     460: "SSS_AQUARIUS",
     500: "DRIFTERS",

@@ -363,8 +363,10 @@ class aviso_sla_map(obsgen):
         """
         # Load AVISO Data
         nc = seapy.netcdf(file)
-        lon = nc.variables["lon"][:]
-        lat = nc.variables["lat"][:]
+        lonname = 'lon' if 'lon' in nc.variables.keys() else 'longitude'
+        lon = nc.variables[lonname][:]
+        latname = 'lat' if 'lat' in nc.variables.keys() else 'latitude'
+        lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
         time = netCDF4.num2date(nc.variables["time"][0],
@@ -401,7 +403,8 @@ _aviso_sla_errors = {
     "SSH_AVISO_HAIYANG": 0.07,
     "SSH_AVISO_ERS1": 0.06,
     "SSH_AVISO_ERS2": 0.06,
-    "SSH_AVISO_TOPEX_POSEIDON": 0.05
+    "SSH_AVISO_TOPEX_POSEIDON": 0.05,
+    "SSH_AVISO_SENTINEL3A": 0.05
 }
 
 
@@ -443,7 +446,8 @@ class aviso_sla_track(obsgen):
         nc = seapy.netcdf(file)
         lon = nc.variables["longitude"][:]
         lat = nc.variables["latitude"][:]
-        dat = nc.variables["SLA"][:]
+        slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
+        dat = nc.variables[slaname][:]
         time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
         nc.close()
 
@@ -471,7 +475,7 @@ class aviso_sla_track(obsgen):
 
         # Duplicate the observations before and after as per the repeat
         # time unless it is zero
-        if self.repeat:
+        if self.repeat and obs:
             prior = obs.copy()
             after = obs.copy()
             prior.time -= self.repeat / 24
@@ -793,28 +797,33 @@ class viirs_swath(obsgen):
         nc = seapy.netcdf(file, aggdim="time")
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
-        dat = np.ma.masked_outside(np.squeeze(
-            nc.variables["sea_surface_temperature"][:]) - 273.15,
+        dat = np.ma.masked_outside(
+            nc.variables["sea_surface_temperature"][:] - 273.15,
             self.temp_limits[0], self.temp_limits[1])
-        err = np.ma.masked_outside(np.squeeze(
-            nc.variables["sses_standard_deviation"][:]), 0.01, 2.0)
+        err = np.ma.masked_outside(
+            nc.variables["sses_standard_deviation"][:], 0.01, 2.0)
         dat[err.mask] = np.ma.masked
 
         # Check the data flags
         if self.check_qc_flags:
             flags = np.ma.masked_not_equal(
-                np.squeeze(nc.variables["quality_level"][:]), 5)
+                nc.variables["quality_level"][:], 5)
             dat[flags.mask] = np.ma.masked
         else:
             dat = np.ma.masked_where(
-                np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
+                nc.variables["quality_level"][:].data == 1, dat)
 
         # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][0],
+        time = netCDF4.num2date(nc.variables["time"][:],
                                 nc.variables["time"].units) - self.epoch
+        time = np.asarray([x.total_seconds() for x in time])[:,np.newaxis,np.newaxis]
         dtime = nc.variables["sst_dtime"][:]
-        time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
+        time = (time + dtime) * seapy.secs2day
         nc.close()
+        
+        # Set up the coordinate
+        lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
+        lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
         if self.grid.east():
             lon[lon < 0] += 360
         good = dat.nonzero()
@@ -1132,7 +1141,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = seapy.netcdf(file)
+        nc = seapy.netcdf(file,aggdim="N_PROF")
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]
