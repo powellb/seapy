@@ -29,8 +29,9 @@ package_data = {
 }
 
 config = Configuration('')
-config.add_extension('oalib', sources='src/oalib.F')
-config.add_extension('hindices', sources='src/hindices.F')
+flags = [] if os.name == 'nt' else ['-fPIC']
+config.add_extension('oalib', sources='src/oalib.F', extra_f77_compile_args=flags)
+config.add_extension('hindices', sources='src/hindices.F', extra_f77_compile_args=flags)
 
 config = dict(
     name='seapy',
