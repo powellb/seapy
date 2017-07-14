@@ -10,23 +10,9 @@ As this library is in continued development with regular updates,
 it is easier to install in an individual location and use `git pull` rather than `python` installation.
 
 1) Clone the Repository into your local structure
-2) Build the components (you must have gfortran installed):
+2) Build and install the components (you must have gfortran installed):
 
-    cd seapy && make all
-
-   This will build the FORTRAN library, the TAGS file, and the documentation.
-   (You must have sphinx along with the numpydoc extension installed).
-   The documentation contains examples and references for the package routines.
-   The HTML documentation will be linked to doc/html.
-
-3) If the `seapy` directory is not already in your python path:
-
-    export PYTHONPATH=`pwd`:$PYTHONPATH
-
-You can then test the installation worked by:
-
-    python -c "import seapy"
-
+   python setup.py install
 
 ## Examples
 
