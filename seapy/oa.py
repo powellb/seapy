@@ -10,7 +10,7 @@
 """
 
 import numpy as np
-import seapy.oalib
+from seapy.external import oalib
 
 __bad_val = -999999.0
 
@@ -62,10 +62,10 @@ def oasurf(x, y, d, xx, yy, pmap=None, weight=10, nx=2, ny=2, verbose=False):
         pmap = np.zeros([xx.size, weight], order='F')
 
     # Call FORTRAN library to objectively map
-    vv, err = seapy.oalib.oa2d(x.ravel(), y.ravel(),
-                               d.filled(__bad_val).ravel(),
-                               xx.ravel(), yy.ravel(), nx, ny,
-                               pmap, verbose)
+    vv, err = oalib.oa2d(x.ravel(), y.ravel(),
+                         d.filled(__bad_val).ravel(),
+                         xx.ravel(), yy.ravel(), nx, ny,
+                         pmap, verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.reshape(xx.shape), __bad_val, copy=False), \
@@ -124,20 +124,18 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
         # Build the map
         tmp = np.ones(x.ravel().shape, order='F')
         pmap = np.zeros([xx.size, weight], order='F')
-        seapy.oalib.oa2d(x.ravel(), y.ravel(), tmp,
-                         xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
+        oalib.oa2d(x.ravel(), y.ravel(), tmp,
+                   xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
 
     # Call FORTRAN library to objectively map
-    vv, err = seapy.oalib.oa3d(x.ravel(), y.ravel(),
-                               z.reshape(z.shape[0], -1).transpose(),
-                               v.filled(__bad_val).reshape(
-                                   v.shape[0], -1).transpose(),
-                               xx.ravel(), yy.ravel(),
-                               zz.reshape(zz.shape[0], -1).transpose(),
-                               nx, ny, pmap, verbose)
+    vv, err = oalib.oa3d(x.ravel(), y.ravel(),
+                         z.reshape(z.shape[0], -1).transpose(),
+                         v.filled(__bad_val).reshape(
+                             v.shape[0], -1).transpose(),
+                         xx.ravel(), yy.ravel(),
+                         zz.reshape(zz.shape[0], -1).transpose(),
+                         nx, ny, pmap, verbose)
 
     # Reshape the results and return
     return np.ma.masked_equal(vv.transpose().reshape(zz.shape), __bad_val,
                               copy=False), pmap
-
-
