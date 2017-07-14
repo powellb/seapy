@@ -6,7 +6,7 @@
 
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import seapy

@@ -3,7 +3,7 @@
   Functions to generate ROMS netcdf files
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 
@@ -98,7 +98,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
             setattr(_nc, a, attr[a])
 
         try:
-            _nc.author =  os.getenv('USER') or \
+            _nc.author = os.getenv('USER') or \
                 os.getenv('LOGNAME') or \
                 os.getenv('USERNAME') or \
                 os.getlogin() or \
@@ -1222,6 +1222,7 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
 
     # Return the new file
     return _nc
+
 
 if __name__ == "__main__":
     grid = create_zlevel("test.nc")

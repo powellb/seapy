@@ -4,7 +4,7 @@
 
   Functions for generating ROMS grid files
 
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime

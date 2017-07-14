@@ -5,7 +5,7 @@
   Methods to interpolate ROMS fields onto other grids
 
   Written by Brian Powell on 11/02/13
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 

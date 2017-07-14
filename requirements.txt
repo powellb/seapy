@@ -3,3 +3,4 @@ scipy
 netcdf4
 joblib
 numpy_groupies
+basemap

@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 
@@ -816,11 +816,12 @@ class viirs_swath(obsgen):
         # Grab the observation time
         time = netCDF4.num2date(nc.variables["time"][:],
                                 nc.variables["time"].units) - self.epoch
-        time = np.asarray([x.total_seconds() for x in time])[:,np.newaxis,np.newaxis]
+        time = np.asarray([x.total_seconds() for x in time])[
+            :, np.newaxis, np.newaxis]
         dtime = nc.variables["sst_dtime"][:]
         time = (time + dtime) * seapy.secs2day
         nc.close()
-        
+
         # Set up the coordinate
         lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
         lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
@@ -1141,7 +1142,7 @@ class argo_ctd(obsgen):
         """
         Load an Argo file and convert into an obs structure
         """
-        nc = seapy.netcdf(file,aggdim="N_PROF")
+        nc = seapy.netcdf(file, aggdim="N_PROF")
 
         # Load the position of all profiles in the file
         lon = nc.variables["LONGITUDE"][:]

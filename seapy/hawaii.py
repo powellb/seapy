@@ -21,7 +21,7 @@
     >>> m.fig.savefig("sst.png",dpi=100)
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 

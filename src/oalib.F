@@ -1,3 +1,8 @@
+c This routine was written by Bruce Cornuelle at Scripps Institute
+c of Oceanography. Because it uses LAPACK routines, it is under
+c the BSD-License consistent with LAPACK
+      
+      
       subroutine oa2d(x,y,datain,xhat,yhat,a,b,pmap,dataout,
      &                   errout,PtIn,PtOut,PtIns,debug)
     	implicit none

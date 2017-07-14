@@ -5,7 +5,7 @@
   Methods for working tidal forcing files in ROMS
 
   Written by Brian Powell on 04/05/16
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 

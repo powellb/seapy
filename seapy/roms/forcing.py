@@ -6,7 +6,7 @@
   rivers, etc.)
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
@@ -159,7 +159,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
                                     fields['frc_time_units'])
     else:
         frc_time = netCDF4.num2date(forcing.variables[fields['frc_time']][:],
-                                forcing.variables[fields['frc_time']].units)
+                                    forcing.variables[fields['frc_time']].units)
 
     # Figure out the time records that are required
     time_list = np.where(np.logical_and(frc_time >= start_time,

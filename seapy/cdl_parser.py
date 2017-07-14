@@ -4,7 +4,7 @@
   tokenize the dimensions and variables
 
   Written by Brian Powell on 04/30/13
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 
@@ -79,6 +79,7 @@ def cdl_parser(filename):
             continue
 
     return dims, vars, attr
+
 
 if __name__ == "__main__":
     cdl_parser("out.cdl")

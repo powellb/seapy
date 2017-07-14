@@ -5,7 +5,7 @@
   Functions for working with tidal time-series
 
   Written by Glenn Carter and Dale Partridge
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import datetime
@@ -405,8 +405,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     # Exclude long period tides if time series not long enough
     freq = frequency(tides)
     total_tides = len(tides)
-    total_hours = (times[-1]-times[0]).total_seconds()/3600
-    invalid_tides = [t for t,f in zip(tides,1/freq) if 2*f>total_hours]
+    total_hours = (times[-1] - times[0]).total_seconds() / 3600
+    invalid_tides = [t for t, f in zip(tides, 1 / freq) if 2 * f > total_hours]
     tides = [t for t in tides if t not in invalid_tides]
     freq = frequency(tides)
 
@@ -428,7 +428,7 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
     # Calculate coefficients
     ntides = len(tides)
     coef = np.linalg.lstsq(A, xin)[0]
-    xout = np.dot(A[:, :2*ntides], coef[:2*ntides])
+    xout = np.dot(A[:, :2 * ntides], coef[:2 * ntides])
 
     # Explained variance
     var_exp = 100 * (np.cov(np.real(xout)) + np.cov(np.imag(xout))) / \
@@ -464,8 +464,8 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
         'tide_start': tide_start,
         'fit': xout,
         'percent': var_exp,
-        'major': pack_amp_phase(tides+invalid_tides, maj_amp, maj_pha),
-        'minor': pack_amp_phase(tides+invalid_tides, min_amp, min_pha)
+        'major': pack_amp_phase(tides + invalid_tides, maj_amp, maj_pha),
+        'minor': pack_amp_phase(tides + invalid_tides, min_amp, min_pha)
     }
 
 

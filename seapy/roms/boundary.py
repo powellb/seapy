@@ -5,7 +5,7 @@
   ROMS boundary utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2017 University of Hawaii under the BSD-License.
+  Copyright (c)2017 University of Hawaii under the MIT-License.
 """
 
 
