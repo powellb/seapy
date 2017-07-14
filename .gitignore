@@ -4,3 +4,7 @@ GPATH
 GRTAGS
 GTAGS
 make.tags
+build
+dist
+seapy.egg-info
+seapy/external
