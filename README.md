@@ -6,12 +6,13 @@ SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
 
 ## Installation
 
-As this library is in continued development with regular updates,
-it is easier to install in an individual location and use `git pull` rather than `python` installation.
+The simplest way to install is:
 
-1) Clone the Repository into your local structure
-2) Build and install the components (you must have gfortran installed):
+   pip install git+git://github.com/powellb/seapy@master
+   
+If you wish to have a copy of the source locally:
 
+   git clone https://github.com/powellb/seapy.git
    python setup.py install
 
 ## Examples
