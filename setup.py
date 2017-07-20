@@ -30,8 +30,14 @@ package_data = {
 
 config = Configuration('')
 flags = [] if os.name == 'nt' else ['-fPIC']
-config.add_extension('oalib', sources='src/oalib.F', extra_f77_compile_args=flags)
-config.add_extension('hindices', sources='src/hindices.F', extra_f77_compile_args=flags)
+# ifort generated libraries produce invalid results in interpolation (NOT
+# OBVIOUS)
+os.environ["F90"] = "gfortran"
+os.environ["FFLAGS"] = "-O"
+config.add_extension('oalib', sources='src/oalib.F',
+                     extra_f77_compile_args=flags)
+config.add_extension('hindices', sources='src/hindices.F',
+                     extra_f77_compile_args=flags)
 
 config = dict(
     name='seapy',
@@ -44,7 +50,7 @@ config = dict(
     classifiers=[
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: MIT License',
-        ],
+    ],
     packages=find_packages(),
     package_data=package_data,
     ext_package='seapy.external',
