@@ -8,12 +8,12 @@ SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
 
 The simplest way to install is:
 
-   pip install git+git://github.com/powellb/seapy@master
+       pip install git+git://github.com/powellb/seapy@master
    
 If you wish to have a copy of the source locally:
 
-   git clone https://github.com/powellb/seapy.git
-   python setup.py install
+       git clone https://github.com/powellb/seapy.git
+       python setup.py install
 
 ## Examples
 
