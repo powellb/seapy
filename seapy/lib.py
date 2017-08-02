@@ -395,6 +395,15 @@ def _distq(lon1, lat1, lon2, lat2):
     lon2 = np.asanyarray(np.radians(lon2))
     lat2 = np.asanyarray(np.radians(lat2))
 
+    # # If one of the points is a singleton and the other is an
+    # array, make them the same size
+    if lon1.size == 1 and lon2.size > 1:
+        lon1 = lon1.repeat(lon2.size)
+        lat1 = lat1.repeat(lat2.size)
+    if lon2.size == 1 and lon1.size > 1:
+        lon2 = lon2.repeat(lon1.size)
+        lat2 = lat2.repeat(lat1.size)
+
     # Set the WGS84 parameters
     A = 6378137.
     E = 0.081819191
