@@ -7,6 +7,10 @@ from setuptools import find_packages, setup
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 
+# Only way to get --noopt defaulted into the build environment
+# since f2py_options is not working below
+sys.argv[:] = sys.argv[:1] + ['config_fc', '--noopt'] + sys.argv[1:]
+
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -29,14 +33,14 @@ package_data = {
 }
 
 config = Configuration('')
-flags = [] if os.name == 'nt' else ['-fPIC']
+flags = [] if os.name == 'nt' else ['-O -fPIC']
 # ifort generated libraries produce invalid results in interpolation (NOT
 # OBVIOUS)
-os.environ["F90"] = "gfortran"
-os.environ["FFLAGS"] = "-O"
-config.add_extension('oalib', sources='src/oalib.F',
+config.add_extension('oalib', sources='src/oalib.f',
+                     # f2py_options=["noopt"],
                      extra_f77_compile_args=flags)
-config.add_extension('hindices', sources='src/hindices.F',
+config.add_extension('hindices', sources='src/hindices.f',
+                     # f2py_options=["noopt"],
                      extra_f77_compile_args=flags)
 
 config = dict(
