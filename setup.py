@@ -62,7 +62,7 @@ config = dict(
     license=LICENSE,
     install_requires=install_requires,
     zip_safe=False,
-    **config.todict(),
+    **config.todict()
 )
 
 
