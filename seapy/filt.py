@@ -107,18 +107,18 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
       >>>  x += 0.2 * np.cos(2 * np.pi / 1.6 * t + .11)
       >>>  x += 1 * np.cos(2 * np.pi / 10 * t + 11)
 
-    Filter the data to low-pass everything below the 1 day period
+    Filter the data to low-pass everything longer than the 1 day period
 
       >>>  nx = bandpass(x, dt=0.5, low_cutoff=24 )
       >>>  plt.plot(t, x, 'k', t, nx, 'r', label=['Raw', 'Filter'])
 
-    Filter the data to low-pass everything below the 2 day period
+    Filter the data to low-pass everything longer the 2 day period
 
       >>>  nx = bandpass(x, dt=0.5, low_cutoff=48 )
       >>>  plt.plot(t, x, 'k', t, nx, 'r', label=['Raw', 'Filter'])
 
-    Filter the data to band-pass everything above the 2 day period
-    and below the 1 hour period
+    Filter the data to band-pass everything shorter the 2 day period
+    and longer the 1 hour period
 
       >>>  nx = bandpass(x, dt=0.5, low_cutoff=1, hi_cutoff=48 )
       >>>  plt.plot(t, x, 'k', t, nx, 'r', label=['Raw', 'Filter'])
@@ -127,7 +127,7 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
     nx = np.ma.masked_all(x.shape)
 
     if low_cutoff and hi_cutoff:
-        freq = 2.0 * dt / np.array([low_cutoff, hi_cutoff])
+        freq = 2.0 * dt / np.array([hi_cutoff, low_cutoff])
         btype = 'bandpass'
     elif low_cutoff:
         freq = 2.0 * dt / low_cutoff
@@ -137,15 +137,15 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
         btype = 'highpass'
     else:
         raise AttributeError("You must specify either low or hi cutoff.")
-    padlen = int(1.0 / freq)
     b, a = scipy.signal.butter(order, freq, btype=btype)
+    padlen = max(len(a), len(b))
 
     # Go over all contiguous regions
     regions = seapy.contiguous(x)
     for r in regions:
         if ((r.stop - r.start) >= padlen):
             nx[r] = scipy.signal.filtfilt(
-                b, a, x[r], padlen=padlen - 2, axis=0)
+                b, a, x[r], padlen=5 * padlen, axis=0)
     return nx
 
 
