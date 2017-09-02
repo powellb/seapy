@@ -120,7 +120,7 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
     Filter the data to band-pass everything shorter the 2 day period
     and longer the 1 hour period
 
-      >>>  nx = bandpass(x, dt=0.5, low_cutoff=1, hi_cutoff=48 )
+      >>>  nx = bandpass(x, dt=0.5, low_cutoff=48, hi_cutoff=1 )
       >>>  plt.plot(t, x, 'k', t, nx, 'r', label=['Raw', 'Filter'])
     """
     x = np.ma.array(np.atleast_1d(x).flatten(), copy=False)
