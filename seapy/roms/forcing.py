@@ -252,24 +252,31 @@ def gen_direct_forcing(his_file, frc_file):
                                             os.path.basename(his_file))
 
     # Copy the data over
-    nc.variables['SSS'][:] = infile.variables['salt'][:, -1, :, :]
-    if 'EminusP' in infile.variables:
-        nc.variables['swflux'][:] = infile.variables['EminusP'][:]
-    elif 'swflux' in infile.variables:
-        nc.variables['swflux'][:] = infile.variables['swflux'][:]
-    else:
-        nc.variables['swflux'][:] = infile.variables['ssflux'][:] \
-            / nc.variables['SSS'][:]
+    time = infile.variables['ocean_time'][:]
+    for x in seapy.progressbar.progress(seapy.chunker(range(len(time)), 1000)):
+        nc.variables['SSS'][x, :, :] = seapy.convolve_mask(
+            infile.variables['salt'][x, -1, :, :], copy=False)
+        if 'EminusP' in infile.variables:
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
+                infile.variables['EminusP'][x, :, :], copy=False)
+        elif 'swflux' in infile.variables:
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
+                infile.variables['swflux'][x, :, :], copy=False)
+        else:
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
+                infile.variables['ssflux'][x, :, :]
+                / nc.variables['SSS'][x, :, :], copy=False)
+
+        for f in ("sustr", "svstr", "shflux", "swrad"):
+            if f in infile.variables:
+                nc.variables[f][x, :, :] = seapy.convolve_mask(
+                    infile.variables[f][x, :, :], copy=False)
+        nc.sync()
     nc.variables['frc_time'][:] = netCDF4.date2num(netCDF4.num2date(
-        infile.variables['ocean_time'][:],
+        time,
         infile.variables['ocean_time'].units), nc.variables['frc_time'].units)
-
-    for f in seapy.progressbar.progress(("sustr", "svstr", "shflux", "swrad",
-                                         "lat_rho", "lat_u", "lat_v",
-                                         "lon_rho", "lon_u", "lon_v")):
+    for f in ("lat_rho", "lat_u", "lat_v", "lon_rho", "lon_u", "lon_v"):
         if f in infile.variables:
-            nc.variables[f][:] = seapy.convolve_mask(
-                infile.variables[f][:], copy=False)
-
+            nc.variables[f][:] = infile.variables[f][:]
     nc.close()
 

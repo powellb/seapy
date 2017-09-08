@@ -18,11 +18,12 @@ from joblib import Parallel, delayed
 from warnings import warn
 
 _up_scaling = {"zeta": 1.0, "u": 1.0, "v": 1.0, "temp": 1.0, "salt": 1.0}
-_down_scaling = {"zeta": 1.0, "u": 0.9, "v": 0.9, "temp": 0.95, "salt": 1.05}
+_down_scaling = {"zeta": 1.0, "u": 0.99,
+                 "v": 0.99, "temp": 0.99, "salt": 1.001}
 _ksize_range = (7, 15)
-# Limit amount of memory to process in a single read. This determines how to
+# Limit amount of memory in bytes to process in a single read. This determines how to
 # divide up the time-records in interpolation
-_max_memory = 768 * 1024 * 1024
+_max_memory = 768 * 1024 * 1024   # 768 MBytes
 
 
 def __mask_z_grid(z_data, src_depth, z_depth):
@@ -107,15 +108,15 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     nrz = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
     nrz[1:-1, :, :] = rz
     nrz[bot, :, :] = rz[bot, :, :] - 5000
-    nrz[top, :, :] = np.minimum(rz[top, :, :] + 50, 0)
+    nrz[top, :, :] = 1
 
     if not gradsrc:
         # The first level is the bottom
-        factor = down_factor
+        # factor = down_factor
         levs = np.arange(data.shape[0], 0, -1) - 1
     else:
         # The first level is the top
-        factor = up_factor
+        # factor = up_factor
         levs = np.arange(0, data.shape[0])
 
     # Fill in missing values where we have them from the shallower layer
@@ -125,13 +126,13 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
         idx = np.nonzero(np.logical_xor(data.mask[k, :, :],
                                         data.mask[k - 1, :, :]))
         data.mask[k, idx[0], idx[1]] = data.mask[k - 1, idx[0], idx[1]]
-        data[k, idx[0], idx[1]] = data[k - 1, idx[0], idx[1]] * factor
+        data[k, idx[0], idx[1]] = data[k - 1, idx[0], idx[1]] * down_factor
 
     # Add upper and lower boundaries
     ndat = np.zeros((data.shape[0] + 2, data.shape[1], data.shape[2]))
-    ndat[0, :, :] = data[0, :, :].filled(np.nan) * factor
+    ndat[bot, :, :] = data[bot, :, :].filled(np.nan) * down_factor
     ndat[1:-1, :, :] = data.filled(np.nan)
-    ndat[-1, :, :] = data[-1, :, :].filled(np.nan) * factor
+    ndat[top, :, :] = data[top, :, :].filled(np.nan) * up_factor
 
     # Interpolate the field and return the result
     with timeout(minutes=30):
