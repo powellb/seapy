@@ -13,8 +13,6 @@ import seapy
 import numpy as np
 import netCDF4
 
-clim_times = ('zeta_time', 'v2d_time', 'v3d_time', 'temp_time', 'salt_time')
-
 
 def gen_bry_clim(clim_file, grid, bry):
     """
