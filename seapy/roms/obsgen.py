@@ -15,6 +15,7 @@
 
 import numpy as np
 import netCDF4
+import h5py
 import seapy
 import datetime
 from warnings import warn
@@ -223,7 +224,28 @@ class obsgen(object):
         """
         pass
 
-    def batch_files(self, in_files, out_files, clobber=True):
+    def datespan_file(self, file):
+        """
+        check the given file and return the date span of data that are
+        covered by the file.
+
+        Parameters
+        ----------
+        file : string,
+            filename of the file to process
+
+        Returns
+        -------
+        start : datetime
+            starting date and time of the data
+        end : datetime
+            ending date and time of the data
+        """
+
+        return None, None
+
+    def batch_files(self, in_files, out_files, start_time=None,
+                    end_time=None, clobber=True):
         """
         Given a list of input files, process each one and save each result
         into the given output file.
@@ -237,9 +259,16 @@ class obsgen(object):
             If a single string is given, the character '#' will be replaced
             by the starting time of the observation (e.g. out_files="out_#.nc"
             will become out_03234.nc)
+        start_time : datetime, optional
+            starting date and time for data to process (ignore files that are
+            outside of the time period)
+        end_time : datetime, optional
+            ending date and time for data to process (ignore files that are
+            outside of the time period). If start_time is provided, and 
+            end_time is not, then a period of one day is assumed.
         clobber : bool, optional
             If TRUE, overwrite any existing output files. If False, the
-            file is not processed.
+            file is given a letter suffix.
 
         Returns
         -------
@@ -248,6 +277,12 @@ class obsgen(object):
         import re
         import os
 
+        datecheck = False
+        if start_time is not None:
+            datecheck = True
+            if end_time is None:
+                end_time = start_time + datetime.timedelta(1)
+
         outtime = False
         if isinstance(out_files, str):
             outtime = True
@@ -255,10 +290,22 @@ class obsgen(object):
 
         for n, file in enumerate(in_files):
             try:
-                print(file)
+                # Check the times if user requested
+                print(file, end="")
+                if datecheck:
+                    st, en = self.datespan_file(file)
+                    if (en is not None and en < start_time) or
+                        (st is not None and st > end_time):
+                            print(": SKIPPED")
+                            continue
+
+                # Convert the file
                 obs = self.convert_file(file)
                 if obs is None:
+                    print(": NO OBS")
                     continue
+
+                # Output the obs to the correct file
                 if outtime:
                     ofile = time.sub("{:05d}".format(int(obs.time[0])),
                                      out_files)
@@ -274,6 +321,7 @@ class obsgen(object):
                         else:
                             break
                     obs.to_netcdf(ofile, False)
+                print(": SAVED")
 
             except (BaseException, UserWarning) as e:
                 warn("WARNING: {:s} cannot be processed.\nError: {:}".format(
@@ -303,12 +351,24 @@ class aquarius_sss(obsgen):
         self.salt_error = salt_error
         super().__init__(grid, dt, reftime)
 
+    def datespan_file(self, file):
+        f = h5py.File(file, 'r')
+        try:
+            year = f.attrs['Period End Year']
+            day = f.attrs['Period End Day']
+            st = datetime.datetime(year, 1, 1) + datetime.timedelta(int(day))
+            en = st + datetime.timedelta(1)
+        except:
+            st = en = None
+            pass
+        finally:
+            f.close()
+            return st, en
+
     def convert_file(self, file, title="AQUARIUS Obs"):
         """
         Load an Aquarius file and convert into an obs structure
         """
-        import h5py
-
         f = h5py.File(file, 'r')
         salt = np.ma.masked_equal(np.flipud(f['l3m_data'][:]),
                                   f['l3m_data'].attrs['_FillValue'])
@@ -356,6 +416,20 @@ class aviso_sla_map(obsgen):
             self.ssh_mean = None
         self.ssh_error = ssh_error
         super().__init__(grid, dt, reftime)
+
+    def datespan_file(self, file):
+        nc = seapy.netcdf(file)
+        try:
+            st = datetime.datetime.strptime(nc.getncattr("time_coverage_start"),
+                                            "%Y-%m-%dT%H:%M:%SZ")
+            en = datetime.datetime.strptime(nc.getncattr("time_coverage_end"),
+                                            "%Y-%m-%dT%H:%M:%SZ")
+        except:
+            st = en = None
+            pass
+        finally:
+            nc.close()
+            return st, en
 
     def convert_file(self, file, title="AVISO Obs"):
         """
@@ -540,14 +614,28 @@ class navo_sst_map(obsgen):
     the loading of the data.
     """
 
-    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch, temp_error=0.25,
-                 temp_limits=None, provenance="SST_NAVO_MAP"):
+    def __init__(self, grid, dt, depth=None, reftime=seapy.default_epoch,
+                 temp_error=0.25, temp_limits=None, provenance="SST_NAVO_MAP"):
 
         self.temp_error = temp_error
         self.provenance = provenance.upper()
         self.temp_limits = (2, 35) if temp_limits is None else temp_limits
         self.depth = 4 if depth is None else np.abs(depth)
         super().__init__(grid, dt, reftime)
+
+    def datespan_file(self, file):
+        nc = seapy.netcdf(file)
+        try:
+            st = datetime.datetime.strptime(nc.getncattr("start_date"),
+                                            "%Y-%m-%d UTC")
+            en = datetime.datetime.strptime(nc.getncattr("stop_date"),
+                                            "%Y-%m-%d UTC")
+        except:
+            st = en = None
+            pass
+        finally:
+            nc.close()
+            return st, en
 
     def convert_file(self, file, title="NAVO SST Obs"):
         """
@@ -1137,6 +1225,23 @@ class argo_ctd(obsgen):
         self.temp_error = temp_error
         self.salt_error = salt_error
         super().__init__(grid, dt, reftime)
+
+    def datespan_file(self, file):
+        """
+        return the just the day that this argo file covers
+        """
+        nc = seapy.netcdf(file)
+        try:
+            d = netCDF4.num2date(nc.variables['JULD'][0],
+                                 nc.variables['JULD'].units)
+            st = datetime.datetime(*d.timetuple()[:3])
+            en = datetime.datetime(*d.timetuple()[:3] + (23, 59, 59))
+        except:
+            st = en = None
+            pass
+        finally:
+            nc.close()
+            return st, en
 
     def convert_file(self, file, title="Argo Obs"):
         """
