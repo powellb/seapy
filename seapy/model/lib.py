@@ -405,13 +405,13 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
 
     rho0 = _R0 + _R0a * Z - _R0b * Z * Z
     bvf = np.zeros(rho.shape)
-    bvf[fill] = scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+    bvf[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
         np.diff(rho, axis=axis) / -np.diff(Z, axis=0)
     if drhodt:
-        dbvfdt[fill] = scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+        dbvfdt[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
             np.diff(drhodt, axis=axis) / -np.diff(Z, axis=0)
     if drhods:
-        dbvfds[fill] = scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+        dbvfds[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
             np.diff(drhods, axis=axis) / -np.diff(Z, axis=0)
 
     return bvf, dbvfdt, dbvfds

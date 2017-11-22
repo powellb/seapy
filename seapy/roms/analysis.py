@@ -112,7 +112,7 @@ def depth_average(field, grid, depth, top_depth=0, zeta=None):
             grid.vtransform, grid.h, grid.hc, grid.s_rho, grid.cs_r) *
             grid.mask_rho, 0)
 
-        thickness = np.ma.array(seapy.roms.thickness(
+        thickness = np.ma.masked_array(seapy.roms.thickness(
             grid.vtransform, grid.h, grid.hc, s_w, cs_w, zeta) *
             grid.mask_rho, 0)
 
