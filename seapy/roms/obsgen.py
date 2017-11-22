@@ -294,10 +294,10 @@ class obsgen(object):
                 print(file, end="")
                 if datecheck:
                     st, en = self.datespan_file(file)
-                    if (en is not None and en < start_time) or
-                        (st is not None and st > end_time):
-                            print(": SKIPPED")
-                            continue
+                    if (en is not None and en < start_time) or \
+                            (st is not None and st > end_time):
+                        print(": SKIPPED")
+                        continue
 
                 # Convert the file
                 obs = self.convert_file(file)

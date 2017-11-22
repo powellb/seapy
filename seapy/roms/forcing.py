@@ -25,7 +25,7 @@ gfs_map = {
     "frc_lat": "latitude",
     "frc_lon": "longitude",
     "frc_time": "time",
-    "Tair": forcing_data("tmpsfc", 1, -273.15),
+    "Tair": forcing_data("tmp2m", 1, -273.15),
     "Pair": forcing_data("prmslmsl", 0.01, 0),
     "Qair": forcing_data("rh2m", 1, 0),
     "rain": forcing_data("pratesfc", 1, 0),
