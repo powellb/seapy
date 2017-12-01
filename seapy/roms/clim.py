@@ -48,7 +48,7 @@ def gen_bry_clim(clim_file, grid, bry):
     # Create the new climatology file
     ncout = seapy.roms.ncgen.create_clim(clim_file,
                                          eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                                         ntimes=len(times), reftime=reftime,
+                                         reftime=reftime,
                                          title="stitched from boundary interpolation")
     ncout.variables["clim_time"][:] = times
 
