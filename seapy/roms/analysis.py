@@ -170,15 +170,35 @@ def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
     Returns
     -------
     x: array
-        x-location values of the new transect
+        x-location values in [m] along transect
     z: array
-        z-location values of the new transect
-    vals: array
-        data values of the new transect
+        depth values in [m] of the new transect
+    vals: np.ma.array
+        data values of the new transect with masked values
+
+    Examples
+    --------
+    Generate series of transects from ROMS output
+
+    >>> nc = seapy.netcdf('roms_his.nc')
+    >>> grid = seapy.model.asgrid(nc)
+    >>> data = nc.variables['salt'][:,:,150,:]
+    >>> shp = (data.shape[0], 50, 400)
+    >>> transect = np.zeros(shp)
+    >>> for i in range(shp[0]):
+    >>>     x, z, d = \
+    >>>          seapy.roms.analysis.transect(grid.lon_rho[150,:],
+    >>>                                       grid.lat_rho[150,:],
+    >>>                                       grid.depth_rho[:,150,:],
+    >>>                                       data[i,:,:], nx=shp[2],
+    >>>                                       nz=shp[1])
+    >>>     transect[i,:,:] = d.filled(np.nan)
+    >>> nc.close()
+    >>> plt.pcolormesh(x/1000, z, transect[0, :, :])
     """
     from scipy.interpolate import griddata
     depth = np.atleast_2d(depth)
-    data = np.atleast_2d(data)
+    data = np.ma.atleast_2d(data).filled(np.mean(data))
     lon = np.atleast_1d(lon)
     lat = np.atleast_1d(lat)
 
@@ -211,7 +231,8 @@ def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
                      np.zeros((1, depth.shape[1]))))
 
     # repeat the same data at the top and bottom
-    dat = np.vstack((data[zl[0], :], data[zl], data[zl[-1], :]))
+    dat = np.vstack((data[zl[0], :], data[zl],
+                     data[zl[-1], :]))
     dist = np.tile(dist.T, [dep.shape[0], 1]) / zscale
 
     # Find the bottom indices to create a mask for nodata/land

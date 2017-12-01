@@ -21,6 +21,7 @@ import seapy
 import numpy as np
 import scipy.spatial
 import matplotlib.path
+import netCDF4
 from warnings import warn
 
 
@@ -32,7 +33,7 @@ def asgrid(grid):
 
     Parameters
     ----------
-    grid: string, list, or model.seapy.grid
+    grid: string, list, netCDF4 Dataset, or model.seapy.grid
         Input variable to cast. If it is already a grid, it will return it;
         otherwise, it attempts to construct a new grid.
 
@@ -45,13 +46,15 @@ def asgrid(grid):
         raise AttributeError("No grid was specified")
     if isinstance(grid, seapy.model.grid):
         return grid
+    if isinstance(grid, netCDF4._netCDF4.Dataset):
+        return seapy.model.grid(nc=grid)
     else:
         return seapy.model.grid(filename=grid)
 
 
 class grid:
 
-    def __init__(self, filename=None, lat=None, lon=None, z=None,
+    def __init__(self, filename=None, nc=None, lat=None, lon=None, z=None,
                  depths=True, cgrid=False):
         """
             Class to wrap around a numerical model grid for oceanography.
@@ -61,9 +64,11 @@ class grid:
 
             Parameters
             ----------
-            filename: filename or list,
-              name to load to build data structure [optional]
+            filename: filename or list, optional
+              name to load to build data structure
                 or
+            nc: netCDF4 Dataset, optional
+              If a file is already open, pass the reference.
             lat: ndarray,
                 latitude values of grid
             lon: ndarray,
@@ -80,8 +85,9 @@ class grid:
         """
         self.filename = filename
         self.cgrid = cgrid
+        self._nc = nc
 
-        if self.filename is not None:
+        if (self.filename or self._nc) is not None:
             self._initfile()
             self._isroms = True if \
                 (len(list(set(("s_rho", "pm", "pn", "theta_s", "theta_b",
@@ -146,7 +152,10 @@ class grid:
                  }
 
         # Open the file
-        self._nc = seapy.netcdf(self.filename)
+        close = False
+        if self._nc is None:
+            close = True
+            self._nc = seapy.netcdf(self.filename)
         try:
             self.name = re.search("[^\.]*",
                                   os.path.basename(self.filename)).group()
@@ -161,9 +170,10 @@ class grid:
                     self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 
-        # Close the file
-        self._nc.close()
-        self._nc = None
+        if close:
+            # Close the file
+            self._nc.close()
+            self._nc = None
 
     def _verify_shape(self):
         """
