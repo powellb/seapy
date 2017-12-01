@@ -145,6 +145,90 @@ def depth_average(field, grid, depth, top_depth=0, zeta=None):
         np.sum(thickness, axis=0)
 
 
+def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
+    """
+    Generate an equidistant transect from data at varying depths. Can be
+    used to plot a slice of model or observational data.
+
+    Parameters
+    ----------
+    lat: array
+        n-dimensional array with latitude of points
+    lon: array
+        n-dimensional array with longitude of points
+    depth: array
+        [k,n] dimensional array of the depths for all k-layers at each n point
+    data: array
+        [k,n] dimensional array of values
+    nx: int, optional
+        number of horizontal points desired in the transect
+    nz: int, optional
+        number of vertical points desired in the transect
+    z: array, optional
+        list of depths to use if you do not want equidistant depths
+
+    Returns
+    -------
+    x: array
+        x-location values of the new transect
+    z: array
+        z-location values of the new transect
+    vals: array
+        data values of the new transect
+    """
+    from scipy.interpolate import griddata
+    depth = np.atleast_2d(depth)
+    data = np.atleast_2d(data)
+    lon = np.atleast_1d(lon)
+    lat = np.atleast_1d(lat)
+
+    # Generate the depths
+    depth[depth > 0] *= -1
+    if z is None:
+        z = np.linspace(depth.min() - 2, depth.max(), nz)
+    else:
+        z[z > 0] *= -1
+        nz = len(z)
+    dz = np.abs(np.diff(z).mean())
+
+    # Determine the distance between points and the weighting to apply
+    dist = np.hstack(([0], seapy.earth_distance(
+        lon[0], lat[0], lon[1:], lat[1:])))
+    dx = np.diff(dist).mean()
+    zscale = np.maximum(1, 10**int(np.log10(dx / dz)))
+    dx /= zscale
+    x = np.linspace(0, dist.max(), nx)
+
+    # All arrays have to be the same size
+    xx, zz = np.meshgrid(x / zscale, z)
+
+    # For the source data, we don't want to extrpolate,
+    # so make the data go from the surface to twice its
+    # depth.
+    zl = np.argsort(depth[:, 0])
+    dep = np.vstack((np.ones((1, depth.shape[1])) * 2 * depth.min(),
+                     depth[zl, :],
+                     np.zeros((1, depth.shape[1]))))
+
+    # repeat the same data at the top and bottom
+    dat = np.vstack((data[zl[0], :], data[zl], data[zl[-1], :]))
+    dist = np.tile(dist.T, [dep.shape[0], 1]) / zscale
+
+    # Find the bottom indices to create a mask for nodata/land
+    idx = np.interp(xx[0, :], dist[0, :],
+                    np.interp(depth.min(axis=0), z,
+                              np.arange(nz))).astype(int)
+    mask = np.arange(nz)[:, np.newaxis] <= idx
+
+    # Interpolate
+    ndat = np.ma.array(griddata(
+        (dist.ravel(), dep.ravel()), dat.ravel(), (xx.ravel(), zz.ravel()),
+        method='cubic').reshape(xx.shape), mask=mask)
+
+    # Return everything
+    return x, z, ndat
+
+
 def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     """
     Create a std file for the given ocean fields. This std file can be used
