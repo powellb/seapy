@@ -166,7 +166,7 @@ def chunker(seq, size):
     [12, 14]
 
     """
-    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+    return (seq[pos:pos + size] for pos in range(0, len(seq), max(1, size)))
 
 
 def smooth(data, ksize=3, kernel=None, copy=True):
