@@ -22,6 +22,7 @@ fields = ("Tair", "Qair", "Pair", "rain",
 gfs_url = "http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd"
 
 gfs_map = {
+    "pad": 1.0,
     "frc_lat": "latitude",
     "frc_lon": "longitude",
     "frc_time": "time",
@@ -36,6 +37,7 @@ gfs_map = {
 }
 
 ncep_map = {
+    "pad": 2.0,
     "frc_lat": "lat",
     "frc_lon": "lon",
     "frc_time": "time",
@@ -168,10 +170,10 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
         raise Exception("Cannot find valid times")
 
     # Get the latitude and longitude ranges
-    minlat = np.floor(np.min(grid.lat_rho)) - 0.5
-    maxlat = np.ceil(np.max(grid.lat_rho)) + 0.5
-    minlon = np.floor(np.min(grid.lon_rho)) - 0.5
-    maxlon = np.ceil(np.max(grid.lon_rho)) + 0.5
+    minlat = np.floor(np.min(grid.lat_rho)) - fields['pad']
+    maxlat = np.ceil(np.max(grid.lat_rho)) + fields['pad']
+    minlon = np.floor(np.min(grid.lon_rho)) - fields['pad']
+    maxlon = np.ceil(np.max(grid.lon_rho)) + fields['pad']
     frc_lon = forcing.variables[fields['frc_lon']][:]
     frc_lat = forcing.variables[fields['frc_lat']][:]
     # Make the forcing lat/lon on 2D grid
@@ -208,7 +210,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
 
     # Loop over the fields and fill out the output file
     for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
-        if hasattr(fields[f], 'field'):
+        if hasattr(fields[f], 'field') and fields[f].field in forcing.variables:
             out.variables[f][:] = \
                 forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
                 fields[f].ratio + fields[f].offset
