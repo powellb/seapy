@@ -367,6 +367,26 @@ def day2date(day=0, epoch=default_epoch):
     return [epoch + datetime.timedelta(days=float(t)) for t in day]
 
 
+def matlab2date(daynum=0):
+    """
+    Return a datetime object from a Matlab datenum value
+
+    Parameters
+    ----------
+    daynum : scalar
+        Input Matlab day number
+
+    Returns
+    -------
+    date : list of datetime(s)
+    """
+    daynum = np.atleast_1d(daynum)
+
+    return np.array([datetime.datetime.fromordinal(int(d)) +
+                     datetime.timedelta(days=d % 1) -
+                     datetime.timedelta(days=366) for d in daynum])
+
+
 def _distq(lon1, lat1, lon2, lat2):
     """
     Compute the geodesic distance between lat/lon points. This code is

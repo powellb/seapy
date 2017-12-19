@@ -56,7 +56,7 @@ def average_err(x, window=5):
     nx = np.ma.masked_all(x.shape)
     err = np.ma.masked_all(x.shape)
     filt = np.ones(window) / window
-    padlen = window * 2
+    padlen = window * 4
 
     # Go over all contiguous regions
     regions = seapy.contiguous(x)

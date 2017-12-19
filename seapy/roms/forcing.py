@@ -22,7 +22,7 @@ fields = ("Tair", "Qair", "Pair", "rain",
 gfs_url = "http://oos.soest.hawaii.edu/thredds/dodsC/hioos/model/atm/ncep_global/NCEP_Global_Atmospheric_Model_best.ncd"
 
 gfs_map = {
-    "pad": 1.0
+    "pad": 1.0,
     "frc_lat": "latitude",
     "frc_lon": "longitude",
     "frc_time": "time",
@@ -37,7 +37,7 @@ gfs_map = {
 }
 
 ncep_map = {
-    "pad": 2.0
+    "pad": 2.0,
     "frc_lat": "lat",
     "frc_lon": "lon",
     "frc_time": "time",

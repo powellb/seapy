@@ -1104,7 +1104,7 @@ class mooring(obsgen):
         if not error:
             error = {}
 
-        if not ta:
+        if not data:
             warn("No data is provided")
             return
 
