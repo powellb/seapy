@@ -53,14 +53,19 @@ def average_err(x, window=5):
 
     """
     x = np.atleast_1d(x).flatten()
-
-    #  an hourly centered average of the data
+    nx = np.ma.masked_all(x.shape)
+    err = np.ma.masked_all(x.shape)
     filt = np.ones(window) / window
-    nx = scipy.signal.filtfilt(filt, [1.0], x, axis=0)
+    padlen = window * 2
 
-    # Generate the variance
-    err = (nx - x)**2
-    err = scipy.signal.filtfilt(filt, [1.0], err, axis=0)
+    # Go over all contiguous regions
+    regions = seapy.contiguous(x)
+    for r in regions:
+        if ((r.stop - r.start) >= padlen):
+            nx[r] = scipy.signal.filtfilt(
+                filt, [1.0], x[r], padlen=padlen, axis=0)
+            err[r] = scipy.signal.filtfilt(
+                filt, [1.0], (nx[r] - x[r])**2, padlen=padlen, axis=0)
 
     return nx, err
 
