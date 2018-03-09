@@ -512,7 +512,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
 
 def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
              threads=2, reftime=None, nx=0, ny=0, weight=10, vmap=None,
-             cdlfile=None, dims=2, pmap=None):
+             cdl=None, dims=2, pmap=None):
     """
     Given an existing ROMS history or average file, create (if does not exit)
     a new z-grid file. Use the given z_grid or otherwise build one with the
@@ -545,6 +545,9 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         mapping source and destination variables
     cdlfile : string, optional
         cdlfile to use for generating the z-file
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     dims : int, optional
         number of dimensions to use for lat/lon arrays (default 2)
     pmap : numpy.ndarray, optional:
@@ -578,7 +581,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
                 raise ValueError("depth must be specified")
             ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
                                                    len(depth), src_ref, "ROMS z-level",
-                                                   cdlfile=cdlfile, dims=dims)
+                                                   cdl=cdl, dims=dims)
             if dims == 1:
                 ncout.variables["lat"][:] = roms_grid.lat_rho[:, 0]
                 ncout.variables["lon"][:] = roms_grid.lon_rho[0, :]
@@ -714,8 +717,9 @@ def to_grid(src_file, dest_file, dest_grid=None, records=None, threads=2,
     return pmap
 
 
-def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
-            reftime=None, nx=0, ny=0, weight=10, vmap=None, pmap=None):
+def to_clim(src_file, dest_file, dest_grid=None, records=None,
+            clobber=False, cdl=None, threads=2, reftime=None,
+            nx=0, ny=0, weight=10, vmap=None, pmap=None):
     """
     Given an model output file, create (if does not exit) a
     new ROMS climatology file using the given ROMS destination grid and
@@ -732,6 +736,12 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
         Name or instance of output definition
     records : numpy.ndarray, optional:
         Record indices to interpolate
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     threads : int, optional:
         number of processing threads
     reftime: datetime, optional:
@@ -766,6 +776,8 @@ def to_clim(src_file, dest_file, dest_grid=None, records=None, threads=2,
                                              xi_rho=destg.lm,
                                              s_rho=destg.n,
                                              reftime=src_ref,
+                                             clobber=clobber,
+                                             cdl=cdl,
                                              title="interpolated from " + src_file)
         src_time = netCDF4.num2date(ncsrc.variables[time][records],
                                     ncsrc.variables[time].units)

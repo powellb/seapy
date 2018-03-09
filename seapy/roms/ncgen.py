@@ -187,10 +187,10 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
     return _nc
 
 
-def create_river(filename, nriver=1, s_rho=5,
-                 reftime=default_epoch, clobber=False, title="My River"):
+def create_psource(filename, nriver=1, s_rho=5,
+                   reftime=default_epoch, clobber=False, cdl=None, title="My River"):
     """
-    Create a new, blank river file
+    Create a new, blank point source file
 
     Parameters
     ----------
@@ -205,6 +205,9 @@ def create_river(filename, nriver=1, s_rho=5,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -214,7 +217,8 @@ def create_river(filename, nriver=1, s_rho=5,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_rivers.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_rivers.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate river values
     dims["river"] = nriver
@@ -230,7 +234,7 @@ def create_river(filename, nriver=1, s_rho=5,
 
 
 def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
-                title="My Grid"):
+                cdl=None, title="My Grid"):
     """
     Create a new, blank grid file
 
@@ -248,6 +252,9 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -257,7 +264,8 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "roms_grid.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "roms_grid.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -271,7 +279,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
 
 
 def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                 reftime=default_epoch, clobber=False, title="My Adsen"):
+                 reftime=default_epoch, clobber=False, cdl=None, title="My Adsen"):
     """
     Create a new adjoint sensitivity file
 
@@ -299,12 +307,12 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Create the general file
-    return _create_generic_file(filename, "adsen.cdl", eta_rho, xi_rho, s_rho,
-                                reftime, clobber, title)
+    return _create_generic_file(filename, "adsen.cdl" if cdl is None else cdl,
+                                eta_rho, xi_rho, s_rho, reftime, clobber, title)
 
 
 def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
-               reftime=default_epoch, clobber=False, title="My BRY"):
+               reftime=default_epoch, clobber=False, cdl=None, title="My BRY"):
     """
     Create a bry forcing file
 
@@ -323,6 +331,9 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -332,7 +343,8 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "bry_unlimit.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "bry_unlimit.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -347,7 +359,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
 
 def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
-                reftime=default_epoch, clobber=False, title="My CLIM"):
+                reftime=default_epoch, clobber=False, cdl=None, title="My CLIM"):
     """
     Create a climatology forcing file
 
@@ -366,6 +378,9 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -375,7 +390,8 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "clm_ts.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "clm_ts.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -390,7 +406,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
 
 def create_frc_bulk(filename, lat=10, lon=10,
-                    reftime=default_epoch, clobber=False,
+                    reftime=default_epoch, clobber=False, cdl=None,
                     title="My Forcing"):
     """
     Create a bulk flux forcing file
@@ -408,6 +424,9 @@ def create_frc_bulk(filename, lat=10, lon=10,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -417,7 +436,8 @@ def create_frc_bulk(filename, lat=10, lon=10,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_bulk.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_bulk.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["lat"] = lat
@@ -433,7 +453,7 @@ def create_frc_bulk(filename, lat=10, lon=10,
 
 
 def create_frc_direct(filename, eta_rho=10, xi_rho=10,
-                      reftime=default_epoch, clobber=False,
+                      reftime=default_epoch, clobber=False, cdl=None,
                       title="My Forcing"):
     """
     Create a direct surface forcing file
@@ -451,6 +471,9 @@ def create_frc_direct(filename, eta_rho=10, xi_rho=10,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -460,7 +483,8 @@ def create_frc_direct(filename, eta_rho=10, xi_rho=10,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_direct.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_direct.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = {'y_rho': eta_rho,
@@ -482,7 +506,7 @@ def create_frc_direct(filename, eta_rho=10, xi_rho=10,
 
 def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
                     cycle=None, reftime=default_epoch, clobber=False,
-                    title="My Flux"):
+                    cdl=None, title="My Flux"):
     """
     Create a surface flux forcing file
 
@@ -506,6 +530,9 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -515,7 +542,8 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_fluxclm.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_fluxclm.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, 1)
@@ -533,7 +561,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
 
 
 def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                      reftime=default_epoch, clobber=False,
+                      reftime=default_epoch, clobber=False, cdl=None,
                       title="My Srelaxation"):
     """
     Create a Salt Relaxation forcing file
@@ -555,6 +583,9 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -564,7 +595,8 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_srelax.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_srelax.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -579,7 +611,7 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
 
 def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                     reftime=default_epoch, clobber=False,
+                     reftime=default_epoch, clobber=False, cdl=None,
                      title="My Qcorrection"):
     """
     Create a Q Correction forcing file
@@ -601,6 +633,9 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -610,7 +645,8 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_qcorr.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_qcorr.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -625,7 +661,7 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
 
 def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
-                    reftime=default_epoch, clobber=False,
+                    reftime=default_epoch, clobber=False, cdl=None,
                     title="My Winds"):
     """
     Create a surface wind stress forcing file
@@ -647,6 +683,9 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -656,7 +695,8 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_windstress.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_windstress.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -671,7 +711,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
 
 def create_frc_wave(filename, eta_rho=10, xi_rho=10, reftime=default_epoch,
-                    clobber=False, title="My Waves"):
+                    clobber=False, cdl=None, title="My Waves"):
     """
     Create a surface wave forcing file
 
@@ -688,6 +728,9 @@ def create_frc_wave(filename, eta_rho=10, xi_rho=10, reftime=default_epoch,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -697,7 +740,8 @@ def create_frc_wave(filename, eta_rho=10, xi_rho=10, reftime=default_epoch,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_wave.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "frc_wave.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho=1)
@@ -758,7 +802,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
 
 
 def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
-               reftime=default_epoch, clobber=False, title="My Ini"):
+               reftime=default_epoch, clobber=False, cdl=None, title="My Ini"):
     """
     Create an initial condition file
 
@@ -777,6 +821,9 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -786,7 +833,8 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "ini_hydro.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "ini_hydro.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -800,7 +848,8 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     return _nc
 
 
-def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False, title="My Nudging"):
+def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
+                      cdl=None, title="My Nudging"):
     """
     Create a nudging coefficients file
 
@@ -817,6 +866,9 @@ def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False, t
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -826,7 +878,8 @@ def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False, t
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "nudge_coef.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "nudge_coef.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -840,7 +893,7 @@ def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False, t
 
 
 def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
-                  clobber=False, title="My Observations"):
+                  clobber=False, cdl=None, title="My Observations"):
     """
     Create an assimilation observations file
 
@@ -859,6 +912,9 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -870,7 +926,8 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
     """
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_obs.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_obs.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["survey"] = survey
@@ -890,7 +947,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
 
 def create_da_ray_obs(filename, ray_datum=1, provenance="None",
                       reftime=default_epoch, clobber=False,
-                      title="My Observations"):
+                      cdl=None, title="My Observations"):
     """
     Create an acoustic ray assimilation observations file
 
@@ -907,6 +964,9 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -917,7 +977,8 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
     """
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_obs_ray.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_obs_ray.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["ray_datum"] = ray_datum
@@ -935,7 +996,7 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
 
 
 def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
-                      reftime=default_epoch, clobber=False,
+                      reftime=default_epoch, clobber=False, cdl=None,
                       title="My BRY STD"):
     """
     Create a boundaries standard deviation file
@@ -957,6 +1018,9 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -966,7 +1030,8 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_b.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_std_b.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -984,7 +1049,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
 
 def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
                       reftime=default_epoch, clobber=False,
-                      title="My FRC STD"):
+                      cdl=None, title="My FRC STD"):
     """
     Create a forcing standard deviation file
 
@@ -1003,6 +1068,9 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -1012,7 +1080,8 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_f.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_std_f.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1028,7 +1097,7 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
 def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
                       reftime=default_epoch, clobber=False,
-                      title="My INI STD"):
+                      cdl=None, title="My INI STD"):
     """
     Create an initialization standard deviation file
 
@@ -1047,6 +1116,9 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -1056,7 +1128,8 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_i.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_std_i.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1072,7 +1145,7 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
 def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
                         reftime=default_epoch, clobber=False,
-                        title="My Model STD"):
+                        cdl=None, title="My Model STD"):
     """
     Create an time varying model standard deviation file
 
@@ -1091,6 +1164,9 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
 
@@ -1100,7 +1176,8 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "s4dvar_std_m.cdl")
+    dims, vars, attr = cdl_parser(
+        _cdl_dir + "s4dvar_std_m.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1115,8 +1192,8 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
 
 def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
-                       clobber=False,
-                       title="Zlevel Grid", cdlfile=None, dims=2):
+                       clobber=False, cdl=None,
+                       title="Zlevel Grid", dims=2):
     """
     Create z-level grid file
 
@@ -1133,10 +1210,11 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
-    cdlfile: string, optional
-        name of CDL file to use for construction
     dims: int, optional
         number of dimensions to use for lat/lon
 
@@ -1147,12 +1225,14 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     """
     if cdlfile == None:
         if dims == 1:
-            cdlfile = "zlevel_1d_grid.cdl"
+            cdlfile = _cdl_dir + "zlevel_1d_grid.cdl"
         else:
-            cdlfile = "zlevel_2d_grid.cdl"
+            cdlfile = _cdl_dir + "zlevel_2d_grid.cdl"
+    else:
+        cdlfile = cdl
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
+    dims, vars, attr = cdl_parser(cdlfile)
 
     # Fill in the appropriate dimension values
     dims["lat"] = lat
@@ -1169,8 +1249,8 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
 
 def create_zlevel(filename, lat=10, lon=10, depth=1,
                   reftime=default_epoch,
-                  clobber=False,
-                  title="Zlevel Model Data", cdlfile=None, dims=2):
+                  clobber=False, cdl=None,
+                  title="Zlevel Model Data", dims=2):
     """
     Create an time varying model standard deviation file
 
@@ -1189,10 +1269,11 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     clobber: bool, optional
         If True, clobber any existing files and recreate. If False, use
         the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     title: string, optional
         netcdf attribute title
-    cdlfile: string, optional
-        name of CDL file to use for construction
     dims: int, optional
         number of dimensions to use for lat/lon
 
@@ -1203,12 +1284,14 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     """
     if cdlfile == None:
         if dims == 1:
-            cdlfile = "zlevel_1d.cdl"
+            cdlfile = _cdl_dir + "zlevel_1d.cdl"
         else:
-            cdlfile = "zlevel_2d.cdl"
+            cdlfile = _cdl_dir + "zlevel_2d.cdl"
+    else:
+        cdlfile = cdl
 
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + cdlfile)
+    dims, vars, attr = cdl_parser(cdlfile)
 
     # Fill in the appropriate dimension values
     dims["lat"] = lat

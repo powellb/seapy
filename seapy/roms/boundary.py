@@ -23,7 +23,8 @@ sides = {"west": __side_info((np.s_[:], 0), 1, 0),
          "north": __side_info((-1, np.s_[:]), 4, 1)}
 
 
-def from_roms(roms_file, bry_file, grid=None, records=None):
+def from_roms(roms_file, bry_file, grid=None, records=None,
+              clobber=False, cdl=None):
     """
     Given a ROMS history, average, or climatology file, generate
     boundary conditions on the same grid.
@@ -33,11 +34,17 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     roms_file : string or list,
         ROMS source (history, average, climatology file)
     bry_file : string,
-        output boundary file
+        output boundary file,
     grid : seapy.model.grid or string, optional,
         ROMS grid for boundaries
-    records : array, optional
+    records : array, optional,
         record indices to put into the boundary
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
 
     Returns
     -------
@@ -57,6 +64,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None):
     ncbry = seapy.roms.ncgen.create_bry(bry_file,
                                         eta_rho=grid.eta_rho, xi_rho=grid.xi_rho,
                                         s_rho=grid.n, reftime=src_ref,
+                                        cdl=cdl, clobber=clobber,
                                         title="generated from " + roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
     grid.to_netcdf(ncbry)
@@ -197,7 +205,7 @@ def gen_ncks(parent_file, grid, sponge=0, pad=3):
     pass
 
 
-def from_std(std_filename, bry_std_file, fields=None):
+def from_std(std_filename, bry_std_file, fields=None, clobber=False, cdl=None):
     """
     Generate the boundary standard deviations file for 4DVAR from the
     standard deviation of a boundary file. Best to use nco:
@@ -221,6 +229,12 @@ def from_std(std_filename, bry_std_file, fields=None):
     fields : list, optional,
         ROMS fields to generate boundaries for. The default are the
         standard fields as defined in seapy.roms.fields
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
 
     Returns
     -------
@@ -232,7 +246,7 @@ def from_std(std_filename, bry_std_file, fields=None):
     s_rho = len(ncstd.dimensions["s_rho"])
     ncout = seapy.roms.ncgen.create_da_bry_std(bry_std_file,
                                                eta_rho=eta_rho, xi_rho=xi_rho,
-                                               s_rho=s_rho,
+                                               s_rho=s_rho, clobber=clobber, cdl=cdl,
                                                title='STD from ' + std_filename)
     ncout.variables["ocean_time"][:] = ncstd.variables["bry_time"][0]
 

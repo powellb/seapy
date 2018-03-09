@@ -43,7 +43,7 @@ ncep_map = {
     "frc_time": "time",
     "Tair": forcing_data("air", 1, -273.15),
     "Pair": forcing_data("slp", 0.01, 0),
-    "Qair": forcing_data("rhum", 0.1, 0),
+    "Qair": forcing_data("rhum", 1, 0),
     "rain": forcing_data("prate", 1, 0),
     "Uwind": forcing_data("uwnd", 1, 0),
     "Vwind": forcing_data("vwnd", 1, 0),
