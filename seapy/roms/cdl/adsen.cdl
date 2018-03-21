@@ -133,6 +133,12 @@ variables:
     salt:long_name = "salinity" ;
     salt:time = "ocean_time" ;
     salt:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  double w(ocean_time, s_w, eta_rho, xi_rho) ;
+    w:long_name = "vertical momentum component" ;
+    w:units = "meter second-1" ;
+    w:time = "ocean_time" ;
+    w:coordinates = "lon_rho lat_rho s_w ocean_time" ;
+    w:field = "w-velocity, scalar, series" ;
 
 // global attributes:
     :type = "ROMS/TOMS adjoint sensitivity functional file" ;
