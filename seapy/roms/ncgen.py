@@ -172,7 +172,7 @@ def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
         internal method: Generic file creator that uses ocean_time
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + cdl)
+    dims, vars, attr = cdl_parser(cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -307,7 +307,7 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Create the general file
-    return _create_generic_file(filename, "adsen.cdl" if cdl is None else cdl,
+    return _create_generic_file(filename, _cdl_dir + "adsen.cdl" if cdl is None else cdl,
                                 eta_rho, xi_rho, s_rho, reftime, clobber, title)
 
 
