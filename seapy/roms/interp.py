@@ -543,8 +543,6 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
-    cdlfile : string, optional
-        cdlfile to use for generating the z-file
     cdl: string, optional,
         Use the specified CDL file as the definition for the new
         netCDF file.
@@ -598,7 +596,7 @@ def to_zgrid(roms_file, z_file, z_grid=None, depth=None, records=None,
             dims = z_grid.spatial_dims
             ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
                                                    len(z_grid.z), src_ref, "ROMS z-level",
-                                                   cdlfile=cdlfile, dims=dims)
+                                                   cdl=cdl, dims=dims)
             if dims == 1:
                 ncout.variables["lat"][:] = z_grid.lat_rho[:, 0]
                 ncout.variables["lon"][:] = z_grid.lon_rho[0, :]

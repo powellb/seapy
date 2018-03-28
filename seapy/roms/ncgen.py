@@ -1223,7 +1223,7 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     nc, netCDF4 object
 
     """
-    if cdlfile == None:
+    if cdl == None:
         if dims == 1:
             cdlfile = _cdl_dir + "zlevel_1d_grid.cdl"
         else:
@@ -1282,7 +1282,7 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     nc, netCDF4 object
 
     """
-    if cdlfile == None:
+    if cdl == None:
         if dims == 1:
             cdlfile = _cdl_dir + "zlevel_1d.cdl"
         else:
