@@ -20,6 +20,7 @@ fields = {"zeta": {"grid": "rho", "dims": 2},
           "v": {"grid": "v", "dims": 3, "rotate": "u"},
           "temp": {"grid": "rho", "dims": 3},
           "salt": {"grid": "rho", "dims": 3}}
+ids = {1: "zeta", 2: "ubar", 3: "vbar", 4: "u", 5: "v", 6: "temp", 7: "salt"}
 
 
 def stretching(vstretching=2, theta_s=2, theta_b=0.1, hc=100, s_rho=10,
@@ -260,7 +261,7 @@ def gen_boundary_region(shp, north=None, east=None, west=None, south=None,
             continue
         x = np.arange(nx)
         if kind == "cosine":
-            x = np.cos(np.pi / (2.0 * nx) * x)
+            x = np.cos(np.pi / (2.0 * nx) * x)[::-1]
         else:
             x = 1.0 / nx * x
         x = np.tile(x[::-1], [dirs[d][0], 1])
