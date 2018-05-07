@@ -140,7 +140,7 @@ class map(object):
         reset = True if fig is None else False
         self.new_figure(reset=reset)
 
-    def new_figure(self, fill_color=None, reset=False):
+    def new_figure(self, fill_color=None, reset=False, dpi=150):
         """
         Create or update a figure for plotting
 
@@ -154,11 +154,13 @@ class map(object):
         if reset:
             if self.ax:
                 self.ax.set_axis_off()
+                self.ax = None
             if self.fig:
-                plt.close(self.fig)
+                self.fig.clf()
+                self.fig = None
 
         if self.fig is None or self.ax is None:
-            self.fig = plt.figure(figsize=self.figsize)
+            self.fig = plt.figure(figsize=self.figsize, dpi=dpi)
             self.ax = self.fig.add_axes([-0.01, 0.25, 1.01, 0.7])
 
         if fill_color is None:
