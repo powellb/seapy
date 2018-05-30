@@ -1,6 +1,7 @@
-numpy
-scipy
-netcdf4
-joblib
-numpy_groupies
 basemap
+h5py
+joblib
+netcdf4
+numpy
+numpy_groupies
+scipy
