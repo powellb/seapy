@@ -10,3 +10,4 @@ seapy.egg-info
 seapy/external
 notes.org
 .dir-locals.el
+/todo.org
