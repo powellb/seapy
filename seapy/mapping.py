@@ -25,7 +25,7 @@
 
 
   Written by Brian Powell on 9/4/14
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -285,5 +285,3 @@ class map(object):
         self.basemap.set_axes_limits(ax=self.ax)
         if label is not None:
             self.cb.set_label(label)
-
-

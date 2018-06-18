@@ -6,7 +6,7 @@
   when importing the model module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import seapy
@@ -309,7 +309,7 @@ def pressure(hz, rho, axis=None, drhodt=None, drhods=None):
 
 def sound(depth, temp, salt):
     """
-    Calcuate speed of sound and adjoint-forcing terms of sound speed using the 
+    Calcuate speed of sound and adjoint-forcing terms of sound speed using the
     quadratic equation of state.
 
     Parameters
@@ -415,5 +415,3 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
             np.diff(drhods, axis=axis) / -np.diff(Z, axis=0)
 
     return bvf, dbvfdt, dbvfds
-
-

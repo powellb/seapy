@@ -8,7 +8,7 @@
   when importing the seapy module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -76,7 +76,7 @@ def fill(x, max_gap=None, kind='linear'):
       if this value is 10 and there are 12 continuous missing values,
       they will be left unfilled). Default is to fill everything.
     kind : str, optional
-      The kind of interpolant to use (see scipy.interpolate.interp1d). 
+      The kind of interpolant to use (see scipy.interpolate.interp1d).
       Default is 'linear'
 
     Returns
@@ -107,7 +107,7 @@ def fill(x, max_gap=None, kind='linear'):
 
 def contiguous(x):
     """
-    Find the indices that provide contiguous regions of a numpy.masked_array. 
+    Find the indices that provide contiguous regions of a numpy.masked_array.
     This will find all regions of valid data. NOTE: this casts as 1-D.
 
     Parameters
@@ -651,7 +651,7 @@ def netcdf(file, aggdim=None):
         Filename(s) to open. If the string has wildcards or is a list,
         this attempts to open an MFDataset
     aggdim : string,
-        Name of dimension to concatenate along if loading a set of files. 
+        Name of dimension to concatenate along if loading a set of files.
         A value of None (default) uses the unlimited dimension.
 
     Returns

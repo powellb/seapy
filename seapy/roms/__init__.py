@@ -3,7 +3,7 @@
 
     Module for working with ROMS data
 
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 
   Imported functions include:
 

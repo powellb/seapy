@@ -6,7 +6,7 @@
   rivers, etc.)
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
@@ -69,11 +69,11 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
          "frc_lat":STRING name of latitude field in forcing file
          "frc_lon":STRING name of longitude field in forcing file
          "frc_time":STRING name of time field in forcing file
-         "frc_time_units":STRING optional, supply units of frc time 
+         "frc_time_units":STRING optional, supply units of frc time
                                 field in forcing file
          keys of ROMS bulk forcing field names (Tair, Pair, Qair,
-         rain, Uwind, Vwind, lwrad_down, swrad) each with an 
-         array of values of a named tuple (forcing_data) with the 
+         rain, Uwind, Vwind, lwrad_down, swrad) each with an
+         array of values of a named tuple (forcing_data) with the
          following fields:
             field: STRING value of the forcing field to use
             ratio: FLOAT value to multiply with the source data
@@ -111,35 +111,35 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     each variable. We can use the wildcards though to put together
     multiple time period (e.g., 2014 through 2015).
 
-    >>> seapy.roms.forcing.gen_bulk_forcing("uwnd.10m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("uwnd.10m.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=True)
-    >>> seapy.roms.forcing.gen_bulk_forcing("vwnd.10m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("vwnd.10m.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.forcing.gen_bulk_forcing("air.2m.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("air.2m.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.forcing.gen_bulk_forcing("dlwrf.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("dlwrf.sfc.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.forcing.gen_bulk_forcing("dswrf.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("dswrf.sfc.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.forcing.gen_bulk_forcing("prate.sfc.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("prate.sfc.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
-    >>> seapy.roms.forcing.gen_bulk_forcing("rhum.sig995.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("rhum.sig995.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=True)
-    >>> seapy.roms.forcing.gen_bulk_forcing("slp.*nc", 
+    >>> seapy.roms.forcing.gen_bulk_forcing("slp.*nc",
             seapy.roms.forcing.ncep_map, 'ncep_frc_rhum_slp.nc',
             'mygrid.nc', datetime.datetime(2014,1,1),
             datetime.datetime(2015,12,31)), clobber=False)
@@ -147,7 +147,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     Two forcing files, 'ncep_frc.nc' and 'ncep_frc_rhum_slp.nc', are
     generated for use with ROMS. NOTE: You will have to use 'ncks'
     to eliminate the empty forcing fields between the two files
-    to prevent ROMS from loading them. 
+    to prevent ROMS from loading them.
     """
     # Load the grid
     grid = seapy.model.asgrid(grid)
@@ -281,4 +281,3 @@ def gen_direct_forcing(his_file, frc_file):
         if f in infile.variables:
             nc.variables[f][:] = infile.variables[f][:]
     nc.close()
-

@@ -3,7 +3,7 @@
   Functions to generate ROMS netcdf files
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -1309,5 +1309,3 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
 
 if __name__ == "__main__":
     grid = create_zlevel("test.nc")
-
-

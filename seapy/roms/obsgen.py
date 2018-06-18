@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -86,7 +86,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
                   reftime=seapy.default_epoch):
     """
     Apply predicted barotropic tides to the SSH values of given observations
-    using the tide_file given. 
+    using the tide_file given.
 
     Parameters
     ----------
@@ -264,7 +264,7 @@ class obsgen(object):
             outside of the time period)
         end_time : datetime, optional
             ending date and time for data to process (ignore files that are
-            outside of the time period). If start_time is provided, and 
+            outside of the time period). If start_time is provided, and
             end_time is not, then a period of one day is assumed.
         clobber : bool, optional
             If TRUE, overwrite any existing output files. If False, the
@@ -1330,5 +1330,3 @@ class argo_ctd(obsgen):
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
-
-

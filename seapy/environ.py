@@ -3,7 +3,7 @@
   Module to store all environment variables in an easy dictionary
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -17,4 +17,3 @@ class options(object):
 opt = options()
 for key in os.environ.keys():
     setattr(opt, key, os.environ[key])
-

@@ -7,7 +7,7 @@ State Estimation and Analysis for PYthon
 Module to compute tidal energy from a column of data.
 
 Written by Brian Powell on 03/30/16
-Copyright (c)2017 University of Hawaii under the MIT-License.
+Copyright (c)2018 University of Hawaii under the MIT-License.
 
 Notes
 -----
@@ -19,7 +19,7 @@ Barotropic to Baroclinic conversion is given by:
     C=1 / T_t \int_0^T_t P'_t * wbar_t * dt,                    (1)
 
 where, T_t is the tidal period for consituent, t, P' is the pressure perturbation,
-wbar is the vertical velocity. Hence, conversion is the time average of the 
+wbar is the vertical velocity. Hence, conversion is the time average of the
 vertical motion of the bottom pressure perturbation. We can do it spectrally if
 we represent P'_t and wbar_t as waves:
 
@@ -58,7 +58,7 @@ Displacement is given by:
 
 where rho' is the density anomaly and N**2 is the Brunt-Vaisala. NOTE:
 this is integrated over one-half period becuase (by definition), it would
-integrate to zero. However, if we know the tidal vertical velocity, then 
+integrate to zero. However, if we know the tidal vertical velocity, then
 we can integrate it for one-half period for the todal displacement:
 
 .. math::
@@ -143,8 +143,8 @@ def tidal_energy(time, hz, u, v, w, pressure, bvf=None, tides=None,
     Calculate aspects of tidal energy from the given data: baroclinic energy flux,
     HKE, APE, displacement, and conversion.
 
-    This only works for a single depth profile, and the arrays are to be 2D with 
-    dimensions of [time, depth] with depth index 0 as the bottom and inded -1 as 
+    This only works for a single depth profile, and the arrays are to be 2D with
+    dimensions of [time, depth] with depth index 0 as the bottom and inded -1 as
     the surface. Likewise, the hz field is oriented the same.
 
     Parameters
@@ -165,7 +165,7 @@ def tidal_energy(time, hz, u, v, w, pressure, bvf=None, tides=None,
       Brunt-Vaisala Frequency of the 3D field [s**-1]. If not specified
       the APE will not be computed
     tides: list of strings, optional
-      The names of the tides to use for analysis. If none 
+      The names of the tides to use for analysis. If none
       provided, use the defaults from seapy.tide
     ubar : ndarray, optional
       u-component of barotropic velocity [m s**-1]. If none

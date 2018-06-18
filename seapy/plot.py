@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
   plot.py
-  
+
   State Estimation and Analysis for PYthon
 
   Module with plotting utilities
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -39,5 +39,3 @@ def stackbar(x, y, colors=None, **kwargs):
             if np.any(l):
                 plt.bar(x[l], y[i, l], color=colors[i], bottom=s[l], **kwargs)
                 s[l] += y[i, l]
-
-

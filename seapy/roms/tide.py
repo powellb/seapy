@@ -5,7 +5,7 @@
   Methods for working tidal forcing files in ROMS
 
   Written by Brian Powell on 04/05/16
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -124,7 +124,7 @@ def load_forcing(filename):
 def tide_error(his_file, tide_file, grid=None):
     """
     Calculates the tidal error for each point given a model history and the
-    tidal file used 
+    tidal file used
 
     Parameters
     ----------
@@ -139,7 +139,7 @@ def tide_error(his_file, tide_file, grid=None):
     Returns
     -------
       tide_error : masked_array,
-        Array containing the tidal error at each point, with land points masked 
+        Array containing the tidal error at each point, with land points masked
 
     """
     if grid:

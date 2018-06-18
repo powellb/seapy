@@ -6,7 +6,7 @@
 
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import seapy
@@ -23,7 +23,7 @@ def average_err(x, window=5):
     x: ndarray,
         The time-series of data to bandpass filter.
     cutoff: float,
-        The period at which the bandpass filter will apply the cutoff. 
+        The period at which the bandpass filter will apply the cutoff.
         Units are same as the time-step of the signal provided (e.g., if the
         data are provided every hour, then a cutoff=12 would be a 12 hour
         cutoff.)
@@ -83,13 +83,13 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
         The time-step between the values in x. Units must be consistent
         with the cutoff period.
     low_cutoff: float,
-        The period at which the bandpass filter will apply the lowpass filter. 
+        The period at which the bandpass filter will apply the lowpass filter.
         Units are same as the time-step of the signal provided (e.g., if the
         data are provided every hour, then a cutoff=12 would be a 12 hour
         cutoff.) Everything that has a longer period will remain. If you only
         want a hi-pass filter, this value should be None.
     hi_cutoff: float,
-        The period at which the bandpass filter will apply the high-pass filter. 
+        The period at which the bandpass filter will apply the high-pass filter.
         Units are same as the time-step of the signal provided (e.g., if the
         data are provided every hour, then a cutoff=12 would be a 12 hour
         cutoff.) Everything that has a shorter period will remain. If you only
@@ -152,5 +152,3 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
             nx[r] = scipy.signal.filtfilt(
                 b, a, x[r], padlen=5 * padlen, axis=0)
     return nx
-
-

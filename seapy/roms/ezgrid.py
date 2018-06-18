@@ -4,7 +4,7 @@
 
   Functions for generating ROMS grid files
 
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
@@ -36,7 +36,7 @@ def create_grid(grid_file, lat, lon):
 
     Returns
     -------
-    netCDF4 : 
+    netCDF4 :
       The netcdf object of the new grid
 
     Examples
@@ -225,7 +225,7 @@ def calc_latlon(llcrnrlat, llcrnrlon, reseta, resxi=None, rotate=0):
 
     Examples
     --------
-    Create a grid of 1km resolution in both eta and xi, 
+    Create a grid of 1km resolution in both eta and xi,
     rotated toward the SE by 33 degrees, with the lower left
     point at 20N, 150E:
 

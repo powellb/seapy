@@ -5,7 +5,7 @@
   ROMS climatology utilities
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 
@@ -82,5 +82,3 @@ def gen_bry_clim(clim_file, grid, bry, clobber=False, cdl=None):
             ncout.sync()
         ncin.close()
     ncout.close()
-
-

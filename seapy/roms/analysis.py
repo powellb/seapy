@@ -5,7 +5,7 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -519,5 +519,3 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
         dep = obs.z if np.mean(obs.z[idx] < 0) else obs.depth
     val = obs.value if not error else np.sqrt(obs.error)
     plt.plot(val[idx], dep[idx], 'k+', **kwargs)
-
-

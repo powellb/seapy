@@ -5,7 +5,7 @@
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
-  Copyright (c)2017 University of Hawaii under the MIT-License.
+  Copyright (c)2018 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -491,4 +491,3 @@ def wvelocity(grid, u, v, zeta=0, scale=False):
 
 
 pass
-
