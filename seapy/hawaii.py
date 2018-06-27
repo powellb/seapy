@@ -12,7 +12,7 @@
     Assume you have longitude, latitude, and sst values:
 
     >>> m=seapy.hawaii()
-    >>> m.pcolor(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
+    >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
     >>> m.land()
     >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
     >>> m.ax.patch.set_facecolor("aqua")
