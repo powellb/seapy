@@ -255,12 +255,15 @@ def gen_direct_forcing(his_file, frc_file):
 
     # Copy the data over
     time = infile.variables['ocean_time'][:]
+    nc.variables['frc_time'][:] = netCDF4.date2num(netCDF4.num2date(
+        time,
+        infile.variables['ocean_time'].units), nc.variables['frc_time'].units)
     for x in seapy.progressbar.progress(seapy.chunker(range(len(time)), 1000)):
         nc.variables['SSS'][x, :, :] = seapy.convolve_mask(
             infile.variables['salt'][x, -1, :, :], copy=False)
         if 'EminusP' in infile.variables:
             nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
-                infile.variables['EminusP'][x, :, :], copy=False)
+                infile.variables['EminusP'][x, :, :], copy=False) * 86400
         elif 'swflux' in infile.variables:
             nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
                 infile.variables['swflux'][x, :, :], copy=False)
@@ -269,14 +272,13 @@ def gen_direct_forcing(his_file, frc_file):
                 infile.variables['ssflux'][x, :, :]
                 / nc.variables['SSS'][x, :, :], copy=False)
 
+        nc.sync()
         for f in ("sustr", "svstr", "shflux", "swrad"):
             if f in infile.variables:
                 nc.variables[f][x, :, :] = seapy.convolve_mask(
                     infile.variables[f][x, :, :], copy=False)
-        nc.sync()
-    nc.variables['frc_time'][:] = netCDF4.date2num(netCDF4.num2date(
-        time,
-        infile.variables['ocean_time'].units), nc.variables['frc_time'].units)
+                nc.sync()
+
     for f in ("lat_rho", "lat_u", "lat_v", "lon_rho", "lon_u", "lon_v"):
         if f in infile.variables:
             nc.variables[f][:] = infile.variables[f][:]

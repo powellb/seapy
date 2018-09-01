@@ -73,7 +73,7 @@ class map(object):
 
     def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
                  urcrnrlat=40, proj='lcc', resolution='c', figsize=(8., 6.),
-                 dlat=1, dlon=2, fig=None, ax=None, fill_color="aqua"):
+                 dlat=1, dlon=2, fig=None, ax=None, fontsize=12, fill_color="aqua"):
         """
         map class for abstracting the basemap methods for quick and easy creation
         of geographically referenced data figures
@@ -132,11 +132,14 @@ class map(object):
                                resolution=resolution, area_thresh=0.0, ax=ax)
 
         self.figsize = figsize
-        self.dlon = dlon
-        self.dlat = dlat
+        delta = np.abs(urcrnrlon - llcrnrlon)
+        self.dlon = np.minimum(delta / 4, dlon)
+        delta = np.abs(urcrnrlat - llcrnrlat)
+        self.dlat = np.minimum(delta / 4, dlat)
         self.fig = fig
         self.ax = ax
         self.fill_color = fill_color
+        self.fontsize = fontsize
         reset = True if fig is None else False
         self.new_figure(reset=reset)
 
@@ -179,7 +182,7 @@ class map(object):
         lon_lines = np.arange(nticks) * self.dlon + slon
         self.basemap.drawmeridians(lon_lines, color="0.5",
                                    linewidth=0.25, dashes=[1, 1, 0.1, 1],
-                                   labels=[0, 0, 0, 1], fontsize=12)
+                                   labels=[0, 0, 0, 1], fontsize=self.fontsize)
 
         # Create the latitude lines
         nticks = int((self.basemap.urcrnrlat - self.basemap.llcrnrlat) /
@@ -193,7 +196,7 @@ class map(object):
         lat_lines = np.arange(nticks) * self.dlat + slat
         self.basemap.drawparallels(lat_lines, color="0.5",
                                    linewidth=0.25, dashes=[1, 1, 0.1, 1],
-                                   labels=[1, 0, 0, 0], fontsize=12)
+                                   labels=[1, 0, 0, 0], fontsize=self.fontsize)
 
     def land(self, color="black"):
         """

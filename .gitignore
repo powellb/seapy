@@ -10,4 +10,6 @@ seapy.egg-info
 seapy/external
 notes.org
 .dir-locals.el
+.ropeproject
 /todo.org
+/todo.org_archive

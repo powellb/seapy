@@ -125,12 +125,12 @@ class grid:
         """
         # Define a dictionary to go through and convert netcdf variables
         # to internal class attributes
-        gvars = {"lat_rho": ["lat_rho", "lat", "latitude", "y_rho"],
-                 "lon_rho": ["lon_rho", "lon", "longitude", "x_rho"],
-                 "lat_u": ["lat_u", "y_u"],
-                 "lon_u": ["lon_u", "x_u"],
-                 "lat_v": ["lat_v", "y_v"],
-                 "lon_v": ["lon_v", "x_v"],
+        gvars = {"lat_rho": ["lat_rho", "lat", "latitude", "y_rho", "geolat_t"],
+                 "lon_rho": ["lon_rho", "lon", "longitude", "x_rho", "geolon_t"],
+                 "lat_u": ["lat_u", "y_u", "geolat_u"],
+                 "lon_u": ["lon_u", "x_u", "geolon_u"],
+                 "lat_v": ["lat_v", "y_v", "geolat_u"],
+                 "lon_v": ["lon_v", "x_v", "geolon_u"],
                  "mask_rho": ["mask_rho", "mask"],
                  "mask_u": ["mask_u"],
                  "mask_v": ["mask_v"],
@@ -148,7 +148,7 @@ class grid:
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
-                 "z": ["z", "depth", "lev"]
+                 "z": ["z", "depth", "lev", "st_ocean"]
                  }
 
         # Open the file
@@ -379,7 +379,7 @@ class grid:
                 self._nc = seapy.netcdf(self.filename)
 
             # Try to load a field from the file
-            for f in ["temp", "temperature", "water_temp"]:
+            for f in ["temp", "temperature", "water_temp", "fed"]:
                 if f in self._nc.variables:
                     fld = self._nc.variables[f][0, :, :, :]
                     fld = np.ma.array(fld, mask=np.isnan(fld))
