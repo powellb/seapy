@@ -253,7 +253,7 @@ def gen_direct_forcing(his_file, frc_file):
                                             os.path.basename(his_file))
 
     # Copy the data over
-    time = seapy.roms.num2date(infile, 'ocean_time'])
+    time = seapy.roms.num2date(infile, 'ocean_time')
     nc.variables['frc_time'][: ] = seapy.roms.date2num(time, nc, 'frc_time')
     for x in seapy.progressbar.progress(seapy.chunker(range(len(time)), 1000)):
         nc.variables['SSS'][x, :, : ] = seapy.convolve_mask(

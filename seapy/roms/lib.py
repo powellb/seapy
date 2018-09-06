@@ -290,15 +290,25 @@ def _get_calendar(var):
 
     Returns
     -------
-    string defining the calendar type
+    calendar type: string,
+      The type of calendar system used
+    convert : bool
+      True if the calendar needs to be converted to datetime
     """
-    cal = 'gregorian'
+    # Set up the mapping for calendars
+    default = 1
+    standard = np.s_[:3]
+    calendar_types = ['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 
+                      'julian', 'all_leap', '365_day', '366_day', '360_day'] 
+    cals = { v:v for v in calendar_types }
+    cals['gregorian_proleptic'] = 'proleptic_gregorian'
 
     # Load the calendar type. If it is incorrectly specified (*cough* ROMS), change it
-    if 'calendar' in var:
-        cal = var.calendar
-        cal = 'proleptic_gregorian' if cal == 'gregorian_proleptic' else cal
-    return cal
+    for cal in ('calendar', 'calendar_type'):
+        if hasattr(var, cal):
+            cal = cals.get(str(getattr(var, cal)).lower(), calendar_types[default])
+            return cal, False if cal in calendar_types[standard] else True
+    return calendar_types[default], False
 
 
 def date2num(dates, nc, tvar=None):
@@ -324,10 +334,11 @@ def date2num(dates, nc, tvar=None):
     """
     tvar = tvar if tvar else get_timevar(nc)
 
+    calendar, _ = _get_calendar(nc.variables[tvar])
     # Convert the times
     return netCDF4.date2num(dates,
                             nc.variables[tvar].units,
-                            calendar=_get_calendar(nc.variables[tvar]))
+                            calendar = calendar)
 
 
 def num2date(nc, tvar=None, records=None, epoch=None):
@@ -354,14 +365,20 @@ def num2date(nc, tvar=None, records=None, epoch=None):
     ndarray,
        Array of datetimes if no epoch is supplied. If epoch, array
        is in days since epoch
-    """
-    records = records if records else np.s_[:]
+    """  
+    import datetime
+    records = records if records is not None else np.s_[:]
     tvar = tvar if tvar else get_timevar(nc)
+    calendar, convert = _get_calendar(nc.variables[tvar])
 
     # Load the times
     times = netCDF4.num2date(nc.variables[tvar][records],
                              nc.variables[tvar].units,
-                             calendar=_get_calendar(nc.variables[tvar]))
+                             calendar=calendar)
+    if convert:
+        times = [ datetime.datetime.strptime(t.strftime(), '%Y-%m-%d %H:%M:%S')
+                  for t in times ]
+
     if not epoch:
         return times
     else:
@@ -410,10 +427,11 @@ def get_reftime(nc, epoch=default_epoch):
         name of variable used to generate the base (None if default)
     """
     try:
-        time = get_timevar(nc)
+        tvar = get_timevar(nc)
+        calendar, _ = _get_calendar(nc.variables[tvar])
 
-        return netCDF4.num2date(0, nc.variables[time].units,
-                                calendar=_get_calendar(nc.variables[time])), time
+        return netCDF4.num2date(0, nc.variables[tvar].units,
+                                calendar=calendar), tvar
     except AttributeError:
         return epoch, None
 
