@@ -59,10 +59,9 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None,
                                         title="generated from " + roms_file)
     grid.to_netcdf(ncini)
     if time is None:
-        time = netCDF4.num2date(ncroms.variables[romstime][record],
-                                ncroms.variables[romstime].units)
-    ncini.variables["ocean_time"][:] = netCDF4.date2num(time,
-                                                        ncini.variables["ocean_time"].units)
+        time = seapy.roms.num2date(ncroms, romstime, record)
+    ncini.variables["ocean_time"][:] = seapy.roms.date2num(
+        time, ncini, "ocean_time")
 
     # Fill up the initial state with the roms file data
     for var in seapy.roms.fields:

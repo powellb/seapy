@@ -57,8 +57,7 @@ def load_history(filename,
     soda = netCDF4.Dataset(url)
 
     # Figure out the time records that are required
-    soda_time = netCDF4.num2date(soda.variables["time"][:],
-                                 soda.variables["time"].units)
+    soda_time = seapy.roms.num2date(hycom, "time")
 
     time_list = np.where(np.logical_and(soda_time >= start_time,
                                         soda_time <= end_time))
@@ -95,8 +94,8 @@ def load_history(filename,
         his.variables["lat"][:] = soda_lat[latlist]
         his.variables["lon"][:] = soda_lon[lonlist]
         his.variables["depth"][:] = soda.variables["lev"]
-        his.variables["time"][:] = netCDF4.date2num(soda_time[time_list],
-                                                    his.variables["time"].units)
+        his.variables["time"][:] = seapy.roms.date2num(
+            soda_time[time_list], his, 'time')
     # Loop over the variables
     sodavars = {"ssh": 3, "u": 4, "v": 4, "temp": 4, "salt": 4}
     hisvars = {"ssh": "zeta", "u": "u", "v": "v", "temp": "temp",

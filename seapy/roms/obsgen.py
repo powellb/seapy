@@ -443,9 +443,8 @@ class aviso_sla_map(obsgen):
         lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
-        time = netCDF4.num2date(nc.variables["time"][0],
-                                nc.variables["time"].units) - self.epoch
-        time = time.total_seconds() * seapy.secs2day
+        time = seapy.roms.get_time(
+            nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
         lon, lat = np.meshgrid(lon, lat)
         lat = lat.flatten()
@@ -522,7 +521,7 @@ class aviso_sla_track(obsgen):
         lat = nc.variables["latitude"][:]
         slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
         dat = nc.variables[slaname][:]
-        time = seapy.roms.get_time(nc, "time", epoch=self.epoch)
+        time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
         nc.close()
 
         # make them into vectors
@@ -590,9 +589,8 @@ class ostia_sst_map(obsgen):
         err = np.ma.masked_outside(np.squeeze(
             nc.variables["analysis_error"][:]), 0.01, 2.0)
         dat[err.mask] = np.ma.masked
-        time = netCDF4.num2date(nc.variables["time"][0],
-                                nc.variables["time"].units) - self.epoch
-        time = time.total_seconds() * seapy.secs2day
+        time = seapy.roms.num2date(
+            nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
         if self.grid.east():
             lon[lon < 0] += 360
@@ -657,9 +655,8 @@ class navo_sst_map(obsgen):
         # temperature (ie at around 4m depth, below the e-folding depths of
         # sunlight in the ocean so the product does not have a diuranl cycle
         # (ie you don;t have to worry about hourly variations)
-        time = netCDF4.num2date(nc.variables["time"][0],
-                                nc.variables["time"].units) - self.epoch
-        time = time.total_seconds() * seapy.secs2day
+        time = seapy.roms.num2date(
+            nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
 
         # here we set the depth to be 4 m below the surface
@@ -777,8 +774,7 @@ class remss_swath(obsgen):
                 np.squeeze(nc.variables["quality_level"][:]).data == 1, dat)
 
         # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][0],
-                                nc.variables["time"].units) - self.epoch
+        time = seapy.roms.num2date(nc, "time", records=[0])[0] - self.epoch
         dtime = nc.variables["sst_dtime"][:]
         time = np.squeeze((time.total_seconds() + dtime) * seapy.secs2day)
         nc.close()
@@ -832,10 +828,7 @@ class remss_map(obsgen):
         err[flags.mask] = np.ma.masked
 
         # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][:],
-                                nc.variables["time"].units)
-        time = np.array([(t - self.epoch).total_seconds() * seapy.secs2day
-                         for t in time])
+        time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
         sst_time = nc.variables["sst_dtime"][:] * seapy.secs2day
         for n, i in enumerate(time):
             sst_time[n, :, :] += i
@@ -1156,9 +1149,7 @@ class tao_mooring(mooring):
         if not self.grid.east():
             lon[lon > 180] -= 360
         lat, lon = np.meshgrid(lat, lon)
-        time = netCDF4.num2date(nc.variables["time"][:],
-                                nc.variables["time"].units) - self.epoch
-        time = list(map(lambda x: x.total_seconds() * seapy.secs2day, time))
+        time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
         depth = -nc.variables["depth"][:]
         profile_list = np.where(np.logical_and.reduce((
             lon >= np.min(self.grid.lon_rho),

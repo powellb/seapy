@@ -152,7 +152,7 @@ def tide_error(his_file, tide_file, grid=None):
 
     # Calculate tidal error for each point
     nc = seapy.netcdf(his_file)
-    times = seapy.roms.get_time(nc)
+    times = seapy.roms.num2date(nc)
     tide_error = np.ma.masked_where(
         grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
     zeta = nc.variables['zeta'][:]

@@ -266,7 +266,9 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         fld = seapy.roms.fields.get(dest, {"dims": 3})
 
         # Only interpolate the fields we want in the destination
-        if (dest not in ncout.variables) or ("rotate" in fld):
+        if (dest not in ncout.variables) or \
+           (dest not in ncsrc.variables) or \
+           ("rotate" in fld):
             continue
 
         if fld["dims"] == 2:
@@ -614,10 +616,8 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
     else:
         ncout = netCDF4.Dataset(z_file, "a")
 
-    ncout.variables["time"][:] = netCDF4.date2num(
-        netCDF4.num2date(ncsrc.variables[time][records],
-                         ncsrc.variables[time].units),
-        ncout.variables["time"].units)
+    ncout.variables["time"][:] = seapy.roms.date2num(
+        seapy.roms.num2date(ncsrc, time, records), ncout, "time")
 
     # Call the interpolation
     try:
@@ -700,10 +700,9 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
                                                 reftime=src_ref,
                                                 title="interpolated from " + src_file)
             destg.to_netcdf(ncout)
-            ncout.variables["ocean_time"][:] = netCDF4.date2num(
-                netCDF4.num2date(ncsrc.variables[time][records],
-                                 ncsrc.variables[time].units),
-                ncout.variables["ocean_time"].units)
+            ncout.variables["ocean_time"][:] = seapy.roms.date2num(
+                seapy.roms.num2date(ncsrc, time, records),
+                ncout, "ocean_time")
 
     if os.path.isfile(dest_file):
         ncout = netCDF4.Dataset(dest_file, "a")
@@ -796,10 +795,9 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
                                              clobber=clobber,
                                              cdl=cdl,
                                              title="interpolated from " + src_file)
-        src_time = netCDF4.num2date(ncsrc.variables[time][records],
-                                    ncsrc.variables[time].units)
-        ncout.variables["clim_time"][:] = netCDF4.date2num(
-            src_time, ncout.variables["clim_time"].units)
+        src_time = seapy.roms.num2date(ncsrc, time, records)
+        ncout.variables["clim_time"][:] = seapy.roms.date2num(
+            src_time, ncout, "clim_time")
     else:
         raise AttributeError(
             "you must supply a destination file or a grid to make the file")

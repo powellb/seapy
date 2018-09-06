@@ -280,12 +280,37 @@ def gen_boundary_region(shp, north=None, east=None, west=None, south=None,
     return fld
 
 
-def get_time(nc, tvar=None, epoch=None):
+def _get_calendar(var):
     """
-    Load the time vector from a netCDF file as a datetime array.
+    Get the proper calendar string from a netcdf file
 
     Parameters
     ----------
+    var : netCDF4.variable
+
+    Returns
+    -------
+    string defining the calendar type
+    """
+    cal = 'gregorian'
+
+    # Load the calendar type. If it is incorrectly specified (*cough* ROMS), change it
+    if 'calendar' in var:
+        cal = var.calendar
+        cal = 'proleptic_gregorian' if cal == 'gregorian_proleptic' else cal
+    return cal
+
+
+def date2num(dates, nc, tvar=None):
+    """
+    Convert the datetime vector to number for the given netcdf files considering
+    the units and the calendar type used. This is a wrapper to the netCDF4.date2num
+    function to account for calendar strangeness in ROMS
+
+    Parameters
+    ----------
+    dates : array of datetime.datetime
+      Values to convert
     nc : netCDF4.Dataset,
       netcdf input file
     tvar : string, optional
@@ -295,12 +320,48 @@ def get_time(nc, tvar=None, epoch=None):
     Returns
     -------
     ndarray,
+       Array of values in the correct units/calendar of the netCDF file
+    """
+    tvar = tvar if tvar else get_timevar(nc)
+
+    # Convert the times
+    return netCDF4.date2num(dates,
+                            nc.variables[tvar].units,
+                            calendar=_get_calendar(nc.variables[tvar]))
+
+
+def num2date(nc, tvar=None, records=None, epoch=None):
+    """
+    Load the time vector from a netCDF file as a datetime array, accounting
+    for units and the calendar type used. This is a wrapper to the netCDF4.num2date
+    function to account for calendar strangeness in ROMS
+
+    Parameters
+    ----------
+    nc : netCDF4.Dataset,
+      netcdf input file
+    tvar : string, optional
+      time variable to load. If not specified, it will find the
+      time variable from predefined
+    records : array or slice, optional
+      the indices of records to load
+    epoch : datetime.datetime, optional
+      if you would like the values relative to an epoch, then
+      specify the epoch to remove.
+
+    Returns
+    -------
+    ndarray,
        Array of datetimes if no epoch is supplied. If epoch, array
        is in days since epoch
     """
+    records = records if records else np.s_[:]
     tvar = tvar if tvar else get_timevar(nc)
-    times = netCDF4.num2date(nc.variables[tvar][:],
-                             nc.variables[tvar].units)
+
+    # Load the times
+    times = netCDF4.num2date(nc.variables[tvar][records],
+                             nc.variables[tvar].units,
+                             calendar=_get_calendar(nc.variables[tvar]))
     if not epoch:
         return times
     else:
@@ -350,7 +411,9 @@ def get_reftime(nc, epoch=default_epoch):
     """
     try:
         time = get_timevar(nc)
-        return netCDF4.num2date(0, nc.variables[time].units), time
+
+        return netCDF4.num2date(0, nc.variables[time].units,
+                                calendar=_get_calendar(nc.variables[time])), time
     except AttributeError:
         return epoch, None
 

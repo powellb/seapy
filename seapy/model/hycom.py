@@ -58,8 +58,7 @@ def load_history(filename,
     hycom = netCDF4.Dataset(url)
 
     # Figure out the time records that are required
-    hycom_time = netCDF4.num2date(hycom.variables["time"][:],
-                                  hycom.variables["time"].units)
+    hycom_time = seapy.roms.num2date(hycom, "time")
 
     time_list = np.where(np.logical_and(hycom_time >= start_time,
                                         hycom_time <= end_time))
@@ -96,8 +95,9 @@ def load_history(filename,
         his.variables["lat"][:] = hycom_lat[latlist]
         his.variables["lon"][:] = hycom_lon[lonlist]
         his.variables["depth"][:] = hycom.variables["depth"]
-        his.variables["time"][:] = netCDF4.date2num(hycom_time[time_list],
-                                                    his.variables["time"].units)
+        his.variables["time"][:] = seapy.roms.date2num(
+            hycom_time[time_list], his, 'time')
+
     # Loop over the variables
     hycomvars = {"surf_el": 3, "water_u": 4, "water_v": 4, "water_temp": 4,
                  "salinity": 4}

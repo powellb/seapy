@@ -9,7 +9,8 @@
 
   - :func:`~seapy.roms.lib.depth`
   - :func:`~seapy.roms.lib.get_reftime`
-  - :func:`~seapy.roms.lib.get_time`
+  - :func:`~seapy.roms.lib.date2num`
+  - :func:`~seapy.roms.lib.num2date`
   - :func:`~seapy.roms.lib.get_timevar`
   - :func:`~seapy.roms.lib.stretching`
   - :func:`~seapy.roms.lib.thickness`

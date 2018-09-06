@@ -68,10 +68,8 @@ def from_roms(roms_file, bry_file, grid=None, records=None,
                                         title="generated from " + roms_file)
     brytime = seapy.roms.get_timevar(ncbry)
     grid.to_netcdf(ncbry)
-    ncbry.variables["bry_time"][:] = netCDF4.date2num(
-        netCDF4.num2date(ncroms.variables[time][records],
-                         ncroms.variables[time].units),
-        ncbry.variables[brytime].units)
+    ncbry.variables[brytime][:] = seapy.roms.date2num(
+        seapy.roms.num2date(ncroms, time, records), ncbry, brytime)
 
     for var in seapy.roms.fields:
         if var in ncroms.variables:
@@ -482,9 +480,8 @@ def from_stations(station_file, bry_file, grid=None):
         rng = np.s_[0:np.min(dup)]
         statime = statime[rng]
     brytime = seapy.roms.get_timevar(ncbry)
-    ncbry.variables["bry_time"][:] = netCDF4.date2num(
-        netCDF4.num2date(statime, ncstation.variables[time].units),
-        ncbry.variables[brytime].units)
+    ncbry.variables[brytime][:] = seapy.roms.date2num(
+        seapy.roms.num2date(ncstation, time, rng), ncbry, brytime)
 
     # Set up the indices
     bry = {
@@ -725,8 +722,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
 
     # Get the definitions of the boundary file
     epoch, timevar = seapy.roms.get_reftime(bry)
-    time = netCDF4.num2date(bry.variables[timevar][:],
-                            bry.variables[timevar].units)
+    time = seapy.roms.num2date(bry, timevar)
 
     # Pick the time for the tide file reference
     if not tide_start:

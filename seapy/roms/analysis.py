@@ -291,8 +291,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     fields = set(nc.variables).intersection(fields)
 
     # Build the output file
-    time_var = seapy.roms.get_timevar(nc)
-    epoch = netCDF4.num2date(0, nc.variables[time_var].units)
+    epoch, time_var = seapy.roms.get_reftime(nc)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_ini_std(std_file,
                                                eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
@@ -355,8 +354,7 @@ def gen_std_f(roms_file, std_file, records=None, fields=None):
     fields = set(nc.variables).intersection(fields)
 
     # Build the output file
-    time_var = seapy.roms.get_timevar(nc)
-    epoch = netCDF4.num2date(0, nc.variables[time_var].units)
+    epoch, time_var = seapy.roms.get_reftime(nc)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_frc_std(std_file,
                                                eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
