@@ -172,7 +172,6 @@ class grid:
             for inp in gvars[var]:
                 if inp in ncvars:
                     self.key[var] = inp
-                    print(var, inp)
                     self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 
