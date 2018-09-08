@@ -298,15 +298,16 @@ def _get_calendar(var):
     # Set up the mapping for calendars
     default = 1
     standard = np.s_[:3]
-    calendar_types = ['standard', 'gregorian', 'proleptic_gregorian', 'noleap', 
-                      'julian', 'all_leap', '365_day', '366_day', '360_day'] 
-    cals = { v:v for v in calendar_types }
+    calendar_types = ['standard', 'gregorian', 'proleptic_gregorian', 'noleap',
+                      'julian', 'all_leap', '365_day', '366_day', '360_day']
+    cals = {v: v for v in calendar_types}
     cals['gregorian_proleptic'] = 'proleptic_gregorian'
 
     # Load the calendar type. If it is incorrectly specified (*cough* ROMS), change it
     for cal in ('calendar', 'calendar_type'):
         if hasattr(var, cal):
-            cal = cals.get(str(getattr(var, cal)).lower(), calendar_types[default])
+            cal = cals.get(str(getattr(var, cal)).lower(),
+                           calendar_types[default])
             return cal, False if cal in calendar_types[standard] else True
     return calendar_types[default], False
 
@@ -338,7 +339,7 @@ def date2num(dates, nc, tvar=None):
     # Convert the times
     return netCDF4.date2num(dates,
                             nc.variables[tvar].units,
-                            calendar = calendar)
+                            calendar=calendar)
 
 
 def num2date(nc, tvar=None, records=None, epoch=None):
@@ -365,7 +366,7 @@ def num2date(nc, tvar=None, records=None, epoch=None):
     ndarray,
        Array of datetimes if no epoch is supplied. If epoch, array
        is in days since epoch
-    """  
+    """
     import datetime
     records = records if records is not None else np.s_[:]
     tvar = tvar if tvar else get_timevar(nc)
@@ -376,8 +377,8 @@ def num2date(nc, tvar=None, records=None, epoch=None):
                              nc.variables[tvar].units,
                              calendar=calendar)
     if convert:
-        times = [ datetime.datetime.strptime(t.strftime(), '%Y-%m-%d %H:%M:%S')
-                  for t in times ]
+        times = [datetime.datetime.strptime(t.strftime(), '%Y-%m-%d %H:%M:%S')
+                 for t in times]
 
     if not epoch:
         return times

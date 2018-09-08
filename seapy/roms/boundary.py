@@ -16,11 +16,11 @@ import textwrap
 from collections import namedtuple
 
 # Define the sides of ROMS boundaries along with the DA ordering
-__side_info = namedtuple("__side_info", "indices order slice")
-sides = {"west": __side_info((np.s_[:], 0), 1, 0),
-         "south": __side_info((0, np.s_[:]), 2, 1),
-         "east": __side_info((np.s_[:], -1), 3, 0),
-         "north": __side_info((-1, np.s_[:]), 4, 1)}
+__side_info = namedtuple("__side_info", "indices order xi")
+sides = {"west": __side_info((np.s_[:], 0), 1, False),
+         "south": __side_info((0, np.s_[:]), 2, True),
+         "east": __side_info((np.s_[:], -1), 3, False),
+         "north": __side_info((-1, np.s_[:]), 4, True)}
 
 
 def from_roms(roms_file, bry_file, grid=None, records=None,
@@ -753,7 +753,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
         lvar = "zeta_" + side
         idx = sides[side].indices
         lat = grid.lat_rho[idx[0], idx[1]]
-        size = grid.xi_rho if sides[side].slice else grid.eta_rho
+        size = grid.xi_rho if sides[side].xi else grid.eta_rho
         if lvar in bry.variables:
             print(lvar)
             zeta = np.ma.array(bry.variables[lvar][:])
@@ -768,13 +768,13 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
-                    if sides[side].slice == 0:
-                        eamp[n, i, idx[1]] = out['major'][t].amp
-                        epha[n, i, idx[1]] = np.mod(
-                            out['major'][t].phase, 2 * np.pi)
-                    else:
+                    if sides[side].xi:
                         eamp[n, idx[0], i] = out['major'][t].amp
                         epha[n, idx[0], i] = np.mod(
+                            out['major'][t].phase, 2 * np.pi)
+                    else:
+                        eamp[n, i, idx[1]] = out['major'][t].amp
+                        epha[n, i, idx[1]] = np.mod(
                             out['major'][t].phase, 2 * np.pi)
 
             # Save out the detided information
@@ -793,16 +793,16 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             # Load data, put onto rho-grid, and rotate
             bubar = np.ma.array(bry.variables[uvar][:]).filled(0)
             bvbar = np.ma.array(bry.variables[vvar][:]).filled(0)
-            if sides[side].slice == 0:
-                vbar[:, 1:-1] = 0.5 * (bvbar[:, 1:] + bvbar[:, :-1])
-                vbar[:, 0] = bvbar[:, 1]
-                vbar[:, -1] = bvbar[:, -2]
-                ubar = bubar.copy()
-            else:
+            if sides[side].xi:
                 ubar[:, 1:-1] = 0.5 * (bubar[:, 1:] + bubar[:, :-1])
                 ubar[:, 0] = bubar[:, 1]
                 ubar[:, -1] = bubar[:, -2]
                 vbar = bvbar.copy()
+            else:
+                vbar[:, 1:-1] = 0.5 * (bvbar[:, 1:] + bvbar[:, :-1])
+                vbar[:, 0] = bvbar[:, 1]
+                vbar[:, -1] = bvbar[:, -2]
+                ubar = bubar.copy()
             ubar, vbar = seapy.rotate(ubar, vbar, grid.angle[idx[0], idx[1]])
             bubar = bvbar = []
 
@@ -818,24 +818,24 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
 
                 # Save the amp/phase in the tide file
                 for n, t in enumerate(tides):
-                    if sides[side].slice == 0:
-                        cmax[n, i, idx[1]] = out['major'][t].amp
-                        cmin[n, i, idx[1]] = out['minor'][t].amp
-                        cpha[n, i, idx[1]] = out['major'][t].phase
-                        cang[n, i, idx[1]] = out['minor'][t].phase
-                    else:
+                    if sides[side].xi:
                         cmax[n, idx[0], i] = out['major'][t].amp
                         cmin[n, idx[0], i] = out['minor'][t].amp
                         cpha[n, idx[0], i] = out['major'][t].phase
                         cang[n, idx[0], i] = out['minor'][t].phase
+                    else:
+                        cmax[n, i, idx[1]] = out['major'][t].amp
+                        cmin[n, i, idx[1]] = out['minor'][t].amp
+                        cpha[n, i, idx[1]] = out['major'][t].phase
+                        cang[n, i, idx[1]] = out['minor'][t].phase
 
             ubar, vbar = seapy.rotate(ubar, vbar, -grid.angle[idx[0], idx[1]])
-            if sides[side].slice == 0:
-                bry.variables[vvar][:] = 0.5 * (vbar[:, 1:] + vbar[:, :-1])
-                bry.variables[uvar][:] = ubar
-            else:
+            if sides[side].xi:
                 bry.variables[uvar][:] = 0.5 * (ubar[:, 1:] + ubar[:, :-1])
                 bry.variables[vvar][:] = vbar
+            else:
+                bry.variables[vvar][:] = 0.5 * (vbar[:, 1:] + vbar[:, :-1])
+                bry.variables[uvar][:] = ubar
             bry.sync()
             ubar = vbar = []
 
