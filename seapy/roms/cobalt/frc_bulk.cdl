@@ -1,0 +1,91 @@
+netcdf frc_bulk {
+
+dimensions:
+    lon = 111 ;
+    lat = 241 ;
+    frc_time = UNLIMITED ; // (0 currently)
+
+variables:
+    float lat(lat, lon) ;
+        lat:long_name = "Latitude" ;
+        lat:units = "degrees_north" ;
+    float lon(lat, lon) ;
+        lon:long_name = "Longitude" ;
+        lon:units = "degrees_east" ;
+    double frc_time(frc_time) ;
+        frc_time:long_name = "atmospheric forcing frc_time" ;
+        frc_time:units = "days since 1940-01-01 00:00:00" ;
+    float Uwind(frc_time, lat, lon) ;
+        Uwind:long_name = "surface u-wind component" ;
+        Uwind:units = "meter second-1" ;
+        Uwind:coordinates = "lon lat frc_time" ;
+        Uwind:time = "frc_time" ;
+    float Vwind(frc_time, lat, lon) ;
+        Vwind:long_name = "surface v-wind component" ;
+        Vwind:units = "meter second-1" ;
+        Vwind:coordinates = "lon lat frc_time" ;
+        Vwind:time = "frc_time" ;
+    float Pair(frc_time, lat, lon) ;
+        Pair:long_name = "surface air pressure" ;
+        Pair:units = "millibar" ;
+        Pair:coordinates = "lon lat frc_time" ;
+        Pair:time = "frc_time" ;
+    float Tair(frc_time, lat, lon) ;
+        Tair:long_name = "surface air temperature" ;
+        Tair:units = "Celsius" ;
+        Tair:coordinates = "lon lat frc_time" ;
+        Tair:time = "frc_time" ;
+    float Qair(frc_time, lat, lon) ;
+        Qair:long_name = "surface air relative humidity" ;
+        Qair:units = "percentage" ;
+        Qair:coordinates = "lon lat frc_time" ;
+        Qair:time = "frc_time" ;
+    float rain(frc_time, lat, lon) ;
+        rain:long_name = "rain fall rate" ;
+        rain:units = "kilogram meter-2 second-1" ;
+        rain:coordinates = "lon lat frc_time" ;
+        rain:time = "frc_time" ;
+    float swrad(frc_time, lat, lon) ;
+        swrad:long_name = "solar shortwave radiation" ;
+        swrad:units = "Watts meter-2" ;
+        swrad:coordinates = "lon lat frc_time" ;
+        swrad:positive_value = "downward flux, heating" ;
+        swrad:negative_value = "upward flux, cooling" ;
+        swrad:time = "frc_time" ;
+    float lwrad_down(frc_time, lat, lon) ;
+        lwrad_down:long_name = "net longwave radiation flux" ;
+        lwrad_down:units = "Watts meter-2" ;
+        lwrad_down:coordinates = "lon lat frc_time" ;
+        lwrad_down:positive_value = "downward flux, heating" ;
+        lwrad_down:negative_value = "upward flux, cooling" ;
+        lwrad_down:time = "frc_time" ;
+    float atmCO2(frc_time, lat, lon) ;
+        atmCO2:long_name = "atmospheric CO2" ;
+        atmCO2:units = "ppmv" ;
+        atmCO2:coordinates = "lon lat frc_time" ;
+        atmCO2:time = "frc_time" ;
+    float ironsed(frc_time, lat, lon) ;
+        ironsed:long_name = "Iron in Sediments" ;
+        ironsed:units = "mol/m2s" ;
+        ironsed:coordinates = "lon lat frc_time" ;
+        ironsed:time = "frc_time" ;
+    float fecoast(frc_time, lat, lon) ;
+        fecoast:long_name = "Coastal Iron" ;
+        fecoast:units = "(mol/kg) (m/s)" ;
+        fecoast:coordinates = "lon lat frc_time" ;
+        fecoast:time = "frc_time" ;
+    float solublefe(frc_time, lat, lon) ;
+        solublefe:long_name = "Soluble Iron" ;
+        solublefe:units = "mol/m2s" ;
+        solublefe:coordinates = "lon lat frc_time" ;
+        solublefe:time = "frc_time" ;
+    float mineralfe(frc_time, lat, lon) ;
+        mineralfe:long_name = "Mineral Iron" ;
+        mineralfe:units = "g/m2s" ;
+        mineralfe:coordinates = "lon lat frc_time" ;
+        mineralfe:time = "frc_time" ;
+
+// global attributes:
+		:type = "FORCING file" ;
+
+}
