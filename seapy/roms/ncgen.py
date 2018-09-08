@@ -90,7 +90,11 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
                 nvar = _nc.createVariable(var["name"], var["type"])
             try:
                 for key in var["attr"]:
-                    setattr(nvar, key, var["attr"][key])
+                    # Check if it is a number and convert
+                    astr = var["attr"][key].strip()
+                    astr = float(astr) if astr.replace('.', '', 1).isdigit() \
+                        else astr
+                    setattr(nvar, key, astr)
             except KeyError:
                 pass
         # Add global attributes
@@ -269,6 +273,8 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
+
+    print(dims)
 
     # Create the grid file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
