@@ -92,7 +92,8 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
                 for key in var["attr"]:
                     # Check if it is a number and convert
                     astr = var["attr"][key].strip()
-                    astr = float(astr) if astr.replace('.', '', 1).isdigit() \
+                    astr = float(astr) if \
+                        astr.lstrip('+-').replace('.', '', 1).isdigit() \
                         else astr
                     setattr(nvar, key, astr)
             except KeyError:
