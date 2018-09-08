@@ -53,7 +53,7 @@ ncep_map = {
 
 
 def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
-                     epoch=seapy.default_epoch, clobber=False):
+                     epoch=seapy.default_epoch, clobber=False, cdl=None):
     """
     Given a source file (or URL), a dictionary that defines the
     source fields mapped to the ROMS fields, then it will generate
@@ -90,6 +90,9 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
         Epoch to use for ROMS times
     clobber: bool optional,
         Delete existing file or not, default False
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
 
     Returns
     -------
@@ -201,7 +204,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     # Create the output file
     out = seapy.roms.ncgen.create_frc_bulk(outfile, lat=frc_lat.shape[0],
                                            lon=frc_lon.shape[1], reftime=epoch,
-                                           clobber=clobber)
+                                           clobber=clobber, cdl=cdl)
     out.variables['frc_time'][:] = seapy.roms.date2num(
         frc_time[time_list], out, 'frc_time')
     out.variables['lat'][:] = frc_lat
@@ -218,7 +221,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     out.close()
 
 
-def gen_direct_forcing(his_file, frc_file):
+def gen_direct_forcing(his_file, frc_file, cdl=None):
     """
     Generate a direct forcing file from a history (or other ROMS output) file. It requires
     that sustr, svstr, shflux, and ssflux (or swflux) with salt be available. This will
@@ -231,6 +234,9 @@ def gen_direct_forcing(his_file, frc_file):
       make forcing from
     frc_file: string,
       The output forcing file
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
 
     Returns
     -------
@@ -250,33 +256,34 @@ def gen_direct_forcing(his_file, frc_file):
                                             reftime=ref,
                                             clobber=True,
                                             title="Forcing from " +
-                                            os.path.basename(his_file))
+                                            os.path.basename(his_file),
+                                            cdl=cdl)
 
     # Copy the data over
     time = seapy.roms.num2date(infile, 'ocean_time')
-    nc.variables['frc_time'][: ] = seapy.roms.date2num(time, nc, 'frc_time')
+    nc.variables['frc_time'][:] = seapy.roms.date2num(time, nc, 'frc_time')
     for x in seapy.progressbar.progress(seapy.chunker(range(len(time)), 1000)):
-        nc.variables['SSS'][x, :, : ] = seapy.convolve_mask(
-            infile.variables['salt'][x, -1, :, :], copy = False)
+        nc.variables['SSS'][x, :, :] = seapy.convolve_mask(
+            infile.variables['salt'][x, -1, :, :], copy=False)
         if 'EminusP' in infile.variables:
-            nc.variables['swflux'][x, :, :]=seapy.convolve_mask(
-                infile.variables['EminusP'][x, :, :], copy = False) * 86400
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
+                infile.variables['EminusP'][x, :, :], copy=False) * 86400
         elif 'swflux' in infile.variables:
-            nc.variables['swflux'][x, :, :]=seapy.convolve_mask(
-                infile.variables['swflux'][x, :, :], copy = False)
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
+                infile.variables['swflux'][x, :, :], copy=False)
         else:
-            nc.variables['swflux'][x, :, :]=seapy.convolve_mask(
+            nc.variables['swflux'][x, :, :] = seapy.convolve_mask(
                 infile.variables['ssflux'][x, :, :]
-                / nc.variables['SSS'][x, :, :], copy = False)
+                / nc.variables['SSS'][x, :, :], copy=False)
 
         nc.sync()
         for f in ("sustr", "svstr", "shflux", "swrad"):
             if f in infile.variables:
-                nc.variables[f][x, :, :]=seapy.convolve_mask(
-                    infile.variables[f][x, :, :], copy = False)
+                nc.variables[f][x, :, :] = seapy.convolve_mask(
+                    infile.variables[f][x, :, :], copy=False)
                 nc.sync()
 
     for f in ("lat_rho", "lat_u", "lat_v", "lon_rho", "lon_u", "lon_v"):
         if f in infile.variables:
-            nc.variables[f][:]=infile.variables[f][:]
+            nc.variables[f][:] = infile.variables[f][:]
     nc.close()

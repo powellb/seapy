@@ -427,7 +427,7 @@ def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):
 
     # Calculate coefficients
     ntides = len(tides)
-    coef = np.linalg.lstsq(A, xin)[0]
+    coef = np.linalg.lstsq(A, xin, rcond=None)[0]
     xout = np.dot(A[:, :2 * ntides], coef[:2 * ntides])
 
     # Explained variance

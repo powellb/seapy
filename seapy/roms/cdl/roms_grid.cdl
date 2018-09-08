@@ -136,6 +136,9 @@ variables:
   double rdrag2(eta_rho, xi_rho) ;
     rdrag2:long_name = "quadratic bottom drag coefficient" ;
     rdrag2:coordinates = "lon_rho lat_rho" ;
+  double wtype_grid(eta_rho, xi_rho) ;
+    wtype_grid:long_name = "Jerlov water type index" ;
+    wtype_grid:coordinates = "lon_rho lat_rho" ;
   double ZoBot(eta_rho, xi_rho) ;
     ZoBot:long_name = "time invariant, bottom roughness length" ;
     ZoBot:units = "meter" ;

@@ -148,7 +148,12 @@ class grid:
                  "f": ["f"],
                  "pm": ["pm"],
                  "pn": ["pn"],
-                 "z": ["z", "depth", "lev", "st_ocean"]
+                 "z": ["z", "depth", "lev", "st_ocean"],
+                 "wtype_grid": ["mask_rho"],
+                 "rdrag": ["rdrag"],
+                 "rdrag2": ["rdrag2"],
+                 "diff_factor": ["diff_factor"],
+                 "visc_factor": ["visc_factor"]
                  }
 
         # Open the file
@@ -167,6 +172,7 @@ class grid:
             for inp in gvars[var]:
                 if inp in ncvars:
                     self.key[var] = inp
+                    print(var, inp)
                     self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 

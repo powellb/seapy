@@ -65,7 +65,8 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None,
 
     # Fill up the initial state with the roms file data
     for var in seapy.roms.fields:
-        ncini.variables[var][0, :] = ncroms.variables[var][record, :]
+        if var in ncini.variables and var in ncroms.variables:
+            ncini.variables[var][0, :] = ncroms.variables[var][record, :]
 
     # Close up
     ncini.close()
