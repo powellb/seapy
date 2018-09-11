@@ -29,7 +29,8 @@ install_requires = [t.strip() for t in tests_require]
 package_data = {
     '': ['constituents.npz',
          'hawaii_coast/*',
-         'roms/cdl/*.cdl']
+         'roms/cdl/*.cdl',
+         'roms/cobalt/*.cdl']
 }
 
 config = Configuration('')
