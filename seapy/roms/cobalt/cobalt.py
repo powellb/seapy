@@ -73,8 +73,9 @@ _cdl_dir = os.path.dirname(__file__)
 cdl = {"his": _cdl_dir + "/his.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_direct.cdl",
+       "frc_direct": _cdl_dir + "/frc_direct.cdl",
        "frc_bulk": _cdl_dir + "/frc_bulk.cdl",
+       "frc_cobalt": _cdl_dir + "/frc_cobalt.cdl",
        "psource": _cdl_dir + "/frc_rivers.cdl"}
 
 
