@@ -326,8 +326,8 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         warn("velocity not present in source file")
         return
 
-    srcangle = src_grid.angle if src_grid.cgrid else None
-    dstangle = child_grid.angle if child_grid.cgrid else None
+    srcangle = getattr(src_grid, 'angle', None)
+    dstangle = getattr(child_grid, 'angle', None)
     maxrecs = np.minimum(len(records),
                          np.int(_max_memory /
                                 (2 * (child_grid.lon_rho.nbytes *
