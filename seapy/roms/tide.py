@@ -57,11 +57,12 @@ def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_ep
     # Set the tide periods and attributes
     tideout.variables['tide_period'][:] = 1.0 / \
         seapy.tide.frequency(tide['tides'])
-    tideout.tidal_constituents = ", ".join(tide['tides'])
-    tideout.tide_start = "Day {:5.1f} ({:s})".format((tide['tide_start'] -
-                                                      epoch).total_seconds() / 86400,
-                                                     str(tide['tide_start']))
-    tideout.base_date = "days since {:s}".format(str(tide['tide_start']))
+    tideout.setncattr("tidal_constituents", ", ".join(tide['tides']))
+    tideout.setncattr("tide_start", "Day {:5.1f} ({:s})".format((tide['tide_start']
+                                                                 - epoch).total_seconds() / 86400,
+                                                                str(tide['tide_start'])))
+    tideout.setncattr("base_date", "days since {:s}".format(
+        str(tide['tide_start'])))
     tideout.variables['tide_Eamp'][:] = tide['Eamp']
     tideout.variables['tide_Ephase'][:] = np.degrees(tide['Ephase'])
     tideout.variables['tide_Cmax'][:] = tide['Cmajor']

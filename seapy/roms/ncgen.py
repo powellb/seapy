@@ -25,6 +25,18 @@ _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
 _format = "NETCDF4_CLASSIC"
 
 
+def __number_or_string(val):
+    """
+    convert a string to a number if the string represents a number;
+    otherwise, return the string.
+    """
+    try:
+        val = float(val.strip())
+    except ValueError:
+        pass
+    return val
+
+
 def ncgen(filename, dims=None, vars=None, attr=None, title=None,
           clobber=False, format=_format):
     """
@@ -90,17 +102,13 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
                 nvar = _nc.createVariable(var["name"], var["type"])
             try:
                 for key in var["attr"]:
-                    # Check if it is a number and convert
-                    astr = var["attr"][key].strip()
-                    astr = float(astr) if \
-                        astr.lstrip('+-').replace('.', '', 1).isdigit() \
-                        else astr
-                    setattr(nvar, key, astr)
+                    nvar.setncattr(key,
+                                   __number_or_string(var["attr"][key]))
             except KeyError:
                 pass
         # Add global attributes
         for a in attr:
-            setattr(_nc, a, attr[a])
+            _nc.setncattr(a, attr[a])
 
         try:
             _nc.author = os.getenv('USER') or \
