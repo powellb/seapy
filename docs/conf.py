@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'seapy'
-copyright = '2017, University of Hawaii, MIT-License'
+copyright = '2018, University of Hawaii, MIT-License'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -193,13 +193,13 @@ htmlhelp_basename = 'SeaPYdoc'
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
 
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
 
     # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -274,7 +274,7 @@ texinfo_documents = [
 epub_title = 'seapy'
 epub_author = 'Powell Lab'
 epub_publisher = 'Powell Lab'
-epub_copyright = '2017, Powell Lab'
+epub_copyright = '2018, Powell Lab'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = 'seapy'

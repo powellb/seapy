@@ -132,10 +132,10 @@ class map(object):
                                resolution=resolution, area_thresh=0.0, ax=ax)
 
         self.figsize = figsize
-        delta = np.abs(urcrnrlon - llcrnrlon)
-        self.dlon = np.minimum(delta / 4, dlon)
-        delta = np.abs(urcrnrlat - llcrnrlat)
-        self.dlat = np.minimum(delta / 4, dlat)
+        delta = (np.abs(urcrnrlon - llcrnrlon) // .04) / 100
+        self.dlon = np.minimum(delta, dlon)
+        delta = (np.abs(urcrnrlat - llcrnrlat) // .04) / 100
+        self.dlat = np.minimum(delta, dlat)
         self.fig = fig
         self.ax = ax
         self.fill_color = fill_color

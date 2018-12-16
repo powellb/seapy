@@ -14,7 +14,7 @@ from datetime import datetime
 import netCDF4
 from seapy.lib import default_epoch, chunker
 from seapy.model.grid import asgrid
-from seapy.roms import ncgen
+from seapy.roms import ncgen, num2date
 
 # _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1/2010"
 _url = "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"
@@ -58,7 +58,7 @@ def load_history(filename,
     hycom = netCDF4.Dataset(url)
 
     # Figure out the time records that are required
-    hycom_time = seapy.roms.num2date(hycom, "time")
+    hycom_time = num2date(hycom, "time")
 
     time_list = np.where(np.logical_and(hycom_time >= start_time,
                                         hycom_time <= end_time))
