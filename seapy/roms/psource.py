@@ -20,7 +20,7 @@ discharge_url = 'https://waterdata.usgs.gov/nwisweb/get_ratings?file_type=exsa&s
 river_url = 'https://waterservices.usgs.gov/nwis/iv/?format=json'
 
 
-def make_psource(filename, rivers, cdl=None):
+def create(filename, rivers, cdl=None):
     """
     Construct a point source file with all of the point sources configured.
 
@@ -116,7 +116,7 @@ def stage2discharge(gage, usgs_id):
     return flux
 
 
-def get_river_transport(usgs_id, times=1, source='discharge'):
+def get_usgs_transport(usgs_id, times=1, source='discharge'):
     '''
     Function to get flux data from usgs and convert to cubic meters
 

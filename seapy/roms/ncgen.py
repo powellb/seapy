@@ -83,21 +83,8 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
             _nc.createDimension(dim, dims[dim])
         # Loop over the variables and add them
         for var in vars:
-            if var["dims"][0]:
-                nvar = _nc.createVariable(var["name"], var["type"],
-                                          var["dims"])
-            else:
-                nvar = _nc.createVariable(var["name"], var["type"])
-            try:
-                for key in var["attr"]:
-                    # Check if it is a number and convert
-                    astr = var["attr"][key].strip()
-                    astr = float(astr) if \
-                        astr.lstrip('+-').replace('.', '', 1).isdigit() \
-                        else astr
-                    setattr(nvar, key, astr)
-            except KeyError:
-                pass
+            add_variable(_nc, var)
+
         # Add global attributes
         for a in attr:
             setattr(_nc, a, attr[a])
@@ -169,6 +156,58 @@ def _set_time_ref(vars, timevar, reftime, cycle=None):
                 if cycle is not None:
                     nvar["attr"]["cycle_length"] = cycle
     return vars
+
+
+def add_variable(nc, var):
+    """
+    Add a new variable with meta data to an existing netcdf file
+
+    Parameters
+    ----------
+    filename : string or netCDF4 object
+        name or file to add the variable to
+    vars: dictionary
+            name: string name of variable
+            type: string type (float, double, etc.)
+            dims: comma separated string of dimensions ("ocean_time, eta_rho")
+            attr: dictionary of variable attributes where the key is
+                  the attribute name and the value is the attribute string
+
+    Returns
+    -------
+    nc, netCDF4 object
+
+    Examples
+    --------
+    >>> var = {"name":"eta_slice", "type":"double",
+               "dims":"ocean_time, eta_rho",
+               "attr":{"units":"degrees Celcius"}}
+    >>> nc = seapy.roms.ncgen.add_variable("test.nc", var)
+    """
+    if nc is None:
+        raise AttributeError("No file was specified")
+    if isinstance(grid, netCDF4._netCDF4.Dataset):
+        pass
+    else:
+        nc = netCDF4.Dataset(nc, "a")
+
+    if var["dims"][0]:
+        nvar = nc.createVariable(var["name"], var["type"],
+                                 var["dims"])
+    else:
+        nvar = nc.createVariable(var["name"], var["type"])
+    try:
+        for key in var["attr"]:
+            # Check if it is a number and convert
+            astr = var["attr"][key].strip()
+            astr = float(astr) if \
+                astr.lstrip('+-').replace('.', '', 1).isdigit() \
+                else astr
+            setattr(nvar, key, astr)
+    except KeyError:
+        pass
+
+    return nc
 
 
 def _create_generic_file(filename, cdl, eta_rho, xi_rho, s_rho,
