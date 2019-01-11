@@ -186,7 +186,7 @@ def add_variable(nc, var):
     """
     if nc is None:
         raise AttributeError("No file was specified")
-    if isinstance(grid, netCDF4._netCDF4.Dataset):
+    if isinstance(nc, netCDF4._netCDF4.Dataset):
         pass
     else:
         nc = netCDF4.Dataset(nc, "a")
