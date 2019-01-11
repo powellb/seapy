@@ -63,6 +63,10 @@ frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
               "solublefe": {"grid": "rho", "dims": 2},
               "mineralfe": {"grid": "rho", "dims": 2}}
 
+# Define fields for point source forcing
+psource_fields = ('river_ldon', 'river_ldop', 'river_ndet', 'river_no3', 'river_po4',
+                  'river_srdon', 'river_srdop', 'river_sldon', 'river_sldop', 'river_fed')
+
 # Define the vmap for nesting. This simply forms a one-to-one correspondence
 # between the fields.
 vmap = {k: k for k in fields}
