@@ -15,7 +15,6 @@ import os
 fields = {"alk": {"grid": "rho", "dims": 3},
           "cadet_arag": {"grid": "rho", "dims": 3},
           "cadet_calc": {"grid": "rho", "dims": 3},
-          "chl": {"grid": "rho", "dims": 3},
           "dic": {"grid": "rho", "dims": 3},
           "fed": {"grid": "rho", "dims": 3},
           "fedet": {"grid": "rho", "dims": 3},
@@ -45,14 +44,15 @@ fields = {"alk": {"grid": "rho", "dims": 3},
           "sio4": {"grid": "rho", "dims": 3},
           "nsmz": {"grid": "rho", "dims": 3},
           "nmdz": {"grid": "rho", "dims": 3},
-          "nlgz": {"grid": "rho", "dims": 3},
-          "irr_mem": {"grid": "rho", "dims": 3},
-          "htotal": {"grid": "rho", "dims": 3},
-          "co3_ion": {"grid": "rho", "dims": 3}}
+          "nlgz": {"grid": "rho", "dims": 3}}
 
-# Extra aggregate fields that are required, but are not
+# Extra aggregate fields that are required to initialize, but are not
 # provided by the COBALT output
-agg_fields = {"mu_mem_di": {"grid": "rho", "dims": 3},
+ini_fields = {"chl": {"grid": "rho", "dims": 3},
+              "irr_mem": {"grid": "rho", "dims": 3},
+              "htotal": {"grid": "rho", "dims": 3},
+              "co3_ion": {"grid": "rho", "dims": 3},
+              "mu_mem_di": {"grid": "rho", "dims": 3},
               "mu_mem_sm": {"grid": "rho", "dims": 3},
               "mu_mem_lg": {"grid": "rho", "dims": 3}}
 
@@ -74,11 +74,11 @@ vmap = {k: k for k in fields}
 # Create a dictionary of CDL files
 _cdl_dir = os.path.dirname(__file__)
 # _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
-cdl = {"his": _cdl_dir + "/his.cdl",
+cdl = {"ini": _cdl_dir + "/ini.cdl",
+       "his": _cdl_dir + "/his.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_direct.cdl",
-       "frc_bulk": _cdl_dir + "/frc_bulk.cdl",
+       "frc": _cdl_dir + "/frc_bulk.cdl",
        "psource": _cdl_dir + "/frc_rivers.cdl"}
 
 
@@ -100,6 +100,22 @@ def disable():
     Switch seapy to use only fields from ROMS hydrodynamics
     """
     seapy.roms.fields = dict(roms_fields)
+
+
+def enable_ini():
+    """
+    Switch seapy to use all fields from ROMS hydrodynamics and COBALT ini fields
+    """
+    enable()
+    seapy.roms.fields.update(ini_fields)
+
+
+def disable_ini():
+    """
+    Switch seapy to use ROMS and COBALT fields without the ini fields
+    """
+    disable()
+    enable()
 
 
 enable()

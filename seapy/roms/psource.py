@@ -18,9 +18,10 @@ import datetime
 
 discharge_url = 'https://waterdata.usgs.gov/nwisweb/get_ratings?file_type=exsa&site_no='
 river_url = 'https://waterservices.usgs.gov/nwis/iv/?format=json'
+ft3m3 = 1 / (3.28**3)
 
 
-def create(filename, rivers, cdl=None):
+def create(filename, river, s_rho=None, cdl=None):
     """
     Construct a point source file with all of the point sources configured.
 
@@ -28,9 +29,7 @@ def create(filename, rivers, cdl=None):
     -----
     filename : string
             Output filename
-    s_rho : int,
-            Number of s-levels in the point source file (should match the grid)
-    rivers : array,
+    river : array,
             array of dictionaries of rivers with the following information that
             defines a point source:
                The x and y values on the grid for where the point source is,
@@ -40,6 +39,9 @@ def create(filename, rivers, cdl=None):
                and an array of values for the vertical shape (a value for each s-level)
                that sum to 1.
             { "x":grid_x, "y":grid_y, "direction":0 or 1, "flag":1,2,3,4,or 5, "id":value, "vshape":[vals] }
+    s_rho : int, optional
+            Number of s-levels in the point source file (should match the grid).
+            If not specified, it will derive it from the vshape parameter
     cdl : string, optional,
             Name of CDL file to use
 
@@ -49,24 +51,23 @@ def create(filename, rivers, cdl=None):
        If successful, returns the netcdf id for writing
     """
     river = np.asarray(river)
-    s_rho = len(river[0]['vshape'])
+    s_rho = len(river[0]['vshape']) if s_rho is None else s_rho
 
     # Create an empty, new file
     nc = seapy.roms.ncgen.create_psource(
-        fname, nriver=len(river), s_rho=s_rho, clobber=True, cdl=cdl)
+        filename, nriver=len(river), s_rho=s_rho, clobber=True, cdl=cdl)
 
     # Go through each river and set up the basics
     for i, r in enumerate(river):
         nc.variables['river'][i] = int(r['id'])
         nc.variables['river_Xposition'][i] = int(r['x'])
-        nc.variables['river_Yposition'][i] = int(r['y'])
+        nc.variables['river_Eposition'][i] = int(r['y'])
         nc.variables['river_direction'][i] = int(r['direction'])
         nc.variables['river_flag'][i] = int(r['flag'])
         try:
             vshape = np.asarray(r['vshape'][:, np.newaxis])
             nc.variables['river_Vshape'][:, i] = vshape
-        except Exeption as err:
-            print(f"Error in VSHAPE: {err}")
+        except Exception as err:
             print("Using default shape")
             vshape = np.ones((s_rho, 1)) / s_rho
             nc.variables['river_Vshape'][:, i] = vshape
@@ -124,10 +125,9 @@ def get_usgs_transport(usgs_id, times=1, source='discharge'):
     -------
     usgs_id : int,
                 8 digit identifier for river on usgs
-    times : int/list of datetimes, default = 1
-                If int supplied, function will fetch last n days of data available
-                If list of datetimes, function will fetch data between the
-                start and end value
+    times : datetime array,
+                list of values to get usgs data for. Values from USGS
+                will be linearly interpolated onto these times.
     source : string,
                   set to 'discharge' or 'stage' to access corresponding
                   parameter. Stage data is then converted to discharge
@@ -148,11 +148,8 @@ def get_usgs_transport(usgs_id, times=1, source='discharge'):
     else:
         print('Incorrect source type specified')
         return None
-    if isinstance(times, int):
-        timeurl = '&period=P%sD' % str(times)
-    else:
-        timeurl = '&startDT=%s&endDT=%s' % (times[0].strftime(
-            '%Y-%m-%d'), times[1].strftime('%Y-%m-%d'))
+    timeurl = '&startDT=%s&endDT=%s' % (times[0].strftime(
+        '%Y-%m-%d'), times[-1].strftime('%Y-%m-%d'))
     url = river_url + siteurl + sourceurl + timeurl
 
     # Access url
@@ -167,14 +164,18 @@ def get_usgs_transport(usgs_id, times=1, source='discharge'):
             flux.append(l['value'])
         flux = np.ma.masked_values(
             np.ma.masked_array(flux).astype(np.float), -999999)
-        if flux.all() is np.ma.masked:
-            print('No valid data found')
-            return None
-        else:
+        try:
             if source == 'stage':
                 flux = stage2discharge(flux, usgs_id)
-            return np.array(dates)[~np.ma.getmaskarray(flux)], \
-                flux.compressed() / 3.28**3
+            # Interpolate the data for consistency
+            flux *= ft3m3
+            return np.interp(seapy.date2day(times),
+                             seapy.date2day(np.array(dates)[
+                                            ~np.ma.getmaskarray(flux)]),
+                             flux.compressed(), left=flux.min(), right=flux.min())
+        except ValueError:
+            print('No valid data found')
+            return None
     else:
         print('Cannot process file from url')
         return None
