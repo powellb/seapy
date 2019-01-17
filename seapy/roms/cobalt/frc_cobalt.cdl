@@ -1,0 +1,47 @@
+netcdf frc_bulk {
+
+dimensions:
+    lon = 111 ;
+    lat = 241 ;
+    frc_time = UNLIMITED ; // (0 currently)
+
+variables:
+    float lat(lat, lon) ;
+        lat:long_name = "Latitude" ;
+        lat:units = "degrees_north" ;
+    float lon(lat, lon) ;
+        lon:long_name = "Longitude" ;
+        lon:units = "degrees_east" ;
+    double frc_time(frc_time) ;
+        frc_time:long_name = "atmospheric forcing frc_time" ;
+        frc_time:units = "days since 1940-01-01 00:00:00" ;
+    float atmCO2(frc_time, lat, lon) ;
+        atmCO2:long_name = "atmospheric CO2" ;
+        atmCO2:units = "ppmv" ;
+        atmCO2:coordinates = "lon lat frc_time" ;
+        atmCO2:time = "frc_time" ;
+    float ironsed(frc_time, lat, lon) ;
+        ironsed:long_name = "Iron in Sediments" ;
+        ironsed:units = "mol/m2s" ;
+        ironsed:coordinates = "lon lat frc_time" ;
+        ironsed:time = "frc_time" ;
+    float fecoast(frc_time, lat, lon) ;
+        fecoast:long_name = "Coastal Iron" ;
+        fecoast:units = "(mol/kg) (m/s)" ;
+        fecoast:coordinates = "lon lat frc_time" ;
+        fecoast:time = "frc_time" ;
+    float solublefe(frc_time, lat, lon) ;
+        solublefe:long_name = "Soluble Iron" ;
+        solublefe:units = "mol/m2s" ;
+        solublefe:coordinates = "lon lat frc_time" ;
+        solublefe:time = "frc_time" ;
+    float mineralfe(frc_time, lat, lon) ;
+        mineralfe:long_name = "Mineral Iron" ;
+        mineralfe:units = "g/m2s" ;
+        mineralfe:coordinates = "lon lat frc_time" ;
+        mineralfe:time = "frc_time" ;
+
+// global attributes:
+		:type = "FORCING file" ;
+
+}

@@ -29,7 +29,8 @@ install_requires = [t.strip() for t in tests_require]
 package_data = {
     '': ['constituents.npz',
          'hawaii_coast/*',
-         'roms/cdl/*.cdl']
+         'roms/cdl/*.cdl',
+         'roms/cobalt/*.cdl']
 }
 
 config = Configuration('')
@@ -45,7 +46,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name='seapy',
-    version='0.2.5',
+    version='0.3.2',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
     author='Brian Powell',

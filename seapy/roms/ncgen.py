@@ -25,6 +25,18 @@ _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
 _format = "NETCDF4_CLASSIC"
 
 
+def __number_or_string(val):
+    """
+    convert a string to a number if the string represents a number;
+    otherwise, return the string.
+    """
+    try:
+        val = float(val.strip())
+    except ValueError:
+        pass
+    return val
+
+
 def ncgen(filename, dims=None, vars=None, attr=None, title=None,
           clobber=False, format=_format):
     """
@@ -87,7 +99,7 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
 
         # Add global attributes
         for a in attr:
-            setattr(_nc, a, attr[a])
+            _nc.setncattr(a, attr[a])
 
         try:
             _nc.author = os.getenv('USER') or \

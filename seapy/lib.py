@@ -22,7 +22,7 @@ import itertools
 
 secs2day = 1.0 / 86400.0
 default_epoch = datetime.datetime(2000, 1, 1)
-_default_timeref = "days since " + default_epoch.strftime("%Y-%m-%m %H:%M:%S")
+_default_timeref = "days since " + default_epoch.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def adddim(fld, size=1):
