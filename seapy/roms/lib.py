@@ -401,7 +401,7 @@ def get_timevar(nc):
 
     """
     for time in ("ocean_time", "time", "bry_time", "wind_time",
-                 "clim_time", "zeta_time"):
+                 "clim_time", "frc_time", "zeta_time"):
         if time in nc.variables:
             return time
     return None
