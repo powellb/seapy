@@ -1,5 +1,5 @@
 !=======================================================================
-!  Copyright (c) 2002-2013 The ROMS/TOMS Group                         !
+!  Copyright (c) 2002-2019 The ROMS/TOMS Group                         !
 !    Licensed under a MIT/X style license                              !
 !    See License_ROMS.txt                           Hernan G. Arango   !
 !========================================== Alexander F. Shchepetkin ===
@@ -76,7 +76,7 @@
       integer :: Is, Ie, Js, Je
 
       logical :: try_range
-      
+
       Is = 1
       Ie = Mm
       Js = 1
@@ -90,12 +90,12 @@
       DO np=1, Npos
          Ipos(np)=IJspv
          Jpos(np)=IJspv
-!     
+!
 !     Check each position to find if it falls inside the whole domain.
 !     Once it is stablished that it inside, find the exact cell to which
 !     it belongs by successively dividing the domain by a half (binary
 !     search).
-!     
+!
          found=try_range(Xgrd, Ygrd, Lm, Mm,                            &
      &        Is, Ie, Js, Je,                                           &
      &        Xpos(np), Ypos(np))
@@ -132,19 +132,19 @@
      &           (Is.le.Imax).and.(Imax.le.Ie).and.                     &
      &           (Js.le.Jmin).and.(Jmin.le.Je).and.                     &
      &           (Js.le.Jmax).and.(Jmax.le.Je)
-!     
+!
 !     Knowing the correct cell, calculate the exact indices, accounting
 !     for a possibly rotated grid.  If spherical, convert all positions
 !     to meters first.
-!     
+!
             IF (found) THEN
                yfac=Eradius*deg2rad
                xfac=yfac*COS(Ypos(np)*deg2rad)
                xpp=(Xpos(np)-Xgrd(Imin,Jmin))*xfac
                ypp=(Ypos(np)-Ygrd(Imin,Jmin))*yfac
-!     
+!
 !     Use Law of Cosines to get cell parallelogram "shear" angle.
-!     
+!
                diag2=((Xgrd(Imin+1,Jmin)-Xgrd(Imin,Jmin+1))*xfac)**2+      &
      &              ((Ygrd(Imin+1,Jmin)-Ygrd(Imin,Jmin+1))*yfac)**2
                aa2=((Xgrd(Imin,Jmin)-Xgrd(Imin+1,Jmin))*xfac)**2+          &
@@ -152,21 +152,21 @@
                bb2=((Xgrd(Imin,Jmin)-Xgrd(Imin,Jmin+1))*xfac)**2+          &
      &              ((Ygrd(Imin,Jmin)-Ygrd(Imin,Jmin+1))*yfac)**2
                phi=ASIN((diag2-aa2-bb2)/(2.0*SQRT(aa2*bb2)))
-!     
+!
 !     Transform float position into curvilinear coordinates. Assume the
 !     cell is rectanglar, for now.
-!     
+!
                ang=angler(Imin,Jmin)
                dx=xpp*COS(ang)+ypp*SIN(ang)
                dy=ypp*COS(ang)-xpp*SIN(ang)
-!     
+!
 !     Correct for parallelogram.
-!     
+!
                dx=dx+dy*TAN(phi)
                dy=dy/COS(phi)
-!     
+!
 !     Scale with cell side lengths to translate into cell indices.
-!     
+!
                dx=MIN(MAX(0.0,dx/SQRT(aa2)),1.0)
                dy=MIN(MAX(0.0,dy/SQRT(bb2)),1.0)
                Ipos(np)=REAL(Imin-1,8)+dx
@@ -210,7 +210,7 @@
 
       real(8), dimension(2*(Jmax-Jmin+Imax-Imin)+1) :: Xb, Yb
       logical :: try_range, inside
-      
+
 !
 !-----------------------------------------------------------------------
 !  Define closed polygon.
@@ -408,4 +408,3 @@
       END IF
       RETURN
       END FUNCTION inside
-    
