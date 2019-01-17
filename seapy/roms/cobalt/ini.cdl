@@ -111,6 +111,10 @@ variables:
       cadet_calc:long_name = "Detrital Calcite CaCO3" ;
       cadet_calc:units = "mol/kg" ;
       cadet_calc:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float chl(ocean_time, s_rho, eta_rho, xi_rho) ;
+      chl:long_name = "Chlorophyll" ;
+      chl:units = "ug/kg" ;
+      chl:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
   float dic(ocean_time, s_rho, eta_rho, xi_rho) ;
       dic:long_name = "Dissolved Inorganic Carbon" ;
       dic:units = "mol/kg" ;
@@ -231,6 +235,30 @@ variables:
       nlgz:long_name = "Large Zooplankton Nitrogen" ;
       nlgz:units = "mol/kg" ;
       nlgz:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float htotal(ocean_time, s_rho, eta_rho, xi_rho) ;
+      htotal:long_name = "H+ ion concentration" ;
+      htotal:units = "mol/kg" ;
+      htotal:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float irr_mem(ocean_time, s_rho, eta_rho, xi_rho) ;
+      irr_mem:long_name = "Irradiance memory" ;
+      irr_mem:units = "Watts/m2" ;
+      irr_mem:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float co3_ion(ocean_time, s_rho, eta_rho, xi_rho) ;
+      co3_ion:long_name = "Carbonate ion" ;
+      co3_ion:units = "mol/kg" ;
+      co3_ion:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float mu_mem_di(ocean_time, s_rho, eta_rho, xi_rho) ;
+      mu_mem_di:long_name = "Aggregation Memory Diazotrophs" ;
+      mu_mem_di:units = "-" ;
+      mu_mem_di:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float mu_mem_sm(ocean_time, s_rho, eta_rho, xi_rho) ;
+      mu_mem_sm:long_name = "Aggregation Memory Small Phyto" ;
+      mu_mem_sm:units = "-" ;
+      mu_mem_sm:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
+  float mu_mem_lg(ocean_time, s_rho, eta_rho, xi_rho) ;
+      mu_mem_lg:long_name = "Aggregation Memory Large Phyto" ;
+      mu_mem_lg:units = "-" ;
+      mu_mem_lg:coordinates = "lon_rho lat_rho s_rho ocean_time" ;
 
 // global attributes:
         :type = "INITIALIZATION file" ;

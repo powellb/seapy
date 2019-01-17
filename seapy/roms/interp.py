@@ -638,8 +638,8 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
 
 
 def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
-            threads=2, reftime=None, nx=0, ny=0, weight=10, vmap=None,
-            pmap=None):
+            clobber=False, cdl=None, threads=2, reftime=None, nx=0, ny=0,
+            weight=10, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
     new ROMS history file using the given ROMS destination grid and
@@ -659,6 +659,12 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         Name or instance of output definition
     records : numpy.ndarray, optional:
         Record indices to interpolate
+    clobber: bool, optional
+        If True, clobber any existing files and recreate. If False, use
+        the existing file definition
+    cdl: string, optional,
+        Use the specified CDL file as the definition for the new
+        netCDF file.
     threads : int, optional:
         number of processing threads
     reftime: datetime, optional:
@@ -683,11 +689,11 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         src_grid = seapy.model.asgrid(src_file)
     else:
         src_grid = seapy.model.asgrid(src_grid)
+    ncsrc = seapy.netcdf(src_file)
     if dest_grid is not None:
         destg = seapy.model.asgrid(dest_grid)
 
         if not os.path.isfile(dest_file):
-            ncsrc = seapy.netcdf(src_file)
             src_ref, time = seapy.roms.get_reftime(ncsrc)
             if reftime is not None:
                 src_ref = reftime
@@ -698,6 +704,8 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
                                                 xi_rho=destg.xi_rho,
                                                 s_rho=destg.n,
                                                 reftime=src_ref,
+                                                clobber=clobber,
+                                                cdl=cdl,
                                                 title="interpolated from " + src_file)
             destg.to_netcdf(ncout)
             ncout.variables["ocean_time"][:] = seapy.roms.date2num(
@@ -708,6 +716,8 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         ncout = netCDF4.Dataset(dest_file, "a")
         if dest_grid is None:
             destg = seapy.model.asgrid(dest_file)
+    else:
+        raise AttributeError("Missing destination grid or file")
 
     # Call the interpolation
     try:

@@ -26,4 +26,5 @@ from . import ncgen
 from . import obs
 from . import obsgen
 from . import tide
+from . import psource
 from .lib import *
