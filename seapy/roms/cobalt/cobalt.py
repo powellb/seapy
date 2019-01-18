@@ -63,29 +63,56 @@ frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
               "solublefe": {"grid": "rho", "dims": 2},
               "mineralfe": {"grid": "rho", "dims": 2}}
 
-# Define fields for point source forcing
-psource_fields = ('river_ldon', 'river_ldop', 'river_ndet', 'river_no3', 'river_po4',
-                  'river_srdon', 'river_srdop', 'river_sldon', 'river_sldop', 'river_fed')
-
 # Define the vmap for nesting. This simply forms a one-to-one correspondence
 # between the fields.
 vmap = {k: k for k in fields}
 
 # Create a dictionary of CDL files
 _cdl_dir = os.path.dirname(__file__)
-# _cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
 cdl = {"ini": _cdl_dir + "/ini.cdl",
        "his": _cdl_dir + "/his.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_bulk.cdl",
-       "psource": _cdl_dir + "/frc_rivers.cdl"}
+       "frc": _cdl_dir + "/frc_bulk.cdl"}
+
+>> > var = {"name": "eta_slice", "type": "double",
+            "dims": "ocean_time, eta_rho",
+            "attr": {"units": "degrees Celcius"}}
 
 
 # Keep track of original ROMS fields
 roms_fields = dict(seapy.roms.fields)
 
 # Helper functions to enable/disable COBALT fields
+
+
+def add_psource_var(nc, name):
+    """
+    Add a list of COBALT variables to an existing netCDF file that
+    has been opened for writing.
+
+    Input
+    -----
+      nc: netCDF4,
+          The netCDF4 river file object to write to.
+          NOTE: it must be opened as writeable.
+      name: string or list of strings,
+          The COBALT variable names to add as point sources to the
+          river file.
+
+    Output
+    ------
+       None
+    """
+    name = np.asarray_1d(name)
+    for n in name:
+        var = {"name": f"river_{n}",
+               "type": "float",
+               "dims": "s_rho, river",
+               "attr": {"units": "mol/kg",
+                        "long_name": f"River runoff for {n}",
+                        "fields": f"river {n}, scalar, series"}}
+        seapy.roms.ncgen.add_variable(nc, var)
 
 
 def enable():

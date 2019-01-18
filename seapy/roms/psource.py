@@ -35,10 +35,17 @@ def create(filename, river, s_rho=None, cdl=None):
                The x and y values on the grid for where the point source is,
                the direction of the point source (0 for xi or 1 for eta),
                an identification number (any choice),
-               flag (1=temp, 2=salt, 3=temp+salt, 4=temp+salt+sed, 5=temp+salt+sed+bio),
+               optional flag (1=temp, 2=salt, 3=temp+salt, 4=temp+salt+sed,
+                              5=temp+salt+sed+bio),
                and an array of values for the vertical shape (a value for each s-level)
                that sum to 1.
-            { "x":grid_x, "y":grid_y, "direction":0 or 1, "flag":1,2,3,4,or 5, "id":value, "vshape":[vals] }
+            { "x":grid_x,
+              "y":grid_y,
+              "direction":0 or 1,
+              "id":value,
+              "flag":[1,2,3,4,or 5],  [optional]
+              "vshape":[vals] } [optional]
+
     s_rho : int, optional
             Number of s-levels in the point source file (should match the grid).
             If not specified, it will derive it from the vshape parameter
@@ -63,7 +70,10 @@ def create(filename, river, s_rho=None, cdl=None):
         nc.variables['river_Xposition'][i] = int(r['x'])
         nc.variables['river_Eposition'][i] = int(r['y'])
         nc.variables['river_direction'][i] = int(r['direction'])
-        nc.variables['river_flag'][i] = int(r['flag'])
+        try:
+            nc.variables['river_flag'][i] = int(r['flag'])
+        except:
+            nc.variables['river_flag'][i] = 0
         try:
             vshape = np.asarray(r['vshape'][:, np.newaxis])
             nc.variables['river_Vshape'][:, i] = vshape
