@@ -203,11 +203,17 @@ def add_variable(nc, var):
     else:
         nc = netCDF4.Dataset(nc, "a")
 
-    if var["dims"][0]:
-        nvar = nc.createVariable(var["name"], var["type"],
-                                 var["dims"])
-    else:
+    # Handle the dimensions by enforcing a tuple list rather
+    # than a list of strings, then add whatever we have
+    try:
+        dims = var['dims'].replace(" ", "").split(',')
+    except:
+        dims = var['dims']
+    try:
+        nvar = nc.createVariable(var["name"], var["type"], dims)
+    except:
         nvar = nc.createVariable(var["name"], var["type"])
+
     try:
         for key in var["attr"]:
             # Check if it is a number and convert

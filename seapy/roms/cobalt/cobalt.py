@@ -75,11 +75,6 @@ cdl = {"ini": _cdl_dir + "/ini.cdl",
        "bry": _cdl_dir + "/bry.cdl",
        "frc": _cdl_dir + "/frc_bulk.cdl"}
 
->> > var = {"name": "eta_slice", "type": "double",
-            "dims": "ocean_time, eta_rho",
-            "attr": {"units": "degrees Celcius"}}
-
-
 # Keep track of original ROMS fields
 roms_fields = dict(seapy.roms.fields)
 
@@ -104,11 +99,12 @@ def add_psource_var(nc, name):
     ------
        None
     """
-    name = np.asarray_1d(name)
+    from numpy import asarray
+    name = asarray(name)
     for n in name:
         var = {"name": f"river_{n}",
                "type": "float",
-               "dims": "s_rho, river",
+               "dims": "river_time, s_rho, river",
                "attr": {"units": "mol/kg",
                         "long_name": f"River runoff for {n}",
                         "fields": f"river {n}, scalar, series"}}
