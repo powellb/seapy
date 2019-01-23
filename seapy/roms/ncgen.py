@@ -30,10 +30,12 @@ def __number_or_string(val):
     convert a string to a number if the string represents a number;
     otherwise, return the string.
     """
+    print(f"{val} to ",end='')
     try:
         val = float(val.strip())
     except ValueError:
         pass
+    print(f"[{val}]")
     return val
 
 
@@ -217,10 +219,7 @@ def add_variable(nc, var):
     try:
         for key in var["attr"]:
             # Check if it is a number and convert
-            astr = var["attr"][key].strip()
-            astr = float(astr) if \
-                astr.lstrip('+-').replace('.', '', 1).isdigit() \
-                else astr
+            astr = __number_or_string(var["attr"][key])
             setattr(nvar, key, astr)
     except KeyError:
         pass
