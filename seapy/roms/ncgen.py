@@ -30,12 +30,10 @@ def __number_or_string(val):
     convert a string to a number if the string represents a number;
     otherwise, return the string.
     """
-    print(f"{val} to ",end='')
     try:
         val = float(val.strip())
     except ValueError:
         pass
-    print(f"[{val}]")
     return val
 
 

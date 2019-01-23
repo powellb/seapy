@@ -313,9 +313,6 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                                      for i in recs), copy=False)
                 if z_mask:
                     __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
-                print(dest)
-                print(ndata.shape)
-                print(outr)
                 ncout.variables[dest][outr, :, :, :] = ndata
                 ncout.sync()
 
