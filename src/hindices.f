@@ -49,7 +49,7 @@
       implicit none
 
       integer, intent(in) :: Lm, Mm, Npos
-      !f2py integer, inten(in) :: Lm,Mm,Npos
+      !f2py integer, intent(in) :: Lm,Mm,Npos
 
       real(8), intent(in), dimension(Mm,Lm) :: angler, Xgrd, Ygrd
       !f2py real, intent(in), dimension(Mm,Lm) :: angler,Xgrd,Ygrd

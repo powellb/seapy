@@ -201,6 +201,8 @@ def w(grid, u, v):
     """
     Compute the vertical velocity for the grid from the u and v velocity.
 
+    For a standard, z-level model the formulation is:
+
     w_ij = u_ij * delta Hz / delta x + v_ij * delta Hz / delta y
 
     Parameters

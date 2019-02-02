@@ -437,7 +437,7 @@ def get_reftime(nc, epoch=default_epoch):
         return epoch, None
 
 
-def omega(grid, u, v, zeta=0, scale=False):
+def omega(grid, u, v, zeta=0, scale=True, work=False):
     """
     Compute the vertical velocity on s-grid.
 
@@ -446,39 +446,86 @@ def omega(grid, u, v, zeta=0, scale=False):
     grid : seapy.model.grid,
       The grid to use for the calculations
     u : ndarray,
-      The u-field at a given time
+      The u-field in time
     v : ndarray,
-      The v-field at a given time
+      The v-field in time
     zeta : ndarray, optional,
-      The zeta-field at a given time
+      The zeta-field in time
     scale : bool, optional,
-      If True, return omega in [m s**-1];
-      If [False], return omega in [m**3 s**-1]
+      If [True], return omega in [m s**-1];
+      If False, return omega in [m**3 s**-1]
+    work : bool, optional,
+      If True, return the work arrays:
+        z_r : ndarray,
+          Depth on rho-grid (time-varying if zeta != 0)
+        z_w : ndarray,
+          Depth on w-grid (time-varying if zeta != 0)
+        thick_u : ndarray
+          Thickness of the u-grid
+        thick_v : ndarray
+          Thickness of the v-grid
+      If False, return only omega
 
     Returns
     -------
     omega : ndarray,
       Vertical Velocity on s-grid
     """
-    u = np.ma.array(u, fill_value=0, copy=False).filled()
-    v = np.ma.array(v, fill_value=0, copy=False).filled()
-    zeta = np.ma.array(zeta, fill_value=0, copy=False).filled()
+    grid = seapy.model.asgrid(grid)
+    u = np.ma.array(u)
+    v = np.ma.array(v)
+    zeta = np.ma.array(zeta)
 
-    z_w = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
-                grid.cs_r, zeta=zeta, w_grid=True)
-    thick = z_w[1:, :, :] - z_w[0:-1, :, :]
-    Huon = u * seapy.model.rho2u(thick / grid.pn)
-    Hvon = v * seapy.model.rho2v(thick / grid.pm)
-    W = np.zeros((grid.n + 1, grid.eta_rho, grid.xi_rho))
-    W[:-1, 1:-1, 1:-1] = np.cumsum((Huon[:, 1:-1, :-1] - Huon[:, 1:-1, 1:]) +
-                                   (Hvon[:, :-1, 1:-1] - Hvon[:, 1:, 1:-1]), axis=0)
-    W -= ((z_w - z_w[0, :, :]) / (z_w[-1, :, :] - z_w[0, :, :])) * W[-1, :, :]
+    # Check the sizes
+    while u.ndim < 4:
+        u = u[np.newaxis, ...]
+    while v.ndim < 4:
+        v = v[np.newaxis, ...]
+    while zeta.ndim < 3:
+        zeta = zeta[np.newaxis, ...]
+
+    # Get the model grid parameters for the given thickness
+    thick_u = u * 0
+    thick_v = v * 0
+    z_r = np.ma.zeros((u.shape[0], u.shape[1], zeta.shape[1], zeta.shape[2]))
+    z_w = np.ma.zeros((u.shape[0], u.shape[1] + 1,
+                       zeta.shape[1], zeta.shape[2]))
+    for i in range(zeta.shape[0]):
+        s_w, cs_w = seapy.roms.stretching(
+            grid.vstretching, grid.theta_s, grid.theta_b, grid.hc,
+            grid.n, w_grid=True)
+        z_r[i, ...] = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+                                       s_w, cs_w, zeta=zeta[i, ...], w_grid=False)
+        z_w[i, ...] = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+                                       s_w, cs_w, zeta=zeta[i, ...], w_grid=True)
+        thick_rho = np.squeeze(z_w[i, 1:, :, :] - z_w[i, :-1, :, :])
+        thick_u[i, ...] = seapy.model.rho2u(thick_rho)
+        thick_v[i, ...] = seapy.model.rho2v(thick_rho)
+    z_r[z_r > 50000] = np.ma.masked
+    z_w[z_w > 50000] = np.ma.masked
+
+    # Compute W (omega)
+    Huon = u * thick_u * seapy.model.rho2u(grid.dn)
+    Hvom = v * thick_v * seapy.model.rho2v(grid.dm)
+    W = z_w * 0
+    for k in range(grid.n):
+        W[:, k + 1, :-2, :-2] = W[:, k, :-2, :-2] - \
+            (Huon[:, k, 1:-1, 1:] - Huon[:, k, 1:-1, :-1]
+             + Hvom[:, k, 1:, 1:-1] - Hvom[:, k, :-1, 1:-1])
+    wrk = W[:, -1:, :, :] / (z_w[:, -1:, :, :] - z_w[:, 0:1, :, :])
+    W[:, :-1, :, :] = W[:, :-1, :, :] - wrk * \
+        (z_w[:, :-1, :, :] - z_w[:, 0:1, :, :])
+    W[:, -1, :, :] = 0
+
     if scale:
-        return W * grid.pn * grid.pm
-    return W
+        W *= grid.pn * grid.pm
+    if work:
+        return W, z_r, z_w, thick_u, thick_v
+    else:
+        return W
 
 
-def wvelocity(grid, u, v, zeta=0, scale=False):
+def wvelocity(grid, u, v, zeta=0):
     """
     Compute "true" vertical velocity
 
@@ -487,89 +534,89 @@ def wvelocity(grid, u, v, zeta=0, scale=False):
     grid : seapy.model.grid,
       The grid to use for the calculations
     u : ndarray,
-      The u-field at a given time
+      The u-field in time
     v : ndarray,
-      The v-field at a given time
+      The v-field in time
     zeta : ndarray, optional,
-      The zeta-field at a given time
-    scale : bool, optional,
-      If True, return omega in [m s**-1];
-      If [False], return omega in [m**3 s**-1]
+      The zeta-field in time
 
     Returns
     -------
     w : ndarray,
       Vertical Velocity
     """
-    u = np.ma.array(u, fill_value=0, copy=False).filled()
-    v = np.ma.array(v, fill_value=0, copy=False).filled()
-    zeta = np.ma.array(zeta, fill_value=0, copy=False).filled()
+    grid = seapy.model.asgrid(grid)
+    u = np.ma.array(u)
+    v = np.ma.array(v)
+    zeta = np.ma.array(zeta)
 
-    z_r = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
-                grid.cs_r, zeta=zeta)
-    z_w = depth(grid.vtransform, grid.h, grid.hc, grid.s_rho,
-                grid.cs_r, zeta=zeta, w_grid=True)
-    thick = z_w[1:, :, :] - z_w[0:-1, :, :]
-    totdep = z_w[-1, :, :] - z_w[0, :, :]
+    # Check the sizes
+    while u.ndim < 4:
+        u = u[np.newaxis, ...]
+    while v.ndim < 4:
+        v = v[np.newaxis, ...]
+    while zeta.ndim < 3:
+        zeta = zeta[np.newaxis, ...]
 
     # Get omega
-    sw = omega(grid, u, v, zeta)
+    W, z_r, z_w, thick_u, thick_v = omega(grid, u, v, zeta, scale=True,
+                                          work=True)
 
     # Compute quasi-horizontal motions (Ui + Vj)*GRAD s(z)
-    udel = u * seapy.model.rho2u(z_r * grid.pm)
-    vdel = v * seapy.model.rho2v(z_r * grid.pn)
-    vert = 0.25 * (udel[:, 1:-1, 1:] + udel[:, 1:-1, :-1] +
-                   vdel[:, 1:, 1:-1] + vdel[:, :-1, 1:-1])
+    vert = z_r * 0
+    # U-contribution
+    wrk = u * (z_r[:, :, :, 1:] - z_r[:, :, :, :-1]) * \
+        (grid.pm[:, 1:] - grid.pm[:, :-1])
+    vert[:, :, :, 1:-1] = 0.25 * (wrk[:, :, :, :-1] + wrk[:, :, :, 1:])
+    # V-contribution
+    wrk = v * (z_r[:, :, 1:, :] - z_r[:, :, :-1, :]) * \
+        (grid.pn[1:, :] - grid.pn[:-1, :])
+    vert[:, :, 1:-1, :] += 0.25 * (wrk[:, :, :-1, :] + wrk[:, :, 1:, :])
 
-    # Compute barotropic velocity
-    ubar = np.sum(u * seapy.model.rho2u(thick), axis=0) / \
-        seapy.model.rho2u(totdep)
-    vbar = np.sum(v * seapy.model.rho2v(thick), axis=0) / \
-        seapy.model.rho2v(totdep)
-    wrk = (ubar[1:-1, :-1] - ubar[1:-1, 1:] + vbar[:-1, 1:-1] -
-           vbar[1:, 1:-1]) / totdep[1:-1, 1:-1]
+    # Compute barotropic velocity [ERROR IN FORMULATION RIGHT NOW]
+    wrk = np.zeros((vert.shape[0], vert.shape[2], vert.shape[3]))
+    ubar = np.sum(u * thick_u, axis=1) / np.sum(thick_u, axis=1)
+    vbar = np.sum(v * thick_v, axis=1) / np.sum(thick_v, axis=1)
+    # wrk[:, 1:-1, 1:-1] = (ubar[:, 1:-1, :-1] - ubar[:, 1:-1, 1:] +
+    #                       vbar[:, :-1, 1:-1] - vbar[:, 1:, 1:-1])
 
-    # Cubic interpolation
-    cff1 = 0.375
-    cff2 = 0.75
-    cff3 = 0.125
-    cff4 = 0.5625
-    cff5 = 0.0625
+    # Shift vert from rho to w
+    wvel = z_w * 0
+    # First two layers
+    slope = (z_r[:, 0, :, :] - z_w[:, 0, :, :]) / \
+        (z_r[:, 1, :, :] - z_r[:, 0, :, :])
+    wvel[:, 0, :, :] = 0.375 * (vert[:, 0, :, :] - slope *
+                                (vert[:, 1, :, :] - vert[:, 0, :, :])) + \
+        0.75 * vert[:, 0, :, :] - \
+        0.125 * vert[:, 1, :, :]
+    wvel[:, 1, :, :] = W[:, 1, :, :] + wrk + \
+        0.375 * vert[:, 0, :, :] + \
+        0.75 * vert[:, 1, :, :] - 0.125 * vert[:, 2, :, :]
 
-    w = np.zeros((grid.n + 1, grid.eta_rho, grid.xi_rho))
+    # Middle of the grid
+    wvel[:, 2:-2, :, :] = W[:, 2:-2, :, :] + \
+        wrk[:, np.newaxis, :, :] + \
+        0.5625 * (vert[:, 1:-2, :, :] + vert[:, 2:-1, :, :]) - \
+        0.0625 * (vert[:, :-3, :, :] + vert[:, 3:, :, :])
 
-    # Do the bottom two layers
-    slope = (z_r[0, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1]) / \
-        (z_r[1, 1:-1, 1:-1] - z_r[0, 1:-1, 1:-1])
-    w[0, 1:-1, 1:-1] = cff1 * (vert[0, :, :] -
-                               slope * (vert[1, :, :] - vert[0, :, :])) + \
-        cff2 * vert[0, :, :] + cff3 * vert[1, :, :]
-    w[1, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
-        (sw[1, 1:-1, 1:-1] + wrk[:, :] *
-         (z_w[1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
-        cff1 * vert[0, :, :] + cff2 * vert[1, :, :] + cff3 * vert[2, :, :]
+    # Upper two layers
+    slope = (z_w[:, -1, :, :] - z_r[:, -1, :, :]) / \
+        (z_r[:, -1, :, :] - z_r[:, -2, :, :])
+    wvel[:, -1, :, :] = wrk + 0.375 * (vert[:, -1, :, :] + slope *
+                                       (vert[:, -1, :, :] - vert[:, -2, :, :])) + \
+        0.75 * vert[:, -1, :, :] - \
+        0.0625 * vert[:, -2, :, :]
+    wvel[:, -2, :, :] = W[:, -2, :, :] + 0.375 * vert[:, -1, :, :] + \
+        wrk + 0.75 * vert[:, -2, :, :] - \
+        0.125 * vert[:, -3, :, :]
 
-    # Do the middle bit
-    w[2:-2, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
-        (sw[2:-2, 1:-1, 1:-1] + wrk[:, :] *
-         (z_w[2:-2, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
-        cff4 * (vert[1:-2, :, :] + vert[2:-1, :, :]) + \
-        cff5 * (vert[:-3, :, :] + vert[3:, :, :])
+    # No gradient at the boundaries
+    wvel[:, :, 0, :] = wvel[:, :, 1, :]
+    wvel[:, :, -2:, :] = wvel[:, :, -3:-2, :]
+    wvel[:, :, :, 0] = wvel[:, :, :, 1]
+    wvel[:, :, :, -2:] = wvel[:, :, :, -3:-2]
 
-    # Do the upper two layers
-    slope = (z_w[-1, 1:-1, 1:-1] - z_r[0, 1:-1, 1:-1]) / \
-        (z_r[-1, 1:-1, 1:-1] - z_r[-2, 1:-1, 1:-1])
-    w[-2, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
-        (sw[-2, 1:-1, 1:-1] + wrk[:, :] *
-         (z_w[-1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1])) + \
-        cff1 * vert[-1, :, :] + cff2 * vert[-2, :, :] + cff3 * vert[-3, :, :]
-    w[-1, 1:-1, 1:-1] = grid.pm[1:-1, 1:-1] * grid.pn[1:-1, 1:-1] * \
-        wrk[:, :] * (z_w[-1, 1:-1, 1:-1] - z_w[0, 1:-1, 1:-1]) + \
-        cff1 * (vert[-1, :, :] + slope * (vert[-1, :, :] - vert[-2, :, :])) + \
-        cff2 * vert[-1, :, :] - cff3 * vert[-2, :, :]
-
-    # Done
-    return w
+    return wvel
 
 
 pass
