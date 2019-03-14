@@ -46,7 +46,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name='seapy',
-    version='0.4.1',
+    version='0.4.2',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
     author='Brian Powell',

@@ -343,6 +343,7 @@ class grid:
                                                     self.lon_rho[:, 0:-1],
                                                     self.lat_rho[:, 0:-1]).astype(np.float32)
             self.dm[:, -1] = self.dm[:, -2]
+            self.pm = 1.0 / self.dm
         if "pn" in self.__dict__:
             self.dn = 1.0 / self.pn
         else:
@@ -352,6 +353,7 @@ class grid:
                                                     self.lon_rho[0:-1, :],
                                                     self.lat_rho[0:-1, :]).astype(np.float32)
             self.dn[-1, :] = self.dn[-2, :]
+            self.pn = 1.0 / self.dn
 
         # Compute the Coriolis
         if "f" not in self.__dict__:

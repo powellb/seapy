@@ -232,14 +232,8 @@ def w(grid, u, v):
                   (grid.pn[1:, :] + grid.pn[:-1, :]))
     else:
         w = np.ma.array(np.zeros(u.shape))
-        w[1:, 1:] = (0.5 * u[1:, 1:] * (grid.thick_rho[:, :, 1:] -
-                                        grid.thick_rho[:, :, :-1]) *
-                     (grid.pm[:, 1:] + grid.pm[:, :-1])) + \
-            (0.5 * v[1:, 1:] * (grid.thick_rho[:, 1:, :] -
-                                grid.thick_rho[:, :-1, :]) *
-             (grid.pn[1:, :] + grid.pn[:-1, :]))
-        w[0, :] = np.masked
-        w[:, 0] = np.masked
+        w = u * grid.thick_rho * grid.pm + \
+            v * grid.thick_rho * grid.pn
 
     return w
 
