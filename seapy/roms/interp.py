@@ -267,7 +267,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
 
         # Only interpolate the fields we want in the destination
         if (dest not in ncout.variables) or \
-           (dest not in ncsrc.variables) or \
+           (src not in ncsrc.variables) or \
            ("rotate" in fld):
             continue
 
