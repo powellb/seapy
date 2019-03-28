@@ -73,7 +73,9 @@ cdl = {"ini": _cdl_dir + "/ini.cdl",
        "his": _cdl_dir + "/his.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_bulk.cdl"}
+       "frc": _cdl_dir + "/frc_bulk.cdl",
+       "zlevel": _cdl_dir + "/zlevel.cdl"}
+
 
 # Keep track of original ROMS fields
 roms_fields = dict(seapy.roms.fields)
