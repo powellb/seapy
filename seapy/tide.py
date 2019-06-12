@@ -22,7 +22,7 @@ __shallowinfo = namedtuple('__shallowinfo', 'isshallow iname coef')
 # Load the constituent data when the module is imported
 __reftime = datetime.datetime(1899, 12, 31, 12, 0, 0)
 
-with np.load(os.path.dirname(__file__) + "/constituents.npz") as data:
+with np.load(os.path.dirname(__file__) + "/constituents.npz", allow_pickle=True) as data:
     __const_file = data['__const'][()]
 
 __const = {}
@@ -341,7 +341,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
                 c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                             + (vufs[ap].v + vufs[ap].u) - c.phase)
                 + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
-                                              + (vufs[ap].v + vufs[ap].u) - c.phase))
+                                            + (vufs[ap].v + vufs[ap].u) - c.phase))
         else:
             ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                               + (vufs[ap].v + vufs[ap].u) - c.phase)

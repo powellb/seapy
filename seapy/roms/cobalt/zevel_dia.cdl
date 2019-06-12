@@ -1,0 +1,56 @@
+netcdf zlevel {
+dimensions:
+    lat = 192 ;
+    lon = 382 ;
+    depth = 40 ;
+    time = UNLIMITED ; // (0 currently)
+variables:
+  float lat(lat, lon) ;
+      lat:long_name = "Latitude" ;
+      lat:units = "degrees_north";
+  float lon(lat, lon) ;
+      lon:long_name = "Longitude" ;
+      lon:units = "degrees_east";
+  float depth(depth) ;
+      depth:long_name = "Z-Level Depth" ;
+      depth:units = "meter" ;
+      depth:positive = "down" ;
+  short mask(lat, lon) ;
+      mask:long_name = "field mask" ;
+      mask:value = "0-land, 1-water" ;
+  float time(time) ;
+      time:long_name = "time since initialization" ;
+      time:units = "hours since 1940-01-01 00:00:00" ;
+  float chl(time, depth, lat, lon) ;
+      chl:long_name = "" ;
+      chl:units = "mol/kg" ;
+      chl:coordinates = "lon lat depth time" ;
+  float irr_mem(time, depth, lat, lon) ;
+     irr_mem:long_name = "" ;
+     irr_mem:units = "mol/kg" ;
+     irr_mem:coordinates = "lon lat depth time" ;
+  float htotal(time, depth, lat, lon) ;
+      htotal:long_name = "" ;
+      htotal:units = "mol/kg" ;
+      htotal:coordinates = "lon lat depth time" ;
+  float co3_ion(time, depth, lat, lon) ;
+      co3_ionfe_bulk_flx:long_name = "" ;
+      co3_ionfe_bulk_flx:units = "mol/kg" ;
+      co3_ionfe_bulk_flx:coordinates = "lon lat depth time" ;
+  float fe_bulk_flx(time, depth, lat, lon) ;
+      fe_bulk_flx:long_name = "" ;
+      fe_bulk_flx:units = "mol/kg" ;
+      fe_bulk_flx:coordinates = "lon lat depth time" ;
+  float omega_cadet_calc(time, depth, lat, lon) ;
+      omega_cadet_calc:long_name = "" ;
+      omega_cadet_calc:units = "mol/kg" ;
+      omega_cadet_calc:coordinates = "lon lat depth time" ;
+  float omega_cadet_arag(time, depth, lat, lon) ;
+      omega_cadet_arag:long_name = "" ;
+      omega_cadet_arag:units = "mol/kg" ;
+      omega_cadet_arag:coordinates = "lon lat depth time" ;
+
+
+// global attributes:
+        :title = "Z Grid File" ;
+}

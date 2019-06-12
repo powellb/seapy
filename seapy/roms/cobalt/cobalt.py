@@ -56,6 +56,15 @@ ini_fields = {"chl": {"grid": "rho", "dims": 3},
               "mu_mem_sm": {"grid": "rho", "dims": 3},
               "mu_mem_lg": {"grid": "rho", "dims": 3}}
 
+# Diagnostic fields that are saved in diagnostic files that are useful
+dia_fields = {"chl": {"grid": "rho", "dims": 3},
+              "irr_mem": {"grid": "rho", "dims": 3},
+              "htotal": {"grid": "rho", "dims": 3},
+              "co3_ion": {"grid": "rho", "dims": 3},
+              "fe_bulk_flx": {"grid": "rho", "dims": 3},
+              "omega_cadet_calc": {"grid": "rho", "dims": 3},
+              "omega_cadet_arag": {"grid": "rho", "dims": 3}}
+
 # Extra fields that are required in the atmospheric forcing
 frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
               "ironsed": {"grid": "rho", "dims": 2},
