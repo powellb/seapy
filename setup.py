@@ -34,7 +34,7 @@ package_data = {
 }
 
 config = Configuration('')
-flags = [] if os.name == 'nt' else ['-O -fPIC']
+flags = [] if os.name == 'nt' else ['-fPIC']
 # ifort generated libraries produce invalid results in interpolation (NOT
 # OBVIOUS)
 config.add_extension('oalib', sources='src/oalib.f',
