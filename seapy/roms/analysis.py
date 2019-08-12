@@ -36,7 +36,15 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
     # Determine the upper and lower bounds of the value in the field
     tmp = np.ma.masked_equal(
         np.diff(((field_a - value) < 0).astype(np.short), axis=0), 0)
-    factor = np.mean(tmp).astype(np.short)
+    factor = np.round(np.mean(tmp)).astype(np.short)
+
+    # If something is amiss with the factor, just set it to the
+    # gradient of the field
+    if factor == 0:
+        grad = np.mean(np.diff(field, axis=0))
+        factor = -1 if grad < 0 else 1
+
+    # Determine the points of the upper bound and the lower bound
     bad = np.sum(tmp, axis=0).astype(bool)
     k_ones = np.arange(grid.n, dtype=np.short)
     upper = (k_ones[:, np.newaxis, np.newaxis] ==
