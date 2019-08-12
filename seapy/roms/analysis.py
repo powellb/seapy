@@ -13,26 +13,61 @@ from joblib import Parallel, delayed
 import seapy
 import netCDF4
 
-# Create a function to do the multiprocessing vertical interpolation.
-# This function is used because we don't want to construct an array of
-# tuples from the oa routine.
+
+def __find_surface_thread(grid, field, value, zeta, const_depth=False,
+                          k_values=False, u_grid=False, v_grid=False):
+    """
+    Internal function to find a value in field_a and return the
+    values from field_b at the same positions.
+    """
+    depth = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+                             grid.s_rho, grid.cs_r, zeta)
+    if u_grid:
+        depth = seapy.model.rho2u(depth)
+    elif v_grid:
+        depth = seapy.model.rho2v(depth)
+
+    # Set the variables based on what we are finding
+    if const_depth:
+        field_a, field_b = depth, field
+    else:
+        field_a, field_b = field, depth
+
+    # Determine the upper and lower bounds of the value in the field
+    tmp = np.ma.masked_equal(
+        np.diff(((field_a - value) < 0).astype(np.short), axis=0), 0)
+    factor = np.mean(tmp).astype(np.short)
+    bad = np.sum(tmp, axis=0).astype(bool)
+    k_ones = np.arange(grid.n, dtype=np.short)
+    upper = (k_ones[:, np.newaxis, np.newaxis] ==
+             np.argmax(np.abs(tmp), axis=0)) * bad
+    k_ones = np.arange(grid.n, dtype=np.short) - factor
+    lower = (k_ones[:, np.newaxis, np.newaxis] ==
+             np.argmax(np.abs(tmp), axis=0)) * bad
+
+    # Now that we have the bounds, we can linearly interpolate to
+    # find where the value lies
+    u_a = np.sum(field_a * upper, axis=0)
+    d_a = u_a - np.sum(field_a * lower, axis=0)
+    d_z = (u_a - value) / d_a
+    if k_values:
+        return np.argmax(upper, axis=0) + factor * d_z
+
+    # Calculate the values from field_b
+    u_b = np.sum(field_b * upper, axis=0)
+    d_b = u_b - np.sum(field_b * lower, axis=0)
+    return u_b - d_b * d_z
 
 
-def __dinterp(x, y, z, dat, fz, pmap):
-    ndat, pm = seapy.oavol(x, y, z, dat, x, y, fz, pmap, 5, 1, 1)
-    ndat = np.squeeze(ndat)
-    return np.ma.masked_where(np.abs(ndat) > 9e10, ndat, copy=False)
-
-
-def constant_depth(field, grid, depth, zeta=None, threads=-2):
+def constant_depth(field, grid, depth, zeta=None, threads=2):
     """
     Find the values of a 3-D field at a constant depth for all times given.
 
     Parameters
     ----------
     field : ndarray,
-        ROMS 3-D field to interpolate onto a constant depth level. Can be
-        two- or three-dimensional array (first dimension assumed to be time).
+        ROMS 3-D field to interpolate onto a constant depth level. If 4-D, it
+        will calculate through time.
     grid : seapy.model.grid or string or list,
         Grid that defines the depths and stretching for the field given
     depth : float,
@@ -48,29 +83,133 @@ def constant_depth(field, grid, depth, zeta=None, threads=-2):
     nfield : ndarray,
         Values from ROMS field on the given constant depth
     """
-
-    # Make sure our inputs are all valid
     grid = seapy.model.asgrid(grid)
+    depth = depth if depth < 0 else -depth
+    if depth is None or grid.depth_rho.min() > depth > grid.depth_rho.max():
+        warn("Error: {:f} is out of range for the depth.".format(value))
+        return
     if np.ndim(field) == 3:
         field = seapy.adddim(field)
-    if zeta is not None and np.ndim(zeta == 2):
-        zeta = seapy.adddim(zeta)
-    depth = depth if depth < 0 else -depth
+    nt = field.shape[0]
+    threads = np.minimum(nt, threads)
+    if zeta is None:
+        zeta = np.zeros((nt, 1, 1))
+    if np.ndim(zeta) == 2:
+        zeta = seapy.adddim(zeta, nt)
 
-    # Set up some arrays
-    x, y = np.meshgrid(np.arange(field.shape[-1]), np.arange(field.shape[-2]))
-    fz, pmap = seapy.oasurf(x, y, x, x, y, None, 5, 1, 1)
-    fz = seapy.adddim(np.ones(x.shape)) * depth
-    # Loop over all times, generate new field at depth
-    nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
-                         (delayed(__dinterp)(x, y, grid.depth_rho,
-                                             np.squeeze(field[i, :, :, :]), fz, pmap)
-                          for i in range(field.shape[0])), copy=False)
+    v_grid = u_grid = False
+    if field.shape[-2:] == grid.mask_u:
+        u_grid = True
+    elif field.shape[-2:] == grid.mask_v:
+        v_grid = True
 
-    return nfield
+    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                       (delayed(__find_surface_thread)
+                        (grid, field[i, :], depth, zeta[i, :],
+                         const_depth=True, u_grid=u_grid, v_grid=v_grid)
+                        for i in range(nt)), copy=False)
 
 
-def depth_average(field, grid, depth, top_depth=0, zeta=None):
+def constant_value(field, grid, value, zeta=None, threads=2):
+    """
+    Find the depth of the value across the field. For example, find the depth
+    of a given isopycnal if the field is density.
+
+    Parameters
+    ----------
+    field : ndarray,
+        ROMS 3-D field to interpolate onto a constant depth level. If 4-D, it
+        will calculate through time.
+    grid : seapy.model.grid or string or list,
+        Grid that defines the depths and stretching for the field given
+    value : float,
+        Value to find the depths for in same units as the 'field'
+    zeta : ndarray, optional,
+        ROMS zeta field corresponding to field if you wish to apply the SSH
+        correction to the depth calculations.
+    threads : int, optional,
+        Number of threads to use for processing
+
+    Returns
+    -------
+    nfield : ndarray,
+        Depths from ROMS field on the given value
+    """
+    grid = seapy.model.asgrid(grid)
+    if value is None or field.min() > value > field.max():
+        warn("Error: {:f} is out of range for the field.".format(value))
+        return
+    if np.ndim(field) == 3:
+        field = seapy.adddim(field)
+    nt = field.shape[0]
+    threads = np.minimum(nt, threads)
+    if zeta is None:
+        zeta = np.zeros((nt, 1, 1))
+    if np.ndim(zeta) == 2:
+        zeta = seapy.adddim(zeta, nt)
+
+    v_grid = u_grid = False
+    if field.shape[-2:] == grid.mask_u:
+        u_grid = True
+    elif field.shape[-2:] == grid.mask_v:
+        v_grid = True
+
+    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                       (delayed(__find_surface_thread)
+                        (grid, field[i, :], value, zeta[i, :],
+                         u_grid=u_grid, v_grid=v_grid)
+                        for i in range(nt)), copy=False)
+
+
+def constant_value_k(field, grid, value, zeta=None, threads=2):
+    """
+    Find the layer number of the value across the field. For example, find the k
+    of a given isopycnal if the field is density.
+
+    Parameters
+    ----------
+    field : ndarray,
+        ROMS 3-D field to interpolate onto a constant depth level. If 4-D, it
+        will calculate through time.
+    grid : seapy.model.grid or string or list,
+        Grid that defines the depths and stretching for the field given
+    value : float,
+        Value to find the depths for in same units as the 'field'
+    threads : int, optional,
+        Number of threads to use for processing
+
+    Returns
+    -------
+    nfield : ndarray,
+        Depths from ROMS field on the given value
+    """
+    grid = seapy.model.asgrid(grid)
+    if value is None or field.min() > value > field.max():
+        warn("Error: {:f} is out of range for the field.".format(value))
+        return
+    if np.ndim(field) == 3:
+        field = seapy.adddim(field)
+    nt = field.shape[0]
+    threads = np.minimum(nt, threads)
+    if zeta is None:
+        zeta = np.zeros((nt, 1, 1))
+    if np.ndim(zeta) == 2:
+        zeta = seapy.adddim(zeta, nt)
+
+    v_grid = u_grid = False
+    if field.shape[-2:] == grid.mask_u:
+        u_grid = True
+    elif field.shape[-2:] == grid.mask_v:
+        v_grid = True
+
+    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+                       (delayed(__find_surface_thread)
+                        (grid, field[i, :], value, zeta[i, :],
+                         k_values=True, u_grid=u_grid, v_grid=v_grid)
+                        for i in range(nt)), copy=False)
+
+
+def depth_average(field, grid, bottom, top, zeta=None):
     """
     Compute the depth-averaged field down to the depth specified. NOTE:
     This just finds the nearest layer, so at every grid cell, it may not be
@@ -83,9 +222,9 @@ def depth_average(field, grid, depth, top_depth=0, zeta=None):
         three-dimensional array (single time).
     grid : seapy.model.grid or string or list,
         Grid that defines the depths and stretching for the field given
-    depth : float,
+    bottom : float,
         Depth (in meters) to integrate from
-    top_depth : float,
+    top : float,
         Depth (in meters) to integrate to
     zeta : ndarray, optional,
         ROMS zeta field corresponding to field if you wish to apply the SSH
@@ -97,11 +236,11 @@ def depth_average(field, grid, depth, top_depth=0, zeta=None):
         Values from depth integrated ROMS field
     """
     grid = seapy.model.asgrid(grid)
-    depth = depth if depth < 0 else -depth
-    top_depth = top_depth if top_depth < 0 else -top_depth
-    if depth > top_depth:
-        depth, top_depth = top_depth, depth
-    drange = top_depth - depth
+    bottom = bottom if bottom < 0 else -bottom
+    top = top if top < 0 else -top
+    if bottom > top:
+        bottom, top = top, bottom
+    drange = top - bottom
 
     # If we have zeta, we need to compute thickness
     if zeta is not None:

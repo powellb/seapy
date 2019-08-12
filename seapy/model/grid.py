@@ -208,6 +208,11 @@ class grid:
         self.ln = int(self.lat_rho.shape[0])
         self.lm = int(self.lat_rho.shape[1])
         self.shape = (self.ln, self.lm)
+        if self.cgrid:
+            self.shape_u = (self.ln, self.lm - 1)
+            self.shape_v = (self.ln - 1, self.lm)
+        else:
+            self.shape_u = self.shape_v = self.shape
 
     def __repr__(self):
         return "{:s}: {:d}x{:d}x{:d}".format("C-Grid" if self.cgrid
