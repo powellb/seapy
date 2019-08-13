@@ -36,13 +36,7 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
     # Determine the upper and lower bounds of the value in the field
     tmp = np.ma.masked_equal(
         np.diff(((field_a - value) < 0).astype(np.short), axis=0), 0)
-    factor = np.round(np.mean(tmp)).astype(np.short)
-
-    # If something is amiss with the factor, just set it to the
-    # gradient of the field
-    if factor == 0:
-        grad = np.mean(np.diff(field, axis=0))
-        factor = -1 if grad < 0 else 1
+    factor = -np.sign(np.mean(np.diff(field, axis=0))).astype(np.short)
 
     # Determine the points of the upper bound and the lower bound
     bad = np.sum(tmp, axis=0).astype(bool)
@@ -92,6 +86,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=2):
         Values from ROMS field on the given constant depth
     """
     grid = seapy.model.asgrid(grid)
+    field = np.ma.masked_invalid(field, copy=False)
     depth = depth if depth < 0 else -depth
     if depth is None or grid.depth_rho.min() > depth > grid.depth_rho.max():
         warn("Error: {:f} is out of range for the depth.".format(value))
@@ -144,6 +139,7 @@ def constant_value(field, grid, value, zeta=None, threads=2):
         Depths from ROMS field on the given value
     """
     grid = seapy.model.asgrid(grid)
+    field = np.ma.masked_invalid(field, copy=False)
     if value is None or field.min() > value > field.max():
         warn("Error: {:f} is out of range for the field.".format(value))
         return
@@ -192,6 +188,7 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
         Depths from ROMS field on the given value
     """
     grid = seapy.model.asgrid(grid)
+    field = np.ma.masked_invalid(field, copy=False)
     if value is None or field.min() > value > field.max():
         warn("Error: {:f} is out of range for the field.".format(value))
         return
