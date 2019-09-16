@@ -45,7 +45,7 @@ config.add_extension('hindices', sources='src/hindices.f',
                      extra_f77_compile_args=flags)
 
 config = dict(
-    name='seapy',
+    name='seapy-ocean',
     version='0.4.2',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
