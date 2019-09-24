@@ -297,7 +297,8 @@ def _get_calendar(var):
     """
     # Set up the mapping for calendars
     default = 1
-    standard = np.s_[:3]
+    calendar_conv = [False, False, False,
+                     True, True, True, False, False, False]
     calendar_types = ['standard', 'gregorian', 'proleptic_gregorian', 'noleap',
                       'julian', 'all_leap', '365_day', '366_day', '360_day']
     cals = {v: v for v in calendar_types}
@@ -308,8 +309,8 @@ def _get_calendar(var):
         if hasattr(var, cal):
             cal = cals.get(str(getattr(var, cal)).lower(),
                            calendar_types[default])
-            return cal, False if cal in calendar_types[standard] else True
-    return calendar_types[default], False
+            return cal, calendar_conv[calendar_types == cal]
+    return calendar_types[default], calendar_conv[default]
 
 
 def date2num(dates, nc, tvar=None):
@@ -377,7 +378,7 @@ def num2date(nc, tvar=None, records=None, epoch=None):
                              nc.variables[tvar].units,
                              calendar=calendar)
     if convert:
-        times = [datetime.datetime.strptime(t.strftime(), '%Y-%m-%d %H:%M:%S')
+        times = [datetime.datetime.strptime(t.strftime(), '%Y-%m-%d-%H:%M:%S')
                  for t in times]
 
     if not epoch:

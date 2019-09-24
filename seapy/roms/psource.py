@@ -43,7 +43,7 @@ def create(filename, river, s_rho=None, cdl=None):
               "y":grid_y,
               "direction":0 or 1,
               "id":value,
-              "flag":[1,2,3,4,or 5],  [optional]
+              "flag":[1,2,3,4,or 5], [optional]
               "vshape":[vals] } [optional]
 
     s_rho : int, optional
@@ -75,7 +75,7 @@ def create(filename, river, s_rho=None, cdl=None):
         except:
             nc.variables['river_flag'][i] = 0
         try:
-            vshape = np.asarray(r['vshape'][:, np.newaxis])
+            vshape = np.asarray(r['vshape'])[:, np.newaxis]
             nc.variables['river_Vshape'][:, i] = vshape
         except Exception as err:
             print("Using default shape")
