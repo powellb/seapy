@@ -57,6 +57,9 @@ $ pip install -e seapy
 
 With an [editable-mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
 
+If you are building from source in a Conda environment on Windows, you should install the
+[m2w64-gcc](https://anaconda.org/msys2/m2w64-gcc) and [m2w64-gfortran](https://anaconda.org/msys2/m2w64-gcc-fortran) compilers. On Linux and OSX the system gcc and gfortran should work OK.
+
 ## Contributing
 
 If you've installed from source in editable mode so that you can change and test the source code, then you should consider forking your own copy of the repository. This allows you to
