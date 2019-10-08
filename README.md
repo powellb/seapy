@@ -2,18 +2,71 @@
 
 Tools for working with ocean models and data.
 
-SEAPY requires: numpy, scipy, netCDF4, joblib, and numpy_groupies
+SEAPY requires: numpy, scipy, netCDF4, basemap, joblib, and numpy_groupies
 
 ## Installation
 
-The simplest way to install is:
+### Install from Conda-Forge
 
-       pip install git+git://github.com/powellb/seapy@master
-   
-If you wish to have a copy of the source locally:
+Install from [conda-forge](https://conda-forge.org/) with the Conda package manager:
+```
+$ conda install -c conda-forge seapy
+```
 
-       git clone https://github.com/powellb/seapy.git
-       python setup.py install
+You should also consider making conda-forge your default channel. See the [conda-forge tips and tricks page](https://conda-forge.org/docs/user/tipsandtricks.html).
+
+The Conda-Forge [SEAPY feedstock](https://github.com/conda-forge/seapy-feedstock) is maintained by Filipe Fernandes, [ocefpaf](https://github.com/ocefpaf/). As of August 2019 there are binary packages on all the platforms that Conda-Forge supports: Python 3.6 and 3.7 on Linux, Windows and Mac OSX (all 64-bit).
+
+To remove seapy:
+```
+$ conda remove seapy
+```
+
+## Install from PyPI
+
+Install from [PyPI](https://pypi.org/) with PIP:
+```
+$ pip install seapy-ocean
+```
+
+Note that on PyPI (but nowhere else) the package name is seapy-ocean to avoid a name clash with another package. The module name is still seapy.
+
+SEAPY packages on PyPI have been built and uploaded by Mark Hadfield, [hadfieldnz](https://pypi.org/user/hadfieldnz/). There is a source distribution that should build with no problems on Linux (and Mac OSX, but we haven't tested it) and a binary distribution for Windows (64-bit).
+
+In a Conda environment, it is quite possible to install with PIP, but dependency handling and updating will be cleaner if you use the Conda package.
+
+To remove seapy-ocean
+```
+$ pip uninstall seapy-ocean
+```
+
+## Install from source code on GitHub.com
+
+The SEAPY source code is maintained by Brian Powell, (powellb)[https://github.com/powellb]. Releases are made on the [master branch](https://github.com/powellb/seapy/tree/master)
+
+Install from [GitHub.com](https://github.com/) with PIP:
+```
+$ pip install git+git://github.com/powellb/seapy@master
+```
+
+OR clone a copy of the source and install in editable mode, eg:
+```
+$ git clone https://github.com/powellb/seapy.git
+$ pip install -e seapy
+```
+
+With an [editable-mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
+
+If you are building from source in a Conda environment on Windows, you should install the
+[m2w64-gcc](https://anaconda.org/msys2/m2w64-gcc) and [m2w64-gfortran](https://anaconda.org/msys2/m2w64-gcc-fortran) compilers. On Linux and OSX the system gcc and gfortran should work OK.
+
+## Contributing
+
+If you've installed from source in editable mode so that you can change and test the source code, then you should consider forking your own copy of the repository. This allows you to
+keep your changes under revision control and potentially contribute them to the project. [Forking on GitHub.com](https://help.github.com/en/articles/fork-a-repo) is a lightweight process that won't complicate your workflow significantly and keeps the relationship between your work and the original project clear, so it is strongly advised to do it early. However he immutable and unique nature of Git commits means that you can create and populate a fork later if you want to, as long as you have saved your work somewhere in Git format. To create a fork you will need a [GitHub.com user account](https://help.github.com/en/articles/signing-up-for-a-new-github-account).
+
+This [beginner's guide to contributing to a GitHub project](https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/) has some good suggestions about contributing to an existing project. The convention in the [existing SEAPY forks](https://github.com/powellb/seapy/network/members) is to reserve the branch name "master" for the master branch in Brian Powell's repository (or copies thereof) and to use a branch matching your user name for your own work.
+
 
 ## Examples
 

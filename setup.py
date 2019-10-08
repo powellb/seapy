@@ -13,13 +13,11 @@ sys.argv[:] = sys.argv[:1] + ['config_fc', '--noopt'] + sys.argv[1:]
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
-
 def read(*parts):
     return open(os.path.join(rootpath, *parts), 'r').read()
 
-
-LICENSE = read('LICENSE.txt')
-long_description = read('README.md')
+with open("README.md", "r") as f:
+    long_description = f.read()
 
 # Dependencies.
 with open('requirements.txt') as f:
@@ -34,7 +32,7 @@ package_data = {
 }
 
 config = Configuration('')
-flags = [] if os.name == 'nt' else ['-O -fPIC']
+flags = [] if os.name == 'nt' else ['-fPIC']
 # ifort generated libraries produce invalid results in interpolation (NOT
 # OBVIOUS)
 config.add_extension('oalib', sources='src/oalib.f',
@@ -45,10 +43,12 @@ config.add_extension('hindices', sources='src/hindices.f',
                      extra_f77_compile_args=flags)
 
 config = dict(
-    name='seapy',
-    version='0.4.2',
+    name=os.getenv('PACKAGE_NAME','seapy'),
+    version='0.4.4',
+    license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Brian Powell',
     author_email='powellb@hawaii.edu',
     url='https://github.com/powellb/seapy',
@@ -60,7 +60,6 @@ config = dict(
     package_data=package_data,
     ext_package='seapy.external',
     scripts=['bin/convert_clim.py', 'bin/convert_frc.py'],
-    license=LICENSE,
     install_requires=install_requires,
     zip_safe=False,
     **config.todict()

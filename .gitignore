@@ -6,7 +6,7 @@ GTAGS
 make.tags
 build
 dist
-seapy.egg-info
+*.egg-info
 seapy/external
 notes.org
 .dir-locals.el
