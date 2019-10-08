@@ -13,7 +13,6 @@ sys.argv[:] = sys.argv[:1] + ['config_fc', '--noopt'] + sys.argv[1:]
 
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
-
 def read(*parts):
     return open(os.path.join(rootpath, *parts), 'r').read()
 
@@ -44,8 +43,8 @@ config.add_extension('hindices', sources='src/hindices.f',
                      extra_f77_compile_args=flags)
 
 config = dict(
-    name='seapy-ocean',
-    version='0.4.3',
+    name=os.getenv('PACKAGE_NAME','seapy'),
+    version='0.4.4',
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
