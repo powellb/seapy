@@ -62,10 +62,13 @@ If you are building from source in a Conda environment on Windows, you should in
 
 ## Contributing
 
-If you've installed from source in editable mode so that you can change and test the source code, then you should consider forking your own copy of the repository. This allows you to
-keep your changes under revision control and potentially contribute them to the project. [Forking on GitHub.com](https://help.github.com/en/articles/fork-a-repo) is a lightweight process that won't complicate your workflow significantly and keeps the relationship between your work and the original project clear, so it is strongly advised to do it early. However he immutable and unique nature of Git commits means that you can create and populate a fork later if you want to, as long as you have saved your work somewhere in Git format. To create a fork you will need a [GitHub.com user account](https://help.github.com/en/articles/signing-up-for-a-new-github-account).
 
-This [beginner's guide to contributing to a GitHub project](https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/) has some good suggestions about contributing to an existing project. The convention in the [existing SEAPY forks](https://github.com/powellb/seapy/network/members) is to reserve the branch name "master" for the master branch in Brian Powell's repository (or copies thereof) and to use a branch matching your user name for your own work.
+If you've installed from source in editable mode, then you should definitely consider forking your own copy of the repository. This allows you to keep your changes under revision control on GitHub.com and potentially contribute them to the main project. You should follow the procedures described in this [Git Workflow](https://www.asmeurer.com/git-workflow/) document.
+
+[Forking on GitHub.com](https://help.github.com/en/articles/fork-a-repo) is a lightweight process that won't complicate your workflow and keeps the relationship between your work and the original project clear, so it is strongly advised to do it early. However the immutable and unique nature of Git commits means that you can create and populate a fork later if you want to, as long as you have saved your work somewhere in Git format. To create a fork you will need a [GitHub.com user account](https://help.github.com/en/articles/signing-up-for-a-new-github-account).
+
+
+All your changes should be committed to a branch other than "master", which is reserved for the master branch in Brian Powell's repository (or copies thereof). A common practice in the [existing SEAPY forks](https://github.com/powellb/seapy/network/members) is to use a branch name matching your user name for your own work. However if you are developing a specific feature or bug fix to be pulled into master, it may be sensible to name the branch after that feature or bug fix.
 
 
 ## Examples
