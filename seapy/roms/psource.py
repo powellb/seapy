@@ -66,7 +66,10 @@ def create(filename, river, s_rho=None, cdl=None):
 
     # Go through each river and set up the basics
     for i, r in enumerate(river):
-        nc.variables['river'][i] = int(r['id'])
+        try:
+            nc.variables['river'][i] = int(r['id'])
+        except:
+            nc.variables['river'][i] = 999
         nc.variables['river_Xposition'][i] = int(r['x'])
         nc.variables['river_Eposition'][i] = int(r['y'])
         nc.variables['river_direction'][i] = int(r['direction'])

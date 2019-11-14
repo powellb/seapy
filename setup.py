@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function
 
 import os
 import sys
-from setuptools import find_packages, setup
+from setuptools import find_packages
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 
@@ -46,7 +46,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name='seapy',
-    version='0.4.2',
+    version='0.5',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
     author='Brian Powell',
