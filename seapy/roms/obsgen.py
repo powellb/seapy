@@ -178,7 +178,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
 class obsgen(object):
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, ib=False):
         """
         class for abstracting the processing of raw observation files
         (satellite, in situ, etc.) into ROMS observations files. All
@@ -194,6 +194,10 @@ class obsgen(object):
             Model time-step or greater in units of days
         epoch: datetime, optional,
             Time to reference all observations from
+        ib: logical
+            Add atmospheric correction back to the obs for
+            runs with inverse barometer effect activated.
+            Only for along track SLA!
 
         Returns
         -------
@@ -203,6 +207,7 @@ class obsgen(object):
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
         self.epoch = reftime
+        self.ib = ib
 
     def convert_file(self, file, title=None):
         """
@@ -522,6 +527,8 @@ class aviso_sla_track(obsgen):
         slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
         dat = nc.variables[slaname][:]
         time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
+        if self.ib == True: # add dynamical atmospheric correction back for inverse barometer
+            dat = dat + nc.variables["dac"][:]
         nc.close()
 
         # make them into vectors
