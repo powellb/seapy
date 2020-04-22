@@ -530,6 +530,7 @@ class aviso_sla_track(obsgen):
         time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
         if self.ib == True: # add dynamical atmospheric correction back for inverse barometer
             dat = dat + nc.variables["dac"][:]
+            errdac = np.nanstd(nc.variables["dac"][:])
         nc.close()
 
         # make them into vectors
@@ -537,6 +538,8 @@ class aviso_sla_track(obsgen):
         lon = lon.ravel()
         dat = dat.ravel()
         err = np.ones(dat.shape) * _aviso_sla_errors.get(self.provenance, 0.1)
+        if self.ib == True: # add variability of atmospheric correction to the obs error
+            err = err + errdac
 
         if not self.grid.east():
             lon[lon > 180] -= 360
