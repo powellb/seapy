@@ -510,6 +510,8 @@ class aviso_sla_track(obsgen):
         self.provenance = provenance.upper()
         self.repeat = repeat
         self.ssh_error = ssh_error if ssh_error else _aviso_sla_errors
+        self.ib = ib
+        
         if ssh_mean is not None:
             self.ssh_mean = seapy.convolve_mask(ssh_mean, ksize=5, copy=True)
         else:
