@@ -178,7 +178,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
 class obsgen(object):
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch, ib=False):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch):
         """
         class for abstracting the processing of raw observation files
         (satellite, in situ, etc.) into ROMS observations files. All
@@ -207,7 +207,6 @@ class obsgen(object):
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
         self.epoch = reftime
-        self.ib = ib
 
     def convert_file(self, file, title=None):
         """
@@ -511,7 +510,7 @@ class aviso_sla_track(obsgen):
         self.repeat = repeat
         self.ssh_error = ssh_error if ssh_error else _aviso_sla_errors
         self.ib = ib
-        
+
         if ssh_mean is not None:
             self.ssh_mean = seapy.convolve_mask(ssh_mean, ksize=5, copy=True)
         else:
