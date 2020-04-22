@@ -207,6 +207,7 @@ class obsgen(object):
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
         self.epoch = reftime
+        self.ib = ib
 
     def convert_file(self, file, title=None):
         """
