@@ -178,7 +178,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
 class obsgen(object):
 
-    def __init__(self, grid, dt, reftime=seapy.default_epoch):
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, ib=False):
         """
         class for abstracting the processing of raw observation files
         (satellite, in situ, etc.) into ROMS observations files. All
