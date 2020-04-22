@@ -194,10 +194,6 @@ class obsgen(object):
             Model time-step or greater in units of days
         epoch: datetime, optional,
             Time to reference all observations from
-        ib: logical
-            Add atmospheric correction back to the obs for
-            runs with inverse barometer effect activated.
-            Only for along track SLA!
 
         Returns
         -------
@@ -502,6 +498,10 @@ class aviso_sla_track(obsgen):
     repeat: int
       Number of hours to repeat the track before and after its initial
       pass
+    ib: logical, optional (default = False)
+      Add atmospheric correction back to the obs for
+      runs with inverse barometer effect activated.
+      Only for along track SLA!
     """
 
     def __init__(self, grid, dt, reftime=seapy.default_epoch, ssh_mean=None,
