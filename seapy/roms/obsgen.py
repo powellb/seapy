@@ -192,6 +192,8 @@ class obsgen(object):
             grid to use for generating observations
         dt: float,
             Model time-step or greater in units of days
+            The bin size of time for observations to be considered at the
+            same time. The units must be the same as the provided time.
         epoch: datetime, optional,
             Time to reference all observations from
 
