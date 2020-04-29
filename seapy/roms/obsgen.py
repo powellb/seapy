@@ -1349,11 +1349,11 @@ class cora_dt_t(obsgen):
             self.temp_limits = (2, 35)
         else:
             self.temp_limits = temp_limits
-        if salt_limits is None:
-
+#        if salt_limits is None:
 #            self.salt_limits = (10, 36.5)
 #        else:
 #            self.salt_limits = salt_limits
+
         self.temp_error = temp_error
 #        self.salt_error = salt_error
         super().__init__(grid, dt, reftime)
@@ -1424,6 +1424,7 @@ class cora_dt_t(obsgen):
         depth = nc.variables["DEPTH"][profile_list, :]
         nc.close()
         import ipdb; ipdb.set_trace()
+
         # Ensure consistency
         full_mask = np.logical_or.reduce((temp.mask, salt.mask, depth.mask))
         temp[full_mask] = np.ma.masked
