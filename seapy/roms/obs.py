@@ -63,8 +63,8 @@ obs_provenance = {
     200: "CTD",
     210: "CTD_HOT",
     220: "CTD_ARGO",
-    230: "CORA_T"
-    240: "CORA_S"
+    230: "CORA_T",
+    240: "CORA_S",
     300: "SST",
     301: "SST_OSTIA",
     315: "SST_NAVO_MAP",
