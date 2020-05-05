@@ -1437,7 +1437,7 @@ class cora_dt_t(obsgen):
 
         # Put everything together into individual observations
         time = np.resize(julian_day - time_delta,
-                         pres.shape[::-1]).T[~temp.mask][good_data]
+                         temp.shape[::-1]).T[~temp.mask][good_data]
         lat = np.resize(lat, temp.shape[::-1]).T[~temp.mask][good_data]
         lon = np.resize(lon, temp.shape[::-1]).T[~temp.mask][good_data]
         depth = np.resize(depth, temp.shape[:-1:]).T[~temp.mask][good_data]
