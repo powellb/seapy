@@ -1425,14 +1425,12 @@ class cora_dt_t(obsgen):
         depth = np.tile(depth.transpose() , (np.shape(temp)[0], 1))
         nc.close()
 
-        import ipdb; ipdb.set_trace()
         # Ensure consistency
-        full_mask = np.logical_or.reduce((temp.mask) , (depth.mask))
-        temp[full_mask] = np.ma.masked
-        temp_qc[full_mask] = np.ma.masked
-#        salt[full_mask] = np.ma.masked
-#        salt_qc[full_mask] = np.ma.masked
-        depth[full_mask] = np.ma.masked
+        temp[temp.mask] = np.ma.masked
+        temp_qc[temp.mask] = np.ma.masked
+#        salt[temp_mask] = np.ma.masked
+#        salt_qc[temp_mask] = np.ma.masked
+        depth[temp.mask] = np.ma.masked
 
         # Search for good data by QC codes
         good_data = np.where(temp_qc <= 4)
@@ -1441,10 +1439,10 @@ class cora_dt_t(obsgen):
         
         # Put everything together into individual observations
         time = np.resize(julian_day - time_delta,
-                         temp.shape[::-1]).T[good_data]
-        lat = np.resize(lat, temp.shape[::-1]).T[good_data]
-        lon = np.resize(lon, temp.shape[::-1]).T[good_data]
-        depth = np.resize(depth, temp.shape[:-1:]).T[good_data]
+                         temp.shape[::-1]).T[~temp.mask][good_data]
+        lat = np.resize(lat, temp.shape[::-1]).T[~temp.mask][good_data]
+        lon = np.resize(lon, temp.shape[::-1]).T[~temp.mask][good_data]
+        #depth = np.resize(depth, temp.shape[:-1:]).T[good_data]
 
         # Apply the limits
         temp = np.ma.masked_outside(temp.compressed()[good_data],
