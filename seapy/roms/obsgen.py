@@ -1425,12 +1425,12 @@ class cora_dt_t(obsgen):
         nc.close()
 
         # Ensure consistency
-        full_mask = np.logical_or.reduce((temp.mask)) #, salt.mask, depth.mask))
-        temp[full_mask] = np.ma.masked
-        temp_qc[full_mask] = np.ma.masked
+#        full_mask = np.logical_or.reduce((temp.mask)) #, salt.mask, depth.mask))
+#        temp[full_mask] = np.ma.masked
+#        temp_qc[full_mask] = np.ma.masked
 #        salt[full_mask] = np.ma.masked
 #        salt_qc[full_mask] = np.ma.masked
-        depth[full_mask] = np.ma.masked
+#        depth[full_mask] = np.ma.masked
 
         # Search for good data by QC codes
         good_data = np.where(temp_qc <= 4)
