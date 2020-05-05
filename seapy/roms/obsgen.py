@@ -1404,8 +1404,8 @@ class cora_dt_t(obsgen):
         cora_epoch = datetime.datetime.strptime(''.join(
             nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
         time_delta = (self.epoch - cora_epoch).days
-        file_stamp = datetime.datetime.strptime(''.join(
-            nc.variables["DATE_CREATION"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
+#        file_stamp = datetime.datetime.strptime(''.join(
+#            nc.variables["DATE_CREATION"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
 
         # Grab data over the previous day
 #        file_time = np.minimum((file_stamp - cora_epoch).days,
@@ -1423,8 +1423,7 @@ class cora_dt_t(obsgen):
 #        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
         depth = nc.variables["DEPTH"][profile_list, :]
         nc.close()
-        import ipdb; ipdb.set_trace()
-
+        
         # Ensure consistency
         full_mask = np.logical_or.reduce((temp.mask, salt.mask, depth.mask))
         temp[full_mask] = np.ma.masked
