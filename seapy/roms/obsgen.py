@@ -1435,6 +1435,8 @@ class cora_dt_t(obsgen):
         # Search for good data by QC codes
         good_data = np.where(temp_qc <= 4)
 
+        import ipdb; ipdb.set_trace()
+        
         # Put everything together into individual observations
         time = np.resize(julian_day - time_delta,
                          temp.shape[::-1]).T[~temp.mask][good_data]
