@@ -1401,9 +1401,10 @@ class cora_dt_t(obsgen):
 
         # Load only the data from those in our area
         julian_day = nc.variables["JULD"][profile_list]
+        import ipdb; ipdb.set_trace()        
         cora_epoch = datetime.datetime.strptime(''.join(
             nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')), '%Y%m%d%H%M%S')
-        import ipdb; ipdb.set_trace()    
+    
         time_delta = (self.epoch - cora_epoch).days
         file_stamp = datetime.datetime.strptime(''.join(
             nc.variables["DATE_CREATION"][:].astype('<U1')), '%Y%m%d%H%M%S')
