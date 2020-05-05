@@ -1425,7 +1425,7 @@ class cora_dt_t(obsgen):
         nc.close()
 
         # Ensure consistency
-        full_mask = np.logical_or.reduce((temp.mask, salt.mask, depth.mask))
+        full_mask = np.logical_or.reduce((temp.mask)) #, salt.mask, depth.mask))
         temp[full_mask] = np.ma.masked
         temp_qc[full_mask] = np.ma.masked
 #        salt[full_mask] = np.ma.masked
