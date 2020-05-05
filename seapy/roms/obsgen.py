@@ -1421,9 +1421,9 @@ class cora_dt_t(obsgen):
         temp_qc = nc.variables["TEMP_QC"][profile_list, :]
 #        salt = nc.variables["PSAL"][profile_list, :]
 #        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
-        depth = nc.variables["DEPTH"][profile_list, :]
+        depth = nc.variables["DEPH"][profile_list, :]
         nc.close()
-        
+
         # Ensure consistency
         full_mask = np.logical_or.reduce((temp.mask, salt.mask, depth.mask))
         temp[full_mask] = np.ma.masked
