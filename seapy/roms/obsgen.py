@@ -1421,7 +1421,7 @@ class cora_dt_t(obsgen):
         temp_qc = nc.variables["TEMP_QC"][profile_list, :]
 #        salt = nc.variables["PSAL"][profile_list, :]
 #        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
-        depth = nc.variables["DEPH"][profile_list, :]
+        depth = nc.variables["DEPH"][:]
         nc.close()
 
         # Ensure consistency
@@ -1440,7 +1440,7 @@ class cora_dt_t(obsgen):
                          pres.shape[::-1]).T[~temp.mask][good_data]
         lat = np.resize(lat, temp.shape[::-1]).T[~temp.mask][good_data]
         lon = np.resize(lon, temp.shape[::-1]).T[~temp.mask][good_data]
-        depth = depth[good_data]
+        depth = np.resize(depth, temp.shape[:-1:]).T[~temp.mask][good_data]
 
         # Apply the limits
         temp = np.ma.masked_outside(temp.compressed()[good_data],
