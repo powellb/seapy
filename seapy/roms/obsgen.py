@@ -1454,22 +1454,22 @@ class cora_dt_s(obsgen):
         self.salt_error = salt_error
         super().__init__(grid, dt, reftime)
 
-    def datespan_file(self, file):
-        """
-        return the just the day that this argo file covers
-        """
-        nc = seapy.netcdf(file)
-        try:
-            d = netCDF4.num2date(nc.variables['JULD'][0],
-                                 nc.variables['JULD'].units)
-            st = datetime.datetime(*d.timetuple()[:3])
-            en = datetime.datetime(*d.timetuple()[:3] + (23, 59, 59))
-        except:
-            st = en = None
-            pass
-        finally:
-            nc.close()
-            return st, en
+#    def datespan_file(self, file):
+#        """
+#        return the just the day that this argo file covers
+#        """
+#        nc = seapy.netcdf(file)
+#        try:
+#            d = netCDF4.num2date(nc.variables['JULD'][0],
+#                                 nc.variables['JULD'].units)
+#            st = datetime.datetime(*d.timetuple()[:3])
+#            en = datetime.datetime(*d.timetuple()[:3] + (23, 59, 59))
+#        except:
+#            st = en = None
+#            pass
+#        finally:
+#            nc.close()
+#            return st, en
 
     def convert_file(self, file, title="CORA DT Obs"):
         """
@@ -1509,7 +1509,7 @@ class cora_dt_s(obsgen):
         salt = nc.variables["PSAL"][profile_list, :]
         salt_qc = nc.variables["PSAL_QC"][profile_list, :]
         depth = nc.variables["DEPH"][:]
-        depth = np.tile(depth.transpose() , (np.shape(temp)[0], 1))
+        depth = np.tile(depth.transpose() , (np.shape(salt)[0], 1))
         nc.close()
 
         # Ensure consistency
