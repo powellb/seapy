@@ -1514,7 +1514,7 @@ class cora_dt_s(obsgen):
 
         # Ensure consistency
         salt[salt.mask] = np.ma.masked
-        salt_qc[salt_mask] = np.ma.masked
+        salt_qc[salt.mask] = np.ma.masked
         depth[salt.mask] = np.ma.masked
 
         # Search for good data by QC codes
