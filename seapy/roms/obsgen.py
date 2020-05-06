@@ -1337,7 +1337,7 @@ class argo_ctd(obsgen):
 
 class cora_dt_t(obsgen):
     """
-    class to process Temperature profiles from CORA delayed time (DT) dataset (Copernicus) into ROMS observation
+    class to process TEMPERATURE profiles from CORA delayed time (DT) dataset (Copernicus) into ROMS observation
     files. This is a subclass of seapy.roms.genobs.genobs, and handles
     the loading of the data.
     """
@@ -1349,13 +1349,8 @@ class cora_dt_t(obsgen):
             self.temp_limits = (2, 35)
         else:
             self.temp_limits = temp_limits
-#        if salt_limits is None:
-#            self.salt_limits = (10, 36.5)
-#        else:
-#            self.salt_limits = salt_limits
 
         self.temp_error = temp_error
-#        self.salt_error = salt_error
         super().__init__(grid, dt, reftime)
 
     def datespan_file(self, file):
@@ -1404,23 +1399,14 @@ class cora_dt_t(obsgen):
         cora_epoch = datetime.datetime.strptime(''.join(
             nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
         time_delta = (self.epoch - cora_epoch).days
-#        file_stamp = datetime.datetime.strptime(''.join(
-#            nc.variables["DATE_CREATION"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
 
-        # Grab data over the previous day
-#        file_time = np.minimum((file_stamp - cora_epoch).days,
-#                               int(np.max(julian_day)))
-#        time_list = np.where(julian_day >= file_time - 1)[0]
-#        julian_day = julian_day[time_list]
         lon = lon[profile_list]
         lat = lat[profile_list]
-#        profile_list = profile_list[time_list]
+
 
         # Load the data in our region and time
         temp = nc.variables["TEMP"][profile_list, :]
         temp_qc = nc.variables["TEMP_QC"][profile_list, :]
-#        salt = nc.variables["PSAL"][profile_list, :]
-#        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
         depth = nc.variables["DEPH"][:]
         depth = np.tile(depth.transpose() , (np.shape(temp)[0], 1))
         nc.close()
@@ -1428,8 +1414,6 @@ class cora_dt_t(obsgen):
         # Ensure consistency
         temp[temp.mask] = np.ma.masked
         temp_qc[temp.mask] = np.ma.masked
-#        salt[temp_mask] = np.ma.masked
-#        salt_qc[temp_mask] = np.ma.masked
         depth[temp.mask] = np.ma.masked
 
         # Search for good data by QC codes
@@ -1445,11 +1429,110 @@ class cora_dt_t(obsgen):
         # Apply the limits
         temp = np.ma.masked_outside(temp.compressed()[good_data],
                                     self.temp_limits[0], self.temp_limits[1])
-#        salt = np.ma.masked_outside(salt.compressed()[good_data],
-#                                    self.salt_limits[0], self.salt_limits[1])
 
         data = [seapy.roms.obs.raw_data("TEMP", "CORA_T", temp,
                                         None, self.temp_error)]
+
+        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+                                      data, self.dt, title)
+
+class cora_dt_s(obsgen):
+    """
+    class to process SALINITY profiles from CORA delayed time (DT) dataset (Copernicus) into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
+                 salt_limits=None, temp_error=0.25,
+                 salt_error=0.1):
+        if salt_limits is None:
+            self.salt_limits = (10, 37)
+        else:
+            self.salt_limits = salt_limits
+
+        self.salt_error = salt_error
+        super().__init__(grid, dt, reftime)
+
+    def datespan_file(self, file):
+        """
+        return the just the day that this argo file covers
+        """
+        nc = seapy.netcdf(file)
+        try:
+            d = netCDF4.num2date(nc.variables['JULD'][0],
+                                 nc.variables['JULD'].units)
+            st = datetime.datetime(*d.timetuple()[:3])
+            en = datetime.datetime(*d.timetuple()[:3] + (23, 59, 59))
+        except:
+            st = en = None
+            pass
+        finally:
+            nc.close()
+            return st, en
+
+    def convert_file(self, file, title="CORA DT Obs"):
+        """
+        Load a CORA file and convert into an obs structure
+        """
+        nc = seapy.netcdf(file, aggdim="N_PROF")
+
+        # Load the position of all profiles in the file
+        lon = nc.variables["LONGITUDE"][:]
+        lat = nc.variables["LATITUDE"][:]
+
+        # Find the profiles that are in our area with known locations quality
+        if self.grid.east():
+            lon[lon < 0] += 360
+        profile_list = np.where(np.logical_and.reduce((
+            lat >= np.min(self.grid.lat_rho),
+            lat <= np.max(self.grid.lat_rho),
+            lon >= np.min(self.grid.lon_rho),
+            lon <= np.max(self.grid.lon_rho),
+            )))[0]
+
+        # Check which are good profiles
+        if not profile_list.size:
+            return None
+
+        # Load only the data from those in our area
+        julian_day = nc.variables["JULD"][profile_list]
+        cora_epoch = datetime.datetime.strptime(''.join(
+            nc.variables["REFERENCE_DATE_TIME"][:].astype('<U1')), '%Y%m%dT%H%M%SZ')
+        time_delta = (self.epoch - cora_epoch).days
+        
+        lon = lon[profile_list]
+        lat = lat[profile_list]
+#        profile_list = profile_list[time_list]
+
+        # Load the data in our region and time
+        salt = nc.variables["PSAL"][profile_list, :]
+        salt_qc = nc.variables["PSAL_QC"][profile_list, :]
+        depth = nc.variables["DEPH"][:]
+        depth = np.tile(depth.transpose() , (np.shape(temp)[0], 1))
+        nc.close()
+
+        # Ensure consistency
+        salt[salt.mask] = np.ma.masked
+        salt_qc[salt_mask] = np.ma.masked
+        depth[salt.mask] = np.ma.masked
+
+        # Search for good data by QC codes
+        good_data = np.where(salt_qc.compressed() <= 4)
+        
+        # Put everything together into individual observations
+        time = np.resize(julian_day - time_delta,
+                         salt.shape[::-1]).T[~salt.mask][good_data]
+        lat = np.resize(lat, salt.shape[::-1]).T[~salt.mask][good_data]
+        lon = np.resize(lon, salt.shape[::-1]).T[~salt.mask][good_data]
+        depth = depth.compressed().T[good_data]
+
+        # Apply the limits
+        salt = np.ma.masked_outside(salt.compressed()[good_data],
+                                    self.salt_limits[0], self.salt_limits[1])
+
+        data = [seapy.roms.obs.raw_data("SALT", "CORA_S", salt,
+                                        None, self.salt_error)]
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
