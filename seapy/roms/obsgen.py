@@ -1412,8 +1412,8 @@ class cora_dt_t(obsgen):
 #                               int(np.max(julian_day)))
 #        time_list = np.where(julian_day >= file_time - 1)[0]
 #        julian_day = julian_day[time_list]
-#        lon = lon[profile_list[time_list]]
-#        lat = lat[profile_list[time_list]]
+        lon = lon[profile_list]
+        lat = lat[profile_list]
 #        profile_list = profile_list[time_list]
 
         # Load the data in our region and time
@@ -1433,27 +1433,25 @@ class cora_dt_t(obsgen):
         depth[temp.mask] = np.ma.masked
 
         # Search for good data by QC codes
-        good_data = np.where(temp_qc <= 4)
-
-        import ipdb; ipdb.set_trace()
+        good_data = np.where(temp_qc.compressed() <= 4)
         
         # Put everything together into individual observations
         time = np.resize(julian_day - time_delta,
                          temp.shape[::-1]).T[~temp.mask][good_data]
         lat = np.resize(lat, temp.shape[::-1]).T[~temp.mask][good_data]
         lon = np.resize(lon, temp.shape[::-1]).T[~temp.mask][good_data]
-        #depth = np.resize(depth, temp.shape[:-1:]).T[good_data]
+        depth = depth.compressed().T[~depth.mask][good_data]
+
+        import ipdb; ipdb.set_trace()
 
         # Apply the limits
         temp = np.ma.masked_outside(temp.compressed()[good_data],
                                     self.temp_limits[0], self.temp_limits[1])
-        salt = np.ma.masked_outside(salt.compressed()[good_data],
-                                    self.salt_limits[0], self.salt_limits[1])
+#        salt = np.ma.masked_outside(salt.compressed()[good_data],
+#                                    self.salt_limits[0], self.salt_limits[1])
 
-        data = [seapy.roms.obs.raw_data("TEMP", "CTD_ARGO", temp,
-                                        None, self.temp_error),
-                seapy.roms.obs.raw_data("SALT", "CTD_ARGO", salt,
-                                        None, self.salt_error)]
+        data = [seapy.roms.obs.raw_data("TEMP", "CORA_T", temp,
+                                        None, self.temp_error)]
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
