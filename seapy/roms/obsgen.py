@@ -1442,8 +1442,6 @@ class cora_dt_t(obsgen):
         lon = np.resize(lon, temp.shape[::-1]).T[~temp.mask][good_data]
         depth = depth.compressed().T[good_data]
 
-        import ipdb; ipdb.set_trace()
-
         # Apply the limits
         temp = np.ma.masked_outside(temp.compressed()[good_data],
                                     self.temp_limits[0], self.temp_limits[1])
