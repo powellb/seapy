@@ -5,7 +5,7 @@
 
     Module for working with oceanographic data and models
 
-  Copyright (c)2019 University of Hawaii under the MIT-License.
+  Copyright (c)2020 University of Hawaii under the MIT-License.
 
   Requires the following packages: joblib
 

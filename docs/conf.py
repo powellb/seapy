@@ -54,7 +54,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'seapy'
-copyright = '2019, University of Hawaii, MIT-License'
+copyright = '2020, University of Hawaii, MIT-License'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -274,7 +274,7 @@ texinfo_documents = [
 epub_title = 'seapy'
 epub_author = 'Powell Lab'
 epub_publisher = 'Powell Lab'
-epub_copyright = '2019, Powell Lab'
+epub_copyright = '2020, Powell Lab'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = 'seapy'

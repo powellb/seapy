@@ -5,7 +5,7 @@
   Functions for working with tidal time-series
 
   Written by Glenn Carter and Dale Partridge
-  Copyright (c)2019 University of Hawaii under the MIT-License.
+  Copyright (c)2020 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import datetime

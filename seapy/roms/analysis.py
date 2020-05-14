@@ -5,7 +5,7 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2019 University of Hawaii under the MIT-License.
+  Copyright (c)2020 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
