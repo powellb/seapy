@@ -100,7 +100,6 @@ class grid:
             self.lon_rho = lon
             self.z = z
             self.cgrid = False
-            self.set_dims()
         self._verify_shape()
         if depths:
             self.set_dims()
