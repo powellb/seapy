@@ -99,10 +99,9 @@ class grid:
             self.lat_rho = lat
             self.lon_rho = lon
             self.z = z
-            self.cgrid = False
         self._verify_shape()
+        self.cgrid = False
         if depths:
-            self.set_dims()
             self.set_depth()
             self.set_thickness()
             self.set_mask_h()
