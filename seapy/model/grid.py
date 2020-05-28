@@ -96,12 +96,14 @@ class grid:
             self.cgrid = True if self._isroms else self.cgrid
         else:
             self._nc = None
+            self._isroms = False
             self.lat_rho = lat
             self.lon_rho = lon
             self.z = z
+            self.cgrid = False
         self._verify_shape()
-        self.cgrid = False
         if depths:
+            self.set_dims()
             self.set_depth()
             self.set_thickness()
             self.set_mask_h()

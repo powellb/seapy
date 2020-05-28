@@ -484,7 +484,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     ndarray:
         interpolated field on the destination grid
     pmap:
-        the pmap used in the inerpolation
+        the pmap used in the interpolation
     """
     if pmap is None:
         tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,

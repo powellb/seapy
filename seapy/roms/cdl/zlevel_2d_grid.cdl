@@ -3,7 +3,6 @@ dimensions:
 	lat = 192 ;
 	lon = 382 ;
 	depth = 40 ;
-	time = UNLIMITED ; // (0 currently)
 variables:
 	float lat(lat, lon) ;
 		lat:long_name = "Latitude" ;

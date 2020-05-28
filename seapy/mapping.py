@@ -251,6 +251,30 @@ class map(object):
         x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
         self.pc = self.ax.pcolormesh(x, y, data, **kwargs)
 
+    def contourf(self, lon, lat, data, **kwargs):
+        """
+        contourf field data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        data: array
+            data to contourf
+        **kwargs: arguments, optional
+            additional arguments to pass to pcolor
+        """
+        # Pcolor requires a modification to the locations to line up with
+        # the geography
+        dlon = lon * 0
+        dlat = lat * 0
+        dlon[:, 0:-1] = lon[:, 1:] - lon[:, 0:-1]
+        dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
+        x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
+        self.pc = self.ax.contourf(x, y, data, **kwargs)
+
     def scatter(self, lon, lat, data, **kwargs):
         """
         scatter plot data onto our geographic plot
