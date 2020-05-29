@@ -417,13 +417,14 @@ class grid:
                 self.mask_rho[water] = 1.0
         self.mask_u = self.mask_v = self.mask_rho
 
-    def set_depth(self):
+    def set_depth(self, force=False):
         """
         Compute the depth of each cell for the model grid.
 
         Parameters
         ----------
-        None
+        force : boolean, default False
+                If True, force the update of the depths
 
         Returns
         -------
@@ -432,7 +433,7 @@ class grid:
         try:
             if self._isroms:
                 if "s_rho" not in self.__dict__ or \
-                   "cs_r" not in self.__dict__:
+                   "cs_r" not in self.__dict__ or force:
                     self.s_rho, self.cs_r = seapy.roms.stretching(
                         self.vstretching, self.theta_s, self.theta_b,
                         self.hc, self.n)
