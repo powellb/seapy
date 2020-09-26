@@ -148,7 +148,7 @@ def bandpass(x, dt, low_cutoff=None, hi_cutoff=None, order=7):
     # Go over all contiguous regions
     regions = seapy.contiguous(x)
     for r in regions:
-        if ((r.stop - r.start) >= padlen):
+        if ((r.stop - r.start) >= 5 * padlen):
             nx[r] = scipy.signal.filtfilt(
                 b, a, x[r], padlen=5 * padlen, axis=0)
     return nx

@@ -94,9 +94,11 @@ def fill(x, max_gap=None, kind='linear'):
     if max_gap is not None:
         regions = contiguous(x)
         for r in regions:
+            print(f"{r}")
             if ((r.stop - r.start) <= max_gap) and \
                     (r.stop < f.x.max()) and (r.start > f.x.min()):
                 nx[r] = f(np.arange(r.start, r.stop))
+                print(f"fill {r}: {nx[r]}")
     else:
         bad = np.nonzero(x.mask)[0]
         bad = np.delete(bad, np.nonzero(
@@ -132,10 +134,12 @@ def contiguous(x):
     x = np.ma.masked_invalid(np.atleast_1d(x).flatten(), copy=False)
     idx = x.nonzero()[0]
     try:
-        d = idx[np.nonzero(np.diff(idx) - 1)[0] + 1]
+        d = np.diff(idx) - 1
+        dl = idx[np.nonzero(d)[0] + 1]
+        d = d[np.nonzero(d)]
         return np.array([np.s_[r[0]:r[1]] for r in
-                         zip(np.hstack((idx.min(), d)),
-                             np.hstack((d - 1, idx.max() + 1)))])
+                         zip(np.hstack((idx.min(), dl)),
+                             np.hstack((dl - d - 1, idx.max())))])
     except:
         return []
 
