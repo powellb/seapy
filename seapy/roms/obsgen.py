@@ -530,6 +530,7 @@ class aviso_sla_track(obsgen):
         slaname = 'SLA' if 'SLA' in nc.variables.keys() else 'sla_filtered'
         dat = nc.variables[slaname][:]
         time = seapy.roms.num2date(nc, "time", epoch=self.epoch)
+        epoch = self.epoch
         if self.ib == True: # add dynamical atmospheric correction back for inverse barometer
             dat = dat + nc.variables["dac"][:]
             errdac = np.nanstd(nc.variables["dac"][:])
