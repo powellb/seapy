@@ -137,6 +137,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
 
     # Gather the observations that need tidal information
     obs = seapy.roms.obs.asobs(obs)
+    obs.reftime = reftime
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
     if pro:
         l = np.where(np.logical_and(obs.type == 1,
@@ -205,6 +206,7 @@ class obsgen(object):
         self.grid = seapy.model.asgrid(grid)
         self.dt = dt
         self.epoch = reftime
+        self.reftime = reftime
 
     def convert_file(self, file, title=None):
         """
@@ -569,6 +571,7 @@ class aviso_sla_track(obsgen):
             after.time += self.repeat / 24
             obs.add(prior)
             obs.add(after)
+        obs.reftime = self.reftime
 
         return obs
 
@@ -614,9 +617,12 @@ class ostia_sst_map(obsgen):
         lon = lon[good]
         data = [seapy.roms.obs.raw_data("TEMP", "SST_OSTIA", dat.compressed(),
                                         err[good], self.temp_error)]
+        
         # Grid it
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
+        obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                       data, self.dt, title)
+        obs.reftime = self.reftime
+        return obs
 
 
 class navo_sst_map(obsgen):
