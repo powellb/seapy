@@ -216,7 +216,7 @@ def smooth(data, ksize=3, kernel=None, copy=True):
         fld = ndimage.convolve(fld.data, kernel,
                                mode="reflect", cval=0.0)
     else:
-        kernel = np.expand_dims(kernel, axis=3)
+        kernel = kernel[:, :, np.newaxis]
         fld = np.transpose(ndimage.convolve(
             fld.filled(0).transpose(1, 2, 0), kernel,
             mode="reflect", cval=0.0), (2, 0, 1))
@@ -274,7 +274,7 @@ def convolve(data, ksize=3, kernel=None, copy=True, only_mask=False):
         nfld = ndimage.convolve(fld.data * (~msk).view(np.int8), kernel,
                                 mode="constant", cval=0.0)
     else:
-        kernel = np.expand_dims(kernel, axis=3)
+        kernel = kernel[:, :, np.newaxis]
         count = np.transpose(ndimage.convolve(
             (~msk).view(np.int8).transpose(1, 2, 0), kernel,
             mode="constant", cval=0.0), (2, 0, 1))
