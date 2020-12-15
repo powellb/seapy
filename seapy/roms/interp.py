@@ -311,6 +311,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                                         up_factor=_up_scaling.get(dest, 1.0),
                                         down_factor=_down_scaling.get(dest, 1.0))
                                      for i in recs), copy=False)
+
                 if z_mask:
                     __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
                 ncout.variables[dest][outr, :, :, :] = ndata

@@ -576,8 +576,6 @@ def from_stations(station_file, bry_file, grid=None):
         return y
 
     for side in sides:
-        print(side)
-
         # Masks
         sta_ocean = np.where(sta_mask[bry[side]] == 1)[0]
         ocean = np.where(grid_mask[bry[side]] == 1)[0]
@@ -614,11 +612,14 @@ def from_stations(station_file, bry_file, grid=None):
         sta_x = seapy.adddim(x, len(sta_s_rho))
         x = seapy.adddim(x, len(grid.s_rho))
 
-        for n, t in track(enumerate(statime)):
+        for n, t in track(enumerate(statime), total=len(statime),
+                     description=f"Converting {side} stations..."):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
-                                         sta_s_rho, sta_cs_r, sta_zeta[n, bry[side]])
+                                         sta_s_rho, sta_cs_r,
+                                         sta_zeta[n, bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
-                                     grid.hc, grid.s_rho, grid.cs_r, sta_zeta[n, bry[side]])
+                                     grid.hc, grid.s_rho, grid.cs_r,
+                                     sta_zeta[n, bry[side]])
 
             in_x = __expand_field(sta_x[:, sta_ocean])
             in_x[:, 0] = in_x[:, 0] - 3600
@@ -631,17 +632,19 @@ def from_stations(station_file, bry_file, grid=None):
             in_data = __expand_field(np.transpose(
                 sta_temp[n, bry[side], :][sta_ocean, :]))
             ncbry.variables["temp_" + side][n, :] = 0.0
-            ncbry.variables["temp_" + side][n, :, ocean], pmap = seapy.oa.oasurf(
-                in_x, in_depth, in_data,
-                x[:, ocean], depth[:, ocean], nx=nx, ny=ny, weight=wght)
+            ncbry.variables["temp_" + side][n, :, ocean], pmap = \
+                seapy.oa.oasurf(in_x, in_depth, in_data,
+                                x[:, ocean], depth[:, ocean], nx=nx, ny=ny,
+                                weight=wght)
 
             # 5) Salt
             in_data = __expand_field(np.transpose(
                 sta_salt[n, bry[side], :][sta_ocean, :]))
             ncbry.variables["salt_" + side][n, :] = 0.0
-            ncbry.variables["salt_" + side][n, :, ocean], pmap = seapy.oa.oasurf(
-                in_x, in_depth, in_data,
-                x[:, ocean], depth[:, ocean], pmap=pmap, nx=nx, ny=ny, weight=wght)
+            ncbry.variables["salt_" + side][n, :, ocean], pmap = \
+                seapy.oa.oasurf(in_x, in_depth, in_data, x[:, ocean],
+                                depth[:, ocean], pmap=pmap, nx=nx, ny=ny,
+                                weight=wght)
 
             # 6) U
             in_data = __expand_field(np.transpose(
@@ -650,7 +653,8 @@ def from_stations(station_file, bry_file, grid=None):
             data[:, ocean], pmap = seapy.oa.oasurf(in_x, in_depth, in_data,
                                                    x[:, ocean],
                                                    depth[:, ocean],
-                                                   pmap=pmap, nx=nx, ny=ny, weight=wght)
+                                                   pmap=pmap, nx=nx, ny=ny,
+                                                   weight=wght)
             if sides[side][0]:
                 ncbry.variables["u_" + side][n, :] = 0.5 * (
                     data[:, 0:-1] + data[:, 1:])
@@ -756,11 +760,10 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
         lat = grid.lat_rho[idx[0], idx[1]]
         size = grid.xi_rho if sides[side].xi else grid.eta_rho
         if lvar in bry.variables:
-            print(lvar)
             zeta = np.ma.array(bry.variables[lvar][:])
             mask = np.ma.getmaskarray(zeta)
             # Detide
-            for i in track(range(size)):
+            for i in track(range(size), description=f"Detiding {lvar}..."):
                 if np.any(mask[:, i]):
                     continue
                 out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
@@ -787,7 +790,6 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
         uvar = "ubar_" + side
         vvar = "vbar_" + side
         if uvar in bry.variables and vvar in bry.variables:
-            print(uvar, vvar)
             ubar = np.zeros((len(time), size))
             vbar = np.zeros((len(time), size))
 
@@ -808,7 +810,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             bubar = bvbar = []
 
             # Detide
-            for i in track(range(size)):
+            for i in track(range(size), description=f"Detiding {uvar, vvar}..."):
                 if np.any(mask[:, i]):
                     continue
                 out = seapy.tide.fit(
