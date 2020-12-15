@@ -1,34 +1,34 @@
 c This routine was written by Bruce Cornuelle at Scripps Institute
 c of Oceanography. Because it uses LAPACK routines, it is under
 c the BSD-License consistent with LAPACK
-      
-      
+
+
       subroutine oa2d(x,y,datain,xhat,yhat,a,b,pmap,dataout,
-     &                   errout,PtIn,PtOut,PtIns,debug)
-    	implicit none
+     &  errout,PtIn,PtOut,PtIns,debug)
+      implicit none
       integer, intent(in) :: PtIn,PtOut,PtIns
-      !f2py integer, intent(in) :: PtIn,PtOut,PtIns
+!f2py integer, intent(in) :: PtIn,PtOut,PtIns
       real(8), intent(in), dimension(PtIn) :: x, y, datain
-      !f2py  real, intent(in), dimension(PtIn) :: x, y, datain
+!f2py  real, intent(in), dimension(PtIn) :: x, y, datain
       real(8), intent(in), dimension(PtOut) :: xhat, yhat
-      !f2py  real, intent(in), dimension(PtOut) :: xhat, yhat
+!f2py  real, intent(in), dimension(PtOut) :: xhat, yhat
       real(8), intent(inout), dimension(PtOut,PtIns) :: pmap
-      !f2py  real, intent(in,out), dimension(PtOut,PtIns) :: pmap
+!f2py  real, intent(in,out), dimension(PtOut,PtIns) :: pmap
       real(8), intent(in) :: a, b
-      !f2py  real, intent(in) :: a, b
+!f2py  real, intent(in) :: a, b
       real(8), intent(out), dimension(PtOut) :: dataout, errout
-      !f2py  real, intent(out), dimension(PtOut) :: dataout, errout
+!f2py  real, intent(out), dimension(PtOut) :: dataout, errout
       logical, intent(in) :: debug
-      
-    	integer :: ii, jj,i,j,Isel
-    	real(8)    :: distb, dista, dist_ref,dist
+
+      integer :: ii, jj,i,j,Isel
+      real(8)    :: distb, dista, dist_ref,dist
       real(8)    :: xs(PtIn),ys(PtIn),datains(PtIn)
 
 
 
 c init to zero matricies
-    	do i=1, PtOut
-    		dataout(i)=0
+      do i=1, PtOut
+        dataout(i)=0
         errout(i)=0
       enddo
 
@@ -37,8 +37,8 @@ c init to zero matricies
           print *, 'PtIns = ', PtIns
           print *, '  building map '
         endif
-    	 call makeMap(x,y,datain,PtIn,
-     &             pmap,PtIns,xhat,yhat,PtOut)
+        call makeMap(x,y,datain,PtIn,
+     &    pmap,PtIns,xhat,yhat,PtOut)
 
         if (debug .eqv. .true.) then
           print *, '  building map DONE.'
@@ -46,106 +46,106 @@ c init to zero matricies
       endif
 
 c do the objective map
-    	do i=1,PtOut
-            do ii=1,PtIns
-                 Isel           =      pmap( i    ,ii )
-    	     xs(ii)=         x( Isel )
-    	     ys(ii)=         y( Isel )
-    	     datains(ii)=    datain( Isel )
-    	  enddo
+      do i=1,PtOut
+        do ii=1,PtIns
+          Isel           =      pmap( i    ,ii )
+          xs(ii)=         x( Isel )
+          ys(ii)=         y( Isel )
+          datains(ii)=    datain( Isel )
+        enddo
 
-	    call oa(xs,ys,datains,xhat(i),yhat(i),PtIns,1,
-     &                         dataout(i),errout(i),a,b)
+        call oa(xs,ys,datains,xhat(i),yhat(i),PtIns,1,
+     &    dataout(i),errout(i),a,b)
       enddo
-	return
-	end
+      return
+      end
 
 c========================================================
-c	select closest points
+c select closest points
 c========================================================
 
       subroutine makeMap(x,y,datain,PtIn,
-     &                    pmap,PtIns,xhat,yhat,PtOut)
-    	integer PtIn,PtOut, ii, jj,i,j,PtIns,jout
-    	real*8 x(PtIn),y(PtIn),datain(PtIn)
-    	real*8 xhat(PtOut),yhat(PtOut)
-    	real*8 pmap(PtOut,PtIns)
-    	real*8 distb, dista, dist_ref,dist(PtIns)
+     &  pmap,PtIns,xhat,yhat,PtOut)
+      integer PtIn,PtOut, ii, jj,i,j,PtIns,jout
+      real*8 x(PtIn),y(PtIn),datain(PtIn)
+      real*8 xhat(PtOut),yhat(PtOut)
+      real*8 pmap(PtOut,PtIns)
+      real*8 distb, dista, dist_ref,dist(PtIns)
 
       real*8 xs(PtIn),ys(PtIn),datains(PtIn)
 
 c     make sure the number of points to select is
 c     not bigger then input points
-	if (PtIn.lt.PtIns) then
-	   print*, 'PtIn lower than PtIns '
-	   return
-	endif
+      if (PtIn.lt.PtIns) then
+        print*, 'PtIn lower than PtIns '
+        return
+      endif
 
-	do jout=1,PtOut
+      do jout=1,PtOut
 c     now find PtIns closest points
-      do ii=1,PtIns
-        dist(ii)=30000
-      enddo
+        do ii=1,PtIns
+          dist(ii)=30000
+        enddo
 
-	do i=1,PtIn
-	  if (datain(i).eq.-999999.0) goto 68
+        do i=1,PtIn
+          if (datain(i).eq.-999999.0) goto 68
           dista=abs(x(i)-xhat(jout))
           distb=abs(y(i)-yhat(jout))
           dist_ref=dista + distb
 
           do ii=1,PtIns
-             if (dist_ref .le. dist(ii)) then
+            if (dist_ref .le. dist(ii)) then
               do jj=PtIns,ii+1,-1
-                 dist(jj)=dist(jj-1)
-                 xs(jj)=xs(jj-1)
-                 ys(jj)=ys(jj-1)
-		     pmap(jout,jj) = pmap(jout,jj-1)
+                dist(jj)=dist(jj-1)
+                xs(jj)=xs(jj-1)
+                ys(jj)=ys(jj-1)
+                pmap(jout,jj) = pmap(jout,jj-1)
               enddo
-                dist(ii)=dist_ref
-                xs(ii)=x(i)
-		    ys(ii)=y(i)
-		    pmap(jout,ii) = i
+              dist(ii)=dist_ref
+              xs(ii)=x(i)
+              ys(ii)=y(i)
+              pmap(jout,ii) = i
               goto 68
-             endif
+            endif
           enddo
 
 
-68      continue
+ 68       continue
         enddo
-        enddo
+      enddo
 
 
 
-c	do i=1,PtIns
-c	  xs(i)=x(i)
-c	  ys(i)=y(i)
-c	  datains(i)=datain(i)
-c	enddo
+c do i=1,PtIns
+c   xs(i)=x(i)
+c   ys(i)=y(i)
+c   datains(i)=datain(i)
+c enddo
 
-	return
-	end
+      return
+      end
 
       subroutine oa3d(x,y,z,datain,xhat,yhat,zhat,a,b,pmap,dataout,
-     &                   errout,PtIn,PtOut,PtZin,PtZout,PtIns,debug)
+     &  errout,PtIn,PtOut,PtZin,PtZout,PtIns,debug)
       implicit none
       integer, intent(in) :: PtIn,PtOut,PtIns,PtZin,PtZout
-      !f2py integer, intent(in) :: PtIn,PtOut,PtIns,PtZin,PtZout
+!f2py integer, intent(in) :: PtIn,PtOut,PtIns,PtZin,PtZout
       real(8), intent(in), dimension(PtIn) :: x, y
-      !f2py  real, intent(in), dimension(PtIn) :: x, y
+!f2py  real, intent(in), dimension(PtIn) :: x, y
       real(8), intent(in), dimension(PtIn, PtZin) :: z, datain
-      !f2py real(8), intent(in), dimension(PtIn, PtZin) :: z, datain
+!f2py real(8), intent(in), dimension(PtIn, PtZin) :: z, datain
       real(8), intent(in), dimension(PtOut) :: xhat, yhat
-      !f2py  real, intent(in), dimension(PtOut) :: xhat, yhat
+!f2py  real, intent(in), dimension(PtOut) :: xhat, yhat
       real(8), intent(in), dimension(PtOut,PtZout) :: zhat
-      !f2py real(8), intent(in), dimension(PtOut,PtZout) :: zhat
+!f2py real(8), intent(in), dimension(PtOut,PtZout) :: zhat
       real(8), intent(inout), dimension(PtOut,PtIns) :: pmap
-      !f2py  real, intent(in,out), dimension(PtOut,PtIns) :: pmap
+!f2py  real, intent(in,out), dimension(PtOut,PtIns) :: pmap
       real(8), intent(in) :: a, b
-      !f2py  real, intent(in) :: a, b
+!f2py  real, intent(in) :: a, b
       real(8), intent(out), dimension(PtOut,PtZout) :: dataout
-      !f2py real(8), intent(out), dimension(PtOut,PtZout) :: dataout
+!f2py real(8), intent(out), dimension(PtOut,PtZout) :: dataout
       real(8), intent(out), dimension(PtOut) :: errout
-      !f2py  real, intent(out), dimension(PtOut) :: errout
+!f2py  real, intent(out), dimension(PtOut) :: errout
       logical, intent(in) :: debug
 
       integer :: ii, jj,i,j,Isel,iz
@@ -182,7 +182,8 @@ c        and re-map using only the good points.  (Takes a long time!)
 c      print *, 'idobdc = ',idobdc
 c dcrit = critical value of abs sum distance:
 c   for choosing nearest points when looking for more points.
-c   values bigger than this are too far away, and those points aren't used
+c   values bigger than this are too far away, and those points aren't
+c   used
       dcrit = 3
 c      print *, 'max absolute sum distance = ',dcrit
 c epsz = tolerance allowed in depth extrapolation.  If a point
@@ -193,7 +194,8 @@ c nptmin = minimum number of points to have to use the objective map
       nptmin = 5
 c      print *, 'minimum number of points required for a map= ',nptmin
 c if nptmin = 2, and there is one point, it will be used for the output
-c idbbdc : debug parameter for output.  0 = none, 1 = more, 2 = more, etc.
+c idbbdc : debug parameter for output.  0 = none, 1 = more, 2 = more,
+c etc.
       idbbdc = 0
 
       if (idobdc .eq. 1 .and. idbbdc .gt. 0) then
@@ -214,7 +216,8 @@ c do the objective map
 c loop over output points (to be interpolated to)
       do i=1,PtOut
 
-c the original program does vertical interpolation first, before horizontal,
+c the original program does vertical interpolation first, before
+c horizontal,
 c meaning that in areas of strong topography, surface values
 c are extrapolated downward, which is scary.
 c This should be modified, so that only ANOMALIES with respect to
@@ -248,7 +251,7 @@ c CAUTION!  This extrapolates linearly to missing depths!
           call lintrp (PtZin,zs,datainsZ,PtZout,zhat_tmp,out_y)
 c now out_y is at the OUTPUT depths, although still at the input
 c  point locations.
-         ! assignment loop: put the 1-d array into a 2-d array
+! assignment loop: put the 1-d array into a 2-d array
           do iz=1,PtZout
             datains(ii, iz ) = out_y(iz)
           enddo
@@ -259,7 +262,8 @@ c check for vertical extrapolation
 c note: depths are negative, and point 1 is at the bottom
 c          if (-zhat_tmp(PtZout) .gt. zs (PtZin)) then
             if (-zhat_tmp(1)*(1-epsz) .gt. -zs (1)) then
-c the output max depth is larger than the input max depth at this input point
+c the output max depth is larger than the input max depth at this input
+c point
 c some of the input values were extrapolated to deeper output depths
 c add to count of input points that were extrapolated
               nextrap = nextrap + 1
@@ -270,7 +274,8 @@ c            iz = PtZout
               do while (-zhat_tmp(iz)*(1-epsz) .gt. -zs(1))
                 iz = iz + 1
               enddo
-c now iz holds the first (deepest) good output depth for input station ii.
+c now iz holds the first (deepest) good output depth for input station
+c ii.
               izfirst(nextrap) = iz
             endif
 c end of:          if (idobdc .eq. 1) then
@@ -281,19 +286,20 @@ c end of loop over input points for this output point
 c now datains(1:PtIns,1:Ptzout) holds the input data interpolated to the
 c  output depths.
 
-c	  print*, ' OA - Estimated COV ', i
+c   print*, ' OA - Estimated COV ', i
 c now do the objective mapping to the output point locations
         call oa3(xs,ys,datains,xhat(i),yhat(i),PtIns,1,PtZout,
      c    dataout_tmp,errout(i),a,b)
 
-        ! assignment loop
+! assignment loop
         do iz = 1,PtZout
           dataout(i,iz) = dataout_tmp(1,iz)
         enddo
 
 c now dataout holds the values made using vertical extrapolation
 
-c bdc: new step added: fix up the points that were vertically extrapolated
+c bdc: new step added: fix up the points that were vertically
+c extrapolated
 c  using a plane fit
 c        if (nextrap .gt. 0 .and. idobdc .eq. 1) then
 c nextrap is only > 0 IF idobdc=1
@@ -304,23 +310,23 @@ c some points were extrapolated
 !           write(10,*) 'xhat(i)= ',xhat(i),' yhat(i)= ',yhat(i)
 !           write(10,*) 'bottom depth =  ',-zhat_tmp(1)
 !           write(10,*) 'izfirst= ',(izfirst(iii),iii=1,nextrap)
-          if (idbbdc .gt. 1) then
-          if (i .eq. 64) then
+            if (idbbdc .gt. 1) then
+              if (i .eq. 64) then
 !             write(10,*) 'special output for point 64'
 c depths
 !             write(10,1002)(zhat_tmp(iz),dataout(i,iz),iz=1,PtZout)
- 1002       format(2g13.5)
+ 1002           format(2g13.5)
 c now put out all the associated points
 c lon, lat, depth
 !             write(10,1001)(xs(ii),ys(ii),zsbot(ii),ii=1,PtIns)
- 1001         format(2f13.7,g13.5)
+ 1001           format(2f13.7,g13.5)
 c values of the stations
-            do iz=1,PtZout
+                do iz=1,PtZout
 !               write(10,1003)(datains(ii,iz),ii=1,PtIns)
-            enddo
- 1003       format(30g13.5)
-          endif
-          endif
+                enddo
+ 1003           format(30g13.5)
+              endif
+            endif
           endif
 c          if (nextrap .ge. PtIns) then
 c            print*, 'Stopping: NO pts are good'
@@ -352,7 +358,7 @@ c
 cc put in the output array
 c          do iz = 1,PtZout
 c            dataout(i,iz) = dataout_tmp(1,iz)
-c	  enddo
+c   enddo
 c-----------------------------
 
 c now loop over output depths where some points were extrapolated
@@ -458,7 +464,7 @@ c stay here if point is deep enough and no bad flag
                   distb=abs(y(ii)-yhat(i))
                   dist_ref=dista + distb
                   if (dist_ref .le. dcrit .and.
-     c                dist_ref .lt. dist(PtIns)) then
+     c              dist_ref .lt. dist(PtIns)) then
 c this is a good point, and can get into the list
                     ngood = ngood + 1
 
@@ -528,7 +534,8 @@ c save the output for this depth
                   else
 !                     write(10,*) 'original value = ',dataout(i,iz)
                     if (nptmin .eq. 2 .and. ngood .eq. 1) then
-!                       write(10,*) 'only one good point, use that value'
+!                       write(10,*) 'only one good point, use that
+!                       value'
 !                       write(10,*) 'new value = ',dataouts(1)
                       dataout(i,iz) = dataouts(1)
                     else
@@ -598,7 +605,7 @@ c
 c slope at start
       dydx1=(y(2)-y(1))/ abs(x(2) - x(1))
 c slope at end
-	dydx2=(y(n)-y(n-1))/ abs(x(n) - x(n-1))
+      dydx2=(y(n)-y(n-1))/ abs(x(n) - x(n-1))
 
 c loop over output points
       do 30 j=1,ni
@@ -607,7 +614,7 @@ c output abscissa is before x(1); have to extrapolate!
           ii=1
 c use the starting slope computed above.
 c bdc: commented out extrapolation
-c	  print*, ' lintrp: extrapolating above first point!'
+c   print*, ' lintrp: extrapolating above first point!'
 c          yi(j)=y(1) - dydx1 * abs(xi(j) - x(1))
           yi(j)=y(1)
 
@@ -616,8 +623,8 @@ c output abscissa is after x(n); have to extrapolate!!
 c extrapolate with a constant
           yi(j)=y(n)
 c bdc: commented out extrapolation
-c	  print*, ' lintrp: extrapolating below last point!'
-c	    yi(j)=y(n) + dydx2 * abs(xi(j) - x(n))
+c   print*, ' lintrp: extrapolating below last point!'
+c     yi(j)=y(n) + dydx2 * abs(xi(j) - x(n))
         else
 c are within the range; find bracketing points
           do 10 i=1,n-1
@@ -637,43 +644,43 @@ c compute linear weights
       end
 
 c========================================================
-c	Objective analysis
+c Objective analysis
 c  added variable k for exponent on cov & noise eqns
 c  set k=2 for gaussian, 1 for markov expl  3/28/06
 c
 c========================================================
       subroutine oa3(x,y,datain,xhat,yhat,PtIn,PtOut,PtZout,
-     c                                      dataout,errout,a,b)
-	implicit none
-	integer PtIn,PtOut, ii, jj,i,j,iz,PtZout,k
-	real*8 x(PtIn),y(PtIn),xhat(PtOut),yhat(PtOut),datap(PtIn),
-     C     dataout(PtOut,PtZout),errout(PtOut),datain(PtIn,PtZout)
+     c  dataout,errout,a,b)
+      implicit none
+      integer PtIn,PtOut, ii, jj,i,j,iz,PtZout,k
+      real*8 x(PtIn),y(PtIn),xhat(PtOut),yhat(PtOut),datap(PtIn),
+     C  dataout(PtOut,PtZout),errout(PtOut),datain(PtIn,PtZout)
 c        real*8 issing,agd,datain_tmp(PtIn),dataout_tmp(PtOut)
-        real*8 agd,datain_tmp(PtIn),dataout_tmp(PtOut)
-        integer issing
+      real*8 agd,datain_tmp(PtIn),dataout_tmp(PtOut)
+      integer issing
 c OA variables
-        real*8 a,b
-	real*8 GD(PtOut,PtIn), DD(PtIn,PtIn), GG(PtOut),
-     c      DDinv(PtIn,PtIn) ,m(3),GD_DD(PtOut,PtIn),
-     c      GDt(PtIn,PtOut)
+      real*8 a,b
+      real*8 GD(PtOut,PtIn), DD(PtIn,PtIn), GG(PtOut),
+     c  DDinv(PtIn,PtIn) ,m(3),GD_DD(PtOut,PtIn),
+     c  GDt(PtIn,PtOut)
 c extra parameters added for bdc revised RemoveMean subroutine
-	real*8 xmean,ymean,xl,yl
+      real*8 xmean,ymean,xl,yl
       integer ipiv(PtIn),INFO
 
-c	print*, '               PtIn      PtOut'
-c	print*, 'Index ',       PtIn,     PtOut
+c print*, '               PtIn      PtOut'
+c print*, 'Index ',       PtIn,     PtOut
 
 c set parameter
 c      a=1.05
-c	b=1.15
+c b=1.15
 c        print *,'Using ',a,b
 
 c init to zero matricies
-	do i=1, PtOut
-	   do iz=1,PtZout
-		dataout(i,iz)=0
-         enddo
-            errout(i)=0
+      do i=1, PtOut
+        do iz=1,PtZout
+          dataout(i,iz)=0
+        enddo
+        errout(i)=0
       enddo
 
 c BELOW: changed to k instead of 2 for expt
@@ -685,29 +692,29 @@ c Data - Grid Covariance = GD
 c      print *,'k = ',k
 
       do i=1,PtOut
-	do j=1,PtIn
-	  GD(i,j)=exp(-(  abs((x(j)-xhat(i))/a)**k +
-     c                    abs((y(j)-yhat(i))/b)**k   ))
+        do j=1,PtIn
+          GD(i,j)=exp(-(  abs((x(j)-xhat(i))/a)**k +
+     c      abs((y(j)-yhat(i))/b)**k   ))
+        enddo
       enddo
-	enddo
 
 c Data - Data Covariance = DD
       do i=1,PtIn
-	do j=1,PtIn
-	  DD(i,j)=exp(-(  abs((x(j)-x(i))/a)**k +
-     c                    abs((y(j)-y(i))/b)**k     ))
+        do j=1,PtIn
+          DD(i,j)=exp(-(  abs((x(j)-x(i))/a)**k +
+     c      abs((y(j)-y(i))/b)**k     ))
+        enddo
       enddo
-	enddo
 
-c Add noise to Diagonal	of data-data Covariance
-	do i=1,PtIn
-	  DD(i,i)=DD(i,i) + DD(i,i)*0.1
-	enddo
+c Add noise to Diagonal of data-data Covariance
+      do i=1,PtIn
+        DD(i,i)=DD(i,i) + DD(i,i)*0.1
+      enddo
 
 c grid-grid covariance: just used for error
       do i=1,PtOut
         GG(i)=exp(-(  abs((xhat(i)-xhat(i))/a)**k +
-     c                  abs((yhat(i)-yhat(i))/b)**k  ))
+     c    abs((yhat(i)-yhat(i))/b)**k  ))
       enddo
 
 c Compute estimate at grid point
@@ -721,7 +728,7 @@ c LAPACK routine ...:)
       call ftranspose(GD,PtOut,PtIn,GDt)
 c now GDt is the transpose of the grid-data covariance
 c solve the problem DD * x = GDt
-	call DGESV( PtIn, PtOut, DD, PtIn, ipiv, GDt, PtIn, INFO )
+      call DGESV( PtIn, PtOut, DD, PtIn, ipiv, GDt, PtIn, INFO )
 c      print *,'Transpose', INFO
 c transpose back to get GD_DD = GD*(DD)^-1
       call ftranspose(GDt,PtIn,PtOut,GD_DD)
@@ -729,70 +736,70 @@ c now GD_DD is the operator to map in 2-d
 
 c
 c loop on PtZout
-       do iz=1,PtZout
-       do i=1,PtIn
+      do iz=1,PtZout
+        do i=1,PtIn
           datain_tmp(i)=datain(i,iz)
-	 enddo
+        enddo
 
 c remove mean (and slope) using a plane fit
 c       call removeMean(x,y,datain_tmp,PtIn,m,datap)
 c revised version from bdc
-       call removeMean3(x,y,datain_tmp,PtIn,m,datap,xmean,ymean,xl,yl)
+        call removeMean3(x,y,datain_tmp,PtIn,m,datap,xmean,ymean,xl,yl)
 c datap are the output de-meaned values, m is the parameter vector
 c do the estimation:
-       call fdot(GD_DD,datap,PtOut,PtIn,1,dataout_tmp)
+        call fdot(GD_DD,datap,PtOut,PtIn,1,dataout_tmp)
 c  A=GD/DD;
 c  dhat=A*d;
 c put the mean back in:
 c      call addMean3(xhat,yhat,dataout_tmp,PtOut,m)
-      call addMean3(xhat,yhat,dataout_tmp,PtOut,m,xmean,ymean,xl,yl)
+        call addMean3(xhat,yhat,dataout_tmp,PtOut,m,xmean,ymean,xl,yl)
 
-	  do i=1,PtOut
-	     dataout(i,iz) = dataout_tmp(i)
-	  enddo
-	enddo
+        do i=1,PtOut
+          dataout(i,iz) = dataout_tmp(i)
+        enddo
+      enddo
 
 c compute errormap
-	do i=1,PtOut
-	  agd=0
-	  do j=1,PtIn
-	     agd=agd + GD_DD(i,j) * GD(i,j)
-	  enddo
-	  errout(i)=GG(i) - agd
-	enddo
+      do i=1,PtOut
+        agd=0
+        do j=1,PtIn
+          agd=agd + GD_DD(i,j) * GD(i,j)
+        enddo
+        errout(i)=GG(i) - agd
+      enddo
 
-	return
-	end
+      return
+      end
 
 
 
 
 c========================================================
-c	remove mean
+c remove mean
 c========================================================
       subroutine removeMean3(x,y,datain,Pt,m,datap,xmean,ymean,xl,yl)
-	implicit none
-	integer Pt, ii, jj,i,j,r,c
-	real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),datap(Pt),
-     c      dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
-         integer issing
+      implicit none
+      integer Pt, ii, jj,i,j,r,c
+      real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),datap(Pt),
+     c  dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
+      integer issing
 c extra output pars added by bdc
-	real*8 xmean,ymean,xl,yl
+      real*8 xmean,ymean,xl,yl
 c extra working parameters
-	real*8 xmin,xmax,ymin,ymax
+      real*8 xmin,xmax,ymin,ymax
 
-   ! setup matrix G
+! setup matrix G
       r=Pt
-	c=3
+      c=3
 
 c compute forward problem matrix for plane fit
 c compute min and max, and mean to non-dimensionalize
-        xmin = x(1)
-        ymin = y(1)
-        xmax = x(1)
-        ymax = y(1)
-        xmean = 0;
-        ymean = 0;
+      xmin = x(1)
+      ymin = y(1)
+      xmax = x(1)
+      ymax = y(1)
+      xmean = 0;
+      ymean = 0;
       do i=1,r
         xmean = xmean + x(i)
         ymean = ymean + y(i)
@@ -803,7 +810,8 @@ c compute min and max, and mean to non-dimensionalize
       enddo
       xmean = xmean/r
       ymean = ymean/r
-c these parameters are output so the forward model in addmean is the same
+c these parameters are output so the forward model in addmean is the
+c same
       if (xmax .gt. xmin) then
         xl = xmax-xmin
       else
@@ -828,7 +836,8 @@ c compute non-dimensionalized forward problem matrix
 c bdc: add error to diagonal of Gp (3x3)
 c assume errors are all 1, so add noise/signal ratio
 c this n/s level was picked arbitrarily!
-c remember that Gp (1,1) is r, and Gp(2,2) and Gp(3,3) are probably about .25r,
+c remember that Gp (1,1) is r, and Gp(2,2) and Gp(3,3) are probably
+c about .25r,
 c so if r is 30, 0.1 is a small number to add.
       do j=1,3
         Gp(j,j) = Gp(j,j) + 0.1
@@ -837,35 +846,35 @@ c so if r is 30, 0.1 is a small number to add.
       call inverse(Gp,c,c,A,issing)
 
       if (issing .eq. 1) then
-          print*, 'Remove Mean: error in computing inverse'
+        print*, 'Remove Mean: error in computing inverse'
       else
-          call fdot(A,b,c,c,1,m)
-	    call fdot(G,m,r,c,1,dmean)
+        call fdot(A,b,c,c,1,m)
+        call fdot(G,m,r,c,1,dmean)
       endif
 
-	do i=1,Pt
-	  datap(i)=datain(i) - dmean(i)
-	enddo
+      do i=1,Pt
+        datap(i)=datain(i) - dmean(i)
+      enddo
 
 
-	return
-	end
+      return
+      end
 
 c========================================================
-c	add mean
+c add mean
 c========================================================
       subroutine addMean3(x,y,datain,Pt,m,xmean,ymean,xl,yl)
-	implicit none
-	integer Pt, ii, jj,i,j,r,c
-	real*8 xmean,ymean,xl,yl
-	real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),
-     c      dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
-        integer issing
+      implicit none
+      integer Pt, ii, jj,i,j,r,c
+      real*8 xmean,ymean,xl,yl
+      real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),
+     c  dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
+      integer issing
 c extra input parameters added by bdc
 
-   ! setup matrix G
+! setup matrix G
       r=Pt
-	c=3
+      c=3
 c old: dimensional, no de-meaned:
 c      do i=1,r
 c        G(i,1)=x(i)
@@ -881,73 +890,74 @@ c compute non-dimensionalized forward problem matrix
       enddo
 
       call fdot(G,m,r,c,1,dmean)
-	do i=1,Pt
-	  datain(i)=datain(i) + dmean(i)
-	enddo
+      do i=1,Pt
+        datain(i)=datain(i) + dmean(i)
+      enddo
 
-	return
-	end
+      return
+      end
 
 c========================================================
-c	Objective analysis
+c Objective analysis
 c========================================================
       subroutine oa(x,y,datain,xhat,yhat,PtIn,PtOut,dataout,errout,a,b)
-    	implicit none
-    	integer PtIn,PtOut, ii, jj,i,j
-    	real*8 x(PtIn),y(PtIn),xhat(PtOut),yhat(PtOut),datap(PtIn),
-     &                 dataout(PtOut),errout(PtOut),datain(PtIn)
-    	real*8 distb, dista, dist_ref,dist
-      real*8 issing,agd
+      implicit none
+      integer PtIn,PtOut, ii, jj,i,j
+      real*8 x(PtIn),y(PtIn),xhat(PtOut),yhat(PtOut),datap(PtIn),
+     &  dataout(PtOut),errout(PtOut),datain(PtIn)
+      real*8 distb, dista, dist_ref,dist,agd
+      integer issing
+c      real*8 issing,agd
 c OA variables
       real*8 a,b
-    	real*8 GD(PtOut,PtIn), DD(PtIn,PtIn), GG(PtOut),
-     &      DDinv(PtIn,PtIn) ,m(3),GD_DD(PtOut,PtIn),
-     &      GDt(PtIn,PtOut)
+      real*8 GD(PtOut,PtIn), DD(PtIn,PtIn), GG(PtOut),
+     &  DDinv(PtIn,PtIn) ,m(3),GD_DD(PtOut,PtIn),
+     &  GDt(PtIn,PtOut)
       integer ipiv(PtIn),INFO
 
-c	print*, '               PtIn      PtOut'
-c	print*, 'Index ',       PtIn,     PtOut
+c print*, '               PtIn      PtOut'
+c print*, 'Index ',       PtIn,     PtOut
 
 c set parameter
 c      a=1.05
-c	b=1.15
+c b=1.15
 c        print *,'Using ',a,b
 
 c init to zero matricies
-    	do i=1, PtOut
-    		dataout(i)=0
-                errout(i)=0
-          enddo
+      do i=1, PtOut
+        dataout(i)=0
+        errout(i)=0
+      enddo
 
 c remove mean as a plane
-       call removeMean(x,y,datain,PtIn,m,datap)
+      call removeMean(x,y,datain,PtIn,m,datap)
 
 c Data - Grid Covariance = GD
-            do i=1,PtOut
-      	do j=1,PtIn
-      	  GD(i,j)=exp(-( ((x(j)-xhat(i))**2)/a**2 +
-     &                     ((y(j)-yhat(i))**2)/b**2 ))
-            enddo
-      	enddo
+      do i=1,PtOut
+        do j=1,PtIn
+          GD(i,j)=exp(-( ((x(j)-xhat(i))**2)/a**2 +
+     &      ((y(j)-yhat(i))**2)/b**2 ))
+        enddo
+      enddo
 
 c Data - Data Covariance = DD
-            do i=1,PtIn
-      	do j=1,PtIn
-      	  DD(i,j)=exp(-( ((x(j)-x(i))**2)/a**2 +
-     &                    ((y(j)-y(i))**2)/b**2 ))
-            enddo
-      	enddo
+      do i=1,PtIn
+        do j=1,PtIn
+          DD(i,j)=exp(-( ((x(j)-x(i))**2)/a**2 +
+     &      ((y(j)-y(i))**2)/b**2 ))
+        enddo
+      enddo
 
-c Add noise to Diagonal	and Grid -Grid Covariance
-      	do i=1,PtIn
-      	  DD(i,i)=DD(i,i) + DD(i,i)*0.1
-c	  DD(i,i)=DD(i,i) + 0.1
-      	enddo
+c Add noise to Diagonal and Grid -Grid Covariance
+      do i=1,PtIn
+        DD(i,i)=DD(i,i) + DD(i,i)*0.1
+c   DD(i,i)=DD(i,i) + 0.1
+      enddo
 
       do i=1,PtOut
         GG(i)=exp(-( ((xhat(i)-xhat(i))**2)/a**2 +
-     &                     ((yhat(i)-yhat(i))**2)/b**2 ))
-	enddo
+     &    ((yhat(i)-yhat(i))**2)/b**2 ))
+      enddo
 
 c Compute estimate at grid point
 c      print *,'Inverse'
@@ -958,7 +968,7 @@ c      call dot(GD_DD,datap,PtOut,PtIn,1,dataout)
 
 c LAPACK routine ...:)
       call ftranspose(GD,PtOut,PtIn,GDt)
-	call DGESV( PtIn, PtOut, DD, PtIn, ipiv, GDt, PtIn, INFO )
+      call DGESV( PtIn, PtOut, DD, PtIn, ipiv, GDt, PtIn, INFO )
 c      print *,'Transpose', INFO
       call ftranspose(GDt,PtIn,PtOut,GD_DD)
       call fdot(GD_DD,datap,PtOut,PtIn,1,dataout)
@@ -968,78 +978,80 @@ c  dhat=A*d;
       call addMean(xhat,yhat,dataout,PtOut,m)
 
 c compute errormap
-	do i=1,PtOut
-	  agd=0
-	  do j=1,PtIn
-	     agd=agd + GD_DD(i,j) * GD(i,j)
-	  enddo
-	  errout(i)=GG(i) - agd
-	enddo
+      do i=1,PtOut
+        agd=0
+        do j=1,PtIn
+          agd=agd + GD_DD(i,j) * GD(i,j)
+        enddo
+        errout(i)=GG(i) - agd
+      enddo
 
-	return
-	end
+      return
+      end
 
 
 
 
 c========================================================
-c	remove mean
+c remove mean
 c========================================================
       subroutine removeMean(x,y,datain,Pt,m,datap)
-    	implicit none
-    	integer Pt, ii, jj,i,j,r,c
-    	real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),datap(Pt),
-     &       dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3),issing
+      implicit none
+      integer Pt, ii, jj,i,j,r,c
+      real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3),datap(Pt),
+     &  dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
+      integer issing
 
-       ! setup matrix G
-          r=Pt
-    	    c=3
+! setup matrix G
+      r=Pt
+      c=3
 
-          do i=1,r
-            G(i,1)=x(i)
-            G(i,2)=y(i)
-            G(i,3)=1.d0
-          enddo
+      do i=1,r
+        G(i,1)=x(i)
+        G(i,2)=y(i)
+        G(i,3)=1.d0
+      enddo
 
-          ! transpose Gt
-          call ftranspose(G,r,c,Gt)
+! transpose Gt
+      call ftranspose(G,r,c,Gt)
 
-          ! b=G'*d
-          call fdot(Gt,datain ,c,r,1, b)
-          ! Gp=G'*G
-          call fdot(Gt,G,c,r,c,Gp)
+! b=G'*d
+      call fdot(Gt,datain ,c,r,1, b)
+! Gp=G'*G
+      call fdot(Gt,G,c,r,c,Gp)
 c  MANU
-          do i=1,c
-             Gp(i,i) = Gp(i,i) + 0.01
-          enddo
-          ! A=inv(Gp)
-          call inverse(Gp,c,c,A,issing)
+      do i=1,c
+        Gp(i,i) = Gp(i,i) + 0.01
+      enddo
+! A=inv(Gp)
+      call inverse(Gp,c,c,A,issing)
 
-          if (issing .eq. 1) then
-              print*, 'Remove Mean: error in computing inverse'
-          else
-              !m=A*b
-              call fdot(A,b,c,c,1,m)
-          !dmean=G*m
-    	      call fdot(G,m,r,c,1,dmean)
-          endif
+      if (issing .eq. 1) then
+        print*, 'Remove Mean: error in computing inverse'
+      else
+!m=A*b
+        call fdot(A,b,c,c,1,m)
+!dmean=G*m
+        call fdot(G,m,r,c,1,dmean)
+      endif
 
-      	do i=1,Pt
-      	  datap(i)=datain(i) - dmean(i)
-      	enddo
+      do i=1,Pt
+        datap(i)=datain(i) - dmean(i)
+      enddo
 
 
-      	return
-      	end
+      return
+      end
 
 c========================================================
-c	add mean
+c add mean
 c========================================================
       subroutine addMean(x,y,datain,Pt,m)
-    	implicit none
-    	integer Pt, ii, jj,i,j,r,c
-    	real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3)
-      real*8 dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3),issing
+      implicit none
+      integer Pt, ii, jj,i,j,r,c
+      real*8 x(Pt),y(Pt),datain(Pt),m(3),G(Pt,3)
+      real*8 dmean(Pt),Gt(3,Pt), b(3,1),Gp(3,3),A(3,3)
+      integer issing
 
 ! setup matrix G
       r=Pt
@@ -1094,7 +1106,7 @@ c========================================================
       real*8 rx,ry,dmean, dhat,V_(4)
       real*8 d(r), b(c),Gp(c,c), A(c,c),m(c)
 
-    ! setup matrix G
+! setup matrix G
       dmean = 0.d0
       do i=1,r
         G(i,1)=X(i)
@@ -1111,14 +1123,14 @@ c========================================================
       call fdot(Gt,d,c,r,1,b)
       call fdot(Gt,G,c,r,c,Gp)
 
-    ! add noise to the diagonal
-    !  do i=1,c
-    !    Gp(i,i) = Gp(i,i) + 0.01
-    !  enddo
+! add noise to the diagonal
+!  do i=1,c
+!    Gp(i,i) = Gp(i,i) + 0.01
+!  enddo
 
       call inverse(Gp,c,c,A,issing)
       if (issing .eq. 1) then
-          dhat=999999.0
+        dhat=999999.0
       else
         call fdot(A,b,c,c,in,m)
         dhat = dmean + rx*m(1) + ry*m(2) + m(3)
@@ -1130,6 +1142,798 @@ c========================================================
 
 
 !-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
+!-------------------------------------------------------------------------
 !
 ! Manu's linear algebra selection!
 !
@@ -1137,9 +1941,10 @@ c========================================================
 ! - INVERSE (using row-echelon form)
 !
       subroutine inverse(A,r,c,Inv,issing)
-      integer r,c
+      integer r,c,issing
       real*8 A(r,c),AI(r,c+c),Inv(r,c)
-      real*8 singtest,issing
+c      real*8 singtest,issing
+      real*8 singtest
 
     ! generate AI
       do i=1,r
@@ -3926,8 +4731,3 @@ C
 C     End of DGEMM .
 C
       END
-
-
-
-
-

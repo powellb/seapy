@@ -5,13 +5,14 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
 from joblib import Parallel, delayed
 import seapy
 import netCDF4
+from rich.progress import track
 
 
 def __find_surface_thread(grid, field, value, zeta, const_depth=False,
@@ -449,8 +450,7 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
                              ('ocean_time', "s_rho", "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
-    for n, t in enumerate(seapy.progressbar.progress(np.arange(skip + pad,
-                                                               len(time) - std_window - pad, std_window))):
+    for n, t in track(enumerate(np.arange(skip + pad, len(time) - std_window - pad, std_window))):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:

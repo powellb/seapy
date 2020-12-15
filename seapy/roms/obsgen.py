@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -19,6 +19,7 @@ import h5py
 import seapy
 import datetime
 from warnings import warn
+from rich.progress import track
 
 
 def error_profile(obs, depth, error, provenance=None):
@@ -151,7 +152,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
         ox = np.rint(obs.x[l]).astype(int)
         oy = np.rint(obs.y[l]).astype(int)
         idx = seapy.unique_rows((ox, oy))
-        for cur in seapy.progressbar.progress(idx):
+        for cur in track(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             # If this point is masked, remove from the observations
             if not tide_error[oy[cur], ox[cur]]:

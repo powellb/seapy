@@ -5,7 +5,7 @@
   ROMS boundary utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -14,6 +14,7 @@ import numpy as np
 import netCDF4
 import textwrap
 from collections import namedtuple
+from rich.progress import track
 
 # Define the sides of ROMS boundaries along with the DA ordering
 __side_info = namedtuple("__side_info", "indices order xi")
@@ -613,7 +614,7 @@ def from_stations(station_file, bry_file, grid=None):
         sta_x = seapy.adddim(x, len(sta_s_rho))
         x = seapy.adddim(x, len(grid.s_rho))
 
-        for n, t in seapy.progressbar.progress(enumerate(statime), statime.size):
+        for n, t in track(enumerate(statime)):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                                          sta_s_rho, sta_cs_r, sta_zeta[n, bry[side]])
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
@@ -759,7 +760,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             zeta = np.ma.array(bry.variables[lvar][:])
             mask = np.ma.getmaskarray(zeta)
             # Detide
-            for i in seapy.progressbar.progress(range(size)):
+            for i in track(range(size)):
                 if np.any(mask[:, i]):
                     continue
                 out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
@@ -807,7 +808,7 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             bubar = bvbar = []
 
             # Detide
-            for i in seapy.progressbar.progress(range(size)):
+            for i in track(range(size)):
                 if np.any(mask[:, i]):
                     continue
                 out = seapy.tide.fit(

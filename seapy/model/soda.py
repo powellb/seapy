@@ -5,7 +5,7 @@
   Functions for dealing with the soda model for importation into ROMS
 
   Written by Brian Powell on 07/24/15
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 
 

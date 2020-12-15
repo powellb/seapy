@@ -5,7 +5,7 @@
   Methods for working tidal forcing files in ROMS
 
   Written by Brian Powell on 04/05/16
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -14,6 +14,7 @@ import netCDF4
 import seapy
 import datetime
 from warnings import warn
+from rich.progress import track
 
 
 def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_epoch):
@@ -158,7 +159,7 @@ def tide_error(his_file, tide_file, grid=None):
         grid.mask_rho == 0, np.zeros((grid.mask_rho.shape)))
     zeta = nc.variables['zeta'][:]
     nc.close()
-    for i in seapy.progressbar.progress(range(grid.ln)):
+    for i in track(range(grid.ln)):
         for j in range(grid.lm):
             if not tide_error.mask[i, j]:
                 z = zeta[:, i, j]

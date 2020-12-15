@@ -6,13 +6,14 @@
   rivers, etc.)
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2021 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
 import netCDF4
 import seapy
 from collections import namedtuple
+from rich.progress import track
 
 # Define a named tuple to store raw data for the gridder
 forcing_data = namedtuple('forcing_data', 'field ratio offset')
@@ -211,7 +212,7 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
     out.variables['lon'][:] = frc_lon
 
     # Loop over the fields and fill out the output file
-    for f in seapy.progressbar.progress(list(set(fields.keys()) & (out.variables.keys()))):
+    for f in track(list(set(fields.keys()) & (out.variables.keys()))):
         if hasattr(fields[f], 'field') and fields[f].field in forcing.variables:
             out.variables[f][:] = \
                 forcing.variables[fields[f].field][time_list, eta_list, xi_list] * \
@@ -262,7 +263,7 @@ def gen_direct_forcing(his_file, frc_file, cdl=None):
     # Copy the data over
     time = seapy.roms.num2date(infile, 'ocean_time')
     nc.variables['frc_time'][:] = seapy.roms.date2num(time, nc, 'frc_time')
-    for x in seapy.progressbar.progress(seapy.chunker(range(len(time)), 1000)):
+    for x in track(seapy.chunker(range(len(time)), 1000)):
         nc.variables['SSS'][x, :, :] = seapy.convolve_mask(
             infile.variables['salt'][x, -1, :, :], copy=False)
         if 'EminusP' in infile.variables:

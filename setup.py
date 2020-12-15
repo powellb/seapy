@@ -39,14 +39,18 @@ flags = [] if os.name == 'nt' else ['-fPIC']
 # OBVIOUS)
 config.add_extension('oalib', sources='src/oalib.f',
                      # f2py_options=["noopt"],
-                     extra_f77_compile_args=flags)
+                     extra_f77_compile_args=flags,
+                     define_macros=[('NPY_NO_DEPRECATED_API',
+                                     'NPY_1_7_API_VERSION')])
 config.add_extension('hindices', sources='src/hindices.f',
                      # f2py_options=["noopt"],
-                     extra_f77_compile_args=flags)
+                     extra_f77_compile_args=flags,
+                     define_macros=[('NPY_NO_DEPRECATED_API',
+                                     'NPY_1_7_API_VERSION')])
 
 config = dict(
     name=os.getenv('PACKAGE_NAME', 'seapy'),
-    version='0.5.1',
+    version='0.6',
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
@@ -55,7 +59,7 @@ config = dict(
     author_email='powellb@hawaii.edu',
     url='https://github.com/powellb/seapy',
     classifiers=[
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.9',
         'License :: OSI Approved :: MIT License',
     ],
     packages=find_packages(),

@@ -74,14 +74,6 @@ SEAPY Documentation
    :show-inheritance:
 
 
-:mod:`progressbar` -- Keep User informed of progress
-----------------------------------------------------
-.. automodule:: seapy.progressbar
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
 :mod:`qserver` -- Manage multiple processes
 -------------------------------------------
 .. autoclass:: seapy.qserver.task
@@ -127,5 +119,3 @@ SEAPY Documentation
    :members:
    :undoc-members:
    :show-inheritance:
-
-
