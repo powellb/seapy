@@ -11,5 +11,6 @@ seapy/external
 notes.org
 .dir-locals.el
 .ropeproject
+*/__pycache__/*
 /todo.org
 /todo.org_archive
