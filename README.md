@@ -15,7 +15,7 @@ $ conda install -c conda-forge seapy
 
 You should also consider making conda-forge your default channel. See the [conda-forge tips and tricks page](https://conda-forge.org/docs/user/tipsandtricks.html).
 
-The Conda-Forge [SEAPY feedstock](https://github.com/conda-forge/seapy-feedstock) is maintained by Filipe Fernandes, [ocefpaf](https://github.com/ocefpaf/). As of August 2019 there are binary packages on all the platforms that Conda-Forge supports: Python 3.6 and 3.7 on Linux, Windows and Mac OSX (all 64-bit).
+The Conda-Forge [SEAPY feedstock](https://github.com/conda-forge/seapy-feedstock) is maintained by Filipe Fernandes, [ocefpaf](https://github.com/ocefpaf/). As of February 2021 there are binary packages on all the platforms that Conda-Forge supports: Python 3.6 through 3.9 on Linux, Windows and Mac OSX (all 64-bit).
 
 To remove seapy:
 ```
