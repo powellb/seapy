@@ -6,7 +6,7 @@
   other models; however, it is mostly geared towards ROMS
 
   Written by Brian Powell on 10/09/13
-  Copyright (c)2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 
   **Examples**
 

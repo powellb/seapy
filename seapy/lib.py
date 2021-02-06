@@ -8,7 +8,7 @@
   when importing the seapy module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -634,6 +634,8 @@ def list_files(path=".", regex=None, full_path=True):
         path += '/'
     files = []
     prog = re.compile(regex)
+
+    # Check each file in the directory we are searching and then sort
     for file in os.listdir(path):
         if prog.search(file) is not None:
             if full_path:
@@ -641,7 +643,12 @@ def list_files(path=".", regex=None, full_path=True):
             else:
                 files.append(file)
     files.sort()
-    return files
+
+    # Return the files or with the full path
+    if full_path:
+        return [path + f for f in files]
+    else:
+        return files
 
 
 def netcdf(file, aggdim=None):

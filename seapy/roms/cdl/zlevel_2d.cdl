@@ -25,27 +25,22 @@ variables:
         zeta:long_name = "free-surface" ;
         zeta:units = "meter" ;
         zeta:coordinates = "lon lat" ;
-        zeta:missing_value = 9.99E10 ;
     float u(time, depth, lat, lon) ;
         u:long_name = "u-momentum component" ;
         u:units = "meter second-1" ;
         u:coordinates = "lon lat" ;
-        u:missing_value = 9.99E10 ;
     float v(time, depth, lat, lon) ;
         v:long_name = "v-momentum component" ;
         v:units = "meter second-1" ;
         v:coordinates = "lon lat" ;
-        v:missing_value = 9.99E10 ;
     float temp(time, depth, lat, lon) ;
         temp:long_name = "potential temperature" ;
         temp:units = "Celsius" ;
         temp:coordinates = "lon lat" ;
-        temp:missing_value = 9.99E10 ;
     float salt(time, depth, lat, lon) ;
         salt:long_name = "salinity" ;
-        salt:missing_value = 9.99E10 ;
+        temp:units = "ppt" ;
         salt:coordinates = "lon lat" ;
-
 // global attributes:
         :title = "Z Grid File" ;
 }

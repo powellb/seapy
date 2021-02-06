@@ -45,8 +45,6 @@ else:
     flags = ['-fPIC']
     libs = []
 
-# ifort generated libraries produce invalid results in interpolation (NOT
-# OBVIOUS)
 config.add_extension('oalib', sources='src/oalib.f',
                      # f2py_options=["noopt"],
                      extra_f77_compile_args=flags,
@@ -62,7 +60,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name=os.getenv('PACKAGE_NAME', 'seapy'),
-    version='0.6',
+    version='1.0',
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
@@ -71,7 +69,7 @@ config = dict(
     author_email='powellb@hawaii.edu',
     url='https://github.com/powellb/seapy',
     classifiers=[
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: MIT License',
     ],
     packages=find_packages(),

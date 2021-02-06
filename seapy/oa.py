@@ -6,7 +6,7 @@
   fortran routines written by Emanuelle Di Lorenzo and Bruce Cornuelle
 
   Written by Brian Powell on 10/08/13
-  Copyright (c)2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
