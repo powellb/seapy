@@ -51,3 +51,5 @@ from .environ import opt
 from .mapping import map
 from .hawaii import hawaii
 from .oa import *
+
+__version__ = "0.7"
