@@ -5,7 +5,7 @@
   Methods to interpolate ROMS fields onto other grids
 
   Written by Brian Powell on 11/02/13
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -16,6 +16,8 @@ import seapy
 from seapy.timeout import timeout, TimeoutError
 from joblib import Parallel, delayed
 from warnings import warn
+from rich.progress import (
+    track, BarColumn, TextColumn, TimeElapsedColumn, Progress)
 
 _up_scaling = {"zeta": 1.0, "u": 1.0, "v": 1.0, "temp": 1.0, "salt": 1.0}
 _down_scaling = {"zeta": 1.0, "u": 0.999,
@@ -46,8 +48,8 @@ def __interp2_thread(rx, ry, data, zx, zy, pmap, weight, nx, ny, mask):
     data = np.ma.fix_invalid(data, copy=False)
 
     # Convolve the water over the land
-    ksize = 2 * np.round(np.sqrt((nx / np.median(np.diff(rx)))**2 +
-                                 (ny / np.median(np.diff(ry.T)))**2)) + 1
+    ksize = 2 * np.round(np.sqrt((nx / np.ma.median(np.ma.diff(rx)))**2 +
+                                 (ny / np.ma.median(np.ma.diff(ry.T)))**2)) + 1
     if ksize < _ksize_range[0]:
         warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
         ksize = _ksize_range[0]
@@ -82,8 +84,8 @@ def __interp3_thread(rx, ry, rz, data, zx, zy, zz, pmap,
     gradsrc = (rz[0, 1, 1] - rz[-1, 1, 1]) > 0
 
     # Convolve the water over the land
-    ksize = 2 * np.round(np.sqrt((nx / np.median(np.diff(rx)))**2 +
-                                 (ny / np.median(np.diff(ry.T)))**2)) + 1
+    ksize = 2 * np.round(np.sqrt((nx / np.ma.median(np.ma.diff(rx)))**2 +
+                                 (ny / np.ma.median(np.ma.diff(ry.T)))**2)) + 1
     if ksize < _ksize_range[0]:
         warn("nx or ny values are too small for stable OA, {:f}".format(ksize))
         ksize = _ksize_range[0]
@@ -218,12 +220,12 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
     # Create or load the pmaps depending on if they exist
     if nx == 0:
         if hasattr(src_grid, "dm") and hasattr(child_grid, "dm"):
-            nx = np.ceil(np.mean(src_grid.dm) / np.mean(child_grid.dm))
+            nx = np.ceil(np.ma.mean(src_grid.dm) / np.ma.mean(child_grid.dm))
         else:
             nx = 5
     if ny == 0:
         if hasattr(src_grid, "dn") and hasattr(child_grid, "dn"):
-            ny = np.ceil(np.mean(src_grid.dn) / np.mean(child_grid.dn))
+            ny = np.ceil(np.ma.mean(src_grid.dn) / np.ma.mean(child_grid.dn))
         else:
             ny = 5
 
@@ -256,123 +258,170 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                                  child_grid.lon_rho, child_grid.lat_rho, pmap[
                                      "pmaprho"],
                                  weight, nx, ny, child_grid.mask_rho)
-    # Interpolate the scalar fields
-    records = np.arange(0, ncsrc.variables[time].shape[0]) \
-        if records is None else np.atleast_1d(records)
-    for src in vmap:
-        dest = vmap[src]
-
-        # Extra fields will probably be user tracers (biogeochemical)
-        fld = seapy.roms.fields.get(dest, {"dims": 3})
-
+    # Make a list of the fields we will interpolate
+    smap = {}
+    total_count = 0
+    for v in vmap:
+        fld = seapy.roms.fields.get(vmap[v], {"dims": 3})
+        inc = 1
         # Only interpolate the fields we want in the destination
-        if (dest not in ncout.variables) or \
-           (src not in ncsrc.variables) or \
-           ("rotate" in fld):
+        if (vmap[v] not in ncout.variables) or (v not in ncsrc.variables):
             continue
 
-        if fld["dims"] == 2:
-            # Compute the max number of hold in memory
-            maxrecs = np.maximum(1, np.minimum(len(records),
-                                               np.int(_max_memory / (child_grid.lon_rho.nbytes +
-                                                                     src_grid.lon_rho.nbytes))))
-            for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
-                outr = np.s_[
-                    rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
-                                    (delayed(__interp2_thread)(
-                                     src_grid.lon_rho, src_grid.lat_rho,
-                                     ncsrc.variables[src][i, :, :],
-                                     child_grid.lon_rho, child_grid.lat_rho,
-                                     pmap["pmaprho"], weight,
-                                     nx, ny, child_grid.mask_rho)
-                                     for i in recs), copy=False)
-                ncout.variables[dest][outr, :, :] = ndata
-                ncout.sync()
-        else:
-            maxrecs = np.maximum(1, np.minimum(
-                len(records), np.int(_max_memory /
-                                     (child_grid.lon_rho.nbytes *
-                                      child_grid.n +
-                                      src_grid.lon_rho.nbytes *
-                                      src_grid.n))))
-            for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
-                outr = np.s_[
-                    rn * maxrecs:np.minimum((rn + 1) * maxrecs, len(records))]
-                ndata = np.ma.array(Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)
-                                    (delayed(__interp3_thread)(
-                                        src_grid.lon_rho, src_grid.lat_rho,
-                                        src_grid.depth_rho,
-                                        ncsrc.variables[src][i, :, :, :],
-                                        child_grid.lon_rho, child_grid.lat_rho,
-                                        child_grid.depth_rho,
-                                        pmap["pmaprho"], weight,
-                                        nx, ny, child_grid.mask_rho,
-                                        up_factor=_up_scaling.get(dest, 1.0),
-                                        down_factor=_down_scaling.get(dest, 1.0))
-                                     for i in recs), copy=False)
+        # If it is a field we want, determine the size of the field
+        # to better track progress
+        if fld["dims"] == 3:
+            inc = child_grid.n
+        if ("rotate" in fld):
+            total_count += inc
+            continue
+        smap[v] = inc
+        total_count += inc
+
+    # Generate the list of records to process in each worker thread
+    records = np.arange(0, ncsrc.variables[time].shape[0]) \
+        if records is None else np.atleast_1d(records)
+
+    # Set up the progress bar
+    progress = Progress(
+        TextColumn("[bold blue]{task.description:20s}", justify="center"),
+        BarColumn(bar_width=None),
+        "[progress.percentage]{task.percentage:>3.1f}%",
+        ":",
+        TimeElapsedColumn()
+    )
+
+    # Do the work, marking the progress to the user
+    with progress:
+        _task_id = progress.add_task("", total=total_count, start=True)
+        for src in smap:
+            dest = vmap[src]
+            progress.update(_task_id, description=dest)
+
+            # Extra fields will probably be user tracers (biogeochemical)
+            fld = seapy.roms.fields.get(dest, {"dims": 3})
+
+            if fld["dims"] == 2:
+                # Compute the max number of hold in memory
+                maxrecs = np.maximum(1,
+                                     np.minimum(len(records),
+                                                np.int(_max_memory /
+                                                       (child_grid.lon_rho.nbytes +
+                                                        src_grid.lon_rho.nbytes))))
+                for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
+                    outr = np.s_[
+                        rn * maxrecs: np.minimum((rn + 1) * maxrecs,
+                                                 len(records))]
+                    ndata = np.ma.array(Parallel(n_jobs=threads,
+                                                 max_nbytes=_max_memory)
+                                        (delayed(__interp2_thread)(
+                                            src_grid.lon_rho,
+                                            src_grid.lat_rho,
+                                            ncsrc.variables[src][i, :, :],
+                                            child_grid.lon_rho,
+                                            child_grid.lat_rho,
+                                            pmap["pmaprho"], weight,
+                                            nx, ny, child_grid.mask_rho)
+                                         for i in recs), copy=False)
+                    ncout.variables[dest][outr, :, :] = ndata
+                    ncout.sync()
+            else:
+                maxrecs = np.maximum(1, np.minimum(
+                    len(records), np.int(_max_memory /
+                                         (child_grid.lon_rho.nbytes *
+                                          child_grid.n +
+                                          src_grid.lon_rho.nbytes *
+                                          src_grid.n))))
+                for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
+                    outr = np.s_[
+                        rn * maxrecs: np.minimum((rn + 1) * maxrecs, len(records))]
+                    ndata = np.ma.array(Parallel(n_jobs=threads,
+                                                 max_nbytes=_max_memory)
+                                        (delayed(__interp3_thread)(
+                                            src_grid.lon_rho,
+                                            src_grid.lat_rho,
+                                            src_grid.depth_rho,
+                                            ncsrc.variables[src][i, :, :, :],
+                                            child_grid.lon_rho,
+                                            child_grid.lat_rho,
+                                            child_grid.depth_rho,
+                                            pmap["pmaprho"], weight,
+                                            nx, ny, child_grid.mask_rho,
+                                            up_factor=_up_scaling.get(dest, 1.0),
+                                            down_factor=_down_scaling.get(dest, 1.0))
+                                         for i in recs), copy=False)
+
+                    if z_mask:
+                        __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
+                        ncout.variables[dest][outr, :, :, :] = ndata
+                        ncout.sync()
+            progress.update(_task_id, advance=smap[src])
+
+        # Rotate and Interpolate the vector fields. First, determine which
+        # are the "u" and the "v" vmap fields
+        try:
+            velmap = {
+                "u": list(vmap.keys())[list(vmap.values()).index("u")],
+                "v": list(vmap.keys())[list(vmap.values()).index("v")]}
+        except:
+            warn("velocity not present in source file")
+            return
+
+        srcangle = getattr(src_grid, 'angle', None)
+        dstangle = getattr(child_grid, 'angle', None)
+        maxrecs = np.minimum(len(records),
+                             np.int(_max_memory /
+                                    (2 * (child_grid.lon_rho.nbytes *
+                                          child_grid.n +
+                                          src_grid.lon_rho.nbytes *
+                                          src_grid.n))))
+        progress.update(_task_id, description="velocity")
+        inc_count = child_grid.n / maxrecs
+        for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
+            vel = Parallel(n_jobs=threads, max_nbytes=_max_memory)(
+                delayed(__interp3_vel_thread)(
+                    src_grid.lon_rho, src_grid.lat_rho,
+                    src_grid.depth_rho, srcangle,
+                    ncsrc.variables[velmap["u"]][i, :, :, :],
+                    ncsrc.variables[velmap["v"]][i, :, :, :],
+                    child_grid.lon_rho, child_grid.lat_rho,
+                    child_grid.depth_rho, dstangle,
+                    pmap["pmaprho"], weight, nx, ny,
+                    child_grid.mask_rho) for i in recs)
+
+            progress.update(_task_id, advance=inc_count * 2)
+            for j in range(len(vel)):
+                vel_u = np.ma.array(vel[j][0], copy=False)
+                vel_v = np.ma.array(vel[j][1], copy=False)
                 if z_mask:
-                    __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
-                ncout.variables[dest][outr, :, :, :] = ndata
+                    __mask_z_grid(vel_u, dst_depth, child_grid.depth_rho)
+                    __mask_z_grid(vel_v, dst_depth, child_grid.depth_rho)
+
+                if child_grid.cgrid:
+                    vel_u = seapy.model.rho2u(vel_u)
+                    vel_v = seapy.model.rho2v(vel_v)
+
+                ncout.variables["u"][nr * maxrecs + j, :] = vel_u
+                ncout.variables["v"][nr * maxrecs + j, :] = vel_v
+
+                if "ubar" in ncout.variables:
+                    # Create ubar and vbar
+                    # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
+                    ncout.variables["ubar"][nr * maxrecs + j, :] = \
+                        np.sum(vel_u * child_grid.depth_u, axis=0) /  \
+                        np.sum(child_grid.depth_u, axis=0)
+                    progress.update(_task_id, advance=inc_count)
+
+                if "vbar" in ncout.variables:
+                    # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
+                    ncout.variables["vbar"][nr * maxrecs + j, :] = \
+                        np.sum(vel_v * child_grid.depth_v, axis=0) /  \
+                        np.sum(child_grid.depth_v, axis=0)
+                    progress.update(_task_id, advance=inc_count)
+
                 ncout.sync()
 
-    # Rotate and Interpolate the vector fields. First, determine which
-    # are the "u" and the "v" vmap fields
-    try:
-        velmap = {
-            "u": list(vmap.keys())[list(vmap.values()).index("u")],
-            "v": list(vmap.keys())[list(vmap.values()).index("v")]}
-    except:
-        warn("velocity not present in source file")
-        return
-
-    srcangle = getattr(src_grid, 'angle', None)
-    dstangle = getattr(child_grid, 'angle', None)
-    maxrecs = np.minimum(len(records),
-                         np.int(_max_memory /
-                                (2 * (child_grid.lon_rho.nbytes *
-                                      child_grid.n +
-                                      src_grid.lon_rho.nbytes *
-                                      src_grid.n))))
-    for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
-        vel = Parallel(n_jobs=threads, verbose=2, max_nbytes=_max_memory)(delayed(__interp3_vel_thread)(
-            src_grid.lon_rho, src_grid.lat_rho,
-            src_grid.depth_rho, srcangle,
-            ncsrc.variables[velmap["u"]][i, :, :, :],
-            ncsrc.variables[velmap["v"]][i, :, :, :],
-            child_grid.lon_rho, child_grid.lat_rho,
-            child_grid.depth_rho, dstangle,
-            pmap["pmaprho"], weight, nx, ny,
-            child_grid.mask_rho) for i in recs)
-
-        for j in range(len(vel)):
-            vel_u = np.ma.array(vel[j][0], copy=False)
-            vel_v = np.ma.array(vel[j][1], copy=False)
-            if z_mask:
-                __mask_z_grid(vel_u, dst_depth, child_grid.depth_rho)
-                __mask_z_grid(vel_v, dst_depth, child_grid.depth_rho)
-
-            if child_grid.cgrid:
-                vel_u = seapy.model.rho2u(vel_u)
-                vel_v = seapy.model.rho2v(vel_v)
-
-            ncout.variables["u"][nr * maxrecs + j, :] = vel_u
-            ncout.variables["v"][nr * maxrecs + j, :] = vel_v
-
-            if "ubar" in ncout.variables:
-                # Create ubar and vbar
-                # depth = seapy.adddim(child_grid.depth_u, vel_u.shape[0])
-                ncout.variables["ubar"][nr * maxrecs + j, :] = \
-                    np.sum(vel_u * child_grid.depth_u, axis=0) /  \
-                    np.sum(child_grid.depth_u, axis=0)
-
-            if "vbar" in ncout.variables:
-                # depth = seapy.adddim(child_grid.depth_v, vel_v.shape[0])
-                ncout.variables["vbar"][nr * maxrecs + j, :] = \
-                    np.sum(vel_v * child_grid.depth_v, axis=0) /  \
-                    np.sum(child_grid.depth_v, axis=0)
-
-            ncout.sync()
+            progress.update(_task_id, advance=total_count)
 
     # Return the pmap that was used
     return pmap
@@ -402,9 +451,11 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     reftime: datetime, optional:
         Reference time as the epoch for z-grid file
     nx : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     ny : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     weight : int, optional:
         number of points to use in weighting matrix
     threads : int, optional:
@@ -429,8 +480,9 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
                          np.minimum(records.size,
                                     np.int(_max_memory /
                                            (dest_lon.nbytes + src_lon.nbytes))))
-    for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
-        nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+    for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
+                          total=maxrecs, description="interp 2d".center(20)):
+        nfield = np.ma.array(Parallel(n_jobs=threads)
                              (delayed(__interp2_thread)(
                                  src_lon, src_lat, src_field[i, :, :],
                                  dest_lon, dest_lat,
@@ -469,9 +521,11 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     reftime: datetime, optional:
         Reference time as the epoch for z-grid file
     nx : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     ny : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     weight : int, optional:
         number of points to use in weighting matrix
     threads : int, optional:
@@ -499,8 +553,9 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
                                                dest_depth.shape[0] +
                                                src_lon.nbytes *
                                                src_depth.shape[0]))))
-    for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
-        nfield = np.ma.array(Parallel(n_jobs=threads, verbose=2)
+    for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
+                          total=maxrecs, description="interp 3d".center(20)):
+        nfield = np.ma.array(Parallel(n_jobs=threads)
                              (delayed(__interp3_thread)(
                                  src_lon, src_lat, src_depth,
                                  src_field[i, :, :],
@@ -544,6 +599,12 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
         decorrelation length-scale for OA (same units as source data)
     ny : float, optional:
         decorrelation length-scale for OA (same units as source data)
+    nx : float, optional:
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
+    ny : float, optional:
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     weight : int, optional:
         number of points to use in weighting matrix
     vmap : dictionary, optional
@@ -670,9 +731,11 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
     reftime: datetime, optional:
         Reference time as the epoch for ROMS file
     nx : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     ny : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     weight : int, optional:
         number of points to use in weighting matrix
     vmap : dictionary, optional
@@ -770,9 +833,11 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
     reftime: datetime, optional:
         Reference time as the epoch for climatology file
     nx : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     ny : float, optional:
-        decorrelation length-scale for OA (same units as source data)
+        decorrelation length-scale for OA (same units as source data,
+        typically twice the difference in the source data)
     weight : int, optional:
         number of points to use in weighting matrix
     vmap : dictionary, optional

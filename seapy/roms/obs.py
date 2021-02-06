@@ -19,7 +19,7 @@
   easily.
 
   Written by Brian Powell on 08/05/14
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -28,6 +28,7 @@ import netCDF4
 import seapy
 from collections import namedtuple
 from warnings import warn
+from rich.progress import track
 
 # Define a named tuple to store raw data for the gridder
 raw_data = namedtuple('raw_data', 'type provenance values error min_error')
@@ -691,7 +692,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
     oerr = list()
     oprov = list()
     otype = list()
-    for t in seapy.progressbar.progress(np.unique(dtime)):
+    for t in track(np.unique(dtime)):
         time_list = np.where(dtime == t)
         mtime = np.nanmean(time[time_list])
 
@@ -871,7 +872,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     edays = np.asarray(edays)
 
     # Loop over the dates in pairs
-    for n, t in enumerate(seapy.progressbar.progress(days)):
+    for n, t in track(enumerate(days)):
         # Set output file name
         if outtime:
             outfile = time.sub("{:05d}".format(t[0]), out_files)

@@ -3,6 +3,7 @@ from __future__ import division, absolute_import, print_function
 
 import os
 import sys
+import platform
 from setuptools import find_packages
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
@@ -34,19 +35,32 @@ package_data = {
 }
 
 config = Configuration('')
-flags = [] if os.name == 'nt' else ['-fPIC']
-# ifort generated libraries produce invalid results in interpolation (NOT
-# OBVIOUS)
+if platform.system() == 'Windows':
+    flags = []
+    libs = []
+elif platform.system() == 'Darwin':
+    flags = ['-fPIC']
+    libs = ['/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib']
+else:
+    flags = ['-fPIC']
+    libs = []
+
 config.add_extension('oalib', sources='src/oalib.f',
                      # f2py_options=["noopt"],
-                     extra_f77_compile_args=flags)
+                     extra_f77_compile_args=flags,
+                     library_dirs=libs,
+                     define_macros=[('NPY_NO_DEPRECATED_API',
+                                     'NPY_1_7_API_VERSION')])
 config.add_extension('hindices', sources='src/hindices.f',
                      # f2py_options=["noopt"],
-                     extra_f77_compile_args=flags)
+                     extra_f77_compile_args=flags,
+                     library_dirs=libs,
+                     define_macros=[('NPY_NO_DEPRECATED_API',
+                                     'NPY_1_7_API_VERSION')])
 
 config = dict(
     name=os.getenv('PACKAGE_NAME', 'seapy'),
-    version='0.5.2',
+    version='0.7',
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
@@ -55,7 +69,7 @@ config = dict(
     author_email='powellb@hawaii.edu',
     url='https://github.com/powellb/seapy',
     classifiers=[
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: MIT License',
     ],
     packages=find_packages(),

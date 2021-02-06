@@ -5,7 +5,7 @@
   ROMS initial conditions utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 
 
@@ -29,7 +29,8 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None,
     record: int
         Input index to use as initial condition
     time: datetime optional
-        Input datetime to use for the initial condition (default to record time)
+        Input datetime to use for the initial condition (default to
+        record time)
     grid: seapy.model.grid or string, optional
         Input ROMS grid: specify the grid if loaded or filename to load
     clobber: bool, optional
@@ -54,8 +55,12 @@ def from_roms(roms_file, ini_file, record=0, time=None, grid=None,
 
     # Create the initial file and fill up the descriptive data
     ncini = seapy.roms.ncgen.create_ini(ini_file,
-                                        eta_rho=grid.eta_rho, xi_rho=grid.xi_rho, s_rho=grid.n,
-                                        reftime=src_ref, clobber=clobber, cdl=cdl,
+                                        eta_rho=grid.eta_rho,
+                                        xi_rho=grid.xi_rho,
+                                        s_rho=grid.n,
+                                        reftime=src_ref,
+                                        clobber=clobber,
+                                        cdl=cdl,
                                         title="generated from " + roms_file)
     grid.to_netcdf(ncini)
     if time is None:

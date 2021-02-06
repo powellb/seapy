@@ -4,13 +4,14 @@
 
   Functions for generating ROMS grid files
 
-  Copyright (c)2020 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
 import netCDF4
 import seapy
 from collections import namedtuple
+from rich.progress import track
 
 
 def create_grid(grid_file, lat, lon):
@@ -259,7 +260,7 @@ def calc_latlon(llcrnrlat, llcrnrlon, reseta, resxi=None, rotate=0):
 
     # Loop over each row, and within the row, step along in the
     # xi-direction before moving to the next row
-    for j in seapy.progressbar.progress(range(lat.shape[0] - 1)):
+    for j in track(range(lat.shape[0] - 1)):
         for i in range(lat.shape[1] - 1):
             # Compute the local deltas
             dlat = seapy.earth_distance(

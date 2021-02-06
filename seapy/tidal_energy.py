@@ -7,7 +7,7 @@ State Estimation and Analysis for PYthon
 Module to compute tidal energy from a column of data.
 
 Written by Brian Powell on 03/30/16
-Copyright (c)2020 University of Hawaii under the MIT-License.
+Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 
 Notes
 -----
@@ -95,6 +95,7 @@ frequency) and use (10); hence, it becomes:
 
 import numpy as np
 import seapy
+from rich.progress import track
 
 _rho0 = 1000
 
@@ -252,7 +253,7 @@ def tidal_energy(time, hz, u, v, w, pressure, bvf=None, tides=None,
     integrals = np.zeros((ntides, 5))
 
     # Compute over all depths
-    for d in seapy.progressbar.progress(np.arange(ndep)):
+    for d in track(np.arange(ndep)):
         # Generate the tidal components
         t_pres = seapy.tide.fit(time, p_prime[:, d], tides)['major']
 
