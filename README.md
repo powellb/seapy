@@ -2,7 +2,8 @@
 
 Tools for working with ocean models and data.
 
-SEAPY requires: numpy, scipy, netCDF4, basemap, joblib, and numpy_groupies
+SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and scipy.
+
 
 ## Installation
 
@@ -31,7 +32,7 @@ $ pip install seapy-ocean
 
 Note that on PyPI (but nowhere else) the package name is seapy-ocean to avoid a name clash with another package. The module name is still seapy.
 
-SEAPY packages on PyPI have been built and uploaded by Mark Hadfield, [hadfieldnz](https://pypi.org/user/hadfieldnz/). There is a source distribution that should build with no problems on Linux (and Mac OSX, but we haven't tested it) and a binary distribution for Windows (64-bit).
+SEAPY packages on PyPI have been built and uploaded by Mark Hadfield, [hadfieldnz](https://pypi.org/user/hadfieldnz/). There is a source distribution that should build with no problems on Linux (and Mac OSX, but we haven't tested it). In the pst there have been binary distributions for Windows (64-bit), but these have now been deleted as binary builds with PIP are no longer supported.
 
 In a Conda environment, it is quite possible to install with PIP, but dependency handling and updating will be cleaner if you use the Conda package.
 
@@ -57,8 +58,7 @@ $ pip install -e seapy
 
 With an [editable-mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
 
-If you are building from source in a Conda environment on Windows, you should install the
-[m2w64-gcc](https://anaconda.org/msys2/m2w64-gcc) and [m2w64-gfortran](https://anaconda.org/msys2/m2w64-gcc-fortran) compilers. On Linux and OSX the system gcc and gfortran should work OK.
+In principle it is possible to build from source on Windows--and success with this has been achieved in the past--but the process tends to break with changes in the environment or Python version, so we don't recommend it or support it.
 
 ## Contributing
 
