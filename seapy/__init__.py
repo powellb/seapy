@@ -7,7 +7,7 @@
 
   Copyright (c)2010--2021 University of Hawaii under the MIT-License.
 
-  Requires the following packages: joblib, rich, basemap
+  Requires the following packages: joblib, rich, cartopy, numpy_groupies
 
   Import classes include:
 
@@ -48,8 +48,7 @@ from . import seawater
 from . import tide
 from .tidal_energy import tidal_energy
 from .environ import opt
-from .mapping import map
-from .hawaii import hawaii
+from .mapping import map, hawaii
 from .oa import *
 
 __version__ = "0.7"

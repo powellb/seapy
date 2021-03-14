@@ -1,4 +1,4 @@
-basemap
+cartopy
 h5py
 joblib
 netcdf4

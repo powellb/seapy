@@ -1,35 +1,23 @@
 #!/usr/bin/env python
 """
-  map.py
+  mapping.py
 
   State Estimation and Analysis for PYthon
 
-  Utilities for dealing with basemap plotting. These routnes are simply
-  abstractions over the existing basemap to make it quicker for generating
-  basemap plots and figures.
+  Utilities for dealing with plotting maps using cartopy. These routines are
+  provide simplified abstractions over the existing cartopy to make it quicker
+  for generating plots and figures.
 
-    Examples
-    -------
-
-    Assume you have longitude, latitude, and sst values:
-
-    >>> m=seapy.mapping.map(llcrnrlon=lon[0,0],llcrnrlat=lat[0,0],
-    >>>     urcrnrlon=lon[-1,-1],urcrnrlat=lat[-1,-1],dlat=2,dlon=2)
-    >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
-    >>> m.land()
-    >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
-    >>> m.ax.patch.set_facecolor("aqua")
-    >>> m.ax.patch.set_alpha(1)
-    >>> m.fig.patch.set_alpha(0.0)
-    >>> m.fig.savefig("sst.png",dpi=100)
-
-
-  Written by Brian Powell on 9/4/14
   Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+import cartopy
+import cartopy.crs as ccrs
+import cartopy.feature as cft
+import os
+from warnings import warn
 from seapy.model import asgrid
 
 
@@ -70,17 +58,20 @@ def gen_coastline(lon, lat, bathy, depth=0):
 
 
 class map(object):
+    """
+    Examples
+    -------
+    >>> m=seapy.mapping.map(llcrnrlon=lon[0,0],llcrnrlat=lat[0,0],
+    >>>     urcrnrlon=lon[-1,-1],urcrnrlat=lat[-1,-1],dlat=2,dlon=2)
+    >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
+    >>> m.land()
+    >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
+    >>> m.ax.patch.set_alpha(1)
+    >>> m.fig.patch.set_alpha(0.0)
+    >>> m.fig.savefig("sst.png",dpi=100)
 
-    def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40, urcrnrlon=180,
-                 urcrnrlat=40, proj='lcc', resolution='c', figsize=(8., 6.),
-                 dlat=1, dlon=2, fig=None, ax=None, fontsize=12, fill_color="aqua"):
-        """
-        map class for abstracting the basemap methods for quick and easy creation
-        of geographically referenced data figures
-
-
-        Parameters
-        ----------
+    Parameters
+    ----------
         grid: seapy.model.grid or string, optional:
             grid to use to define boundaries
         llcrnrlon: float, optional
@@ -92,11 +83,11 @@ class map(object):
         urcrnrlat: float, optional
             latitude of upper, right corner
         proj: string, optional
-            projection to use for map
-        resolution: character
-            resolution to use for coastline, etc. From Basemap:
-            'c' (crude), 'l' (low), 'i' (intermediate),
-            'h' (high), 'f' (full), or None
+            projection to use (name from cartopy projection list, e.g.:
+                 PlateCarree, LambertConformal, Miller, etc.)
+        resolution: string, optional
+            resolution to use for coastline, etc. From cartopy:
+            'auto' (default), 'coarse', 'low', 'intermediate', 'high' or 'full'
         figsize: list, optional
             dimensions to use for creation of figure
         dlat: float, optional
@@ -111,12 +102,16 @@ class map(object):
             along with the figure object.
         fill_color: string, optional
             The color to use for the axis background
+    """
 
-        Returns
-        -------
-        None
+    def __init__(self, grid=None, llcrnrlon=-180, llcrnrlat=-40,
+                 urcrnrlon=180, urcrnrlat=40,
+                 proj='PlateCarree',
+                 resolution='auto', figsize=(8., 6.),
+                 dlat=1, dlon=2, fig=None, ax=None,
+                 fontsize=12, fill_color=cft.COLORS['water']):
+        import inspect
 
-        """
         if grid is not None:
             grid = asgrid(grid)
             llcrnrlat = np.min(grid.lat_rho)
@@ -124,24 +119,41 @@ class map(object):
             llcrnrlon = np.min(grid.lon_rho)
             urcrnrlon = np.max(grid.lon_rho)
 
-        self.basemap = Basemap(llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
-                               urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
-                               projection=proj,
-                               lat_0=urcrnrlat - (urcrnrlat - llcrnrlat) / 2.,
-                               lon_0=urcrnrlon - (urcrnrlon - llcrnrlon) / 2.,
-                               resolution=resolution, area_thresh=0.0, ax=ax)
+        # Set up the projection scheme
+        try:
+            cproj = getattr(ccrs, proj)
+        except AttributeError:
+            warn(
+                f"WARNING: {proj} is not a valid projection. " +
+                "Using 'PlateCarree' instead")
+            cproj = ccrs.PlateCarree
+        self.proj = cproj
 
+        # Determine what our projection needs
+        clon = 0.5 * (urcrnrlon + llcrnrlon)
+        clat = 0.5 * (urcrnrlat + llcrnrlat)
+        self.fig = plt.figure(figsize=figsize)
+        args = inspect.getfullargspec(cproj)[0]
+        if "central_latitude" in args:
+            self.ax = self.fig.add_subplot(1, 1, 1,
+                                           projection=cproj(central_longitude=clon,
+                                                            central_latitude=clat))
+        else:
+            self.ax = self.fig.add_subplot(1, 1, 1,
+                                           projection=cproj(central_longitude=clon))
+        self.ax.set_extent((llcrnrlon, urcrnrlon, llcrnrlat, urcrnrlat),
+                           crs=ccrs.PlateCarree())
+        self.ax.set_facecolor(fill_color)
+        self.fill = fill_color
         self.figsize = figsize
         delta = (np.abs(urcrnrlon - llcrnrlon) // .04) / 100
         self.dlon = np.minimum(delta, dlon)
         delta = (np.abs(urcrnrlat - llcrnrlat) // .04) / 100
         self.dlat = np.minimum(delta, dlat)
-        self.fig = fig
-        self.ax = ax
-        self.fill_color = fill_color
+        self.res = resolution
         self.fontsize = fontsize
-        reset = True if fig is None else False
-        self.new_figure(reset=reset)
+        # reset = True if fig is None else False
+        # self.new_figure(reset=reset)
 
     def new_figure(self, fill_color=None, reset=False, dpi=150):
         """
@@ -169,34 +181,9 @@ class map(object):
         if fill_color is None:
             fill_color = self.fill_color
 
-        self.basemap.drawmapboundary(fill_color=fill_color)
         # Create the longitude lines
-        nticks = int((self.basemap.urcrnrlon - self.basemap.llcrnrlon) /
-                     self.dlon)
-        md = np.mod(self.basemap.llcrnrlon, self.dlon)
-        if md:
-            slon = self.basemap.llcrnrlon + self.dlon - md
-        else:
-            slon = self.basemap.llcrnrlon
-            nticks += 1
-        lon_lines = np.arange(nticks) * self.dlon + slon
-        self.basemap.drawmeridians(lon_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
-                                   labels=[0, 0, 0, 1], fontsize=self.fontsize)
 
         # Create the latitude lines
-        nticks = int((self.basemap.urcrnrlat - self.basemap.llcrnrlat) /
-                     self.dlat)
-        md = np.mod(self.basemap.llcrnrlat, self.dlat)
-        if md:
-            slat = self.basemap.llcrnrlat + self.dlat - md
-        else:
-            slat = self.basemap.llcrnrlat
-            nticks += 1
-        lat_lines = np.arange(nticks) * self.dlat + slat
-        self.basemap.drawparallels(lat_lines, color="0.5",
-                                   linewidth=0.25, dashes=[1, 1, 0.1, 1],
-                                   labels=[1, 0, 0, 0], fontsize=self.fontsize)
 
     def land(self, color="black"):
         """
@@ -207,9 +194,8 @@ class map(object):
         color: string, optional
             color to draw the mask with
         """
-        self.basemap.drawcoastlines()
-        self.basemap.drawcountries()
-        self.basemap.fillcontinents(color=color)
+        self.ax.add_feature(cft.GSHHSFeature(self.res, [1]),
+                            facecolor=color)
 
     def zoom(self, xrange, yrange):
         """
@@ -223,8 +209,8 @@ class map(object):
             minimum and maximum latitudes to display
         """
         x, y = self.basemap(xrange, yrange)
-        self.ax.set_xlim(x)
-        self.ax.set_ylim(y)
+        self.ax.set_limits((xrange.min(), xrange.max(),
+                            yrange.min(), yrange.max()))
         self.fig.canvas.draw()
 
     def pcolormesh(self, lon, lat, data, **kwargs):
@@ -248,8 +234,8 @@ class map(object):
         dlat = lat * 0
         dlon[:, 0:-1] = lon[:, 1:] - lon[:, 0:-1]
         dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
-        x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
-        self.pc = self.ax.pcolormesh(x, y, data, **kwargs)
+        self.pc = self.ax.pcolormesh(lon - dlon * 0.5, lon - dlon * 0.5,
+                                     data, **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
@@ -266,14 +252,7 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to pcolor
         """
-        # Pcolor requires a modification to the locations to line up with
-        # the geography
-        dlon = lon * 0
-        dlat = lat * 0
-        dlon[:, 0:-1] = lon[:, 1:] - lon[:, 0:-1]
-        dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
-        x, y = self.basemap(lon - dlon * 0.5, lat - dlat * 0.5)
-        self.pc = self.ax.contourf(x, y, data, **kwargs)
+        self.pc = self.ax.contourf(lon, lat, data, **kwargs)
 
     def scatter(self, lon, lat, data, **kwargs):
         """
@@ -290,8 +269,7 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to pcolor
         """
-        x, y = self.basemap(lon, lat)
-        self.pc = self.ax.scatter(x, y, c=data, **kwargs)
+        self.pc = self.ax.scatter(lon, lat, c=data, **kwargs)
 
     def colorbar(self, label=None, cticks=None, **kwargs):
         """
@@ -309,6 +287,57 @@ class map(object):
         self.cax = self.fig.add_axes([0.25, 0.16, 0.5, 0.03])
         self.cb = plt.colorbar(self.pc, cax=self.cax, orientation="horizontal",
                                ticks=cticks, **kwargs)
-        self.basemap.set_axes_limits(ax=self.ax)
         if label is not None:
             self.cb.set_label(label)
+
+
+class hawaii(map):
+    """
+      Make plots using high resolution coastlines around Hawaii
+
+        Examples
+        --------
+        >>> m=seapy.hawaii()
+        >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
+        >>> m.land()
+        >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
+        >>> m.ax.patch.set_alpha(1)
+        >>> m.fig.patch.set_alpha(0.0)
+        >>> m.fig.savefig("sst.png",dpi=100)
+
+      Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+    """
+
+    def __init__(self, grid=None, llcrnrlon=-163, llcrnrlat=17,
+                 urcrnrlon=-153, urcrnrlat=24, figsize=(8., 6.),
+                 dlat=1, dlon=2):
+        super().__init__(grid=grid, llcrnrlon=llcrnrlon, llcrnrlat=llcrnrlat,
+                         urcrnrlon=urcrnrlon, urcrnrlat=urcrnrlat,
+                         figsize=figsize, dlat=dlat, dlon=dlon)
+
+    def land(self, color="black"):
+        """
+        Draw the GIS coastline data from the state of Hawaii to draw the
+        land boundaries. This does not include rivers, etc., only the
+        coastline.
+
+        Parameters
+        ----------
+        color: string, optional
+            Color to draw the land mask with
+
+        Returns
+        -------
+        None
+
+        """
+        _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii.shp"
+
+        if not hasattr(self, "feature"):
+            print('load data')
+            self.feature = cft.ShapelyFeature(
+                cartopy.io.shapereader.Reader(_shape_file).geometries(),
+                self.proj(central_longitude=-158))
+
+        # Draw the loaded shapes
+        self.ax.add_feature(self.feature, facecolor=color)
