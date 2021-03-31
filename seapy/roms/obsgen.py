@@ -622,6 +622,7 @@ class ostia_sst_map(obsgen):
         obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
                                       data, self.dt, title)
         obs.reftime = self.reftime
+        obs.depth = obs.depth - 2 #put SST info bellow the surface 
         return obs
 
 
@@ -1410,7 +1411,6 @@ class cora_dt_t(obsgen):
         lon = lon[profile_list]
         lat = lat[profile_list]
 
-
         # Load the data in our region and time
         temp = nc.variables["TEMP"][profile_list, :]
         temp_qc = nc.variables["TEMP_QC"][profile_list, :]
@@ -1440,9 +1440,10 @@ class cora_dt_t(obsgen):
         data = [seapy.roms.obs.raw_data("TEMP", "CORA_T", temp,
                                         None, self.temp_error)]
 
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+        obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
-
+        obs.reftime = self.reftime
+        return obs
 class cora_dt_s(obsgen):
     """
     class to process SALINITY profiles from CORA delayed time (DT) dataset (Copernicus) into ROMS observation
@@ -1541,5 +1542,7 @@ class cora_dt_s(obsgen):
         data = [seapy.roms.obs.raw_data("SALT", "CORA_S", salt,
                                         None, self.salt_error)]
 
-        return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
+        obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
                                       data, self.dt, title)
+        obs.reftime = self.reftime
+        return obs
