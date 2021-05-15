@@ -256,12 +256,52 @@ class map(object):
         lat: array
             Latitude field for data
         data: array
-            data to pcolor
+            data to scatter
         **kwargs: arguments, optional
-            additional arguments to pass to pcolor
+            additional arguments to pass to scatter
         """
         self.pc = self.ax.scatter(lon, lat, c=data, transform=self.proj(),
                                   **kwargs)
+
+    def streamplot(self, lon, lat, u, v, **kwargs):
+        """
+        streamline plot vector data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        u: array
+            u-component to display
+        v: array
+            v-component to display
+        **kwargs: arguments, optional
+            additional arguments to pass to streamplot
+        """
+        return self.ax.streamplot(lon, lat, u, v, transform=self.proj(),
+                                  **kwargs)
+
+    def quiver(self, lon, lat, u, v, **kwargs):
+        """
+        quiver plot vector data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        u: array
+            u-component to display
+        v: array
+            v-component to display
+        **kwargs: arguments, optional
+            additional arguments to pass to streamplot
+        """
+        return self.ax.quiver(lon, lat, u, v, transform=self.proj(),
+                              **kwargs)
 
     def colorbar(self, label=None, location="bottom", **kwargs):
         """
