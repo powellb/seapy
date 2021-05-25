@@ -872,7 +872,8 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     edays = np.asarray(edays)
 
     # Loop over the dates in pairs
-    for n, t in track(enumerate(days)):
+    for n, t in track(enumerate(days), total=len(days),
+                      description="search files"):
         # Set output file name
         if outtime:
             outfile = time.sub("{:05d}".format(t[0]), out_files)

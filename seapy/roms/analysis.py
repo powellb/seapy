@@ -450,7 +450,9 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
                              ('ocean_time', "s_rho", "eta_rho", "xi_rho"))
 
     # Loop over the time with the variance window:
-    for n, t in track(enumerate(np.arange(skip + pad, len(time) - std_window - pad, std_window))):
+    time_list = np.arange(skip + pad, len(time) - std_window - pad, std_window)
+    for n, t in track(enumerate(time_list), total=len(time_list),
+                      description="evaluate time window"):
         idx = np.arange(t - pad, t + std_window + pad)
         ncout.variables[time_var][n] = np.mean(time[idx])
         for v in fields:
