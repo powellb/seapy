@@ -638,10 +638,7 @@ def list_files(path=".", regex=None, full_path=True):
     # Check each file in the directory we are searching and then sort
     for file in os.listdir(path):
         if prog.search(file) is not None:
-            if full_path:
-                files.append(path + file)
-            else:
-                files.append(file)
+            files.append(file)
     files.sort()
 
     # Return the files or with the full path
