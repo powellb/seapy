@@ -600,8 +600,12 @@ class ostia_sst_map(obsgen):
         nc = seapy.netcdf(file)
         lon = nc.variables["lon"][:]
         lat = nc.variables["lat"][:]
+        if nc.variables["analysed_sst"].units[0].lower() == 'k':
+            k2c = - 273.15
+        else:
+            k2c = 0
         dat = np.ma.masked_outside(np.squeeze(
-            nc.variables["analysed_sst"][:]) - 273.15,
+            nc.variables["analysed_sst"][:]) + k2c,
             self.temp_limits[0], self.temp_limits[1])
         err = np.ma.masked_outside(np.squeeze(
             nc.variables["analysis_error"][:]), 0.01, 2.0)
