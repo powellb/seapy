@@ -262,8 +262,16 @@ def vel_ellipse(u, v):
         minor = rccw - rcw
         phase = (theta_cw - theta_ccw) / 2.0
         angle = (theta_cw + theta_ccw) / 2.0
-        phase = np.mod(phase, 2 * np.pi) if phase > 0 else phase + 2 * np.pi
-        angle = np.mod(angle, 2 * np.pi) if angle > 0 else angle + 2 * np.pi
+        if phase.ndim == 0:
+            phase = np.mod(phase, 2 * np.pi) if phase > 0 else phase + 2 * np.pi
+            angle = np.mod(angle, 2 * np.pi) if angle > 0 else angle + 2 * np.pi
+        else: # vector or matrix
+            ppos, pneg = phase > 0, phase < 0
+            apos, aneg = angle > 0, angle < 0
+            phase[ppos] = np.mod(phase[ppos], 2 * np.pi)
+            phase[pneg] = phase[pneg] + 2 * np.pi
+            angle[apos] = np.mod(angle[apos], 2 * np.pi)
+            angle[aneg] = angle[aneg] + 2 * np.pi
 
         # Store the result
         ell[c.upper()] = tellipse(major, minor, angle, phase)
