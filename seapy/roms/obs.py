@@ -64,6 +64,8 @@ obs_provenance = {
     200: "CTD",
     210: "CTD_HOT",
     220: "CTD_ARGO",
+    230: "CORA_T",
+    240: "CORA_S",
     300: "SST",
     301: "SST_OSTIA",
     315: "SST_NAVO_MAP",
@@ -543,6 +545,10 @@ class obs:
         nc.variables["survey_time"][:] = self.survey_time
         nc.variables["obs_variance"][:] = np.ones(state_vars) * 0.1
         nc.variables["obs_time"][:] = self.time[self.sort]
+#        setattr(nc.variables['obs_time'], 'units', 'days since ' + self.reftime[0].strftime("%Y-%m-%d %H:%M:%S") + ' GMT')
+#        setattr(nc.variables['survey_time'], 'units', 'days since ' + self.reftime[0].strftime("%Y-%m-%d %H:%M:%S") + ' GMT')
+        setattr(nc.variables['obs_time'], 'units', 'days since ' + self.reftime.strftime("%Y-%m-%d %H:%M:%S") + ' GMT')
+        setattr(nc.variables['survey_time'], 'units', 'days since ' + self.reftime.strftime("%Y-%m-%d %H:%M:%S") + ' GMT')
         nc.variables["obs_Xgrid"][:] = self.x[self.sort]
         nc.variables["obs_Ygrid"][:] = self.y[self.sort]
         nc.variables["obs_Zgrid"][:] = self.z[self.sort]
@@ -656,7 +662,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
         # Get the grid locations from the data locations
         subsurface_values = False
         (j, i) = grid.ij((lon, lat))
-        depth = grid.n * np.ones(i.size)
+        #depth = grid.n * np.ones(i.size)
+        depth = np.zeros(i.size)
         k = np.ma.array(np.resize(grid.n, i.size))
     else:
         # Get the grid locations from the data locations
@@ -670,7 +677,6 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
     j = j[valid_list].compressed()
     k = k[valid_list].compressed()
     depth = depth[valid_list]
-
     # Make sure the times are consistent and in dt-space
     if time.size == 1:
         time = np.resize(time, valid_list[0].size)
@@ -756,8 +762,8 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
                 kk = kk[binned].ravel() + 1
             else:
                 kk = np.resize(grid.n, Nd)
-                dd = kk
-
+                dd = np.zeros(kk.size)
+                #dd = kk
             # Put all of the data from this time into our lists
             ot.append(np.resize(mtime, Nd))
             ox.append(ii)
@@ -793,7 +799,7 @@ def gridder(grid, time, lon, lat, depth, data, dt, depth_adjust=False,
                               title=title)
 
 
-def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
+def merge_files(obs_files, out_files, days, dt, reftime, limits=None, clobber=True):
     """
     merge together a group of observation files into combined new files
     with observations that lie only within the corresponding dates
@@ -815,6 +821,9 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     dt : float,
         Time separation of observations. Observations that are less than
         dt apart in time will be set to the same time.
+    reftime :
+        Reference time used to process the observations. The merged files
+        are now timed in relation to the beginning of the assimilation cycle
     limits : dict, optional
         Set the limits of the grid points that observations are allowed
         within, {'north':i, 'south':i, 'east':i, 'west':i }. As obs near
@@ -904,7 +913,10 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
                 nobs.y < limits['south'],
                 nobs.y > limits['north'])))
             nobs.delete(l)
-
+        # Make time relative to the assimilation window
+        nobs.reftime = reftime
+        #nobs.reftime = seapy.day2date(t[0],epoch=reftime)
+        #nobs.time = abs(abs(nobs.time) - abs(t[0]))
         # Save out the new observations
         nobs.to_netcdf(outfile, dt=dt)
 
