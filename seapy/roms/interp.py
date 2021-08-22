@@ -353,8 +353,9 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
 
                     if z_mask:
                         __mask_z_grid(ndata, dst_depth, child_grid.depth_rho)
-                        ncout.variables[dest][outr, :, :, :] = ndata
-                        ncout.sync()
+                    # Save results
+                    ncout.variables[dest][outr, :, :, :] = ndata
+                    ncout.sync()
             progress.update(_task_id, advance=smap[src])
 
         # Rotate and Interpolate the vector fields. First, determine which
