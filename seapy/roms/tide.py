@@ -70,6 +70,9 @@ def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_ep
     tideout.variables['tide_Cmin'][:] = tide['Cminor']
     tideout.variables['tide_Cphase'][:] = np.degrees(tide['Cphase'])
     tideout.variables['tide_Cangle'][:] = np.degrees(tide['Cangle'])
+    t0 = tide['tide_start']
+    tideout.variables['zero_phase_date'][:] = t0.year * 1e4 + t0.month * 1e2 + \
+        t0.day + t0.hour / 24 + t0.minute / (24 * 60)
     tideout.close()
 
 
@@ -105,21 +108,25 @@ def load_forcing(filename):
     frc['Cminor'] = nc.variables['tide_Cmin'][:]
     frc['Cphase'] = np.radians(nc.variables['tide_Cphase'][:])
     frc['Cangle'] = np.radians(nc.variables['tide_Cangle'][:])
-    start_str = getattr(nc, 'tide_start', None) or \
-        getattr(nc, 'base_date', None)
+    frc['tide_start'] = None
+    if 'zero_phase_date' in nc.variables:
+        tstart = nc.variables['zero_phase_date']
+        delta = datetime.timedelta(seconds=(tstart - int(tstart)) * 86400)
+        frc['tide_start'] = datetime.datetime.strptime(f"{int(tstart)}",
+                                                       '%Y%m%d') + delta
+    else:
+        if getattr(nc, 'tide_start', None):
+            frc['tide_start'] = datetime.datetime.strptime(
+                re.sub('^[^\(]*', '', getattr(nc, 'tide_start')),
+                "(%Y-%m-%d %H:%M:%S)")
+        elif getattr(nc, 'base_date', None):
+            frc['tide_start'] = datetime.datetime.strptime(
+                re.sub('^.*since\s*', '', getattr(nc, 'base_date')),
+                "%Y-%m-%d %H:%M:%S")
     tides = getattr(nc, 'tidal_constituents', None) or \
         getattr(nc, 'tides', None)
     frc['tides'] = tides.upper().split(", ")
-    frc['tide_start'] = None
     nc.close()
-    if start_str:
-        try:
-            frc['tide_start'] = datetime.datetime.strptime(
-                re.sub('^.*since\s*', '', start_str),
-                "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            pass
-
     return frc
 
 
