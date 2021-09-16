@@ -72,7 +72,7 @@ def from_roms(roms_file, bry_file, grid=None, records=None,
     ncbry.variables[brytime][:] = seapy.roms.date2num(
         seapy.roms.num2date(ncroms, time, records), ncbry, brytime)
 
-    for var in seapy.roms.fields:
+    for var in track(seapy.roms.fields, description="Converting..."):
         if var in ncroms.variables:
             for bry in sides:
                 ndim = seapy.roms.fields[var]["dims"]
@@ -613,7 +613,7 @@ def from_stations(station_file, bry_file, grid=None):
         x = seapy.adddim(x, len(grid.s_rho))
 
         for n, t in track(enumerate(statime), total=len(statime),
-                     description=f"Converting {side} stations..."):
+                          description=f"Converting {side} stations..."):
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                                          sta_s_rho, sta_cs_r,
                                          sta_zeta[n, bry[side]])
@@ -680,10 +680,16 @@ def from_stations(station_file, bry_file, grid=None):
     pass
 
 
-def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
+def detide(grid, bryfile, tidefile=None, tides=None, tide_start=None,
+           frc=None):
     """
-    Given a boundary file, detide the barotropic components and create tidal
-    forcing file for the grid. This method will update the given boundary file.
+    Given a boundary file, detide the barotropic components. This will be
+    done using the boundary data and create a new tidal file for the grid, or
+    it will use the ref_tide provided to detide the boundaries and no tidal
+    file is created.
+
+    This method will alter the given boundary file by removing the
+    barotropic tides from zeta, ubar, and vbar.
 
     Parameters
     ----------
@@ -691,14 +697,19 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
        The grid that defines the boundaries shape and mask
     bryfile : string,
        The boundary file to detide
-    tidefile : string,
-       The output tidal forcing file with the tide spectral forcing
+    tidefile : string, optional
+       The output tidal forcing file with the tide spectral forcing.
+       This is required if ref_tide is not provided.
     tides : string array, optional
        Array of strings defining which tides to extract. Defaults to the
        standard 11 constituents.
     tide_start : datetime, optional
        The reference date to use for the tide forcing. If None, the
        center of the time period is used.
+    frc : dict, optional
+       Reference tidal forcing. If this is provided, the bryfile will be
+       detided from the provided tides (typically loaded from a tidal forcing
+       file) and no new tide forcing file is generated.
 
     Returns
     -------
@@ -707,19 +718,35 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
     Examples
     --------
     Make a long time-series boundary conditions from a group of boundary files,
-    skipping the last record of each file to prevent overlap (if there are 100 records
-    in each file). Afterwards, detide the resulting file.
+    skipping the last record of each file to prevent overlap (if there are
+    100 records in each file). Afterwards, detide the resulting file.
 
     >>> !ncrcat -dbry_time,0,,100,99 bry_out_*nc bry_detide.nc
     >>> seapy.roms.boundary.detide("mygrid.nc", "bry_detide.nc", "tide_out.nc")
 
+    Or, use an existing tidal file
+
+    >>> reftide = seapy.roms.tide.load_forcing('tide.nc')
+    >>> seapy.roms.boundary.detide("mygrid.nc", "bry_detide.nc", frc=reftide)
+
     """
     import datetime
+
+    # Check if we are fitting and detiding or predicting and detiding
+    if tidefile:
+        fit = True
+    elif frc:
+        fit = False
+    else:
+        raise ValueError("You must specify a tidefile or ref_tide.")
 
     if not tides:
         tides = seapy.tide.default_tides
     else:
         tides = np.atleast_1d(tides)
+
+    if frc:
+        tides = frc['tides']
 
     # Load Files
     grid = seapy.model.asgrid(grid)
@@ -734,6 +761,8 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
         tide_start = time[0] + (time[-1] - time[0]) / 2
         tide_start = datetime.datetime(
             tide_start.year, tide_start.month, tide_start.day)
+    if frc:
+        tide_start = frc['tide_start']
 
     try:
         s_rho = len(bry.dimensions['s_rho'])
@@ -743,16 +772,21 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
     # Set variables to detide
     detide_vars = ['zeta', 'ubar', 'vbar']
 
-    # Create the tide forcing file
-    bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
+    # Update the boundary attributes
+    if fit:
+        bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
+    else:
+        bry.detide = "Detided with zero phase of {:s}".format(
+            str(ref_tide['tide_start']))
 
     # Detide the free-surface
-    eamp = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
-    epha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
-    cmin = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
-    cmax = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
-    cang = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
-    cpha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+    if fit:
+        eamp = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+        epha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+        cmin = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+        cmax = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+        cang = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
+        cpha = np.zeros((len(tides), grid.eta_rho, grid.xi_rho))
 
     for side in sides:
         lvar = "zeta_" + side
@@ -766,20 +800,33 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             for i in track(range(size), description=f"Detiding {lvar}..."):
                 if np.any(mask[:, i]):
                     continue
-                out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
-                                     tide_start=tide_start)
-                zeta[:, i] -= out['fit'].data
+                if fit:
+                    out = seapy.tide.fit(time, zeta[:, i], tides=tides, lat=lat[i],
+                                         tide_start=tide_start)
+                    zeta[:, i] -= out['fit'].data
 
-                # Save the amp/phase in the tide file
-                for n, t in enumerate(tides):
+                    # Save the amp/phase in the tide file
+                    for n, t in enumerate(tides):
+                        if sides[side].xi:
+                            eamp[n, idx[0], i] = out['major'][t].amp
+                            epha[n, idx[0], i] = np.mod(
+                                out['major'][t].phase, 2 * np.pi)
+                        else:
+                            eamp[n, i, idx[1]] = out['major'][t].amp
+                            epha[n, i, idx[1]] = np.mod(
+                                out['major'][t].phase, 2 * np.pi)
+                else:
                     if sides[side].xi:
-                        eamp[n, idx[0], i] = out['major'][t].amp
-                        epha[n, idx[0], i] = np.mod(
-                            out['major'][t].phase, 2 * np.pi)
+                        pt = np.s_[:, idx[0], i]
                     else:
-                        eamp[n, i, idx[1]] = out['major'][t].amp
-                        epha[n, i, idx[1]] = np.mod(
-                            out['major'][t].phase, 2 * np.pi)
+                        pt = np.s_[:, i, idx[1]]
+                    amppha = seapy.tide.pack_amp_phase(tides,
+                                                       frc['Eamp'][pt],
+                                                       frc['Ephase'][pt])
+                    zpred = seapy.tide.predict(time, amppha,
+                                               lat=lat[i],
+                                               tide_start=tide_start)
+                    zeta[:, i] -= zpred
 
             # Save out the detided information
             bry.variables[lvar][:] = zeta
@@ -813,24 +860,46 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             for i in track(range(size), description=f"Detiding {uvar, vvar}..."):
                 if np.any(mask[:, i]):
                     continue
-                out = seapy.tide.fit(
-                    time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
-                    tide_start=tide_start)
-                ubar[:, i] -= np.real(out['fit'])
-                vbar[:, i] -= np.imag(out['fit'])
+                if fit:
+                    out = seapy.tide.fit(
+                        time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
+                        tide_start=tide_start)
+                    ubar[:, i] -= np.real(out['fit'])
+                    vbar[:, i] -= np.imag(out['fit'])
 
-                # Save the amp/phase in the tide file
-                for n, t in enumerate(tides):
+                    # Save the amp/phase in the tide file
+                    for n, t in enumerate(tides):
+                        if sides[side].xi:
+                            cmax[n, idx[0], i] = out['major'][t].amp
+                            cmin[n, idx[0], i] = out['minor'][t].amp
+                            cpha[n, idx[0], i] = out['major'][t].phase
+                            cang[n, idx[0], i] = out['minor'][t].phase
+                        else:
+                            cmax[n, i, idx[1]] = out['major'][t].amp
+                            cmin[n, i, idx[1]] = out['minor'][t].amp
+                            cpha[n, i, idx[1]] = out['major'][t].phase
+                            cang[n, i, idx[1]] = out['minor'][t].phase
+                else:
                     if sides[side].xi:
-                        cmax[n, idx[0], i] = out['major'][t].amp
-                        cmin[n, idx[0], i] = out['minor'][t].amp
-                        cpha[n, idx[0], i] = out['major'][t].phase
-                        cang[n, idx[0], i] = out['minor'][t].phase
+                        pt = np.s_[:, idx[0], i]
                     else:
-                        cmax[n, i, idx[1]] = out['major'][t].amp
-                        cmin[n, i, idx[1]] = out['minor'][t].amp
-                        cpha[n, i, idx[1]] = out['major'][t].phase
-                        cang[n, i, idx[1]] = out['minor'][t].phase
+                        pt = np.s_[:, i, idx[1]]
+                    amppha = seapy.tide.pack_amp_phase(tides,
+                                                       frc['Eamp'][pt],
+                                                       frc['Ephase'][pt])
+                    major = seapy.tide.pack_amp_phase(tides,
+                                                      frc['Cmajor'][pt],
+                                                      frc['Cphase'][pt])
+                    minor = seapy.tide.pack_amp_phase(tides,
+                                                      frc['Cminor'][pt],
+                                                      frc['Cangle'][pt])
+
+                    velpred = seapy.tide.predict(time, tide=major,
+                                                 tide_minor=minor,
+                                                 lat=lat[i],
+                                                 tide_start=tide_start)
+                    ubar[:, i] -= np.real(velpred)
+                    vbar[:, i] -= np.imag(velpred)
 
             ubar, vbar = seapy.rotate(ubar, vbar, -grid.angle[idx[0], idx[1]])
             if sides[side].xi:
@@ -842,45 +911,46 @@ def detide(grid, bryfile, tidefile, tides=None, tide_start=None):
             bry.sync()
             ubar = vbar = []
 
-    # Have to duplicate the boundary tide info into the inner row/column
-    eamp[:, 1:-1, 1] = eamp[:, 1:-1, 0]
-    eamp[:, 1:-1, -2] = eamp[:, 1:-1, -1]
-    eamp[:, 1, 1:-1] = eamp[:, 0, 1:-1]
-    eamp[:, -2, 1:-1] = eamp[:, -1, 1:-1]
-    epha[:, 1:-1, 1] = epha[:, 1:-1, 0]
-    epha[:, 1:-1, -2] = epha[:, 1:-1, -1]
-    epha[:, 1, 1:-1] = epha[:, 0, 1:-1]
-    epha[:, -2, 1:-1] = epha[:, -1, 1:-1]
-    cmax[:, 1:-1, 1] = cmax[:, 1:-1, 0]
-    cmax[:, 1:-1, -2] = cmax[:, 1:-1, -1]
-    cmax[:, 1, 1:-1] = cmax[:, 0, 1:-1]
-    cmax[:, -2, 1:-1] = cmax[:, -1, 1:-1]
-    cmin[:, 1:-1, 1] = cmin[:, 1:-1, 0]
-    cmin[:, 1:-1, -2] = cmin[:, 1:-1, -1]
-    cmin[:, 1, 1:-1] = cmin[:, 0, 1:-1]
-    cmin[:, -2, 1:-1] = cmin[:, -1, 1:-1]
-    cpha[:, 1:-1, 1] = cpha[:, 1:-1, 0]
-    cpha[:, 1:-1, -2] = cpha[:, 1:-1, -1]
-    cpha[:, 1, 1:-1] = cpha[:, 0, 1:-1]
-    cpha[:, -2, 1:-1] = cpha[:, -1, 1:-1]
-    cang[:, 1:-1, 1] = cang[:, 1:-1, 0]
-    cang[:, 1:-1, -2] = cang[:, 1:-1, -1]
-    cang[:, 1, 1:-1] = cang[:, 0, 1:-1]
-    cang[:, -2, 1:-1] = cang[:, -1, 1:-1]
-
-    # Set the tide reference
-    tideout = {}
-    tideout['tides'] = tides
-    tideout['tide_start'] = tide_start
-    tideout['Eamp'] = eamp
-    tideout['Ephase'] = epha
-    tideout['Cmajor'] = cmax
-    tideout['Cminor'] = cmin
-    tideout['Cphase'] = cpha
-    tideout['Cangle'] = cang
-
-    seapy.roms.tide.create_forcing(tidefile, tideout,
-                                   title="Tides from " + bryfile, epoch=epoch)
     bry.close()
 
+    if fit:
+        # Have to duplicate the boundary tide info into the inner row/column
+        eamp[:, 1:-1, 1] = eamp[:, 1:-1, 0]
+        eamp[:, 1:-1, -2] = eamp[:, 1:-1, -1]
+        eamp[:, 1, 1:-1] = eamp[:, 0, 1:-1]
+        eamp[:, -2, 1:-1] = eamp[:, -1, 1:-1]
+        epha[:, 1:-1, 1] = epha[:, 1:-1, 0]
+        epha[:, 1:-1, -2] = epha[:, 1:-1, -1]
+        epha[:, 1, 1:-1] = epha[:, 0, 1:-1]
+        epha[:, -2, 1:-1] = epha[:, -1, 1:-1]
+        cmax[:, 1:-1, 1] = cmax[:, 1:-1, 0]
+        cmax[:, 1:-1, -2] = cmax[:, 1:-1, -1]
+        cmax[:, 1, 1:-1] = cmax[:, 0, 1:-1]
+        cmax[:, -2, 1:-1] = cmax[:, -1, 1:-1]
+        cmin[:, 1:-1, 1] = cmin[:, 1:-1, 0]
+        cmin[:, 1:-1, -2] = cmin[:, 1:-1, -1]
+        cmin[:, 1, 1:-1] = cmin[:, 0, 1:-1]
+        cmin[:, -2, 1:-1] = cmin[:, -1, 1:-1]
+        cpha[:, 1:-1, 1] = cpha[:, 1:-1, 0]
+        cpha[:, 1:-1, -2] = cpha[:, 1:-1, -1]
+        cpha[:, 1, 1:-1] = cpha[:, 0, 1:-1]
+        cpha[:, -2, 1:-1] = cpha[:, -1, 1:-1]
+        cang[:, 1:-1, 1] = cang[:, 1:-1, 0]
+        cang[:, 1:-1, -2] = cang[:, 1:-1, -1]
+        cang[:, 1, 1:-1] = cang[:, 0, 1:-1]
+        cang[:, -2, 1:-1] = cang[:, -1, 1:-1]
+
+        # Set the tide reference
+        tideout = {}
+        tideout['tides'] = tides
+        tideout['tide_start'] = tide_start
+        tideout['Eamp'] = eamp
+        tideout['Ephase'] = epha
+        tideout['Cmajor'] = cmax
+        tideout['Cminor'] = cmin
+        tideout['Cphase'] = cpha
+        tideout['Cangle'] = cang
+
+        seapy.roms.tide.create_forcing(tidefile, tideout,
+                                       title="Tides from " + bryfile, epoch=epoch)
     pass

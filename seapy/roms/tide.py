@@ -110,7 +110,7 @@ def load_forcing(filename):
     frc['Cangle'] = np.radians(nc.variables['tide_Cangle'][:])
     frc['tide_start'] = None
     if 'zero_phase_date' in nc.variables:
-        tstart = nc.variables['zero_phase_date']
+        tstart = nc.variables['zero_phase_date'][0]
         delta = datetime.timedelta(seconds=(tstart - int(tstart)) * 86400)
         frc['tide_start'] = datetime.datetime.strptime(f"{int(tstart)}",
                                                        '%Y%m%d') + delta
@@ -124,8 +124,9 @@ def load_forcing(filename):
                 re.sub('^.*since\s*', '', getattr(nc, 'base_date')),
                 "%Y-%m-%d %H:%M:%S")
     tides = getattr(nc, 'tidal_constituents', None) or \
-        getattr(nc, 'tides', None)
-    frc['tides'] = tides.upper().split(", ")
+        getattr(nc, 'tides', None) or getattr(nc, 'components', None)
+    frc['tides'] = re.split('\W', tides.upper(),
+                            maxsplit=frc['Eamp'].shape[0])[:frc['Eamp'].shape[0]]
     nc.close()
     return frc
 
