@@ -777,7 +777,7 @@ def detide(grid, bryfile, tidefile=None, tides=None, tide_start=None,
         bry.detide = "Detided to generate tide forcing: {:s}".format(tidefile)
     else:
         bry.detide = "Detided with zero phase of {:s}".format(
-            str(ref_tide['tide_start']))
+            str(frc['tide_start']))
 
     # Detide the free-surface
     if fit:
@@ -857,13 +857,13 @@ def detide(grid, bryfile, tidefile=None, tides=None, tide_start=None,
             bubar = bvbar = []
 
             # Detide
-            for i in track(range(size), description=f"Detiding {uvar, vvar}..."):
+            for i in track(range(size), description=f"Detiding \[uv]bar_{side}..."):
                 if np.any(mask[:, i]):
                     continue
                 if fit:
                     out = seapy.tide.fit(
-                        time, ubar[:, i] + 1j * vbar[:, i], tides=tides, lat=lat[i],
-                        tide_start=tide_start)
+                        time, ubar[:, i] + 1j * vbar[:, i], tides=tides,
+                        lat=lat[i], tide_start=tide_start)
                     ubar[:, i] -= np.real(out['fit'])
                     vbar[:, i] -= np.imag(out['fit'])
 
@@ -884,18 +884,16 @@ def detide(grid, bryfile, tidefile=None, tides=None, tide_start=None,
                         pt = np.s_[:, idx[0], i]
                     else:
                         pt = np.s_[:, i, idx[1]]
-                    amppha = seapy.tide.pack_amp_phase(tides,
-                                                       frc['Eamp'][pt],
-                                                       frc['Ephase'][pt])
-                    major = seapy.tide.pack_amp_phase(tides,
-                                                      frc['Cmajor'][pt],
-                                                      frc['Cphase'][pt])
-                    minor = seapy.tide.pack_amp_phase(tides,
-                                                      frc['Cminor'][pt],
-                                                      frc['Cangle'][pt])
 
-                    velpred = seapy.tide.predict(time, tide=major,
-                                                 tide_minor=minor,
+                    u = seapy.tide.pack_amp_phase(tides,
+                                                  frc['Uamp'][pt],
+                                                  frc['Uphase'][pt])
+                    v = seapy.tide.pack_amp_phase(tides,
+                                                  frc['Vamp'][pt],
+                                                  frc['Vphase'][pt])
+
+                    velpred = seapy.tide.predict(time, tide=u,
+                                                 tide_minor=v,
                                                  lat=lat[i],
                                                  tide_start=tide_start)
                     ubar[:, i] -= np.real(velpred)

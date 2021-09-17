@@ -341,7 +341,7 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
                 c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                             + (vufs[ap].v + vufs[ap].u) - c.phase)
                 + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
-                                            + (vufs[ap].v + vufs[ap].u) - c.phase))
+                                              + (vufs[ap].v + vufs[ap].u) - c.phase))
         else:
             ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
                                               + (vufs[ap].v + vufs[ap].u) - c.phase)
@@ -598,3 +598,46 @@ def unpack_ellipse(ellipse, tides=None):
         except KeyError:
             continue
     return tellipse(mj, mn, ag, ph)
+
+
+def ellipse_amppha(major, minor, phase, angle):
+    """
+    Given the tides and arrays for major, minor, phase,
+    and angle, convert to u and v amplitude and phase.
+
+    Parameters
+    ----------
+    major: ndarray,
+      semi-major axis of ellipse
+    minor: ndarray,
+      semi-minor axis of ellipse
+    phase: ndarray,
+      phase of the elipse
+    angle: ndarray,
+      inclination angle of the elipse
+
+    Returns
+    -------
+      uamp, uphase, vamp, vphase: ndarray
+
+    """
+    major = np.atleast_1d(major)
+    minor = np.atleast_1d(minor)
+    phase = np.atleast_1d(phase)
+    angle = np.atleast_1d(angle)
+
+    if np.any(phase > 2 * np.pi) or np.any(angle > 2 * np.pi):
+        warn("Angles appear to be degrees. Beware of results.")
+
+    ecc = minor / major
+    wp = (1 + ecc) / 2 * major * np.exp(1j * (angle - phase))
+    wm = (1 - ecc) / 2 * major * np.exp(1j * (angle + phase))
+
+    uphase = wp + wm.conjugate()
+    vphase = -1j * (wp - wm.conjugate())
+    uamp = np.abs(uphase)
+    vamp = np.abs(vphase)
+    uphase = -np.angle(uphase)
+    vphase = -np.angle(vphase)
+
+    return uamp, uphase, vamp, vphase

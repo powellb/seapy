@@ -108,6 +108,16 @@ def load_forcing(filename):
     frc['Cminor'] = nc.variables['tide_Cmin'][:]
     frc['Cphase'] = np.radians(nc.variables['tide_Cphase'][:])
     frc['Cangle'] = np.radians(nc.variables['tide_Cangle'][:])
+    try:
+        frc['Uamp'] = nc.variables['tide_Uamp'][:]
+        frc['Vamp'] = nc.variables['tide_Vamp'][:]
+        frc['Uphase'] = np.radians(nc.variables['tide_Uphase'][:])
+        frc['Vphase'] = np.radians(nc.variables['tide_Vphase'][:])
+    except:
+        print("GEN UV")
+        frc['Uamp'], frc['Uphase'], frc['Vamp'], frc['Vphase'] = \
+            seapy.tide.ellipse_amppha(frc['Cmajor'], frc['Cminor'],
+                                      frc['Cphase'], frc['Cangle'])
     frc['tide_start'] = None
     if 'zero_phase_date' in nc.variables:
         tstart = nc.variables['zero_phase_date'][0]
