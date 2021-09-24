@@ -671,7 +671,7 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     return _nc
 
 
-def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
+def create_frc_qcorr(filename, lat=10, lon=10, cycle=None,
                      reftime=default_epoch, clobber=False, cdl=None,
                      title="My Qcorrection"):
     """
@@ -681,12 +681,10 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     ----------
     filename : string
         name and path of file to create
-    eta_rho: int, optional
-        number of rows in the eta direction
-    xi_rho: int, optional
-        number of columns in the xi direction
-    s_rho: int, optional
-        number of s-levels
+    lat: int, optional
+        number of rows in the lat direction
+    lon: int, optional
+        number of columns in the lon direction
     cycle: int or None, optional
         The number of days before cycling the forcing records
     reftime: datetime, optional
@@ -711,6 +709,8 @@ def create_frc_qcorr(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
+    dims['lat'] = lat
+    dims['lon'] = lon
     vars = _set_time_ref(vars, "sst_time", reftime, cycle)
 
     # Create the file
