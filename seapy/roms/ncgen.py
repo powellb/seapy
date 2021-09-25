@@ -708,7 +708,6 @@ def create_frc_qcorr(filename, lat=10, lon=10, cycle=None,
         _cdl_dir + "frc_qcorr.cdl" if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
-    dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
     dims['lat'] = lat
     dims['lon'] = lon
     vars = _set_time_ref(vars, "sst_time", reftime, cycle)
