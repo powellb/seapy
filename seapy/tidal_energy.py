@@ -240,7 +240,7 @@ def tidal_energy(time, hz, u, v, w, pressure, bvf=None, tides=None,
     # Velocity anomalies
     u_prime = u - u.mean(axis=0) - np.real(tidal_vel['fit'])
     v_prime = v - v.mean(axis=0) - np.imag(tidal_vel['fit'])
-    w_prime = w - v.mean(axis=0) - wbar['fit']
+    w_prime = w - w.mean(axis=0) - wbar['fit']
     wbar = wbar['major']
 
     # Set the results structure: for each tide, and for each

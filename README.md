@@ -56,7 +56,7 @@ $ git clone https://github.com/powellb/seapy.git
 $ pip install -e seapy
 ```
 
-With an [editable-mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
+With an [editable-mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
 
 In principle it is possible to build from source on Windows--and success with this has been achieved in the past--but the process tends to break with changes in the environment or Python version, so we don't recommend it or support it.
 
@@ -131,6 +131,3 @@ This will display the 'ncks' command necessary to download the data. If you want
         >> seapy.roms.obs.merge_files(seapy.list_files('.*roms_[0-9]+.nc'), 'roms_obs_#.nc', np.arange([0, 10.1, 5]))
 
 There are many more things that can be done, but these show some of the power available via simple commands.
-
-
-
