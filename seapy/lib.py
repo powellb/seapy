@@ -271,7 +271,7 @@ def convolve(data, ksize=3, kernel=None, copy=True, only_mask=False):
     if fld.ndim == 2:
         count = ndimage.convolve((~msk).view(np.int8), kernel,
                                  mode="constant", cval=0.0)
-        nfld = ndimage.convolve(fld.data * (~msk).view(np.int8), kernel,
+        nfld = ndimage.convolve(fld.filled(0), kernel,
                                 mode="constant", cval=0.0)
     else:
         kernel = kernel[:, :, np.newaxis]
@@ -279,7 +279,7 @@ def convolve(data, ksize=3, kernel=None, copy=True, only_mask=False):
             (~msk).view(np.int8).transpose(1, 2, 0), kernel,
             mode="constant", cval=0.0), (2, 0, 1))
         nfld = np.transpose(ndimage.convolve(
-            (fld.data * (~msk).view(np.int8)).transpose(1, 2, 0), kernel,
+            fld.filled(0).transpose(1, 2, 0), kernel,
             mode="constant", cval=0.0), (2, 0, 1))
 
     if only_mask:
