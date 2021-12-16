@@ -514,14 +514,14 @@ class grid:
             warn("could not compute grid thicknesses.")
             pass
 
-    def plot_trace(self, basemap=None, **kwargs):
+    def plot_trace(self, axis, **kwargs):
         """
         Trace the boundary of the grid onto a map projection
 
         Parameters
         ----------
-        basemap: basemap instance
-            The basemap instance to use for drawing
+        axis: axis instance
+            The axis to use for drawing
         **kwargs: optional
             Arguments to pass to the plot routine
 
@@ -533,12 +533,11 @@ class grid:
                               self.lon_rho[-1, ::-1], self.lon_rho[::-1, 0]])
         lat = np.concatenate([self.lat_rho[0, :], self.lat_rho[:, -1],
                               self.lat_rho[-1, ::-1], self.lat_rho[::-1, 0]])
-        if basemap:
-            x, y = basemap(lon, lat)
-            basemap.plot(x, y, **kwargs)
-        else:
+        if axis is None:
             from matplotlib import pyplot
             pyplot.plot(lon, lat, **kwargs)
+        else:
+            axis.plot(x, y, **kwargs)
 
     def plot_depths(self, row=None, col=None, ax=None):
         """
