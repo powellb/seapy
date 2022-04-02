@@ -4,7 +4,7 @@
   tokenize the dimensions and variables
 
   Written by Brian Powell on 04/30/13
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 
 

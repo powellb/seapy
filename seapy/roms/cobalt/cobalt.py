@@ -6,7 +6,7 @@
    and ROMS
 
    Author: Brian Powell <powellb@hawaii.edu>
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 import seapy
 import os

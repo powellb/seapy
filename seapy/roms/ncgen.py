@@ -3,7 +3,7 @@
   Functions to generate ROMS netcdf files
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 
 
@@ -53,8 +53,9 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
     vars: list of dictionaries
         each variable to define is a dictionary that contains three keys:
             name: string name of variable
-            type: string type (float, double, etc.)
-            dims: comma separated string of dimensions ("ocean_time, eta_rho")
+            type: string type ('d' for double [this is the default]
+                               'f' for float, 'l' for int.)
+    dims: comma separated string of dimensions ("ocean_time, eta_rho")
             attr: dictionary of variable attributes where the key is
                   the attribute name and the value is the attribute string
     attr: dict, optional
@@ -74,10 +75,10 @@ def ncgen(filename, dims=None, vars=None, attr=None, title=None,
     Examples
     --------
     >>> dims = {"ocean_time":0, "eta_rho":120, "xi_rho":100}
-    >>> vars = [  {"name":"eta_slice", "type":"double",
+    >>> vars = [  {"name":"eta_slice", "type":"d",
                    "dims":"ocean_time, eta_rho",
                    "attr":{"units":"degrees Celcius"}},
-                  {"name":"xi_slice", "type":"double",
+                  {"name":"xi_slice", "type":"d",
                    "dims":"ocean_time, xi_rho",
                    "attr":{"units":"degrees Celcius"}} ]
     >>> seapy.roms.ncgen("test.nc", dims=dims, vars=vars, title="Test")
@@ -191,7 +192,7 @@ def add_variable(nc, var):
 
     Examples
     --------
-    >>> var = {"name":"eta_slice", "type":"double",
+    >>> var = {"name":"eta_slice", "type":"d",
                "dims":"ocean_time, eta_rho",
                "attr":{"units":"degrees Celcius"}}
     >>> nc = seapy.roms.ncgen.add_variable("test.nc", var)

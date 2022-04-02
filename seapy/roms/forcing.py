@@ -6,7 +6,7 @@
   rivers, etc.)
 
   Written by Brian Powell on 02/09/16
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 import numpy as np
 from datetime import datetime
@@ -224,17 +224,18 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
 
 def gen_direct_forcing(his_file, frc_file, cdl=None):
     """
-    Generate a direct forcing file from a history (or other ROMS output) file. It requires
-    that sustr, svstr, shflux, and ssflux (or swflux) with salt be available. This will
-    generate a forcing file that contains: sustr, svstr, swflux, and ssflux.
+    Generate a direct forcing file from a history (or other ROMS output)
+    file. It requires that sustr, svstr, shflux, and ssflux (or swflux) with
+    salt be available. This will generate a forcing file that contains: sustr,
+    svstr, swflux, and ssflux.
 
     Parameters
     ----------
     his_file: string,
-      The ROMS history (or other) file(s) (can use wildcards) that contains the fields to
-      make forcing from
+        The ROMS history (or other) file(s) (can use wildcards) that contains
+        the fields to make forcing from
     frc_file: string,
-      The output forcing file
+        The output forcing file
     cdl: string, optional,
         Use the specified CDL file as the definition for the new
         netCDF file.
@@ -242,6 +243,7 @@ def gen_direct_forcing(his_file, frc_file, cdl=None):
     Returns
     -------
     None: Generates an output file of bulk forcings
+
     """
     import os
 

@@ -19,7 +19,7 @@
   easily.
 
   Written by Brian Powell on 08/05/14
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 
 

@@ -5,7 +5,7 @@
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
-  Copyright (c)2010--2021 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -444,8 +444,8 @@ def get_reftime(nc, epoch=default_epoch):
         name of variable used to generate the base (None if default)
     """
     try:
-        tvar=get_timevar(nc)
-        calendar, _=_get_calendar(nc.variables[tvar])
+        tvar = get_timevar(nc)
+        calendar, _ = _get_calendar(nc.variables[tvar])
 
         return netCDF4.num2date(0, nc.variables[tvar].units,
                                 calendar=calendar), tvar
@@ -487,53 +487,53 @@ def omega(grid, u, v, zeta=0, scale=True, work=False):
     omega : ndarray,
       Vertical Velocity on s-grid
     """
-    grid=seapy.model.asgrid(grid)
-    u=np.ma.array(u)
-    v=np.ma.array(v)
-    zeta=np.ma.array(zeta)
+    grid = seapy.model.asgrid(grid)
+    u = np.ma.array(u)
+    v = np.ma.array(v)
+    zeta = np.ma.array(zeta)
 
     # Check the sizes
     while u.ndim < 4:
-        u=u[np.newaxis, ...]
+        u = u[np.newaxis, ...]
     while v.ndim < 4:
-        v=v[np.newaxis, ...]
+        v = v[np.newaxis, ...]
     while zeta.ndim < 3:
-        zeta=zeta[np.newaxis, ...]
+        zeta = zeta[np.newaxis, ...]
 
     # Get the model grid parameters for the given thickness
-    thick_u=u * 0
-    thick_v=v * 0
-    z_r=np.ma.zeros((u.shape[0], u.shape[1], zeta.shape[1], zeta.shape[2]))
-    z_w=np.ma.zeros((u.shape[0], u.shape[1] + 1,
+    thick_u = u * 0
+    thick_v = v * 0
+    z_r = np.ma.zeros((u.shape[0], u.shape[1], zeta.shape[1], zeta.shape[2]))
+    z_w = np.ma.zeros((u.shape[0], u.shape[1] + 1,
                        zeta.shape[1], zeta.shape[2]))
     for i in range(zeta.shape[0]):
-        s_w, cs_w=seapy.roms.stretching(
+        s_w, cs_w = seapy.roms.stretching(
             grid.vstretching, grid.theta_s, grid.theta_b, grid.hc,
             grid.n, w_grid=True)
-        z_r[i, ...]=seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+        z_r[i, ...] = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
                                        s_w, cs_w, zeta=zeta[i, ...],
                                        w_grid=False)
-        z_w[i, ...]=seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+        z_w[i, ...] = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
                                        s_w, cs_w, zeta=zeta[i, ...],
                                        w_grid=True)
-        thick_rho=np.squeeze(z_w[i, 1:, :, :] - z_w[i, :-1, :, :])
-        thick_u[i, ...]=seapy.model.rho2u(thick_rho)
-        thick_v[i, ...]=seapy.model.rho2v(thick_rho)
-    z_r[z_r > 50000]=np.ma.masked
-    z_w[z_w > 50000]=np.ma.masked
+        thick_rho = np.squeeze(z_w[i, 1:, :, :] - z_w[i, :-1, :, :])
+        thick_u[i, ...] = seapy.model.rho2u(thick_rho)
+        thick_v[i, ...] = seapy.model.rho2v(thick_rho)
+    z_r[z_r > 50000] = np.ma.masked
+    z_w[z_w > 50000] = np.ma.masked
 
     # Compute W (omega)
-    Huon=u * thick_u * seapy.model.rho2u(grid.dn)
-    Hvom=v * thick_v * seapy.model.rho2v(grid.dm)
-    W=z_w * 0
+    Huon = u * thick_u * seapy.model.rho2u(grid.dn)
+    Hvom = v * thick_v * seapy.model.rho2v(grid.dm)
+    W = z_w * 0
     for k in range(grid.n):
-        W[:, k + 1, :-2, :-2]=W[:, k, :-2, :-2] - \
+        W[:, k + 1, :-2, :-2] = W[:, k, :-2, :-2] - \
             (Huon[:, k, 1:-1, 1:] - Huon[:, k, 1:-1, :-1]
              + Hvom[:, k, 1:, 1:-1] - Hvom[:, k, :-1, 1:-1])
-    wrk=W[:, -1:, :, :] / (z_w[:, -1:, :, :] - z_w[:, 0:1, :, :])
-    W[:, :-1, :, :]=W[:, :-1, :, :] - wrk * \
+    wrk = W[:, -1:, :, :] / (z_w[:, -1:, :, :] - z_w[:, 0:1, :, :])
+    W[:, :-1, :, :] = W[:, :-1, :, :] - wrk * \
         (z_w[:, :-1, :, :] - z_w[:, 0:1, :, :])
-    W[:, -1, :, :]=0
+    W[:, -1, :, :] = 0
 
     if scale:
         W *= grid.pn * grid.pm
@@ -563,29 +563,29 @@ def wvelocity(grid, u, v, zeta=0):
     w : ndarray,
       Vertical Velocity
     """
-    grid=seapy.model.asgrid(grid)
-    u=np.ma.array(u)
-    v=np.ma.array(v)
-    zeta=np.ma.array(zeta)
+    grid = seapy.model.asgrid(grid)
+    u = np.ma.array(u)
+    v = np.ma.array(v)
+    zeta = np.ma.array(zeta)
 
     # Check the sizes
     while u.ndim < 4:
-        u=u[np.newaxis, ...]
+        u = u[np.newaxis, ...]
     while v.ndim < 4:
-        v=v[np.newaxis, ...]
+        v = v[np.newaxis, ...]
     while zeta.ndim < 3:
-        zeta=zeta[np.newaxis, ...]
+        zeta = zeta[np.newaxis, ...]
 
     # Get omega
-    W, z_r, z_w, thick_u, thick_v=omega(grid, u, v, zeta, scale=True,
+    W, z_r, z_w, thick_u, thick_v = omega(grid, u, v, zeta, scale=True,
                                           work=True)
 
     # Compute quasi-horizontal motions (Ui + Vj)*GRAD s(z)
-    vert=z_r * 0
+    vert = z_r * 0
     # U-contribution
-    wrk=u * (z_r[:, :, :, 1:] - z_r[:, :, :, :-1]) * \
+    wrk = u * (z_r[:, :, :, 1:] - z_r[:, :, :, :-1]) * \
         (grid.pm[:, 1:] - grid.pm[:, :-1])
-    vert[:, :, :, 1:-1]=0.25 * (wrk[:, :, :, :-1] + wrk[:, :, :, 1:])
+    vert[:, :, :, 1:-1] = 0.25 * (wrk[:, :, :, :-1] + wrk[:, :, :, 1:])
     # V-contribution
     wrk = v * (z_r[:, :, 1:, :] - z_r[:, :, :-1, :]) * \
         (grid.pn[1:, :] - grid.pn[:-1, :])
