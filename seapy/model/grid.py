@@ -537,7 +537,7 @@ class grid:
             from matplotlib import pyplot
             pyplot.plot(lon, lat, **kwargs)
         else:
-            axis.plot(x, y, **kwargs)
+            axis.plot(lon, lat, **kwargs)
 
     def plot_depths(self, row=None, col=None, ax=None):
         """
