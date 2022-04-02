@@ -60,7 +60,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name=os.getenv('PACKAGE_NAME', 'seapy'),
-    version='0.8.8',
+    version='0.9',
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
