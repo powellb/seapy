@@ -34,6 +34,8 @@
   - :func:`~seapy.mapping.hawaii`
   - :func:`~seapy.oa.oasurf`
   - :func:`~seapy.oa.oavol`
+  - :func:`~seapy.river.get_river_transport`
+  - :func:`~seapy.river.get_turbidity`
   - :func:`~seapy.tidal_energy.tidal_energy`
 
 """
@@ -45,10 +47,11 @@ from . import qserver
 from . import filt
 from . import plot
 from . import seawater
+from . import river
 from . import tide
 from .tidal_energy import tidal_energy
 from .environ import opt
 from .mapping import map, hawaii
 from .oa import *
 
-__version__ = "0.7"
+__version__ = "0.8.8"

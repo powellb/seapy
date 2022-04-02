@@ -2,7 +2,7 @@
 """
   river.py
 
-  Python functions to make and fill river files
+  Python functions to gather USGS stream data
 
   Written by Dale Partridge on 08/21/17
   Copyright (c)2017 University of Hawaii under the BSD-License.
@@ -155,78 +155,6 @@ def get_river_transport(usgs_id, times=1, source='discharge'):
     else:
         print('Cannot process file from url')
         return None
-
-
-def make_river(grid, fname, rivers, times=None, turbidity=False):
-    '''
-    Function to make a river file with all the constants, with option to automatically
-    get flux data from USGS
-
-    Input
-    -------
-    grid : string or seapy.model.grid
-    fname : string
-            Output file name
-    rivers : dict,
-        Dictionary of the rivers in the grid with constants in the river named tuple format
-    times : int/list of datetimes, optional
-            If int supplied, function will fetch last n days of data available
-            If list of datetimes, function will fetch data between the start and end value
-    turbidity : bool, optional
-            If True the turbidity fields are added to the created river file
-    '''
-    g = seapy.model.asgrid(grid)
-    seapy.roms.ncgen.create_psource(fname, nriver=len(rivers), s_rho=g.n)
-
-    if turbidity:
-        import netCDF4
-        nc = netCDF4.Dataset(fname, 'a')
-        var = nc.createVariable('river_turb_01', float,
-                                dimensions=('river_time', 's_rho', 'river'))
-        var.long_name = 'river runoff turbidity'
-        var.units = 'NTU'
-        var.field = 'river runoff turbidity, scalar, series'
-        nc.sync()
-        nc.close()
-
-    print(f"Creating river file for times between {times[0].strftime('%Y-%m-%d')}" +
-          f" and {times[-1].strftime('%Y-%m-%d')}")
-    # End time in seconds from first time
-    delta = int((times[-1] - times[0]).total_seconds())
-    time = np.asarray([times[0] + datetime.timedelta(seconds=t)
-                       for t in range(0, delta + 1, 900)])
-
-    nc = seapy.netcdf(fname)
-    nc.variables['river_time'][:] = seapy.date2day(time)
-    for i, rd in enumerate(sorted(rivers)):
-        print(rd.capitalize())
-        r = rivers[rd]
-        nc.variables['river_Xposition'][i] = int(r.x)
-        nc.variables['river_Eposition'][i] = int(r.y)
-        nc.variables['river_direction'][i] = int(r.direction)
-        nc.variables['river_flag'][i] = int(r.flag)
-        nc.variables['river'][i] = int(r.usgs_id)
-        nc.variables['river_Vshape'][:, i] = np.asarray(r.vshape)[:, np.newaxis]
-
-        dat = get_river_transport(r.usgs_id, times, r.source)
-        if dat:
-            nc.variables['river_transport'][:, i] = r.flow_direction * np.interp(
-                seapy.date2day(time), seapy.date2day(dat[0]), r.multiplier * dat[1],
-                right=r.multiplier * np.abs(r.defaults.transport))
-        else:
-            print('Using default transport values')
-            nc.variables['river_transport'][:, i] = r.multiplier * \
-                r.defaults.transport * np.ones([len(time), g.n])
-        nc.variables['river_temp'][:, :, i] = r.defaults.temp * \
-            np.ones([len(time), g.n])
-        nc.variables['river_salt'][:, :, i] = r.defaults.salt * \
-            np.ones([len(time), g.n])
-        if turbidity:
-            nc.variables['river_turb_01'][:, :, i] = r.defaults.turb * \
-                np.ones([len(time), g.n])
-        nc.sync()
-    nc.close()
-    return
 
 
 def get_turbidity(fname, rivers):
