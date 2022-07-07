@@ -444,7 +444,7 @@ class aviso_sla_map(obsgen):
         lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
-        time = seapy.roms.get_time(
+        time = seapy.roms.num2date(
             nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
         lon, lat = np.meshgrid(lon, lat)
