@@ -46,7 +46,7 @@ def error_profile(obs, depth, error, provenance=None):
     Returns
     -------
     None:
-      The obs structure is mutable is changed in place
+      The obs structure is mutable and is changed in place
 
     Examples
     --------
@@ -75,7 +75,7 @@ def error_profile(obs, depth, error, provenance=None):
                                             np.in1d(obs.provenance, pro)))
             else:
                 l = np.where(np.logical_and(obs.type == typ, obs.depth < 0))
-            nerr = fint(np.abs(obs.depth[l]))
+            nerr = fint(np.abs(obs.depth[l].data))
             obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))

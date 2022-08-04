@@ -275,7 +275,7 @@ def depth_average(field, grid, bottom, top, zeta=None):
 
     # 1. pick all of the points that are deeper and shallower than the limits
     k_ones = np.arange(grid.n, dtype=int)
-    top_depth = depths[-1, :, :] if top_depth == 0 else top_depth
+    top_depth = depths[-1, :, :] if top == 0 else top
     upper = depths - top_depth
     upper[np.where(upper < 0)] = np.float('inf')
     lower = depths - depth
