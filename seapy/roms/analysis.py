@@ -21,12 +21,19 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
     Internal function to find a value in field_a and return the
     values from field_b at the same positions.
     """
-    depth = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
-                             grid.s_rho, grid.cs_r, zeta)
-    if u_grid:
-        depth = seapy.model.rho2u(depth)
-    elif v_grid:
-        depth = seapy.model.rho2v(depth)
+    if zeta is not None:
+        depth = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
+                                 grid.s_rho, grid.cs_r, zeta)
+        if u_grid:
+            depth = seapy.model.rho2u(depth)
+        elif v_grid:
+            depth = seapy.model.rho2v(depth)
+    else:
+        depth = grid.depth_rho
+        if u_grid:
+            depth = getattr(grid, 'depth_v', depth)
+        elif v_grid:
+            depth = getattr(grid, 'depth_v', depth)
 
     # Set the variables based on what we are finding
     if const_depth:
@@ -278,7 +285,7 @@ def depth_average(field, grid, bottom, top, zeta=None):
     top_depth = depths[-1, :, :] if top == 0 else top
     upper = depths - top_depth
     upper[np.where(upper < 0)] = np.float('inf')
-    lower = depths - depth
+    lower = depths - bottom
     lower[np.where(lower > 0)] = -np.float('inf')
     thickness *= np.ma.masked_equal(np.logical_and(
         k_ones[:, np.newaxis, np.newaxis] <= np.argmin(upper, axis=0),
