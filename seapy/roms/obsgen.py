@@ -151,7 +151,9 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     if l[0].any():
         ox = np.rint(obs.x[l]).astype(int)
         oy = np.rint(obs.y[l]).astype(int)
-        idx = seapy.unique_rows((ox, oy))
+        # Because we have positive integers of ox and oy, the magnitude
+        # scaled by the x-position should guarantee a unique scalar
+        _, idx = np.unique(ox * (ox * ox + oy * oy), return_index=True)
         for cur in track(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             # If this point is masked, remove from the observations
