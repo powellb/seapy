@@ -60,11 +60,7 @@ config.add_extension('hindices', sources='src/hindices.f',
 
 config = dict(
     name=os.getenv('PACKAGE_NAME', 'seapy'),
-<<<<<<< HEAD
-    version='0.9.3',
-=======
     version='0.9.4',
->>>>>>> 1ee48d7 (fix analysis module constant functions to better handle zeta.)
     license='MIT',
     description='State Estimation and Analysis in PYthon',
     long_description=long_description,
