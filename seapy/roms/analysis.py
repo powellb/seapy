@@ -21,19 +21,19 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
     Internal function to find a value in field_a and return the
     values from field_b at the same positions.
     """
-    if zeta is not None:
+    if zeta[0][0] is None:
+        depth = grid.depth_rho
+        if u_grid:
+            depth = getattr(grid, 'depth_u', depth)
+        elif v_grid:
+            depth = getattr(grid, 'depth_v', depth)
+    else:
         depth = seapy.roms.depth(grid.vtransform, grid.h, grid.hc,
                                  grid.s_rho, grid.cs_r, zeta)
         if u_grid:
             depth = seapy.model.rho2u(depth)
         elif v_grid:
             depth = seapy.model.rho2v(depth)
-    else:
-        depth = grid.depth_rho
-        if u_grid:
-            depth = getattr(grid, 'depth_v', depth)
-        elif v_grid:
-            depth = getattr(grid, 'depth_v', depth)
 
     # Set the variables based on what we are finding
     if const_depth:
@@ -104,7 +104,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=2):
     nt = field.shape[0]
     threads = np.minimum(nt, threads)
     if zeta is None:
-        zeta = np.zeros((nt, 1, 1))
+        zeta = np.array(None * nt)[:, np.newaxis]
     if np.ndim(zeta) == 2:
         zeta = seapy.adddim(zeta, nt)
 
@@ -116,7 +116,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=2):
 
     return np.ma.array(Parallel(n_jobs=threads, verbose=2)
                        (delayed(__find_surface_thread)
-                        (grid, field[i, :], depth, zeta[i, :],
+                        (grid, field[i, :], depth, zeta[i, ...],
                          const_depth=True, u_grid=u_grid, v_grid=v_grid)
                         for i in range(nt)), copy=False)
 
@@ -156,7 +156,7 @@ def constant_value(field, grid, value, zeta=None, threads=2):
     nt = field.shape[0]
     threads = np.minimum(nt, threads)
     if zeta is None:
-        zeta = np.zeros((nt, 1, 1))
+        zeta = np.array([None] * nt)[:, np.newaxis]
     if np.ndim(zeta) == 2:
         zeta = seapy.adddim(zeta, nt)
 
@@ -168,7 +168,7 @@ def constant_value(field, grid, value, zeta=None, threads=2):
 
     return np.ma.array(Parallel(n_jobs=threads, verbose=2)
                        (delayed(__find_surface_thread)
-                        (grid, field[i, :], value, zeta[i, :],
+                        (grid, field[i, :], value, zeta[i, ...],
                          u_grid=u_grid, v_grid=v_grid)
                         for i in range(nt)), copy=False)
 
@@ -217,7 +217,7 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
 
     return np.ma.array(Parallel(n_jobs=threads, verbose=2)
                        (delayed(__find_surface_thread)
-                        (grid, field[i, :], value, zeta[i, :],
+                        (grid, field[i, :], value, zeta[i, ...],
                          k_values=True, u_grid=u_grid, v_grid=v_grid)
                         for i in range(nt)), copy=False)
 
