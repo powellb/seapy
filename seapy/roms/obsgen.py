@@ -46,7 +46,7 @@ def error_profile(obs, depth, error, provenance=None):
     Returns
     -------
     None:
-      The obs structure is mutable is changed in place
+      The obs structure is mutable and is changed in place
 
     Examples
     --------
@@ -75,7 +75,7 @@ def error_profile(obs, depth, error, provenance=None):
                                             np.in1d(obs.provenance, pro)))
             else:
                 l = np.where(np.logical_and(obs.type == typ, obs.depth < 0))
-            nerr = fint(np.abs(obs.depth[l]))
+            nerr = fint(np.abs(obs.depth[l].data))
             obs.error[l] = np.maximum(obs.error[l], nerr)
         except ValueError:
             warn("Error for {:s} is the wrong size".format(var))
@@ -151,7 +151,9 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     if l[0].any():
         ox = np.rint(obs.x[l]).astype(int)
         oy = np.rint(obs.y[l]).astype(int)
-        idx = seapy.unique_rows((ox, oy))
+        # Because we have positive integers of ox and oy, the magnitude
+        # scaled by the x-position should guarantee a unique scalar
+        _, idx = np.unique(ox * (ox * ox + oy * oy), return_index=True)
         for cur in track(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             # If this point is masked, remove from the observations
@@ -444,7 +446,7 @@ class aviso_sla_map(obsgen):
         lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
         err = np.squeeze(nc.variables["err"][:])
-        time = seapy.roms.get_time(
+        time = seapy.roms.num2date(
             nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
         lon, lat = np.meshgrid(lon, lat)
