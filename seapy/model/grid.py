@@ -55,7 +55,7 @@ def asgrid(grid):
 class grid:
 
     def __init__(self, filename=None, nc=None, lat=None, lon=None, z=None,
-                 depths=True, cgrid=False):
+                 depths=True, cgrid=False, zeta=0):
         """
             Class to wrap around a numerical model grid for oceanography.
             It attempts to track latitude, longitude, z, and other
@@ -104,8 +104,7 @@ class grid:
         self._verify_shape()
         if depths:
             self.set_dims()
-            self.set_depth()
-            self.set_thickness()
+            self.set_depth(zeta=self.zeta)
             self.set_mask_h()
         self.ijinterp = None
         self.llinterp = None
@@ -176,6 +175,10 @@ class grid:
                     self.__dict__[var] = self._nc.variables[ncvars[inp]][:]
                     break
 
+        # See if we can generate the mean zeta
+        self.zeta = 0
+        if "zeta" in ncvars:
+            self.zeta = self._nc.variables['zeta'][:].mean(axis=0)
         if close:
             # Close the file
             self._nc.close()
@@ -277,7 +280,8 @@ class grid:
 
     def set_dims(self):
         """
-        Compute the dimension attributes of the grid based upon the information provided.
+        Compute the dimension attributes of the grid based upon the
+        information provided.
 
         Parameters
         ----------
@@ -417,7 +421,7 @@ class grid:
                 self.mask_rho[water] = 1.0
         self.mask_u = self.mask_v = self.mask_rho
 
-    def set_depth(self, force=False):
+    def set_depth(self, zeta=0, force=True):
         """
         Compute the depth of each cell for the model grid.
 
@@ -438,9 +442,11 @@ class grid:
                         self.vstretching, self.theta_s, self.theta_b,
                         self.hc, self.n)
                 self.depth_rho = seapy.roms.depth(
-                    self.vtransform, self.h, self.hc, self.s_rho, self.cs_r)
+                    self.vtransform, self.h, self.hc, self.s_rho, self.cs_r,
+                    zeta=zeta)
                 self.depth_u = seapy.model.rho2u(self.depth_rho).filled(0)
                 self.depth_v = seapy.model.rho2v(self.depth_rho).filled(0)
+                self.zeta = zeta
             else:
                 d = self.z.copy()
                 l = np.nonzero(d > 0)
@@ -459,11 +465,12 @@ class grid:
                 else:
                     self.depth_u = self.depth_rho
                     self.depth_v = self.depth_rho
+            self.set_thickness(zeta=zeta)
         except (AttributeError, ValueError):
             warn("could not compute grid depths.")
             pass
 
-    def set_thickness(self):
+    def set_thickness(self, zeta=0):
         """
         Compute the thickness of each cell for the model grid.
 
@@ -485,7 +492,7 @@ class grid:
                     self.vstretching, self.theta_s, self.theta_b, self.hc,
                     self.n, w_grid=True)
                 self.thick_rho = seapy.roms.thickness(
-                    self.vtransform, self.h, self.hc, s_w, cs_w)
+                    self.vtransform, self.h, self.hc, s_w, cs_w, zeta=zeta)
                 self.thick_u = seapy.model.rho2u(self.thick_rho)
                 self.thick_v = seapy.model.rho2v(self.thick_rho)
             else:

@@ -260,6 +260,24 @@ class map(object):
         self.pc = self.ax.contourf(lon, lat, data, transform=self.proj(),
                                    **kwargs)
 
+    def contour(self, lon, lat, data, **kwargs):
+        """
+        contour field data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        data: array
+            data to contourf
+        **kwargs: arguments, optional
+            additional arguments to pass to contourf
+        """
+        self.pc = self.ax.contour(lon, lat, data, transform=self.proj(),
+                                  **kwargs)
+
     def scatter(self, lon, lat, data, **kwargs):
         """
         scatter plot data onto our geographic plot
