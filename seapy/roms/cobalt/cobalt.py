@@ -85,7 +85,7 @@ cdl = {"ini": _cdl_dir + "/ini.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
        "frc": _cdl_dir + "/frc_bulk.cdl",
-       "zlevel": _cdl_dir + "/zlevel.cdl"}
+       "zlevel": _cdl_dir + "/zlevel-cobalt-2d.cdl"}
 
 
 # Keep track of original ROMS fields
