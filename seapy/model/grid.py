@@ -149,6 +149,7 @@ class grid:
                  "pm": ["pm"],
                  "pn": ["pn"],
                  "z": ["z", "depth", "lev", "st_ocean"],
+                 "dz": ["dz", "thick"],
                  "wtype_grid": ["mask_rho"],
                  "rdrag": ["rdrag"],
                  "rdrag2": ["rdrag2"],
@@ -178,7 +179,9 @@ class grid:
         # See if we can generate the mean zeta
         self.zeta = 0
         if "zeta" in ncvars:
-            self.zeta = self._nc.variables['zeta'][:].mean(axis=0)
+            self.zeta = self._nc.variables['zeta'][:]
+        if np.ndim(self.zeta) > 2:
+            self.zeta = self.zeta.mean(axis=0)
         if close:
             # Close the file
             self._nc.close()
@@ -498,13 +501,18 @@ class grid:
             else:
                 d = np.abs(self.z.copy())
                 w = d * 0
-                # Check which way the depths are going
-                if d[0] < d[-1]:
-                    w[0] = d[0]
-                    w[1:] = d[1:] - d[0:-1]
-                else:
-                    w[-1] = d[-1]
-                    w[0:-1] = d[0:-1] - d[1:]
+                if hasattr(self, 'dz'):
+                    w = self.dz
+
+                # If any of the thicknesses are 0, calculate it
+                if not np.all(w):
+                    # Check which way the depths are going
+                    if d[0] < d[-1]:
+                        w[0] = d[0]
+                        w[1:] = d[1:] - d[0:-1]
+                    else:
+                        w[-1] = d[-1]
+                        w[0:-1] = d[0:-1] - d[1:]
 
                 self.thick_rho = np.kron(np.kron(w,
                                                  np.ones(self.lon_rho.shape[1])),

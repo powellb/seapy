@@ -211,11 +211,15 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         for k in seapy.roms.fields:
             vmap[k] = k
 
-    # Generate a file to store the pmap information
-    sname = getattr(src_grid, 'name', None)
-    cname = getattr(child_grid, 'name', None)
-    pmap_file = None if any(v is None for v in (sname, cname)) else \
-        sname + "_" + cname + "_pmap.npz"
+    # If not specified, generate a file to store the pmap information
+    if isinstance(pmap, str):
+        pmap_file = pmap
+        pmap = None
+    else:
+        sname = getattr(src_grid, 'name', None)
+        cname = getattr(child_grid, 'name', None)
+        pmap_file = None if any(v is None for v in (sname, cname)) else \
+            sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
     if nx == 0:
@@ -461,15 +465,16 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
         number of points to use in weighting matrix
     threads : int, optional:
         number of processing threads
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Output
     ------
     ndarray:
         interpolated field on the destination grid
     pmap:
-        the pmap used in the inerpolation
+        the pmap used in the interpolation
     """
     if pmap is None:
         tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
@@ -531,8 +536,9 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
         number of points to use in weighting matrix
     threads : int, optional:
         number of processing threads
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Output
     ------
@@ -615,8 +621,9 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
         netCDF file.
     dims : int, optional
         number of dimensions to use for lat/lon arrays (default 2)
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------
@@ -741,8 +748,9 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------
@@ -843,8 +851,9 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------

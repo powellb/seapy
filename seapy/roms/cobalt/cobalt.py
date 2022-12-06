@@ -80,6 +80,7 @@ vmap = {k: k for k in fields}
 _cdl_dir = os.path.dirname(__file__)
 cdl = {"ini": _cdl_dir + "/ini.cdl",
        "his": _cdl_dir + "/his.cdl",
+       "fullhis": _cdl_dir + "/his-full.cdl",
        "nudge": _cdl_dir + "/nudge.cdl",
        "clim": _cdl_dir + "/clim.cdl",
        "bry": _cdl_dir + "/bry.cdl",
