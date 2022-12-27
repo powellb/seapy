@@ -227,7 +227,7 @@ class map(object):
         self.pc = self.ax.pcolormesh(lon - dlon * 0.5, lat - dlat * 0.5,
                                      data, transform=self.proj(), **kwargs)
 
-    def plot(self, lon, lat, **kwargs):
+    def plot(self, lon, lat, *args, **kwargs):
         """
         plot data onto our geographic plot
 
@@ -240,7 +240,7 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to plot
         """
-        self.pc = self.ax.plot(lon, lat, transform=self.proj(), **kwargs)
+        self.pc = self.ax.plot(lon, lat, *args, transform=self.proj(), **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
