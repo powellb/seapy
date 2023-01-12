@@ -33,9 +33,9 @@ for f in list(__const_file.keys()):
                       __const_file[f]['sat']['phcorr'],
                       __const_file[f]['sat']['amprat'],
                       __const_file[f]['sat']['ilatfac'])
-    __const[f] = __cformat(np.float(__const_file[f]['freq']),
+    __const[f] = __cformat(np.float32(__const_file[f]['freq']),
                            __const_file[f]['doodson'],
-                           np.float(__const_file[f]['semi']),
+                           np.float32(__const_file[f]['semi']),
                            __sat, __shallow)
 
 default_tides = ['M4', 'K2', 'S2', 'M2', 'N2',

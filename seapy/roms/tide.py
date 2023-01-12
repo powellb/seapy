@@ -135,8 +135,8 @@ def load_forcing(filename):
                 "%Y-%m-%d %H:%M:%S")
     tides = getattr(nc, 'tidal_constituents', None) or \
         getattr(nc, 'tides', None) or getattr(nc, 'components', None)
-    frc['tides'] = re.split('\W', tides.upper(),
-                            maxsplit=frc['Eamp'].shape[0])[:frc['Eamp'].shape[0]]
+    frc['tides'] = [s for s in re.split(
+        '[\W, ]', tides.upper()) if s][:frc['Eamp'].shape[0]]
     nc.close()
     return frc
 

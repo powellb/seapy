@@ -216,7 +216,7 @@ class map(object):
         data: array
             data to pcolor
         **kwargs: arguments, optional
-            additional arguments to pass to pcolor
+            additional arguments to pass to pcolormesh
         """
         # Pcolor requires a modification to the locations to line up with
         # the geography
@@ -226,6 +226,21 @@ class map(object):
         dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
         self.pc = self.ax.pcolormesh(lon - dlon * 0.5, lat - dlat * 0.5,
                                      data, transform=self.proj(), **kwargs)
+
+    def plot(self, lon, lat, *args, **kwargs):
+        """
+        plot data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        **kwargs: arguments, optional
+            additional arguments to pass to plot
+        """
+        self.pc = self.ax.plot(lon, lat, *args, transform=self.proj(), **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
@@ -240,10 +255,28 @@ class map(object):
         data: array
             data to contourf
         **kwargs: arguments, optional
-            additional arguments to pass to pcolor
+            additional arguments to pass to contourf
         """
         self.pc = self.ax.contourf(lon, lat, data, transform=self.proj(),
                                    **kwargs)
+
+    def contour(self, lon, lat, data, **kwargs):
+        """
+        contour field data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        data: array
+            data to contourf
+        **kwargs: arguments, optional
+            additional arguments to pass to contourf
+        """
+        self.pc = self.ax.contour(lon, lat, data, transform=self.proj(),
+                                  **kwargs)
 
     def scatter(self, lon, lat, data, **kwargs):
         """
@@ -298,7 +331,7 @@ class map(object):
         v: array
             v-component to display
         **kwargs: arguments, optional
-            additional arguments to pass to streamplot
+            additional arguments to pass to quiver
         """
         return self.ax.quiver(lon, lat, u, v, transform=self.proj(),
                               **kwargs)

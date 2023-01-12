@@ -54,4 +54,4 @@ from .environ import opt
 from .mapping import map, hawaii
 from .oa import *
 
-__version__ = "0.9.4"
+__version__ = "0.9.9"

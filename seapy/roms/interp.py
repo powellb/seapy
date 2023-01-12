@@ -211,11 +211,15 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         for k in seapy.roms.fields:
             vmap[k] = k
 
-    # Generate a file to store the pmap information
-    sname = getattr(src_grid, 'name', None)
-    cname = getattr(child_grid, 'name', None)
-    pmap_file = None if any(v is None for v in (sname, cname)) else \
-        sname + "_" + cname + "_pmap.npz"
+    # If not specified, generate a file to store the pmap information
+    if isinstance(pmap, str):
+        pmap_file = pmap
+        pmap = None
+    else:
+        sname = getattr(src_grid, 'name', None)
+        cname = getattr(child_grid, 'name', None)
+        pmap_file = None if any(v is None for v in (sname, cname)) else \
+            sname + "_" + cname + "_pmap.npz"
 
     # Create or load the pmaps depending on if they exist
     if nx == 0:
@@ -305,7 +309,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                 # Compute the max number of hold in memory
                 maxrecs = np.maximum(1,
                                      np.minimum(len(records),
-                                                np.int(_max_memory /
+                                                np.int8(_max_memory /
                                                        (child_grid.lon_rho.nbytes +
                                                         src_grid.lon_rho.nbytes))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
@@ -327,7 +331,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                     ncout.sync()
             else:
                 maxrecs = np.maximum(1, np.minimum(
-                    len(records), np.int(_max_memory /
+                    len(records), np.int8(_max_memory /
                                          (child_grid.lon_rho.nbytes *
                                           child_grid.n +
                                           src_grid.lon_rho.nbytes *
@@ -371,7 +375,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         srcangle = getattr(src_grid, 'angle', None)
         dstangle = getattr(child_grid, 'angle', None)
         maxrecs = np.minimum(len(records),
-                             np.int(_max_memory /
+                             np.int8(_max_memory /
                                     (2 * (child_grid.lon_rho.nbytes *
                                           child_grid.n +
                                           src_grid.lon_rho.nbytes *
@@ -461,15 +465,16 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
         number of points to use in weighting matrix
     threads : int, optional:
         number of processing threads
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Output
     ------
     ndarray:
         interpolated field on the destination grid
     pmap:
-        the pmap used in the inerpolation
+        the pmap used in the interpolation
     """
     if pmap is None:
         tmp, pmap = seapy.oasurf(src_lon, src_lat, src_lat,
@@ -479,7 +484,7 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int(_max_memory /
+                                    np.int8(_max_memory /
                                            (dest_lon.nbytes + src_lon.nbytes))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 2d".center(20)):
@@ -531,8 +536,9 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
         number of points to use in weighting matrix
     threads : int, optional:
         number of processing threads
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Output
     ------
@@ -549,7 +555,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int(_max_memory /
+                                    np.int8(_max_memory /
                                            (dest_lon.nbytes *
                                                dest_depth.shape[0] +
                                                src_lon.nbytes *
@@ -615,8 +621,9 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
         netCDF file.
     dims : int, optional
         number of dimensions to use for lat/lon arrays (default 2)
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------
@@ -741,8 +748,9 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------
@@ -843,8 +851,9 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
         number of points to use in weighting matrix
     vmap : dictionary, optional
         mapping source and destination variables
-    pmap : numpy.ndarray, optional:
-        use the specified pmap rather than compute it
+    pmap : numpy.ndarray, or string, optional:
+        use the specified pmap rather than compute it. If string,
+        load from the specified file
 
     Returns
     -------

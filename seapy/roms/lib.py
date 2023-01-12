@@ -593,8 +593,8 @@ def wvelocity(grid, u, v, zeta=0):
 
     # Compute barotropic velocity [ERROR IN FORMULATION RIGHT NOW]
     wrk = np.zeros((vert.shape[0], vert.shape[2], vert.shape[3]))
-    ubar = np.sum(u * thick_u, axis=1) / np.sum(thick_u, axis=1)
-    vbar = np.sum(v * thick_v, axis=1) / np.sum(thick_v, axis=1)
+    # ubar = np.sum(u * thick_u, axis=1) / np.sum(thick_u, axis=1)
+    # vbar = np.sum(v * thick_v, axis=1) / np.sum(thick_v, axis=1)
     # wrk[:, 1:-1, 1:-1] = (ubar[:, 1:-1, :-1] - ubar[:, 1:-1, 1:] +
     #                       vbar[:, :-1, 1:-1] - vbar[:, 1:, 1:-1])
 

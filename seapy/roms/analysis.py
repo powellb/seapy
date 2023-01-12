@@ -11,8 +11,8 @@
 import numpy as np
 from joblib import Parallel, delayed
 import seapy
-import netCDF4
 from rich.progress import track
+from warnings import warn
 
 
 def __find_surface_thread(grid, field, value, zeta, const_depth=False,
@@ -114,7 +114,7 @@ def constant_depth(field, grid, depth, zeta=None, threads=2):
     elif field.shape[-2:] == grid.mask_v:
         v_grid = True
 
-    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+    return np.ma.array(Parallel(n_jobs=threads, verbose=0)
                        (delayed(__find_surface_thread)
                         (grid, field[i, :], depth, zeta[i, ...],
                          const_depth=True, u_grid=u_grid, v_grid=v_grid)
@@ -175,8 +175,8 @@ def constant_value(field, grid, value, zeta=None, threads=2):
 
 def constant_value_k(field, grid, value, zeta=None, threads=2):
     """
-    Find the layer number of the value across the field. For example, find the k
-    of a given isopycnal if the field is density.
+    Find the layer number of the value across the field. For example, find
+    the k of a given isopycnal if the field is density.
 
     Parameters
     ----------
@@ -187,6 +187,9 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
         Grid that defines the depths and stretching for the field given
     value : float,
         Value to find the depths for in same units as the 'field'
+    zeta : ndarray, optional,
+        ROMS zeta field corresponding to field if you wish to apply the SSH
+        correction to the depth calculations.
     threads : int, optional,
         Number of threads to use for processing
 
@@ -222,7 +225,57 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
                         for i in range(nt)), copy=False)
 
 
-def depth_average(field, grid, bottom, top, zeta=None):
+def gen_k_mask(N, kbot, ktop=None):
+    """
+    Given a k matrix, such as from constant_value_k(), generate
+    a grid matrix that contains the weights of all values included.
+    This allows you to perform multiplications to integrate over depths, etc.
+
+    Parameters
+    ----------
+    N : int
+        Number of layers present in the grid
+    kbot : ndarray,
+        A field of 'k' values that specify the bottom fractional layer.
+    ktop : ndarray, optional
+        A field of 'k' values that specify the top fractional layer. If not
+        specified, the surface is assumed
+
+    Returns
+    -------
+    nfield : ndarray,
+        3-D field in size of k that is a weighting matrix. Value greater
+        than zero is the weight of that cell. Value of zero means that cell
+        is not used.
+
+    Examples
+    --------
+    In this example, we want to generate a weighting matrix for all points
+    from -50m to surface. Then, we can use that matrix for selection, or
+    for vertical integration.
+
+    >>> k = constant_value_k(grid.depth_rho, grid, -50)
+    >>> imask = gen_k_mask(k, grid)
+    >>> temp = (data.temp * grid.thick_rho * imask).sum(axis=0) /
+               (grid.thick_rho * imask).sum(axis=0)
+    """
+    kbot = np.asarray(kbot)
+    if ktop is None:
+        ktop = N
+    ktop = np.asarray(ktop)
+    k_ones = np.arange(N, dtype=int)
+    dbot, _ = np.modf(kbot)
+    dtop, _ = np.modf(ktop)
+    fld = np.logical_and(
+        k_ones[:, np.newaxis, np.newaxis] >= kbot.astype(int),
+        k_ones[:, np.newaxis, np.newaxis] < np.ceil(ktop).astype(int)).astype(float)
+    bfrac = (k_ones[:, np.newaxis, np.newaxis] == kbot.astype(int)).astype(float)
+    tfrac = (k_ones[:, np.newaxis, np.newaxis] == ktop.astype(int)).astype(float)
+
+    return fld - bfrac * dbot - tfrac * (1 - dtop)
+
+
+def depth_average(field, depths, thickness, bottom, top=0):
     """
     Compute the depth-averaged field down to the depth specified. NOTE:
     This just finds the nearest layer, so at every grid cell, it may not be
@@ -233,68 +286,45 @@ def depth_average(field, grid, bottom, top, zeta=None):
     field : ndarray,
         ROMS 3-D field to integrate from a depth level. Must be
         three-dimensional array (single time).
-    grid : seapy.model.grid or string or list,
-        Grid that defines the depths and stretching for the field given
+    depths : ndarray,
+        3-D array of the depths of each grid cell in field
+    thickness : ndarray,
+        3-D array of the thickness of each grid cell in field
     bottom : float,
         Depth (in meters) to integrate from
-    top : float,
-        Depth (in meters) to integrate to
-    zeta : ndarray, optional,
-        ROMS zeta field corresponding to field if you wish to apply the SSH
-        correction to the depth calculations.
+    top : float, [optional]
+        Depth (in meters) to integrate to defaults to surface
 
     Returns
     -------
     ndarray,
         Values from depth integrated ROMS field
     """
-    grid = seapy.model.asgrid(grid)
     bottom = bottom if bottom < 0 else -bottom
     top = top if top < 0 else -top
     if bottom > top:
         bottom, top = top, bottom
-    drange = top - bottom
 
-    # If we have zeta, we need to compute thickness
-    if zeta is not None:
-        s_w, cs_w = seapy.roms.stretching(grid.vstretching, grid.theta_s,
-                                          grid.theta_b, grid.hc,
-                                          grid.n, w_grid=True)
-        depths = np.ma.masked_equal(seapy.roms.depth(
-            grid.vtransform, grid.h, grid.hc, grid.s_rho, grid.cs_r) *
-            grid.mask_rho, 0)
-
-        thickness = np.ma.masked_array(seapy.roms.thickness(
-            grid.vtransform, grid.h, grid.hc, s_w, cs_w, zeta) *
-            grid.mask_rho, 0)
-
-    else:
-        depths = np.ma.masked_equal(grid.depth_rho * grid.mask_rho, 0)
-        thickness = np.ma.masked_equal(grid.thick_rho * grid.mask_rho, 0)
-
-    # If we are on u- or v-grid, transform
-    if field.shape == grid.thick_u.shape:
-        depths = seapy.model.rho2u(depths)
-        thickness = seapy.model.rho2u(thickness)
-    elif field.shape == grid.thick_v.shape:
-        depths = seapy.model.rho2v(depths)
-        thickness = seapy.model.rho2v(thickness)
+    # Check that the depths, thickness, and field are consistent
+    if depths.shape != thickness.shape:
+        raise ValueError("depths and thickness must be of same shape: " +
+                         f"{depths.shape} vs {thickness.shape}")
+    idim = field.ndim - depths.ndim
+    if field.shape[idim:] != depths.shape:
+        raise ValueError("field and depths cannot be broadcast together: " +
+                         f"{field.shape} vs {depths.shape}")
 
     # 1. pick all of the points that are deeper and shallower than the limits
-    k_ones = np.arange(grid.n, dtype=int)
     top_depth = depths[-1, :, :] if top == 0 else top
     upper = depths - top_depth
-    upper[np.where(upper < 0)] = np.float('inf')
+    upper[np.where(upper < 0)] = np.float32('inf')
     lower = depths - bottom
-    lower[np.where(lower > 0)] = -np.float('inf')
-    thickness *= np.ma.masked_equal(np.logical_and(
-        k_ones[:, np.newaxis, np.newaxis] <= np.argmin(upper, axis=0),
-        k_ones[:, np.newaxis, np.newaxis] >=
-        np.argmax(lower, axis=0)).astype(int), 0)
+    lower[np.where(lower > 0)] = -np.float32('inf')
+    thickness *= gen_k_mask(depths.shape[0], lower, upper)
 
     # Do the integration
-    return np.sum(field * thickness, axis=0) / \
-        np.sum(thickness, axis=0)
+    return np.sum(field * thickness, axis=idim) / \
+        np.sum(thickness, axis=idim)
 
 
 def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
@@ -446,8 +476,10 @@ def gen_std_i(roms_file, std_file, std_window=5, pad=1, skip=30, fields=None):
     epoch, time_var = seapy.roms.get_reftime(nc)
     time = nc.variables[time_var][:]
     ncout = seapy.roms.ncgen.create_da_ini_std(std_file,
-                                               eta_rho=grid.ln, xi_rho=grid.lm, s_rho=grid.n,
-                                               reftime=epoch, title="std from " + str(roms_file))
+                                               eta_rho=grid.ln, xi_rho=grid.lm,
+                                               s_rho=grid.n,
+                                               reftime=epoch,
+                                               title="std from " + str(roms_file))
     grid.to_netcdf(ncout)
 
     # If there are any fields that are not in the standard output file,
