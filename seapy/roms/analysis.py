@@ -317,9 +317,9 @@ def depth_average(field, depths, thickness, bottom, top=0):
     # 1. pick all of the points that are deeper and shallower than the limits
     top_depth = depths[-1, :, :] if top == 0 else top
     upper = depths - top_depth
-    upper[np.where(upper < 0)] = np.float('inf')
+    upper[np.where(upper < 0)] = np.float32('inf')
     lower = depths - bottom
-    lower[np.where(lower > 0)] = -np.float('inf')
+    lower[np.where(lower > 0)] = -np.float32('inf')
     thickness *= gen_k_mask(depths.shape[0], lower, upper)
 
     # Do the integration

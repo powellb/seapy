@@ -328,7 +328,7 @@ def matlab2date(daynum):
     datetime : list
     """
     daynum = np.atleast_1d(daynum)
-    return [datetime.datetime.fromordinal(d.astype(np.int)) +
+    return [datetime.datetime.fromordinal(d.astype(np.int8)) +
             datetime.timedelta(days=(d % 1 - 366)) for d in daynum]
 
 

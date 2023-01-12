@@ -309,7 +309,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                 # Compute the max number of hold in memory
                 maxrecs = np.maximum(1,
                                      np.minimum(len(records),
-                                                np.int(_max_memory /
+                                                np.int8(_max_memory /
                                                        (child_grid.lon_rho.nbytes +
                                                         src_grid.lon_rho.nbytes))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
@@ -331,7 +331,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                     ncout.sync()
             else:
                 maxrecs = np.maximum(1, np.minimum(
-                    len(records), np.int(_max_memory /
+                    len(records), np.int8(_max_memory /
                                          (child_grid.lon_rho.nbytes *
                                           child_grid.n +
                                           src_grid.lon_rho.nbytes *
@@ -375,7 +375,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         srcangle = getattr(src_grid, 'angle', None)
         dstangle = getattr(child_grid, 'angle', None)
         maxrecs = np.minimum(len(records),
-                             np.int(_max_memory /
+                             np.int8(_max_memory /
                                     (2 * (child_grid.lon_rho.nbytes *
                                           child_grid.n +
                                           src_grid.lon_rho.nbytes *
@@ -484,7 +484,7 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int(_max_memory /
+                                    np.int8(_max_memory /
                                            (dest_lon.nbytes + src_lon.nbytes))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 2d".center(20)):
@@ -555,7 +555,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int(_max_memory /
+                                    np.int8(_max_memory /
                                            (dest_lon.nbytes *
                                                dest_depth.shape[0] +
                                                src_lon.nbytes *
