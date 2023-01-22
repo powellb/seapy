@@ -464,7 +464,8 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     weight : int, optional:
         number of points to use in weighting matrix
     threads : int, optional:
-        number of processing threads
+        number of threads to use for TIME interpolation (does not parallelize
+        the grid size in space)
     pmap : numpy.ndarray, or string, optional:
         use the specified pmap rather than compute it. If string,
         load from the specified file
@@ -535,7 +536,8 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     weight : int, optional:
         number of points to use in weighting matrix
     threads : int, optional:
-        number of processing threads
+        number of threads to use for TIME interpolation (does not parallelize
+        the grid size in space)
     pmap : numpy.ndarray, or string, optional:
         use the specified pmap rather than compute it. If string,
         load from the specified file
@@ -599,7 +601,8 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
     records : numpy.ndarray, optional:
         Record indices to interpolate
     threads : int, optional:
-        number of processing threads
+        number of threads to use for TIME interpolation (does not parallelize
+        the grid size in space)
     reftime: datetime, optional:
         Reference time as the epoch for z-grid file
     nx : float, optional:
@@ -735,7 +738,8 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
         Use the specified CDL file as the definition for the new
         netCDF file.
     threads : int, optional:
-        number of processing threads
+        number of threads to use for TIME interpolation (does not parallelize
+        the grid size in space)
     reftime: datetime, optional:
         Reference time as the epoch for ROMS file
     nx : float, optional:
@@ -838,7 +842,8 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
         Use the specified CDL file as the definition for the new
         netCDF file.
     threads : int, optional:
-        number of processing threads
+        number of threads to use for TIME interpolation (does not parallelize
+        the grid size in space)
     reftime: datetime, optional:
         Reference time as the epoch for climatology file
     nx : float, optional:

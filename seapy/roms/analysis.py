@@ -228,8 +228,9 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
 def gen_k_mask(N, kbot, ktop=None):
     """
     Given a k matrix, such as from constant_value_k(), generate
-    a grid matrix that contains the weights of all values included.
-    This allows you to perform multiplications to integrate over depths, etc.
+    a full-grid matrix that contains the weights of all values included.
+    This allows you to perform multiplications to get proper contributions
+    from the fractional layers.
 
     Parameters
     ----------
@@ -248,16 +249,6 @@ def gen_k_mask(N, kbot, ktop=None):
         than zero is the weight of that cell. Value of zero means that cell
         is not used.
 
-    Examples
-    --------
-    In this example, we want to generate a weighting matrix for all points
-    from -50m to surface. Then, we can use that matrix for selection, or
-    for vertical integration.
-
-    >>> k = constant_value_k(grid.depth_rho, grid, -50)
-    >>> imask = gen_k_mask(k, grid)
-    >>> temp = (data.temp * grid.thick_rho * imask).sum(axis=0) /
-               (grid.thick_rho * imask).sum(axis=0)
     """
     kbot = np.asarray(kbot)
     if ktop is None:
@@ -275,56 +266,92 @@ def gen_k_mask(N, kbot, ktop=None):
     return fld - bfrac * dbot - tfrac * (1 - dtop)
 
 
-def depth_average(field, depths, thickness, bottom, top=0):
+def depth_average(field, thickness, bottom, top=0, partial=False):
     """
-    Compute the depth-averaged field down to the depth specified. NOTE:
-    This just finds the nearest layer, so at every grid cell, it may not be
-    exactly the specified depth.
+    Compute the depth-averaged field between the specified bottom and top
+    depths. Because a grid cell represents a volume, the thickness is used
+    rather than depth. This provides the most accurate integration.
 
     Parameters
     ----------
     field : ndarray,
         ROMS 3-D field to integrate from a depth level. Must be
         three-dimensional array (single time).
-    depths : ndarray,
-        3-D array of the depths of each grid cell in field
     thickness : ndarray,
         3-D array of the thickness of each grid cell in field
     bottom : float,
         Depth (in meters) to integrate from
     top : float, [optional]
         Depth (in meters) to integrate to defaults to surface
+    partial: boolean, [optional]
+        If True, produce results from grid locations that don't cover the
+        full range of depths specified (i.e., bottom is 30, but the call
+        was to integrate between 50 and 20m). Default is False.
 
     Returns
     -------
     ndarray,
         Values from depth integrated ROMS field
     """
-    bottom = bottom if bottom < 0 else -bottom
-    top = top if top < 0 else -top
-    if bottom > top:
+    bottom = bottom if bottom > 0 else -bottom
+    top = top if top > 0 else -top
+    if bottom < top:
         bottom, top = top, bottom
 
-    # Check that the depths, thickness, and field are consistent
-    if depths.shape != thickness.shape:
-        raise ValueError("depths and thickness must be of same shape: " +
-                         f"{depths.shape} vs {thickness.shape}")
-    idim = field.ndim - depths.ndim
-    if field.shape[idim:] != depths.shape:
-        raise ValueError("field and depths cannot be broadcast together: " +
-                         f"{field.shape} vs {depths.shape}")
+    # Check that the span and field are consistent
+    idim = field.ndim - thickness.ndim
+    if field.shape[idim:] != thickness.shape:
+        raise ValueError("field and thickness cannot be broadcast together: " +
+                         f"{field.shape} vs {thickness.shape}")
 
-    # 1. pick all of the points that are deeper and shallower than the limits
-    top_depth = depths[-1, :, :] if top == 0 else top
-    upper = depths - top_depth
-    upper[np.where(upper < 0)] = np.float32('inf')
-    lower = depths - bottom
-    lower[np.where(lower > 0)] = -np.float32('inf')
-    thickness *= gen_k_mask(depths.shape[0], lower, upper)
+    # Calculate the depth span of each cell
+    span = np.cumsum(thickness[::-1, ...], axis=0)[::-1, ...]
+
+    # Set up arrays for indexing
+    surf = span.shape[0]
+    k_ones = np.arange(span.shape[0], dtype=int)
+    sl1 = np.arange(span.shape[1], dtype=int)[:, None]
+    sl2 = np.arange(span.shape[2], dtype=int)[None, :]
+
+    # Helper function to find fractional minimums
+    def _find_fraction_layer0(f):
+        # Identify problem locations, where there is no zero crossing
+        shallow = f.min(axis=0) > 0
+        deep = f.max(axis=0) <= 0
+        mask = np.argmin(np.ma.masked_equal(k_ones[:, np.newaxis, np.newaxis] *
+                                            (f < 0), 0), axis=0)
+        mask1 = np.maximum(0, mask - 1)
+        return mask - 1 + f[mask1, sl1, sl2] / thickness[mask1, sl1, sl2], \
+            shallow, deep
+
+    # Find the bottom k levels
+    kbot, shbot, dpbot = _find_fraction_layer0(span - bottom)
+    # If the bottom is too shallow, we can just use the surface
+    kbot[shbot] = surf - 1
+    # If the bottom is too deep, use the bottom
+    kbot[dpbot] = 0
+
+    # Find the top k levels
+    ktop = np.array([surf])
+    dptop = np.full(kbot.shape, False)
+    if top != 0:
+        ktop, shtop, dptop = _find_fraction_layer0(span - top)
+        # If the top is too shallow, use the surface
+        ktop[shtop] = surf
+
+    # Build the mask
+    mask = gen_k_mask(surf, kbot, ktop)
+
+    # Set mask to nan for locaions with a water depth above the top
+    mask[:, dptop] = np.nan
+    # Set mask to nan for locations with a water depth that only partially
+    # covers the specified region unless the user requests partial points
+    if not partial:
+        mask[:, dpbot] = np.nan
 
     # Do the integration
-    return np.sum(field * thickness, axis=idim) / \
-        np.sum(thickness, axis=idim)
+    return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim) /
+                                np.sum(thickness * mask, axis=0), copy=False)
 
 
 def transect(lon, lat, depth, data, nx=200, nz=40, z=None):

@@ -73,7 +73,7 @@ def frequency(tides=None):
     array([ 12.4206012,  12.       ])
 
     """
-    return np.array([__const[x].freq for x in _set_tides(tides)])
+    return np.array([__const[x].freq for x in _set_tides(tides)]).ravel()
 
 
 def __astron(ctime):
