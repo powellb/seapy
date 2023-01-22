@@ -143,7 +143,7 @@ def get_river_transport(usgs_id, times=1, source='discharge'):
                 l['dateTime'][:16], '%Y-%m-%dT%H:%M'))
             flux.append(l['value'])
         flux = np.ma.masked_values(
-            np.ma.masked_array(flux).astype(np.float32), -999999)
+            np.ma.masked_array(flux).astype(np.float), -999999)
         if flux.all() is np.ma.masked:
             print('No valid data found')
             return None
@@ -188,7 +188,7 @@ def get_turbidity(fname, rivers):
                     l['dateTime'][:16], '%Y-%m-%dT%H:%M'))
                 turb.append(l['value'])
             turb = np.ma.masked_values(
-                np.ma.masked_array(turb).astype(np.float32), -999999)
+                np.ma.masked_array(turb).astype(np.float), -999999)
 
         for j, rt in enumerate(nc.variables['river'][:]):
             if int(rt) == r.usgs_id:

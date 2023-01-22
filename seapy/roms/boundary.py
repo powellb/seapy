@@ -76,18 +76,16 @@ def from_roms(roms_file, bry_file, grid=None, records=None,
         if var in ncroms.variables:
             for bry in sides:
                 ndim = seapy.roms.fields[var]["dims"]
-                svar = "_".join((var, bry))
-                if svar in ncbry.variables:
-                    if ndim == 3:
-                        ncbry.variables[svar][:] = \
-                            ncroms.variables[var][records, :,
-                                                  sides[bry].indices[0],
-                                                  sides[bry].indices[1]]
-                    elif ndim == 2:
-                        ncbry.variables[svar][:] = \
-                            ncroms.variables[var][records,
-                                                  sides[bry].indices[0],
-                                                  sides[bry].indices[1]]
+                if ndim == 3:
+                    ncbry.variables["_".join((var, bry))][:] = \
+                        ncroms.variables[var][records, :,
+                                              sides[bry].indices[0],
+                                              sides[bry].indices[1]]
+                elif ndim == 2:
+                    ncbry.variables["_".join((var, bry))][:] = \
+                        ncroms.variables[var][records,
+                                              sides[bry].indices[0],
+                                              sides[bry].indices[1]]
     ncbry.close()
     pass
 

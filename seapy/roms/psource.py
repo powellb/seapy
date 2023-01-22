@@ -175,7 +175,7 @@ def get_usgs_transport(usgs_id, times=1, source='discharge'):
                 l['dateTime'][:16], '%Y-%m-%dT%H:%M'))
             flux.append(l['value'])
         flux = np.ma.masked_values(
-            np.ma.masked_array(flux).astype(np.float32), -999999)
+            np.ma.masked_array(flux).astype(np.float), -999999)
         try:
             if source == 'stage':
                 flux = stage2discharge(flux, usgs_id)

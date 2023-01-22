@@ -60,7 +60,7 @@ This will display the 'ncks' command necessary to download the data. If you want
 
     >> dt = 400/86400       # time-step of the model in days
     >> aviso_gen = seapy.roms.obsgen.aviso_sla_map(mygrid, dt)
-    >> aviso_gen.batch_files(seapy.list_files('./aviso.*nc'), 'aviso_roms_#.nc')
+    >> aviso_gen.batch_files(seapy.list_files('.','aviso.*nc'), 'aviso_roms_#.nc')
     >> argo_gen = seapy.roms.obsgen.argo_ctd(mygrid, dt)
     >> obs = argo_gen.convert_file("argo_day1.nc")
     >> obs.to_netcdf("argo_roms_1.nc")
@@ -72,3 +72,6 @@ This will display the 'ncks' command necessary to download the data. If you want
     >> seapy.roms.obs.merge_files(seapy.list_files('.*roms_[0-9]+.nc'), 'roms_obs_#.nc', np.arange([0, 10.1, 5]))
 
 There are many more things that can be done, but these show some of the power available via simple commands.
+
+
+

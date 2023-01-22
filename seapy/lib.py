@@ -328,7 +328,7 @@ def matlab2date(daynum):
     datetime : list
     """
     daynum = np.atleast_1d(daynum)
-    return [datetime.datetime.fromordinal(d.astype(np.int8)) +
+    return [datetime.datetime.fromordinal(d.astype(np.int)) +
             datetime.timedelta(days=(d % 1 - 366)) for d in daynum]
 
 
@@ -595,16 +595,18 @@ def flatten(l, ltypes=(list, tuple, set)):
     return ltype(l)
 
 
-def list_files(pattern=None, deprecated=None, full_path=True):
+def list_files(path=".", regex=None, full_path=True):
     """
-    list all sorted file names that conform to the given pattern using shell
-    matching. This is not a generator function because it sorts
+    list all sorted file names in the given path that conform to the regular
+    expression pattern. This is not a generator function because it sorts
     the files in alphabetic/numeric order.
 
     Parameters
     ----------
-    pattern : string
-        Search for the given matches (e.g. "./*.txt")
+    path : string
+        Search for the given matches
+    regex : string, optional
+        Input regular expression string to filter filenames
     full_path : bool, optional
         If True, return the full path for each found object. If false,
         return only the filename
@@ -618,26 +620,30 @@ def list_files(pattern=None, deprecated=None, full_path=True):
     >>> files = seapy.list_files('/path/to/dir/test_.*txt')
     >>> print(files)
     ['/path/to/dir/test_001.txt', '/path/to/dir/test_002.txt']
-    """
-    from glob import glob
 
-    # If anyone still uses deprecated call, put it together
-    if deprecated is not None:
-        print("WARNING: Use of regex pattern separately from pattern is deprecated and will be removed in a future version.")
-        if pattern:
-            pattern += "/" + deprecated
-        else:
-            pattern = deprecated
-    if pattern is None:
-        pattern = "./*"
+    NOTE: this is equivalent for separating:
+    >>> files = seapy.list_files('/path/to/dir', 'test_.*txt')
+    """
+    # If only one parameter is given, parse into its components
+    if regex is None:
+        regex = os.path.basename(path)
+        path = os.path.dirname(path)
+    if not path:
+        path = './'
+    elif path[-1] != '/':
+        path += '/'
+    files = []
+    prog = re.compile(regex)
 
     # Check each file in the directory we are searching and then sort
-    files = glob(pattern)
+    for file in os.listdir(path):
+        if prog.search(file) is not None:
+            files.append(file)
     files.sort()
 
-    # Return the files with the path or just the name
-    if not full_path:
-        return [os.path.basename(f) for f in files]
+    # Return the files or with the full path
+    if full_path:
+        return [path + f for f in files]
     else:
         return files
 
@@ -876,7 +882,7 @@ def godelnumber(x):
     x = np.atleast_2d(x.astype(int))
     if x.ndim > 1:
         primevals = primes(x.shape[1] * 10)[:x.shape[1]].astype(float)
-        return (np.prod(primevals**x, axis=1))
+        return(np.prod(primevals**x, axis=1))
     else:
         return 2.0**x
 
