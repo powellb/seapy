@@ -3,7 +3,7 @@
   Functions to generate ROMS netcdf files
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
 """
 
 

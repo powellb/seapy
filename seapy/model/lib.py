@@ -6,7 +6,7 @@
   when importing the model module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import seapy

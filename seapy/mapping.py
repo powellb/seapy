@@ -8,7 +8,7 @@
   provide simplified abstractions over the existing cartopy to make it quicker
   for generating plots and figures.
 
-  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
 
 """
 import numpy as np
@@ -390,7 +390,7 @@ class hawaii(map):
         >>> m.fig.patch.set_alpha(0.0)
         >>> m.fig.savefig("sst.png",dpi=100)
 
-      Copyright (c)2010--2022 University of Hawaii under the MIT-License.
+      Copyright (c)2010--2023 University of Hawaii under the MIT-License.
     """
 
     def __init__(self, grid=None, region=(-163, 17, -153, 24),

@@ -3,7 +3,7 @@
 
     Module for working with oceanographic data and models
 
-  Copyright (c)2010--2022 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
 
   Import classes include:
 
