@@ -145,7 +145,7 @@ variables:
     ZoBot:coordinates = "lon_rho lat_rho" ;
   float zeta(eta_rho, xi_rho) ;
     zeta:long_name = 'mean sea surface height for depth calc" ;
-    zeta:_FillValue = 0.0 ;
+    zeta:fill_value = 0. ;
   double diff_factor(eta_rho, xi_rho) ;
     diff_factor:long_name = "horizontal diffusivity factor" ;
     diff_factor:valid_min = 0. ;

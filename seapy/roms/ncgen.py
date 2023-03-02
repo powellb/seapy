@@ -330,8 +330,6 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
 
-    print(dims)
-
     # Create the grid file
     _nc = ncgen(filename, dims=dims, vars=vars, attr=attr, clobber=clobber,
                 title=title)

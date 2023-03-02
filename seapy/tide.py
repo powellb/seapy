@@ -309,8 +309,8 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
 
 
     """
-    times = np.atleast_1d(times)
     clist = list(tide.keys())
+    times = np.atleast_1d(times)
     freq = frequency(clist)
 
     # If given a tide_start, then the phase is relative to that datetime,
@@ -326,27 +326,25 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         ctime = times[0] + (times[-1] - times[0]) / 2
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
-
+    
     # Calculate time series
-    ts = np.zeros(len(times))
-    if tide_minor:
-        ts = np.zeros(len(times), dtype=np.complex)
-    for i, ap in enumerate(tide):
-        c = tide[ap]
-        ap = ap.upper()
-        if tide_minor:
-            m = tide_minor[ap]
-
-            ts += np.exp(1j * m.phase) * (
-                c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                            + (vufs[ap].v + vufs[ap].u) - c.phase)
-                + m.amp * vufs[ap].f * np.sin(2.0 * np.pi * np.dot(freq[i], hours)
-                                              + (vufs[ap].v + vufs[ap].u) - c.phase))
+    ts = np.zeros(len(times), dtype=complex)    
+    for i, td in enumerate(clist):
+        if not tide_minor:
+            ap = tide[td].amp/2*np.exp(-1 * 1j*tide[td].phase)
+            am = ap.conjugate()
         else:
-            ts += c.amp * vufs[ap].f * np.cos(2.0 * np.pi * np.dot(freq[i], hours)
-                                              + (vufs[ap].v + vufs[ap].u) - c.phase)
-
-    return ts
+            ellipse = vel_ellipse(tide, tide_minor)
+            ap = (ellipse[td].major+ellipse[td].minor)/2*np.exp(1j*(ellipse[td].angle-ellipse[td].phase))
+            am = (ellipse[td].major-ellipse[td].minor)/2*np.exp(1j*(ellipse[td].angle+ellipse[td].phase))
+        
+        
+        ap = ap * vufs[td].f * np.exp(1j*2.0*np.pi*(vufs[td].v+vufs[td].u))
+        am = am * vufs[td].f * np.exp(-1*1j*2.0*np.pi*(vufs[td].v+vufs[td].u))
+        
+        ts += np.exp(1j*2.0*np.pi*np.dot(freq[i], hours)) * ap + np.exp(-1*1j*2.0*np.pi*np.dot(freq[i], hours)) * am
+        
+    return ts if tide_minor else ts.real
 
 
 def fit(times, xin, tides=None, lat=55, tide_start=None, trend=True):

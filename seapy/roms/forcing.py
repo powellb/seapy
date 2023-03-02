@@ -195,6 +195,10 @@ def gen_bulk_forcing(infile, fields, outfile, grid, start_time, end_time,
         frc_lat <= maxlat,
         frc_lat >= minlat)))
     if not np.any(region_list):
+        print(f"MODEL REGION: ({minlat:5.2f}, {minlon:5.2f}) to " +
+              f"({maxlat:5.2f}, {maxlon:5.2f})")
+        print(f"  FRC REGION: ({frc_lat.min():5.2f}, {frc_lon.min():5.2f}) to " +
+              f"({frc_lat.max():5.2f}, {frc_lon.max():5.2f})")
         raise Exception("Cannot find valid region")
 
     eta_list = np.s_[np.min(region_list[0]):np.max(region_list[0]) + 1]

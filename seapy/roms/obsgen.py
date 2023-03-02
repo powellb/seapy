@@ -445,7 +445,7 @@ class aviso_sla_map(obsgen):
         latname = 'lat' if 'lat' in nc.variables.keys() else 'latitude'
         lat = nc.variables[latname][:]
         dat = np.squeeze(nc.variables["sla"][:])
-        err = np.squeeze(nc.variables["err"][:])
+        err = np.squeeze(nc.variables["err_sla"][:])
         time = seapy.roms.num2date(
             nc, "time", records=[0], epoch=self.epoch)[0]
         nc.close()
@@ -480,7 +480,10 @@ _aviso_sla_errors = {
     "SSH_AVISO_ERS1": 0.06,
     "SSH_AVISO_ERS2": 0.06,
     "SSH_AVISO_TOPEX_POSEIDON": 0.05,
-    "SSH_AVISO_SENTINEL3A": 0.05
+    "SSH_AVISO_SENTINEL3A": 0.05,
+    "SSH_AVISO_SENTINEL3A": 0.05,
+    "SSH_AVISO_SENTINEL3B": 0.05,
+    "SSH_AVISO_HAIYANG2B": 0.05
 }
 
 
@@ -878,35 +881,36 @@ class viirs_swath(obsgen):
         Load a VIIRS file and convert into an obs structure
         """
         # Load VIIRS Data
-        nc = seapy.netcdf(file, aggdim="time")
-        lon = nc.variables["lon"][:]
-        lat = nc.variables["lat"][:]
-        dat = np.ma.masked_outside(
-            nc.variables["sea_surface_temperature"][:] - 273.15,
-            self.temp_limits[0], self.temp_limits[1])
-        err = np.ma.masked_outside(
-            nc.variables["sses_standard_deviation"][:], 0.01, 2.0)
-        dat[err.mask] = np.ma.masked
+        with seapy.netcdf(file, aggdim="time") as nc:
+          dat = np.ma.masked_outside(
+              nc.variables["sea_surface_temperature"][:] - 273.15,
+              self.temp_limits[0], self.temp_limits[1])
+          err = np.ma.masked_outside(
+              nc.variables["sses_standard_deviation"][:], 0.005, 2.0)
+          dat[err.mask] = np.ma.masked
 
-        # Check the data flags
-        if self.check_qc_flags:
-            flags = np.ma.masked_not_equal(
-                nc.variables["quality_level"][:], 5)
-            dat[flags.mask] = np.ma.masked
-        else:
-            dat = np.ma.masked_where(
-                nc.variables["quality_level"][:].data == 1, dat)
+          # Check the data flags
+          flags = nc.variables["quality_level"][:]
+          if self.check_qc_flags:
+              dat[flags!=5] = np.ma.masked
+          else:
+              dat[flags==1] = np.ma.masked
 
-        # Grab the observation time
-        time = netCDF4.num2date(nc.variables["time"][:],
-                                nc.variables["time"].units) - self.epoch
-        time = np.asarray([x.total_seconds() for x in time])[
-            :, np.newaxis, np.newaxis]
-        dtime = nc.variables["sst_dtime"][:]
-        time = (time + dtime) * seapy.secs2day
-        nc.close()
+          # If there aren't any good values, return
+          if not dat.compressed().any():
+              return None
 
-        # Set up the coordinate
+          # Grab the observation time
+          time = netCDF4.num2date(nc.variables["time"][:],
+                                  nc.variables["time"].units) - self.epoch
+          time = np.asarray([x.total_seconds() for x in time])[:, np.newaxis, np.newaxis]
+          dtime = nc.variables["sst_dtime"][:]
+          time = (time + dtime) * seapy.secs2day
+
+          # Set up the coordinates
+          lon = nc.variables["lon"][:]
+          lat = nc.variables["lat"][:]
+
         lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
         lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
         if self.grid.east():

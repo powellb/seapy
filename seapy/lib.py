@@ -604,7 +604,7 @@ def list_files(pattern=None, deprecated=None, full_path=True):
     Parameters
     ----------
     pattern : string
-        Search for the given matches (e.g. "./*.txt")
+        Search for files matching the shell glob string (e.g. "/path/to/*.txt")
     full_path : bool, optional
         If True, return the full path for each found object. If false,
         return only the filename
@@ -615,7 +615,7 @@ def list_files(pattern=None, deprecated=None, full_path=True):
 
     Examples
     --------
-    >>> files = seapy.list_files('/path/to/dir/test_.*txt')
+    >>> files = seapy.list_files('/path/to/dir/test_*txt')
     >>> print(files)
     ['/path/to/dir/test_001.txt', '/path/to/dir/test_002.txt']
     """
