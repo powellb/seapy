@@ -35,7 +35,7 @@ variables:
 		temp:units = "Celsius" ;
 	float salt(time, depth, lat, lon) ;
 		salt:long_name = "salinity" ;
-		temp:units = "ppt" ;
+		salt:units = "ppt" ;
 
 // global attributes:
 		:title = "Z Grid File" ;
