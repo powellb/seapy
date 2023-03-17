@@ -213,7 +213,8 @@ class map(object):
         Parameters
         ----------
         facecolor: string, optional
-            color to draw the mask with
+            color to draw the mask with. If you specify 'none', it will not
+            fill land.
         **kwargs: additional arguments to add_feature
         """
         self.cur_sp.add_feature(cft.GSHHSFeature(self.res, [1]),
