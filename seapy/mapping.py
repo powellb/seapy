@@ -262,9 +262,27 @@ class map(object):
         dlat = lat * 0
         dlon[:, 0:-1] = lon[:, 1:] - lon[:, 0:-1]
         dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
-        self.pc[self.cur_ax] = self.cur_sp.pcolormesh(lon - dlon * 0.5, lat - dlat * 0.5,
-                                             data, transform=self.proj(),
-                                             **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.pcolormesh(lon - dlon * 0.5,
+                                                      lat - dlat * 0.5,
+                                                      data, transform=self.proj(),
+                                                      **kwargs)
+
+    def text(self, lon, lat, text, **kwargs):
+        """
+        plot data onto our geographic plot
+
+        Parameters
+        ----------
+        lon: array
+            Longitude field for data
+        lat: array
+            Latitude field for data
+        text: string
+            Text to display
+        **kwargs: arguments, optional
+            additional arguments to pass to plot
+        """
+        self.cur_sp.text(lon, lat, text, transform=self.proj(), **kwargs)
 
     def plot(self, lon, lat, *args, **kwargs):
         """
@@ -279,8 +297,9 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to plot
         """
-        self.pc[self.cur_ax] = self.cur_sp.plot(lon, lat, *args, transform=self.proj(),
-                                       **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.plot(lon, lat, *args,
+                                                transform=self.proj(),
+                                                **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
@@ -297,8 +316,9 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to contourf
         """
-        self.pc[self.cur_ax] = self.cur_sp.contourf(lon, lat, data, transform=self.proj(),
-                                           **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.contourf(lon, lat, data,
+                                                    transform=self.proj(),
+                                                    **kwargs)
 
     def contour(self, lon, lat, data, **kwargs):
         """
@@ -315,8 +335,9 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to contourf
         """
-        self.pc[self.cur_ax] = self.cur_sp.contour(lon, lat, data, transform=self.proj(),
-                                          **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.contour(lon, lat, data,
+                                                   transform=self.proj(),
+                                                   **kwargs)
 
     def scatter(self, lon, lat, data, **kwargs):
         """
@@ -333,8 +354,9 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to scatter
         """
-        self.pc[self.cur_ax] = self.cur_sp.scatter(lon, lat, c=data, transform=self.proj(),
-                                          **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.scatter(lon, lat, c=data,
+                                                   transform=self.proj(),
+                                                   **kwargs)
 
     def streamplot(self, lon, lat, u, v, **kwargs):
         """
@@ -414,6 +436,7 @@ class map(object):
         # If user wants a new axis, calculate a new axis to hold
         # the colorbar.
         if newaxis or len(self.ax) == 1:
+            ax = np.atleast_1d(ax)
             sz = np.zeros((ax.size, 4))
             for i,a in enumerate(ax.flatten()):
                 sz[i,:] = np.array(a.get_position().bounds)
@@ -436,7 +459,7 @@ class map(object):
                 bb = np.min(sz[:, 1]) + hh / 2 - hh * shrink / 2
                 hh *= shrink
 
-            elif position == "top":
+            elif location == "top":
                 orientation = "horizontal"
                 bb = np.max(sz[:,1] + sz[:,3]) + pad * 2
                 _, idx = np.unique(sz[:,0], return_index=True)
