@@ -21,6 +21,7 @@ from warnings import warn
 from seapy.model import asgrid
 
 
+
 def gen_coastline(lon, lat, bathy, depth=0):
     """
     Given lon, lat, and bathymetry, generate vectors of line segments
@@ -59,15 +60,7 @@ def gen_coastline(lon, lat, bathy, depth=0):
 
 class map(object):
     """
-    Examples
-    -------
-    >>> m=seapy.mapping.map(region=(lon[0,0],lat[0,0],lon[-1,-1],lat[-1,-1]))
-    >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
-    >>> m.land()
-    >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
-    >>> m.ax.patch.set_alpha(1)
-    >>> m.fig.patch.set_alpha(0.0)
-    >>> m.fig.savefig("sst.png",dpi=100)
+    Create a new mapping object for producing geographic figures.
 
     Parameters
     ----------
@@ -88,11 +81,23 @@ class map(object):
             along with the axis object.
         fill_color: string, optional
             The color to use for the axis background
-    """
 
-    def __init__(self, grid=None, region=(-180, -40, 180, 40),
+    Examples
+    --------
+    >>> m=seapy.mapping.map(region=(lon[0,0],lat[0,0],lon[-1,-1],lat[-1,-1]))
+    >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
+    >>> m.land()
+    >>> m.colorbar(label="Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
+    >>> m.ax.patch.set_alpha(1)
+    >>> m.fig.patch.set_alpha(0.0)
+    >>> m.fig.savefig("sst.png",dpi=100)
+
+"""
+
+    def __init__(self, nrows=1, ncols=1, grid=None, region=(-180, -40, 180, 40),
                  proj='PlateCarree', resolution='auto', figsize=(8., 6.),
-                 fig=None, fill_color=cft.COLORS['water']):
+                 fig=None, fill_color=cft.COLORS['water'], **kwargs):
+
         import inspect
 
         if grid is not None:
@@ -120,12 +125,14 @@ class map(object):
         if "central_latitude" not in args:
             self.clat = None
 
+        self.nrows = nrows
+        self.ncols = ncols
         self.fill = fill_color
         self.figsize = figsize
         self.res = resolution
         self.fig = fig
         if fig is None:
-            self.new_figure()
+            self.new_figure(**kwargs)
 
     def new_figure(self, **kwargs):
         """
@@ -136,37 +143,68 @@ class map(object):
         fill_color: string, optional
            Color to fill the background of the axes with
         """
-        self.pc = self.cb = self.ax = None
+        # Create the mapping setup
+        self.cur_sp = self.cur_pc = None
+
+        if self.clat:
+            geokw = dict(projection=self.proj(central_longitude=self.clon,
+                                              central_latitude=self.clat))
+        else:
+            geokw = dict(projection=self.proj(central_longitude=self.clon))
 
         # Create a figure
-        self.fig = plt.figure(figsize=self.figsize, **kwargs)
-        self.new_axes()
+        self.fig, self.ax = plt.subplots(self.nrows, self.ncols,
+                                         figsize=self.figsize, **kwargs,
+                                         subplot_kw=geokw)
+        self.ax = np.atleast_2d(self.ax)
+        self.pc = np.empty((self.nrows, self.ncols), dtype=object)
 
-    def new_axes(self):
-        """
-        Create a new axes for plotting geospatial data
-        """
-        # Create the mapping axes
-        if self.clat:
-            self.ax = self.fig.add_subplot(1, 1, 1,
-                                           projection=self.proj(
-                                               central_longitude=self.clon,
-                                               central_latitude=self.clat))
-        else:
-            self.ax = self.fig.add_subplot(1, 1, 1,
-                                           projection=self.proj(
-                                               central_longitude=self.clon))
-        self.ax.set_extent((self.region[0], self.region[2],
+        for ax in self.fig.axes:
+            ax.set_extent((self.region[0], self.region[2],
                             self.region[1], self.region[3]),
                            crs=ccrs.PlateCarree())
-        self.ax.set_facecolor(self.fill)
+            ax.set_facecolor(self.fill)
+
+        # Set the Current Axis
+        self.subplot()
+
+    def subplot(self, ax=None):
+        """
+        Set the current subplot axis to work on. Subplots start in the upper,
+        left with (0, 0) down to the lower right with (nrows-1, ncolumns-1).
+
+        Parameters
+        ----------
+        ax : tuple
+          A tuple of the (column, row) axis that you wish to currently
+          work with
+
+        Examples
+        --------
+        >>> m=seapy.mapping.map(region=(lon[0,0],lat[0,0],lon[-1,-1],lat[-1,-1]))
+        >>> m.plot(lon, lat, 'k')
+        >>> m.subplot((0,1))
+        >>> m.pcolormesh(lon, lat, data)
+
+        """
+        self.cur_ax = ax if ax else (0, 0)
+        self.cur_sp = self.ax[self.cur_ax]
 
     def clear(self):
         """
         Clear the existing axes to draw a new frame
         """
-        if self.ax:
-            self.ax.clear()
+        self.cur_sp.clear()
+
+    def title(self, *args, **kwargs):
+        """
+        Set the title of the current plot
+
+        Parameters
+        ----------
+        Same as matplotlib.axes.Axes.set_title
+        """
+        self.cur_sp.set_title(*args, **kwargs)
 
     def land(self, facecolor="white", **kwargs):
         """
@@ -178,8 +216,8 @@ class map(object):
             color to draw the mask with
         **kwargs: additional arguments to add_feature
         """
-        self.ax.add_feature(cft.GSHHSFeature(self.res, [1]),
-                            facecolor=facecolor, **kwargs)
+        self.cur_sp.add_feature(cft.GSHHSFeature(self.res, [1]),
+                                facecolor=facecolor, **kwargs)
 
     def gridlines(self, labels=(True, False, True, False), linewidth=1,
                   color='black', alpha=0.25, linestyle=":", **kwargs):
@@ -197,9 +235,9 @@ class map(object):
         linestyle: type of lines
         kwargs: additional arguments passed to the gridline
         """
-        gl = self.ax.gridlines(draw_labels=True, linewidth=linewidth,
-                               color=color, alpha=alpha,
-                               linestyle=linestyle, **kwargs)
+        gl = self.cur_sp.gridlines(draw_labels=True, linewidth=linewidth,
+                                   color=color, alpha=alpha,
+                                   linestyle=linestyle, **kwargs)
         for i, side in enumerate(("left", "right", "top", "bottom")):
             setattr(gl, f"{side}_labels", labels[i])
 
@@ -224,8 +262,9 @@ class map(object):
         dlat = lat * 0
         dlon[:, 0:-1] = lon[:, 1:] - lon[:, 0:-1]
         dlat[0:-1, :] = lat[1:, :] - lat[0:-1, :]
-        self.pc = self.ax.pcolormesh(lon - dlon * 0.5, lat - dlat * 0.5,
-                                     data, transform=self.proj(), **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.pcolormesh(lon - dlon * 0.5, lat - dlat * 0.5,
+                                             data, transform=self.proj(),
+                                             **kwargs)
 
     def plot(self, lon, lat, *args, **kwargs):
         """
@@ -240,7 +279,8 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to plot
         """
-        self.pc = self.ax.plot(lon, lat, *args, transform=self.proj(), **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.plot(lon, lat, *args, transform=self.proj(),
+                                       **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
@@ -257,8 +297,8 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to contourf
         """
-        self.pc = self.ax.contourf(lon, lat, data, transform=self.proj(),
-                                   **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.contourf(lon, lat, data, transform=self.proj(),
+                                           **kwargs)
 
     def contour(self, lon, lat, data, **kwargs):
         """
@@ -275,8 +315,8 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to contourf
         """
-        self.pc = self.ax.contour(lon, lat, data, transform=self.proj(),
-                                  **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.contour(lon, lat, data, transform=self.proj(),
+                                          **kwargs)
 
     def scatter(self, lon, lat, data, **kwargs):
         """
@@ -293,8 +333,8 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to scatter
         """
-        self.pc = self.ax.scatter(lon, lat, c=data, transform=self.proj(),
-                                  **kwargs)
+        self.pc[self.cur_ax] = self.cur_sp.scatter(lon, lat, c=data, transform=self.proj(),
+                                          **kwargs)
 
     def streamplot(self, lon, lat, u, v, **kwargs):
         """
@@ -313,8 +353,8 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to streamplot
         """
-        return self.ax.streamplot(lon, lat, u, v, transform=self.proj(),
-                                  **kwargs)
+        return self.cur_sp.streamplot(lon, lat, u, v, transform=self.proj(),
+                                      **kwargs)
 
     def quiver(self, lon, lat, u, v, **kwargs):
         """
@@ -333,47 +373,96 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to quiver
         """
-        return self.ax.quiver(lon, lat, u, v, transform=self.proj(),
-                              **kwargs)
+        return self.cur_sp.quiver(lon, lat, u, v, transform=self.proj(),
+                                  **kwargs)
 
-    def colorbar(self, label=None, location="bottom", **kwargs):
+    def colorbar(self, ax=None, label=None, location="bottom", newaxis=False,
+                 pad=0.1, shrink=0.8, **kwargs):
         """
-        Display a colorbar on the figure
+        Display a colorbar. The colorbar can be attached to
+        individual subplots [default] or it can span multiple
+        subplots. If it spans multiple, it will use the values
+        from the first axis of the span for the colorbar range.
 
         Parameters
         ----------
+        ax: index or slice, optional
+            The axis (or more) that the colorbar should span. The default
+            is the current axis.
         label: string, optional
             Colorbar label title
         location: string
             "bottom" (default), "top", "right", or "left"
+        newaxis : bool
+            Create a new axis outside of the axes. Results will vary
+            depending on the way the figure is constructed, so you
+            must know what you are doing. This is only for creating
+            colorbars outside of the subplots.
+        pad : float
+            How large of a pad to space the colorbar if creating a new
+            axis.
+        shrink : float
+            The percentage to shrink the colorbar by
         **kwargs: arguments, optional
             additional arguments to pass to colorbar
         """
-        if self.pc is None:
-            return
 
-        l, b, w, h = self.ax.get_position().bounds
+        # Set the values object(s) and axes object(s)
+        pc = self.pc[ax].flatten()[0] if ax else self.pc[self.cur_ax]
+        ax = self.ax[ax] if ax else self.cur_sp
 
-        location = location.lower()
-        if location == "right":
-            cax = self.fig.add_axes([0.94, 0.25, 0.03, h * 0.8])
-            orientation = "vertical"
-        elif location == "left":
-            cax = self.fig.add_axes([0.01, 0.25, 0.03, h * 0.8])
-            orientation = "vertical"
-        elif location == "bottom":
-            cax = self.fig.add_axes([0.25, b - 0.07, 0.5, 0.03])
-            orientation = "horizontal"
-        elif location == "top":
-            cax = self.fig.add_axes([0.25, b + 1.13 * h, 0.5, 0.03])
-            orientation = "horizontal"
+        # If user wants a new axis, calculate a new axis to hold
+        # the colorbar.
+        if newaxis or len(self.ax) == 1:
+            sz = np.zeros((ax.size, 4))
+            for i,a in enumerate(ax.flatten()):
+                sz[i,:] = np.array(a.get_position().bounds)
 
-        self.cb = plt.colorbar(self.pc, cax=cax, orientation=orientation,
-                               shrink=0.8, **kwargs)
-        # self.cb = plt.colorbar(self.pc, ax=self.ax, location=location,
-        #                        **kwargs)
+            if location == "right":
+                orientation = "vertical"
+                ll = np.max(sz[:, 0] + sz[:, 2]) + pad
+                _, idx = np.unique(sz[:, 1], return_index = True)
+                hh = np.minimum(0.8, np.sum(sz[idx, 3]))
+                ww = 0.03
+                bb = np.min(sz[:, 1]) + hh / 2 - hh * shrink / 2
+                hh *= shrink
+
+            elif location == "left":
+                orientation = "vertical"
+                ll = np.min(sz[:, 0]) - pad * 2
+                _, idx = np.unique(sz[:, 1], return_index = True)
+                hh = np.minimum(0.8, np.sum(sz[idx, 3]))
+                ww = 0.03
+                bb = np.min(sz[:, 1]) + hh / 2 - hh * shrink / 2
+                hh *= shrink
+
+            elif position == "top":
+                orientation = "horizontal"
+                bb = np.max(sz[:,1] + sz[:,3]) + pad * 2
+                _, idx = np.unique(sz[:,0], return_index=True)
+                ww = np.minimum(0.8, np.sum(sz[idx,2]))
+                hh = 0.03
+                ll = np.min(sz[:,0]) + ww/2 - ww*shrink/2
+                ww *= shrink
+
+            else: # bottom
+                orientation = "horizontal"
+                bb = np.min(sz[:, 1]) - pad * 2
+                _, idx = np.unique(sz[:, 0], return_index=True)
+                ww = np.minimum(0.8, np.sum(sz[idx, 2]))
+                hh = 0.03
+                ll = np.min(sz[:, 0]) + ww / 2 - ww * shrink / 2
+                ww *= shrink
+
+            cax = self.fig.add_axes([ll, bb, ww, hh])
+            cb = self.fig.colorbar(pc, cax=cax, orientation=orientation,
+                                   shrink=shrink)
+        else:
+            # Let matplotlib do its own colorbar adjustment
+            cb = self.fig.colorbar(pc, ax=ax, location=location,
+                                   shrink=shrink, **kwargs)
         if label is not None:
-            self.cb.set_label(label)
+            cb.set_label(label)
 
 
 class hawaii(map):
@@ -392,10 +481,17 @@ class hawaii(map):
 
       Copyright (c)2010--2023 University of Hawaii under the MIT-License.
     """
+    # Class variable for the shapes
+    _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii.shp"
 
-    def __init__(self, grid=None, region=(-163, 17, -153, 24),
-                 figsize=(8., 6.)):
-        super().__init__(grid=grid, region=region, figsize=figsize)
+    def __init__(self, *args, region=(-163, 17, -153, 24), figsize=(8., 6.),
+                 **kwargs):
+        super().__init__(*args, region=region, figsize=figsize, **kwargs)
+
+        self.shape = cft.ShapelyFeature(
+            cartopy.io.shapereader.Reader(self._shape_file).geometries(),
+            self.proj())
+
 
     def land(self, facecolor="white", **kwargs):
         """
@@ -415,12 +511,6 @@ class hawaii(map):
         None
 
         """
-        _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii.shp"
-
-        if not hasattr(self, "feature"):
-            self.feature = cft.ShapelyFeature(
-                cartopy.io.shapereader.Reader(_shape_file).geometries(),
-                self.proj())
 
         # Draw the loaded shapes
-        self.ax.add_feature(self.feature, facecolor=facecolor, **kwargs)
+        self.cur_sp.add_feature(self.shape, facecolor=facecolor, **kwargs)
