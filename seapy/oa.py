@@ -15,7 +15,7 @@ from seapy.external import oalib
 __bad_val = -999999.0
 
 
-def oasurf(x, y, d, xx, yy, pmap=None, weight=10, nx=2, ny=2, verbose=False):
+def oasurf(x, y, d, xx, yy, pmap=None, weight=9, nx=2, ny=2, verbose=False):
     """
     Objective analysis interpolation for 2D fields
 
@@ -72,7 +72,7 @@ def oasurf(x, y, d, xx, yy, pmap=None, weight=10, nx=2, ny=2, verbose=False):
                               copy=False), pmap
 
 
-def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
+def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=9, nx=2, ny=2,
           verbose=False):
     """
     Objective analysis interpolation for 3D fields
@@ -125,7 +125,7 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=10, nx=2, ny=2,
         tmp = np.ones(x.ravel().shape, order='F')
         pmap = np.zeros([xx.size, weight], order='F')
         _ = oalib.oa2d(x.ravel(), y.ravel(), tmp,
-                   xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
+                       xx.ravel(), yy.ravel(), nx, ny, pmap, verbose)
 
     # Call FORTRAN library to objectively map
     _, vv, err = oalib.oa3d(x.ravel(), y.ravel(),

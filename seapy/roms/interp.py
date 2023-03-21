@@ -180,7 +180,7 @@ def __interp3_vel_thread(rx, ry, rz, ra, u, v, zx, zy, zz, za, pmap,
 
 
 def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
-                   threads=2, nx=0, ny=0, weight=10, vmap=None, z_mask=False,
+                   threads=2, nx=0, ny=0, weight=9, vmap=None, z_mask=False,
                    pmap=None):
     """
     internal method:  Given a model file (average, history, etc.),
@@ -237,17 +237,20 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         if pmap_file is not None and os.path.isfile(pmap_file):
             pmap = np.load(pmap_file)
         else:
-            tmp = np.ma.masked_equal(src_grid.mask_rho, 0)
+            tmp = np.ma.masked_equal(src_grid.mask_rho.astype(float), 0)
             tmp, pmaprho = seapy.oasurf(src_grid.lon_rho, src_grid.lat_rho,
-                                        tmp, child_grid.lon_rho, child_grid.lat_rho,
+                                        tmp, child_grid.lon_rho,
+                                        child_grid.lat_rho,
                                         weight=weight, nx=nx, ny=ny)
             tmp = np.ma.masked_equal(src_grid.mask_u, 0)
             tmp, pmapu = seapy.oasurf(src_grid.lon_u, src_grid.lat_u,
-                                      tmp, child_grid.lon_rho, child_grid.lat_rho,
+                                      tmp, child_grid.lon_rho,
+                                      child_grid.lat_rho,
                                       weight=weight, nx=nx, ny=ny)
             tmp = np.ma.masked_equal(src_grid.mask_v, 0)
             tmp, pmapv = seapy.oasurf(src_grid.lon_v, src_grid.lat_v,
-                                      tmp, child_grid.lon_rho, child_grid.lat_rho,
+                                      tmp, child_grid.lon_rho,
+                                      child_grid.lat_rho,
                                       weight=weight, nx=nx, ny=ny)
             if pmap_file is not None:
                 np.savez(pmap_file, pmaprho=pmaprho, pmapu=pmapu, pmapv=pmapv)
@@ -310,8 +313,8 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                 maxrecs = np.maximum(1,
                                      np.minimum(len(records),
                                                 np.int8(_max_memory /
-                                                       (child_grid.lon_rho.nbytes +
-                                                        src_grid.lon_rho.nbytes))))
+                                                        (child_grid.lon_rho.nbytes +
+                                                         src_grid.lon_rho.nbytes))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                     outr = np.s_[
                         rn * maxrecs: np.minimum((rn + 1) * maxrecs,
@@ -332,10 +335,10 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
             else:
                 maxrecs = np.maximum(1, np.minimum(
                     len(records), np.int8(_max_memory /
-                                         (child_grid.lon_rho.nbytes *
-                                          child_grid.n +
-                                          src_grid.lon_rho.nbytes *
-                                          src_grid.n))))
+                                          (child_grid.lon_rho.nbytes *
+                                           child_grid.n +
+                                           src_grid.lon_rho.nbytes *
+                                           src_grid.n))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                     outr = np.s_[
                         rn * maxrecs: np.minimum((rn + 1) * maxrecs, len(records))]
@@ -376,10 +379,10 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         dstangle = getattr(child_grid, 'angle', None)
         maxrecs = np.minimum(len(records),
                              np.int8(_max_memory /
-                                    (2 * (child_grid.lon_rho.nbytes *
-                                          child_grid.n +
-                                          src_grid.lon_rho.nbytes *
-                                          src_grid.n))))
+                                     (2 * (child_grid.lon_rho.nbytes *
+                                           child_grid.n +
+                                           src_grid.lon_rho.nbytes *
+                                           src_grid.n))))
         progress.update(_task_id, description="velocity")
         inc_count = child_grid.n / maxrecs
         for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
@@ -433,7 +436,7 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
 
 
 def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
-            nx=0, ny=0, weight=10, threads=2, pmap=None):
+            nx=0, ny=0, weight=9, threads=2, pmap=None):
     """
     Given a 2D field with time (dimensions [time, lat, lon]), interpolate
     onto a new grid and return the new field. This is a helper function
@@ -486,7 +489,7 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
                                     np.int8(_max_memory /
-                                           (dest_lon.nbytes + src_lon.nbytes))))
+                                            (dest_lon.nbytes + src_lon.nbytes))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 2d".center(20)):
         nfield = np.ma.array(Parallel(n_jobs=threads)
@@ -500,7 +503,7 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
 
 
 def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
-            dest_depth, dest_mask=None, nx=0, ny=0, weight=10,
+            dest_depth, dest_mask=None, nx=0, ny=0, weight=9,
             threads=2, pmap=None):
     """
     Given a 3D field with time (dimensions [time, z, lat, lon]), interpolate
@@ -558,10 +561,10 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
                                     np.int8(_max_memory /
-                                           (dest_lon.nbytes *
-                                               dest_depth.shape[0] +
-                                               src_lon.nbytes *
-                                               src_depth.shape[0]))))
+                                            (dest_lon.nbytes *
+                                             dest_depth.shape[0] +
+                                             src_lon.nbytes *
+                                             src_depth.shape[0]))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 3d".center(20)):
         nfield = np.ma.array(Parallel(n_jobs=threads)
@@ -577,7 +580,7 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
 
 
 def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
-             records=None, threads=2, reftime=None, nx=0, ny=0, weight=10,
+             records=None, threads=2, reftime=None, nx=0, ny=0, weight=9,
              vmap=None, cdl=None, dims=2, pmap=None):
     """
     Given an existing ROMS history or average file, create (if does not exit)
@@ -658,7 +661,8 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
             if depth is None:
                 raise ValueError("depth must be specified")
             ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
-                                                   len(depth), src_ref, "ROMS z-level",
+                                                   len(depth), src_ref,
+                                                   "ROMS z-level",
                                                    cdl=cdl, dims=dims)
             if dims == 1:
                 ncout.variables["lat"][:] = src_grid.lat_rho[:, 0]
@@ -675,7 +679,8 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
             lon = z_grid.lat_rho.shape[1]
             dims = z_grid.spatial_dims
             ncout = seapy.roms.ncgen.create_zlevel(z_file, lat, lon,
-                                                   len(z_grid.z), src_ref, "ROMS z-level",
+                                                   len(z_grid.z), src_ref,
+                                                   "ROMS z-level",
                                                    cdl=cdl, dims=dims)
             if dims == 1:
                 ncout.variables["lat"][:] = z_grid.lat_rho[:, 0]
@@ -711,7 +716,7 @@ def to_zgrid(roms_file, z_file, src_grid=None, z_grid=None, depth=None,
 
 def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
             clobber=False, cdl=None, threads=2, reftime=None, nx=0, ny=0,
-            weight=10, vmap=None, pmap=None):
+            weight=9, vmap=None, pmap=None):
     """
     Given an existing model file, create (if does not exit) a
     new ROMS history file using the given ROMS destination grid and
@@ -815,7 +820,7 @@ def to_grid(src_file, dest_file, src_grid=None, dest_grid=None, records=None,
 
 def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
             records=None, clobber=False, cdl=None, threads=2, reftime=None,
-            nx=0, ny=0, weight=10, vmap=None, pmap=None):
+            nx=0, ny=0, weight=9, vmap=None, pmap=None):
     """
     Given an model output file, create (if does not exit) a
     new ROMS climatology file using the given ROMS destination grid and
@@ -895,8 +900,9 @@ def to_clim(src_file, dest_file, src_grid=None, dest_grid=None,
     # Call the interpolation
     try:
         src_grid.set_east(destg.east())
-        pmap = __interp_grids(src_grid, destg, ncsrc, ncout, records=records, threads=threads,
-                              nx=nx, ny=ny, vmap=vmap, weight=weight, pmap=pmap)
+        pmap = __interp_grids(src_grid, destg, ncsrc, ncout, records=records,
+                              threads=threads, nx=nx, ny=ny, vmap=vmap, weight=weight,
+                              pmap=pmap)
     except TimeoutError:
         print("Timeout: process is hung, deleting output.")
         # Delete the output file

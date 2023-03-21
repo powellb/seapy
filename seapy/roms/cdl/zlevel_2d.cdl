@@ -15,7 +15,7 @@ variables:
         depth:long_name = "Z-Level Depth" ;
         depth:units = "meter" ;
         depth:positive = "down" ;
-    short mask(lat, lon) ;
+    float mask(lat, lon) ;
         mask:long_name = "field mask" ;
         mask:value = "0-land, 1-water" ;
     float time(time) ;
