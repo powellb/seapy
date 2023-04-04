@@ -400,7 +400,7 @@ class aquarius_sss(obsgen):
                                         salt, None, self.salt_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)
         pass
 
 
@@ -458,7 +458,7 @@ class aviso_sla_map(obsgen):
                                         dat.flatten(), err.flatten(), self.ssh_error)]
         # Grid it
         obs = seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                     data, self.dt, title)
+                                     data, self.dt, title=title)
 
         # Apply the model mean ssh to the sla data
         if self.ssh_mean is not None:
@@ -544,7 +544,7 @@ class aviso_sla_track(obsgen):
                                         dat[good], err[good], err[0])]
         # Grid it
         obs = seapy.roms.obs.gridder(self.grid, time, lon[good], lat[good], None,
-                                     data, self.dt, title)
+                                     data, self.dt, title=title)
 
         # Apply the model mean ssh to the sla data
         if self.ssh_mean is not None and obs is not None:
@@ -608,7 +608,7 @@ class ostia_sst_map(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)
 
 
 class navo_sst_map(obsgen):
@@ -734,7 +734,7 @@ class modis_sst_map(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, None,
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)
 
 
 class remss_swath(obsgen):
@@ -792,7 +792,7 @@ class remss_swath(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
-                                      None, data, self.dt, title)
+                                      None, data, self.dt, title=title)
 
 
 class remss_map(obsgen):
@@ -855,7 +855,7 @@ class remss_map(obsgen):
         # Grid it
         return seapy.roms.obs.gridder(self.grid, sst_time.compressed(),
                                       lon.compressed(), lat.compressed, None,
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)
 
 
 class viirs_swath(obsgen):
@@ -882,34 +882,35 @@ class viirs_swath(obsgen):
         """
         # Load VIIRS Data
         with seapy.netcdf(file, aggdim="time") as nc:
-          dat = np.ma.masked_outside(
-              nc.variables["sea_surface_temperature"][:] - 273.15,
-              self.temp_limits[0], self.temp_limits[1])
-          err = np.ma.masked_outside(
-              nc.variables["sses_standard_deviation"][:], 0.005, 2.0)
-          dat[err.mask] = np.ma.masked
+            dat = np.ma.masked_outside(
+                nc.variables["sea_surface_temperature"][:] - 273.15,
+                self.temp_limits[0], self.temp_limits[1])
+            err = np.ma.masked_outside(
+                nc.variables["sses_standard_deviation"][:], 0.005, 2.0)
+            dat[err.mask] = np.ma.masked
 
-          # Check the data flags
-          flags = nc.variables["quality_level"][:]
-          if self.check_qc_flags:
-              dat[flags!=5] = np.ma.masked
-          else:
-              dat[flags==1] = np.ma.masked
+            # Check the data flags
+            flags = nc.variables["quality_level"][:]
+            if self.check_qc_flags:
+                dat[flags != 5] = np.ma.masked
+            else:
+                dat[flags == 1] = np.ma.masked
 
-          # If there aren't any good values, return
-          if not dat.compressed().any():
-              return None
+            # If there aren't any good values, return
+            if not dat.compressed().any():
+                return None
 
-          # Grab the observation time
-          time = netCDF4.num2date(nc.variables["time"][:],
-                                  nc.variables["time"].units) - self.epoch
-          time = np.asarray([x.total_seconds() for x in time])[:, np.newaxis, np.newaxis]
-          dtime = nc.variables["sst_dtime"][:]
-          time = (time + dtime) * seapy.secs2day
+            # Grab the observation time
+            time = netCDF4.num2date(nc.variables["time"][:],
+                                    nc.variables["time"].units) - self.epoch
+            time = np.asarray([x.total_seconds() for x in time])[
+                :, np.newaxis, np.newaxis]
+            dtime = nc.variables["sst_dtime"][:]
+            time = (time + dtime) * seapy.secs2day
 
-          # Set up the coordinates
-          lon = nc.variables["lon"][:]
-          lat = nc.variables["lat"][:]
+            # Set up the coordinates
+            lon = nc.variables["lon"][:]
+            lat = nc.variables["lat"][:]
 
         lon = np.ma.masked_where(dat.mask, seapy.adddim(lon, len(time)))
         lat = np.ma.masked_where(dat.mask, seapy.adddim(lat, len(time)))
@@ -921,7 +922,7 @@ class viirs_swath(obsgen):
                                         err[good], self.temp_error)]
         # Grid it
         return seapy.roms.obs.gridder(self.grid, time[good], lon[good], lat[good],
-                                      None, data, self.dt, title)
+                                      None, data, self.dt, title=title)
 
 
 ##############################################################################
@@ -1021,7 +1022,7 @@ class seaglider_profile(obsgen):
                                       pro["lon"][good],
                                       pro["lat"][good],
                                       depth.compressed(),
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)
 
 
 class mooring(obsgen):
@@ -1126,7 +1127,7 @@ class mooring(obsgen):
         depth = np.resize(depth, (nt, ndep))
         time = np.resize(time, (nt, ndep))
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
-                                      obsdata, self.dt, title)
+                                      obsdata, self.dt, title=title)
 
 
 class tao_mooring(mooring):
@@ -1198,7 +1199,7 @@ class tao_mooring(mooring):
         depth = np.squeeze(np.transpose(depth, (0, 2, 1)))[~data.mask]
         time = np.squeeze(np.resize(time, (npts, ndep, nt)))[~data.mask]
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
-                                      obsdata, self.dt, title)
+                                      obsdata, self.dt, title=title)
 
 
 class argo_ctd(obsgen):
@@ -1327,4 +1328,4 @@ class argo_ctd(obsgen):
                                         None, self.salt_error)]
 
         return seapy.roms.obs.gridder(self.grid, time, lon, lat, depth,
-                                      data, self.dt, title)
+                                      data, self.dt, title=title)

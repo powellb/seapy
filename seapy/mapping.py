@@ -21,7 +21,6 @@ from warnings import warn
 from seapy.model import asgrid
 
 
-
 def gen_coastline(lon, lat, bathy, depth=0):
     """
     Given lon, lat, and bathymetry, generate vectors of line segments
@@ -161,8 +160,8 @@ class map(object):
 
         for ax in self.fig.axes:
             ax.set_extent((self.region[0], self.region[2],
-                            self.region[1], self.region[3]),
-                           crs=ccrs.PlateCarree())
+                           self.region[1], self.region[3]),
+                          crs=ccrs.PlateCarree())
             ax.set_facecolor(self.fill)
 
         # Set the Current Axis
@@ -428,6 +427,12 @@ class map(object):
             The percentage to shrink the colorbar by
         **kwargs: arguments, optional
             additional arguments to pass to colorbar
+
+        Returns
+        -------
+        cb : matplotlib.colorbar.Colorbar
+            the colorbar object that was created (only needed if you
+            wish to alter the colorbar)
         """
 
         # Set the values object(s) and axes object(s)
@@ -439,13 +444,13 @@ class map(object):
         if newaxis or len(self.ax) == 1:
             ax = np.atleast_1d(ax)
             sz = np.zeros((ax.size, 4))
-            for i,a in enumerate(ax.flatten()):
-                sz[i,:] = np.array(a.get_position().bounds)
+            for i, a in enumerate(ax.flatten()):
+                sz[i, :] = np.array(a.get_position().bounds)
 
             if location == "right":
                 orientation = "vertical"
                 ll = np.max(sz[:, 0] + sz[:, 2]) + pad
-                _, idx = np.unique(sz[:, 1], return_index = True)
+                _, idx = np.unique(sz[:, 1], return_index=True)
                 hh = np.minimum(0.8, np.sum(sz[idx, 3]))
                 ww = 0.03
                 bb = np.min(sz[:, 1]) + hh / 2 - hh * shrink / 2
@@ -454,7 +459,7 @@ class map(object):
             elif location == "left":
                 orientation = "vertical"
                 ll = np.min(sz[:, 0]) - pad * 2
-                _, idx = np.unique(sz[:, 1], return_index = True)
+                _, idx = np.unique(sz[:, 1], return_index=True)
                 hh = np.minimum(0.8, np.sum(sz[idx, 3]))
                 ww = 0.03
                 bb = np.min(sz[:, 1]) + hh / 2 - hh * shrink / 2
@@ -462,14 +467,14 @@ class map(object):
 
             elif location == "top":
                 orientation = "horizontal"
-                bb = np.max(sz[:,1] + sz[:,3]) + pad * 2
-                _, idx = np.unique(sz[:,0], return_index=True)
-                ww = np.minimum(0.8, np.sum(sz[idx,2]))
+                bb = np.max(sz[:, 1] + sz[:, 3]) + pad * 2
+                _, idx = np.unique(sz[:, 0], return_index=True)
+                ww = np.minimum(0.8, np.sum(sz[idx, 2]))
                 hh = 0.03
-                ll = np.min(sz[:,0]) + ww/2 - ww*shrink/2
+                ll = np.min(sz[:, 0]) + ww / 2 - ww * shrink / 2
                 ww *= shrink
 
-            else: # bottom
+            else:  # bottom
                 orientation = "horizontal"
                 bb = np.min(sz[:, 1]) - pad * 2
                 _, idx = np.unique(sz[:, 0], return_index=True)
@@ -487,6 +492,8 @@ class map(object):
                                    shrink=shrink, **kwargs)
         if label is not None:
             cb.set_label(label)
+
+        return cb
 
 
 class hawaii(map):
@@ -515,7 +522,6 @@ class hawaii(map):
         self.shape = cft.ShapelyFeature(
             cartopy.io.shapereader.Reader(self._shape_file).geometries(),
             self.proj())
-
 
     def land(self, facecolor="white", **kwargs):
         """

@@ -302,7 +302,8 @@ def gen_stations(filename, grid):
     Npts = len(lon)
 
     header = """\
-
+    !==============================================================================
+    !
     ! Switch to control the writing of stations data within nested and/or multiple
     ! connected grids, [1:Ngrids].
 
@@ -313,10 +314,14 @@ def gen_stations(filename, grid):
 
     Sout(idUvel) == T       ! u                  3D U-velocity
     Sout(idVvel) == T       ! v                  3D V-velocity
+    Sout(idu3dE) == F       ! u_eastward         3D U-eastward at RHO-points
+    Sout(idv3dN) == F       ! v_northward        3D V-nortward at RHO-points
     Sout(idWvel) == F       ! w                  3D W-velocity
     Sout(idOvel) == F       ! omega              3D omega vertical velocity
     Sout(idUbar) == T       ! ubar               2D U-velocity
     Sout(idVbar) == T       ! vbar               2D V-velocity
+    Sout(idu2dE) == F       ! ubar_eastward      2D U-eastward  at RHO-points
+    Sout(idv2dN) == F       ! vbar_northward     2D V-northward at RHO-points
     Sout(idFsur) == T       ! zeta               free-surface
     Sout(idBath) == F       ! bath               time-dependent bathymetry
 
@@ -388,35 +393,28 @@ def gen_stations(filename, grid):
     Sout(idMtls) == F       ! gls                turbulent length scale
 
     ! Logical switches (TRUE/FALSE) to activate writing of exposed sediment
-    ! layer properties into STATIONS output file.  Currently, MBOTP properties
-    ! are expected for the bottom boundary layer and/or sediment models:
-    !
-    ! idBott( 1=isd50)   grain_diameter          mean grain diameter
-    ! idBott( 2=idens)   grain_density           mean grain density
-    ! idBott( 3=iwsed)   settling_vel            mean settling velocity
-    ! idBott( 4=itauc)   erosion_stres           critical erosion stress
-    ! idBott( 5=irlen)   ripple_length           ripple length
-    ! idBott( 6=irhgt)   ripple_height           ripple height
-    ! idBott( 7=ibwav)   bed_wave_amp            wave excursion amplitude
-    ! idBott( 8=izdef)   Zo_def                  default bottom roughness
-    ! idBott( 9=izapp)   Zo_app                  apparent bottom roughness
-    ! idBott(10=izNik)   Zo_Nik                  Nikuradse bottom roughness
-    ! idBott(11=izbio)   Zo_bio                  biological bottom roughness
-    ! idBott(12=izbfm)   Zo_bedform              bed form bottom roughness
-    ! idBott(13=izbld)   Zo_bedload              bed load bottom roughness
-    ! idBott(14=izwbl)   Zo_wbl                  wave bottom roughness
-    ! idBott(15=iactv)   active_layer_thickness  active layer thickness
-    ! idBott(16=ishgt)   saltation               saltation height
-    !
-    !                                 1 1 1 1 1 1 1
-    !               1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+    ! layer properties into STATIONS output file.
 
-    Sout(idBott) == F F F F F F F F F F F F F F F F
+    Sout(isd50)  == F       ! grain_diameter     mean grain diameter
+    Sout(idens)  == F       ! grain_density      mean grain density
+    Sout(iwsed)  == F       ! settling_vel       mean settling velocity
+    Sout(itauc)  == F       ! erosion_stress     critical erosion stress
+    Sout(irlen)  == F       ! ripple_length      ripple length
+    Sout(irhgt)  == F       ! ripple_height      ripple height
+    Sout(ibwav)  == F       ! bed_wave_amp       wave excursion amplitude
+    Sout(izdef)  == F       ! Zo_def             default bottom roughness
+    Sout(izapp)  == F       ! Zo_app             apparent bottom roughness
+    Sout(izNik)  == F       ! Zo_Nik             Nikuradse bottom roughness
+    Sout(izbio)  == F       ! Zo_bio             biological bottom roughness
+    Sout(izbfm)  == F       ! Zo_bedform         bed form bottom roughness
+    Sout(izbld)  == F       ! Zo_bedload         bed load bottom roughness
+    Sout(izwbl)  == F       ! Zo_wbl             wave bottom roughness
+    Sout(iactv)  == F       ! active_layer_t...  active layer thickness
+    Sout(ishgt)  == F       ! saltation          saltation height
 
     ! Number of stations to process in each nested grid.  These values are
     ! essential because the station arrays are dynamically allocated using
     ! these values, [1:Ngrids].
-
     """
     stations = """
     ! Station locations for all grids in any desired order.  The horizontal
@@ -436,9 +434,8 @@ def gen_stations(filename, grid):
         print("        NSTATION ==  {}".format(Npts), file=text_file)
         print(textwrap.dedent(stations), file=text_file)
         for i in range(Npts):
-            print("        1     1    {0:10.6f}   {1:10.6f}   BRY".format(
-                lon[i], lat[i]), file=text_file)
-
+            print(f"        1     1    {lon[i]:10.6f}   {lat[i]:10.6f}   ! BRY",
+                  file=text_file)
     pass
 
 
@@ -483,19 +480,19 @@ def from_stations(station_file, bry_file, grid, threads=4):
         dup = np.where(statime[1:] == statime[0])[0]
         rng = np.s_[:]
         if dup.size > 0:
-          rng = np.s_[0:np.min(dup)]
-          statime = statime[rng]
+            rng = np.s_[0:np.min(dup)]
+            statime = statime[rng]
         # Map the times between station and boundary files
         brytime = seapy.roms.get_timevar(ncbry)
         ncbry.variables[brytime][:] = seapy.roms.date2num(
-          seapy.roms.num2date(ncstation, time, rng), ncbry, brytime)
+            seapy.roms.num2date(ncstation, time, rng), ncbry, brytime)
 
         # Set up the indices
         bry = {
-          "south": range(0, grid.lm),
-          "north": range(grid.lm, 2 * grid.lm),
-          "west": range(2 * grid.lm, 2 * grid.lm + grid.ln),
-          "east": range(2 * grid.lm + grid.ln, 2 * (grid.lm + grid.ln))
+            "south": range(0, grid.lm),
+            "north": range(grid.lm, 2 * grid.lm),
+            "west": range(2 * grid.lm, 2 * grid.lm + grid.ln),
+            "east": range(2 * grid.lm + grid.ln, 2 * (grid.lm + grid.ln))
         }
 
         # Gather the information from the station file
@@ -582,7 +579,8 @@ def from_stations(station_file, bry_file, grid, threads=4):
     # Interpolate a given field
     def __side_interp(data):
         in_data = __expand_field(data)
-        res, _ = seapy.oasurf(in_x, in_depth, in_data, out_x, out_depth, pmap, wght, nx, ny)
+        res, _ = seapy.oasurf(in_x, in_depth, in_data, out_x,
+                              out_depth, pmap, wght, nx, ny)
         return np.ma.masked_equal(res, 0, copy=False)
 
     # Go through each side and variable and interpolate (vertically) from the station
@@ -631,7 +629,7 @@ def from_stations(station_file, bry_file, grid, threads=4):
             # Create depths
             sta_depth = seapy.roms.depth(sta_vt, sta_h[bry[side]], sta_hc,
                                          sta_s_rho, sta_cs_r,
-                                         np.mean(sta_zeta[: , bry[side]], axis=0))
+                                         np.mean(sta_zeta[:, bry[side]], axis=0))
             depth = seapy.roms.depth(grid.vtransform, grid_h[bry[side]],
                                      grid.hc, grid.s_rho, grid.cs_r,
                                      np.mean(sta_zeta[:, bry[side]], axis=0))
@@ -652,21 +650,21 @@ def from_stations(station_file, bry_file, grid, threads=4):
             # 4) Temp
             ncbry.variables["temp_" + side][:] = 0.0
             ncbry.variables["temp_" + side][:, :, ocean] = \
-                     np.ma.array(Parallel(n_jobs=threads)
-                                            (delayed(__side_interp)(
-                                                np.transpose(sta_temp[n, bry[side], :][sta_ocean, :]))
-                                             for n in range(len(statime))), copy=False)
+                np.ma.array(Parallel(n_jobs=threads)
+                            (delayed(__side_interp)(
+                                np.transpose(sta_temp[n, bry[side], :][sta_ocean, :]))
+                             for n in range(len(statime))), copy=False)
 
             # 5) Salt
             ncbry.variables["salt_" + side][:] = 0.0
             ncbry.variables["salt_" + side][:, :, ocean] = \
-                     np.ma.array(Parallel(n_jobs=threads)
-                                            (delayed(__side_interp)(
-                                                np.transpose(sta_salt[n, bry[side], :][sta_ocean, :]))
-                                             for n in range(len(statime))), copy=False)
+                np.ma.array(Parallel(n_jobs=threads)
+                            (delayed(__side_interp)(
+                                np.transpose(sta_salt[n, bry[side], :][sta_ocean, :]))
+                             for n in range(len(statime))), copy=False)
 
             # 6) U
-            data = np.zeros([len(statime),x.shape[0],x.shape[1]])
+            data = np.zeros([len(statime), x.shape[0], x.shape[1]])
             data[:, :, ocean] = np.ma.array(Parallel(n_jobs=threads)
                                             (delayed(__side_interp)(
                                                 np.transpose(sta_u[n, bry[side], :][sta_ocean, :]))
@@ -684,10 +682,9 @@ def from_stations(station_file, bry_file, grid, threads=4):
                                                 np.transpose(sta_v[n, bry[side], :][sta_ocean, :]))
                                              for n in range(len(statime))), copy=False)
 
-
             if sides[side][1]:
                 ncbry.variables["v_" + side][:] = 0.5 * (
-                    data[:,:, 0:-1] + data[:, :, 1:])
+                    data[:, :, 0:-1] + data[:, :, 1:])
             else:
                 ncbry.variables["v_" + side][:] = data
     except Exception as e:
