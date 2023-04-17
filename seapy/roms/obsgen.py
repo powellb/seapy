@@ -412,7 +412,7 @@ class aviso_sla_map(obsgen):
     """
 
     def __init__(self, grid, dt, reftime=seapy.default_epoch, ssh_mean=None,
-                 ssh_error=0.05):
+                 ssh_error=0.10):
         if ssh_mean is not None:
             self.ssh_mean = seapy.convolve_mask(ssh_mean, ksize=5, copy=True)
         else:
