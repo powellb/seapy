@@ -1,9 +1,9 @@
 netcdf zlevel {
 dimensions:
-	lat = 192 ;
-	lon = 382 ;
-	depth = 40 ;
-	time = UNLIMITED ; // (0 currently)
+  lat = 192 ;
+  lon = 382 ;
+  depth = 40 ;
+  time = UNLIMITED ; // (0 currently)
 variables:
     float lat(lat) ;
         lat:long_name = "Latitude" ;
@@ -36,5 +36,5 @@ variables:
     float turbidity(time, depth, lat, lon) ;
         turbidity:long_name = "turbidity" ;
     // global attributes:
-		:title = "Z Grid File" ;
+    :title = "Z Grid File" ;
 }

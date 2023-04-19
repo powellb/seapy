@@ -31,7 +31,7 @@ def __number_or_string(val):
     otherwise, return the string.
     """
     try:
-        val = float(val.strip())
+        val = float(val.strip().rstrip('fid'))
     except ValueError:
         pass
     return val
