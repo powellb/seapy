@@ -88,7 +88,7 @@ class grid:
         self._nc = nc
 
         if (self.filename or self._nc) is not None:
-            self._initfile()
+            self._initfile(zeta)
             self._isroms = True if \
                 (len(list(set(("s_rho", "pm", "pn", "theta_s", "theta_b",
                                "vtransform", "vstretching")).intersection(
@@ -109,7 +109,7 @@ class grid:
         self.ijinterp = None
         self.llinterp = None
 
-    def _initfile(self):
+    def _initfile(self, zeta):
         """
         Using an input file, try to load as much information
         as can be found in the given file.
@@ -180,7 +180,7 @@ class grid:
                     break
 
         # See if we can generate the mean zeta
-        self.zeta = 0
+        self.zeta = zeta
         if "zeta" in ncvars:
             self.zeta = self._nc.variables['zeta'][:]
         if np.ndim(self.zeta) > 2:

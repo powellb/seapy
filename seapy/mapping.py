@@ -156,7 +156,7 @@ class map(object):
                                          figsize=self.figsize, **kwargs,
                                          subplot_kw=geokw)
         self.ax = np.atleast_2d(self.ax)
-        self.pc = np.empty((self.nrows, self.ncols), dtype=object)
+        self.pc = np.empty(self.ax.shape, dtype=object)
 
         for ax in self.fig.axes:
             ax.set_extent((self.region[0], self.region[2],

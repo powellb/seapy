@@ -166,7 +166,7 @@ def constant_value(field, grid, value, zeta=None, threads=2):
     elif field.shape[-2:] == grid.mask_v:
         v_grid = True
 
-    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+    return np.ma.array(Parallel(n_jobs=threads, verbose=0)
                        (delayed(__find_surface_thread)
                         (grid, field[i, :], value, zeta[i, ...],
                          u_grid=u_grid, v_grid=v_grid)
@@ -218,7 +218,7 @@ def constant_value_k(field, grid, value, zeta=None, threads=2):
     elif field.shape[-2:] == grid.mask_v:
         v_grid = True
 
-    return np.ma.array(Parallel(n_jobs=threads, verbose=2)
+    return np.ma.array(Parallel(n_jobs=threads, verbose=0)
                        (delayed(__find_surface_thread)
                         (grid, field[i, :], value, zeta[i, ...],
                          k_values=True, u_grid=u_grid, v_grid=v_grid)
@@ -342,7 +342,7 @@ def depth_average(field, thickness, bottom, top=0, partial=False):
     # Build the mask
     mask = gen_k_mask(surf, kbot, ktop)
 
-    # Set mask to nan for locaions with a water depth above the top
+    # Set mask to nan for locations with a water depth above the top
     mask[:, dptop] = np.nan
     # Set mask to nan for locations with a water depth that only partially
     # covers the specified region unless the user requests partial points
