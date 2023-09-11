@@ -353,10 +353,14 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
     """
     Calculate the Brunt-Vaisala Frequency of the density
 
+    NOTE: This assumes that data are oriented from bottom-to-surface. If your
+    data are surface-to-bottom, the sign of the bvf will be opposite, so simply
+    account for it afterwards.
+
     Parameters
     ----------
     depth: ndarray
-      Depth of temperature and salinity values
+      Depth of density values
     rho : ndarray
       Density of water
     axis : int, optional
@@ -372,7 +376,7 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
     Returns
     -------
     bvf : ndarray
-      Brunt-Vaisala Frequency
+      Brunt-Vaisala Frequency on w-points (vertical interface of cells)
     dbvfdt : ndarray
       Variation of BVF with respect to temperature
     dbvfds : ndarray
@@ -396,18 +400,16 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
         else:
             axis = 1
 
-    fill = [slice(None, None, None) for i in range(rho.ndim)]
-    fill[axis] = slice(None, -1, None)
-
-    rho0 = _R0 + _R0a * Z - _R0b * Z * Z
-    bvf = np.zeros(rho.shape)
-    bvf[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+    Zw = 0.5 * ( Z[:-1,:,:] + Z[1:,:,:] )
+    rho0 = _R0 + _R0a * Zw - _R0b * Zw * Zw
+    bvf = - scipy.constants.g / rho0 * \
         np.diff(rho, axis=axis) / -np.diff(Z, axis=0)
+
     if drhodt:
-        dbvfdt[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+        dbvfdt = - scipy.constants.g / rho0 * \
             np.diff(drhodt, axis=axis) / -np.diff(Z, axis=0)
     if drhods:
-        dbvfds[fill] = - scipy.constants.g / rho0[::-1, ...][:-1, ...] * \
+        dbvfds = - scipy.constants.g / rho0 * \
             np.diff(drhods, axis=axis) / -np.diff(Z, axis=0)
 
     return bvf, dbvfdt, dbvfds
