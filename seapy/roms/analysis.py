@@ -266,7 +266,7 @@ def gen_k_mask(N, kbot, ktop=None):
     return fld - bfrac * dbot - tfrac * (1 - dtop)
 
 
-def depth_average(field, thickness, bottom, top=0, partial=False):
+def depth_average(field, thickness, bottom, top=0, partial=False, average=True):
     """
     Compute the depth-averaged field between the specified bottom and top
     depths. Because a grid cell represents a volume, the thickness is used
@@ -287,6 +287,9 @@ def depth_average(field, thickness, bottom, top=0, partial=False):
         If True, produce results from grid locations that don't cover the
         full range of depths specified (i.e., bottom is 30, but the call
         was to integrate between 50 and 20m). Default is False.
+    average: boolean, [optional]
+        If True [default], calculate the depth average. If False, calculate
+        the depth integral.
 
     Returns
     -------
@@ -350,9 +353,11 @@ def depth_average(field, thickness, bottom, top=0, partial=False):
         mask[:, dpbot] = np.nan
 
     # Do the integration
-    return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim) /
-                                np.sum(thickness * mask, axis=0), copy=False)
-
+    if average:
+        return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim) /
+                                    np.sum(thickness * mask, axis=0), copy=False)
+    else:
+        return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim))
 
 def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
     """
