@@ -649,8 +649,9 @@ class grid:
 
         """
         for var in nc.variables:
-            if hasattr(self, var.lower()):
-                nc.variables[var][:] = getattr(self, var.lower())
+            v = var.lower()
+            if hasattr(self, v) and v != "zeta":
+                nc.variables[var][:] = getattr(self, v)
 
     def nearest(self, lon, lat, grid="rho"):
         """
