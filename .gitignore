@@ -7,7 +7,6 @@ make.tags
 build
 dist
 *.egg-info
-seapy/external
 notes.org
 .dir-locals.el
 .ropeproject
