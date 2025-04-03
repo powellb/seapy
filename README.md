@@ -1,7 +1,7 @@
 # State Estimation and Analysis in PYthon (SEAPY)
 
-[![Test](https://github.com/rsoutelino/seapy/actions/workflows/test/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/test.yml)
-[![Build](https://github.com/rsoutelino/seapy/actions/workflows/build/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/build.yml)
+[![Test](https://github.com/rsoutelino/seapy/actions/workflows/test.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/test.yml)
+[![Build](https://github.com/rsoutelino/seapy/actions/workflows/build.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/build.yml)
 
 
 
