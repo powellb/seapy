@@ -7,6 +7,21 @@ SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and 
 
 ## Installation
 
+### Install with pip
+
+Pip installation is based on meson-python, following example from pyfort
+
+- create a python virtual environment using your preferred tool, activate the environment and run `pip install .`
+
+Simple example using virtualenvwrapper assuming you are in the root directory of cloned
+version of this repository:
+
+```bash
+mkvirtualenv seapy
+workon seapy # if not activated automatically
+pip install .
+```
+
 ### Install from Conda-Forge
 
 Install from [conda-forge](https://conda-forge.org/) with the Conda package manager:
