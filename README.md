@@ -9,7 +9,7 @@ SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and 
 
 ### Install with pip
 
-Pip installation is based on meson-python, following example from pyfort
+Pip installation is based on [meson-python](https://mesonbuild.com/meson-python/), following example from [pyfort](https://github.com/larsbuntemeyer/pyfort).
 
 - create a python virtual environment using your preferred tool, activate the environment and run `pip install .`
 
