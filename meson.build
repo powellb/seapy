@@ -1,8 +1,8 @@
 project( 'seapy', 'c',
   # Note that the git commit hash cannot be added dynamically here
-  version: '0.1.0',
+  version: '1.1.8',
   license: 'MIT',
-  meson_version: '>= 0.63.0',
+  meson_version: '>= 0.64.0',
   default_options: [
     'buildtype=debugoptimized',
     # TODO: the below -Wno flags are all needed to silence warnings in
@@ -67,7 +67,9 @@ oalib_source = custom_target('oalibmodule.c',
   command : [py3, '-m', 'numpy.f2py', '@INPUT@', '-m', 'oalib', '--lower']
 )
 
+message('Include dirs are: ', incdir_f2py, ' ', incdir_numpy)
 inc_dirs = include_directories(incdir_numpy, incdir_f2py)
+
 
 # Platform detection to set more flags for Windows systems
 is_windows = host_machine.system() == 'windows'
