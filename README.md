@@ -1,5 +1,10 @@
 # State Estimation and Analysis in PYthon (SEAPY)
 
+[![Test](https://github.com/rsoutelino/seapy/actions/workflows/test/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/test.yml)
+[![Build](https://github.com/rsoutelino/seapy/actions/workflows/build/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/build.yml)
+
+
+
 Tools for working with ocean models and data.
 
 SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and scipy.

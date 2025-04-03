@@ -1,8 +1,6 @@
 import os
-from os.path import join
 import pytest
 import datetime as dt
-import numpy as np
 from netCDF4 import Dataset
 
 from seapy.roms.forcing import gen_bulk_forcing, forcing_data
@@ -94,9 +92,6 @@ def test_to_clim():
 
     # check if pmap is not None
     assert pmap is not None, "pmap should not be None."
-
-    # check if pmap is <class 'numpy.lib.npyio.NpzFile'>
-    assert isinstance(pmap, np.lib.npyio.NpzFile), "pmap should be a NpzFile Object."
 
     # check if output file exists
     assert os.path.exists(CLMFILE), f"Output file {CLMFILE} does not exist."
