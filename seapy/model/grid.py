@@ -706,7 +706,7 @@ class grid:
         >>> idx = g.ij(a)
         """
 
-        from seapy.external.hindices import hindices
+        from seapy.external.oalib import hindices
 
         # Interpolate the lat/lons onto the I, J
         xgrid, ygrid = np.ma.masked_equal(hindices(self.angle.T,
