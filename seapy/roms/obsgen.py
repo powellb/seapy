@@ -151,9 +151,9 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     if l[0].any():
         ox = np.rint(obs.x[l]).astype(int)
         oy = np.rint(obs.y[l]).astype(int)
-        # Because we have positive integers of ox and oy, the magnitude
-        # scaled by the x-position should guarantee a unique scalar
-        _, idx = np.unique(ox * (ox * ox + oy * oy), return_index=True)
+        # Because ox and oy are natural numbers, we can use the Cantor Pairing
+        # to find each unique grid cell that is observed
+        _, idx = np.unique(0.5 * (ox + oy) * (ox + oy + 1) + oy, return_index=True)
         for cur in track(idx):
             pts = np.where(np.logical_and(ox == ox[cur], oy == oy[cur]))
             # If this point is masked, remove from the observations
@@ -294,18 +294,17 @@ class obsgen(object):
         for n, file in enumerate(in_files):
             try:
                 # Check the times if user requested
-                print(file, end="")
                 if datecheck:
                     st, en = self.datespan_file(file)
                     if (en is not None and en < start_time) or \
                             (st is not None and st > end_time):
-                        print(": SKIPPED")
+                        print(f"{file}: SKIPPED")
                         continue
 
                 # Convert the file
                 obs = self.convert_file(file)
                 if obs is None:
-                    print(": NO OBS")
+                    print(f"{file}: NO OBS")
                     continue
 
                 # Output the obs to the correct file
@@ -324,7 +323,6 @@ class obsgen(object):
                         else:
                             break
                     obs.to_netcdf(ofile, False)
-                print(": SAVED")
 
             except (BaseException, UserWarning) as e:
                 warn("WARNING: {:s} cannot be processed.\nError: {:}".format(
@@ -866,14 +864,14 @@ class viirs_swath(obsgen):
     """
 
     def __init__(self, grid, dt, check_qc_flags=True, reftime=seapy.default_epoch,
-                 temp_error=0.4, temp_limits=None, provenance="SST_VIIRS"):
+                 temp_error=0.4, temp_limits=(2, 35), err_limits=(0.15, 0.6),
+                 provenance="SST_VIIRS"):
         self.temp_error = temp_error
         self.provenance = provenance.upper()
         self.check_qc_flags = check_qc_flags
-        if temp_limits is None:
-            self.temp_limits = (2, 35)
-        else:
-            self.temp_limits = temp_limits
+        self.temp_limits = temp_limits
+        self.err_limits = err_limits
+
         super().__init__(grid, dt, reftime)
 
     def convert_file(self, file, title="VIIRS SST Obs"):
@@ -886,7 +884,8 @@ class viirs_swath(obsgen):
                 nc.variables["sea_surface_temperature"][:] - 273.15,
                 self.temp_limits[0], self.temp_limits[1])
             err = np.ma.masked_outside(
-                nc.variables["sses_standard_deviation"][:], 0.005, 2.0)
+                nc.variables["sses_standard_deviation"][:], self.err_limits[0],
+                self.err_limits[1])
             dat[err.mask] = np.ma.masked
 
             # Check the data flags
