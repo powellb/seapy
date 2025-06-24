@@ -50,10 +50,10 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
     bad = np.sum(tmp, axis=0).astype(bool)
     k_ones = np.arange(grid.n, dtype=np.short)
     upper = (k_ones[:, np.newaxis, np.newaxis] ==
-             np.argmax(np.abs(tmp), axis=0)) * bad
+             np.argmax(np.abs(tmp), axis=0) + 1) * bad
     k_ones = np.arange(grid.n, dtype=np.short) - factor
     lower = (k_ones[:, np.newaxis, np.newaxis] ==
-             np.argmax(np.abs(tmp), axis=0)) * bad
+             np.argmax(np.abs(tmp), axis=0) + 1) * bad
 
     # Now that we have the bounds, we can linearly interpolate to
     # find where the value lies
@@ -109,9 +109,9 @@ def constant_depth(field, grid, depth, zeta=None, threads=2):
         zeta = seapy.adddim(zeta, nt)
 
     v_grid = u_grid = False
-    if field.shape[-2:] == grid.mask_u:
+    if field.shape[-2:] == grid.mask_u.shape:
         u_grid = True
-    elif field.shape[-2:] == grid.mask_v:
+    elif field.shape[-2:] == grid.mask_v.shape:
         v_grid = True
 
     return np.ma.array(Parallel(n_jobs=threads, verbose=0)
@@ -161,9 +161,9 @@ def constant_value(field, grid, value, zeta=None, threads=2):
         zeta = seapy.adddim(zeta, nt)
 
     v_grid = u_grid = False
-    if field.shape[-2:] == grid.mask_u:
+    if field.shape[-2:] == grid.mask_u.shape:
         u_grid = True
-    elif field.shape[-2:] == grid.mask_v:
+    elif field.shape[-2:] == grid.mask_v.shape:
         v_grid = True
 
     return np.ma.array(Parallel(n_jobs=threads, verbose=0)
@@ -358,6 +358,7 @@ def depth_average(field, thickness, bottom, top=0, partial=False, average=True):
                                     np.sum(thickness * mask, axis=0), copy=False)
     else:
         return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim))
+
 
 def transect(lon, lat, depth, data, nx=200, nz=40, z=None):
     """

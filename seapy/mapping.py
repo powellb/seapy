@@ -297,9 +297,7 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to plot
         """
-        self.pc[self.cur_ax] = self.cur_sp.plot(lon, lat, *args,
-                                                transform=self.proj(),
-                                                **kwargs)
+        return self.cur_sp.plot(lon, lat, *args, transform=self.proj(), **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
