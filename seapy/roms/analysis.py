@@ -5,7 +5,7 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -266,9 +266,9 @@ def gen_k_mask(N, kbot, ktop=None):
     return fld - bfrac * dbot - tfrac * (1 - dtop)
 
 
-def depth_average(field, thickness, bottom, top=0, partial=False, average=True):
+def depth_sum(field, thickness, bottom, top=0, partial=False, average=False):
     """
-    Compute the depth-averaged field between the specified bottom and top
+    Compute the depth-integrated field between the specified bottom and top
     depths. Because a grid cell represents a volume, the thickness is used
     rather than depth. This provides the most accurate integration.
 
@@ -288,8 +288,8 @@ def depth_average(field, thickness, bottom, top=0, partial=False, average=True):
         full range of depths specified (i.e., bottom is 30, but the call
         was to integrate between 50 and 20m). Default is False.
     average: boolean, [optional]
-        If True [default], calculate the depth average. If False, calculate
-        the depth integral.
+        When False [default], depth integrate the field. If True, calculate
+        the depth average.
 
     Returns
     -------
@@ -358,6 +358,36 @@ def depth_average(field, thickness, bottom, top=0, partial=False, average=True):
                                     np.sum(thickness * mask, axis=0), copy=False)
     else:
         return np.ma.masked_invalid(np.sum(field * mask * thickness, axis=idim))
+
+
+def depth_average(field, thickness, bottom, top=0, partial=False):
+    """
+    Compute the depth-averaged field between the specified bottom and top
+    depths. Because a grid cell represents a volume, the thickness is used
+    rather than depth. This provides the most accurate integration.
+
+    Parameters
+    ----------
+    field : ndarray,
+        ROMS 3-D field to integrate from a depth level. Must be
+        three-dimensional array (single time).
+    thickness : ndarray,
+        3-D array of the thickness of each grid cell in field
+    bottom : float,
+        Depth (in meters) to integrate from
+    top : float, [optional]
+        Depth (in meters) to integrate to defaults to surface
+    partial: boolean, [optional]
+        If True, produce results from grid locations that don't cover the
+        full range of depths specified (i.e., bottom is 30, but the call
+        was to integrate between 50 and 20m). Default is False.
+
+    Returns
+    -------
+    ndarray,
+        Values from depth integrated ROMS field
+    """
+    return depth_sum(field, thickness, bottom, top, partial, average=True)
 
 
 def transect(lon, lat, depth, data, nx=200, nz=40, z=None):

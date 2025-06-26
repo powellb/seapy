@@ -6,7 +6,7 @@
   other models; however, it is mostly geared towards ROMS
 
   Written by Brian Powell on 10/09/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 
   **Examples**
 
@@ -707,7 +707,11 @@ class grid:
         >>> idx = g.ij(a)
         """
 
-        from seapy.external.hindices import hindices
+        try:
+            from seapy.external.hindices import hindices
+        except ImportError:
+            raise RuntimeError(
+                "The hindices library was not built on install. Cannot use the ij method.")
 
         # Interpolate the lat/lons onto the I, J
         xgrid, ygrid = np.ma.masked_equal(hindices(self.angle.T,
