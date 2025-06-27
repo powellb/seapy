@@ -1,9 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0", "numpy"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "seapy" # This can be overridden by the PACKAGE_NAME environment variable as in setup.py
+name = "seapy"
 version = "1.1.9"
 license = {text = "MIT"}
 description = "State Estimation and Analysis in PYthon"
@@ -20,8 +20,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    # These will be read from requirements.txt
-    # Example: "numpy>=1.20",
+    "numpy",
 ]
 
 [project.urls]
@@ -33,9 +32,8 @@ convert_clim = "seapy.bin.convert_clim:main" # Assuming main function in these s
 convert_frc = "seapy.bin.convert_frc:main"   # You might need to adjust this if they're not functions
 
 [tool.setuptools.packages.find]
-# This is equivalent to find_packages()
 where = ["."]
-include = ["seapy*", "seapy.external*"] # Assuming your packages are under 'seapy'
+include = ["seapy*", "seapy.external*"]
 
 [tool.setuptools.package-data]
 "seapy" = [
@@ -49,73 +47,3 @@ include = ["seapy*", "seapy.external*"] # Assuming your packages are under 'seap
 oalib = {sources = ["src/oalib.f"], f2py_options = ["noopt"], extra_f77_compile_args = [], library_dirs = [], define_macros = {NPY_NO_DEPRECATED_API = "NPY_1_7_API_VERSION"}}
 hindices = {sources = ["src/hindices.f"], f2py_options = ["noopt"], extra_f77_compile_args = [], library_dirs = [], define_macros = {NPY_NO_DEPRECATED_API = "NPY_1_7_API_VERSION"}}
 extractobs = {sources = ["src/extract_obs.f"], f2py_options = ["noopt"], extra_f77_compile_args = [], library_dirs = [], define_macros = {NPY_NO_DEPRECATED_API = "NPY_1_7_API_VERSION"}}
-
-# Conditional compilation flags (platform specific) need to be handled programmatically.
-# setuptools does not directly support platform-specific compiler flags in pyproject.toml.
-# You would typically achieve this by having a build script or by dynamically
-# setting these in a setup.py that is *still* used by setuptools for extensions,
-# but the rest of the metadata is in pyproject.toml.
-
-# For the conditional flags, you will likely need a small `setup.py` file *alongside*
-# `pyproject.toml` to handle the platform-specific compilation arguments for the Fortran extensions.
-# The `pyproject.toml` will handle the metadata and package structure, while `setup.py` will
-# be used by setuptools to build the extensions.
-
-# Here's how you'd typically structure that for extensions:
-
-# --- setup.py (minimal, for extensions only) ---
-# import platform
-# from setuptools import setup, Extension
-# import numpy as np # For numpy include dirs if needed
-
-# flags = []
-# libs = []
-# if platform.system() == 'Windows':
-#     flags = []
-#     libs = []
-# elif platform.system() == 'Darwin':
-#     flags = ['-fPIC']
-#     libs = ['/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib']
-# else:
-#     flags = ['-fPIC']
-#     libs = []
-
-# define_macros = [('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')]
-
-# extensions = [
-#     Extension('seapy.external.oalib', sources=['src/oalib.f'],
-#               extra_f77_compile_args=flags,
-#               library_dirs=libs,
-#               define_macros=define_macros),
-#     Extension('seapy.external.hindices', sources=['src/hindices.f'],
-#               extra_f77_compile_args=flags,
-#               library_dirs=libs,
-#               define_macros=define_macros),
-#     Extension('seapy.external.extractobs', sources=['src/extract_obs.f'],
-#               extra_f77_compile_args=flags,
-#               library_dirs=libs,
-#               define_macros=define_macros),
-# ]
-
-# setup(
-#     ext_modules=extensions,
-#     # No other metadata here, it's all in pyproject.toml
-# )
-# ----------------------------------------------------
-
-# Note about `sys.argv[:] = sys.argv[:1] + ['config_fc', '--noopt'] + sys.argv[1:]`:
-# This line in your original setup.py was a workaround to pass `noopt` to f2py.
-# In pyproject.toml, you can specify `f2py_options = ["noopt"]` directly for each extension,
-# as shown in the `[tool.setuptools.ext_modules]` section.
-
-# To manage `requirements.txt`, you would typically list the dependencies directly under
-# `project.dependencies` in pyproject.toml. For example:
-# [project]
-# dependencies = [
-#     "numpy",
-#     "scipy",
-#     # ... other dependencies from requirements.txt
-# ]
-# If requirements.txt is very long or dynamically generated, you might still need to
-# parse it within a `setup.py` that handles `setuptools.setup()` (if not fully migrated).
-# However, for a clean `pyproject.toml` solution, direct listing is preferred.
