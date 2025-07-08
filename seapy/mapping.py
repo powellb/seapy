@@ -8,7 +8,7 @@
   provide simplified abstractions over the existing cartopy to make it quicker
   for generating plots and figures.
 
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 
 """
 import numpy as np
@@ -297,9 +297,7 @@ class map(object):
         **kwargs: arguments, optional
             additional arguments to pass to plot
         """
-        self.pc[self.cur_ax] = self.cur_sp.plot(lon, lat, *args,
-                                                transform=self.proj(),
-                                                **kwargs)
+        return self.cur_sp.plot(lon, lat, *args, transform=self.proj(), **kwargs)
 
     def contourf(self, lon, lat, data, **kwargs):
         """
@@ -510,7 +508,7 @@ class hawaii(map):
         >>> m.fig.patch.set_alpha(0.0)
         >>> m.fig.savefig("sst.png",dpi=100)
 
-      Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+      Copyright (c)2010--2025 University of Hawaii under the MIT-License.
     """
     # Class variable for the shapes
     _shape_file = os.path.dirname(__file__) + "/hawaii_coast/hawaii.shp"

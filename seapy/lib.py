@@ -8,7 +8,7 @@
   when importing the seapy module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 

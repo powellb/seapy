@@ -3,7 +3,7 @@
   Module to store all environment variables in an easy dictionary
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
