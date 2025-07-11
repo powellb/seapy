@@ -43,15 +43,15 @@ def __find_surface_thread(grid, field, value, zeta, const_depth=False,
 
     # Determine the upper and lower bounds of the value in the field
     tmp = np.ma.masked_equal(
-        np.diff(((field_a - value) < 0).astype(np.short), axis=0), 0)
-    factor = -np.sign(np.mean(np.diff(field, axis=0))).astype(np.short)
+        np.diff(((field_a - value) < 0).astype(np.intp), axis=0), 0)
+    factor = -np.sign(np.mean(np.diff(field, axis=0))).astype(np.intp)
 
     # Determine the points of the upper bound and the lower bound
     bad = np.sum(tmp, axis=0).astype(bool)
-    k_ones = np.arange(grid.n, dtype=np.short)
+    k_ones = np.arange(grid.n, dtype=np.intp)
     upper = (k_ones[:, np.newaxis, np.newaxis] ==
              np.argmax(np.abs(tmp), axis=0) + 1) * bad
-    k_ones = np.arange(grid.n, dtype=np.short) - factor
+    k_ones = np.arange(grid.n, dtype=np.intp) - factor
     lower = (k_ones[:, np.newaxis, np.newaxis] ==
              np.argmax(np.abs(tmp), axis=0) + 1) * bad
 
@@ -254,7 +254,7 @@ def gen_k_mask(N, kbot, ktop=None):
     if ktop is None:
         ktop = N
     ktop = np.asarray(ktop)
-    k_ones = np.arange(N, dtype=int)
+    k_ones = np.arange(N, dtype=intp)
     dbot, _ = np.modf(kbot)
     dtop, _ = np.modf(ktop)
     fld = np.logical_and(
@@ -312,9 +312,9 @@ def depth_sum(field, thickness, bottom, top=0, partial=False, average=False):
 
     # Set up arrays for indexing
     surf = span.shape[0]
-    k_ones = np.arange(span.shape[0], dtype=int)
-    sl1 = np.arange(span.shape[1], dtype=int)[:, None]
-    sl2 = np.arange(span.shape[2], dtype=int)[None, :]
+    k_ones = np.arange(span.shape[0], dtype=intp)
+    sl1 = np.arange(span.shape[1], dtype=intp)[:, None]
+    sl2 = np.arange(span.shape[2], dtype=intp)[None, :]
 
     # Helper function to find fractional minimums
     def _find_fraction_layer0(f):

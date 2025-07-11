@@ -166,7 +166,7 @@ class grid:
             close = True
             self._nc = seapy.netcdf(self.filename)
         try:
-            self.name = re.search("[^\.]*",
+            self.name = re.search(r"[^\.]*",
                                   os.path.basename(self.filename)).group()
         except:
             self.name = "untitled"

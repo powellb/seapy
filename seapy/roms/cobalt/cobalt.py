@@ -10,6 +10,7 @@
 """
 import seapy
 import os
+import importlib
 
 # Define the COBALT fields that are used
 fields = {"alk": {"grid": "rho", "dims": 3},
@@ -77,7 +78,8 @@ frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
 vmap = {k: k for k in fields}
 
 # Create a dictionary of CDL files
-_cdl_dir = os.path.dirname(__file__)
+with importlib.resources.path("seapy.roms", "cobalt") as fspath:
+    _cdl_dir = str(fspath)
 cdl = {"ini": _cdl_dir + "/ini.cdl",
        "his": _cdl_dir + "/his.cdl",
        "fullhis": _cdl_dir + "/his-full.cdl",

@@ -853,7 +853,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     outtime = False
     if isinstance(out_files, str):
         outtime = True
-        time = re.compile('\#')
+        time = re.compile(r'\#')
 
     # Go through the files to determine which periods they cover
     myobs = list()

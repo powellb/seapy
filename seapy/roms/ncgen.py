@@ -14,14 +14,15 @@ import numpy as np
 from datetime import datetime
 from seapy.lib import default_epoch
 from seapy.cdl_parser import cdl_parser
-from seapy.roms import lib
 from warnings import warn
+import importlib
 
 """
     Module variables
 """
-_cdl_dir = os.path.dirname(lib.__file__)
-_cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
+with importlib.resources.path("seapy.roms", "cdl") as fspath:
+    _cdl_dir = str(fspath) + '/'
+
 _format = "NETCDF4_CLASSIC"
 
 
@@ -160,7 +161,7 @@ def _set_time_ref(vars, timevar, reftime, cycle=None):
         for nvar in vars:
             if nvar["name"] == tvar:
                 if "units" in nvar["attr"]:
-                    t = re.findall('(\w+) since .*', nvar["attr"]["units"])
+                    t = re.findall(r'(\w+) since .*', nvar["attr"]["units"])
                     nvar["attr"]["units"] = \
                         "{:s} since {:s}".format(t[0], str(reftime))
                 else:

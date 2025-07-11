@@ -215,10 +215,6 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     return z_w[1:, :, :] - z_w[0:-1, :, :]
 
 
-<< << << < Updated upstream
-== == == =
-
-
 def extract(fld, i, j, k=None, depths=None, mask=None, u=False, v=False):
     """
     Extract value(s) from a ROMS gridded field using fractional i,j(,k)
@@ -297,9 +293,6 @@ def extract(fld, i, j, k=None, depths=None, mask=None, u=False, v=False):
         vals = extract_obs2d(fld.T.data, mask.T, i + di, j + dj)
 
     return np.ma.masked_equal(vals, -9999)
-
-
->>>>>> > Stashed changes
 
 
 def gen_boundary_region(shp, north=None, east=None, west=None, south=None,

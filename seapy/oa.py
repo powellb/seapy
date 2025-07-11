@@ -11,7 +11,7 @@
 
 import numpy as np
 try:
-    import seapy.external.oalib
+    import seapy.external.oalib as oalib
     _oalib_built = True
 except ImportError:
     _oalib_built = False

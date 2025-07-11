@@ -832,7 +832,7 @@ def vecfind(a, b, tolerance=None):
     _, uniq_b = np.unique(b, return_index=True)
     na = len(uniq_a)
     t = np.hstack((a[uniq_a], b[uniq_b]))
-    is_a = np.zeros(t.shape, dtype=np.int8)
+    is_a = np.zeros(t.shape, dtype=int)
     is_a[:na] = 1
     isorted = np.argsort(t)
     tsorted = t[isorted]
