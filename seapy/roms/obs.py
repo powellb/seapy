@@ -19,7 +19,7 @@
   easily.
 
   Written by Brian Powell on 08/05/14
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -853,7 +853,7 @@ def merge_files(obs_files, out_files, days, dt, limits=None, clobber=True):
     outtime = False
     if isinstance(out_files, str):
         outtime = True
-        time = re.compile('\#')
+        time = re.compile(r'\#')
 
     # Go through the files to determine which periods they cover
     myobs = list()

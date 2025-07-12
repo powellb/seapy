@@ -6,12 +6,15 @@
   fortran routines written by Emanuelle Di Lorenzo and Bruce Cornuelle
 
   Written by Brian Powell on 10/08/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
-from seapy.external import oalib
-
+try:
+    import seapy.external.oalib as oalib
+    _oalib_built = True
+except ImportError:
+    _oalib_built = False
 __bad_val = -999999.0
 
 
@@ -52,6 +55,10 @@ def oasurf(x, y, d, xx, yy, pmap=None, weight=9, nx=2, ny=2, verbose=False):
         weighting map used in the interpolation
 
     """
+    # Make sure we have the library
+    if not _oalib_built:
+        raise RuntimeError("The OA library was not built on install. Cannot use oasurf.")
+
     # Do some error checking
     nx = ny if nx == 0 else nx
     ny = nx if ny == 0 else ny
@@ -114,6 +121,10 @@ def oavol(x, y, z, v, xx, yy, zz, pmap=None, weight=9, nx=2, ny=2,
         weighting map used in the interpolation
 
     """
+    # Make sure we have the library
+    if not _oalib_built:
+        raise RuntimeError("The OA library was not built on install. Cannot use oavol.")
+
     # Do some error checking
     nx = ny if nx == 0 else nx
     ny = nx if ny == 0 else ny

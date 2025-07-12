@@ -1,7 +1,7 @@
 # State Estimation and Analysis in PYthon (SEAPY)
 
-[![Test](https://github.com/rsoutelino/seapy/actions/workflows/test.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/test.yml)
-[![Build](https://github.com/rsoutelino/seapy/actions/workflows/build.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/build.yml)
+[![Test](https://github.com/powellb/seapy/actions/workflows/test.yml/badge.svg)](https://github.com/powellb/seapy/actions/workflows/test.yml)
+[![Build](https://github.com/powellb/seapy/actions/workflows/build.yml/badge.svg)](https://github.com/powellb/seapy/actions/workflows/build.yml)
 
 
 
@@ -12,22 +12,48 @@ SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and 
 
 ## Installation
 
-### Install with pip
+The SEAPY source code is maintained by Brian Powell, (powellb)[https://github.com/powellb]. Releases are made on the [main branch](https://github.com/powellb/seapy/tree/main)
+
+Installation can be accomplished a number of ways.
+
+## Install from source code on GitHub.com
+
+Thanks to [@rsoultelino](https://github.com/rsoutelino), seapy has been updated to work with the latest setupconfig and can easily be installed via a number of methods.
+
 
 Pip installation is based on [meson-python](https://mesonbuild.com/meson-python/), following example from [pyfort](https://github.com/larsbuntemeyer/pyfort).
 
-- create a python virtual environment using your preferred tool, activate the environment and run `pip install .`
+Install from [GitHub.com](https://github.com/) with PIP:
+```
+$ pip install git+git://github.com/powellb/seapy
+```
+
+OR clone a copy of the source and install in editable mode, eg:
+```
+$ git clone https://github.com/powellb/seapy.git
+$ pip install --no-build-isolation -e seapy
+```
+
+With an [editable-mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
+
+In principle it is possible to build from source on Windows--and success with this has been achieved in the past--but the process tends to break with changes in the environment or Python version, so we don't recommend it or support it.
+
+### Install into virtual environment
+
+- create a python virtual environment using your preferred tool, activate the environment, clone the repository, and run `pip install .` from within the repository.
 
 Simple example using virtualenvwrapper assuming you are in the root directory of cloned
 version of this repository:
 
 ```bash
+git clone https://github.com/powellb/seapy.git
 mkvirtualenv seapy
 workon seapy # if not activated automatically
-pip install .
+pip install seapy
 ```
 
-### Install from Conda-Forge
+
+## Install from Conda-Forge
 
 Install from [conda-forge](https://conda-forge.org/) with the Conda package manager:
 ```
@@ -60,25 +86,6 @@ To remove seapy-ocean
 ```
 $ pip uninstall seapy-ocean
 ```
-
-## Install from source code on GitHub.com
-
-The SEAPY source code is maintained by Brian Powell, (powellb)[https://github.com/powellb]. Releases are made on the [master branch](https://github.com/powellb/seapy/tree/master)
-
-Install from [GitHub.com](https://github.com/) with PIP:
-```
-$ pip install git+git://github.com/powellb/seapy@master
-```
-
-OR clone a copy of the source and install in editable mode, eg:
-```
-$ git clone https://github.com/powellb/seapy.git
-$ pip install -e seapy
-```
-
-With an [editable-mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs) installation, changes you make to your copy of the source code will take effect when you import the module.
-
-In principle it is possible to build from source on Windows--and success with this has been achieved in the past--but the process tends to break with changes in the environment or Python version, so we don't recommend it or support it.
 
 ## Contributing
 

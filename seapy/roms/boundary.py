@@ -5,7 +5,7 @@
   ROMS boundary utilities
 
   Written by Brian Powell on 01/15/14
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -688,7 +688,7 @@ def from_stations(station_file, bry_file, grid, threads=4):
             else:
                 ncbry.variables["v_" + side][:] = data
     except Exception as e:
-        raise(e)
+        raise (e)
     finally:
         ncbry.close()
     pass
@@ -871,7 +871,7 @@ def detide(grid, bryfile, tidefile=None, tides=None, tide_start=None,
             bubar = bvbar = []
 
             # Detide
-            for i in track(range(size), description=f"Detiding \[uv]bar_{side}..."):
+            for i in track(range(size), description=f"Detiding [uv]bar_{side}..."):
                 if np.any(mask[:, i]):
                     continue
                 if fit:

@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -289,7 +289,7 @@ class obsgen(object):
         outtime = False
         if isinstance(out_files, str):
             outtime = True
-            time = re.compile('\#')
+            time = re.compile(r'\#')
 
         for n, file in enumerate(in_files):
             try:
@@ -319,7 +319,7 @@ class obsgen(object):
                 else:
                     for i in "abcdefgh":
                         if os.path.isfile(ofile):
-                            ofile = re.sub("[a-h]{0,1}\.nc", i + ".nc", ofile)
+                            ofile = re.sub(r"[a-h]{0,1}\.nc", i + ".nc", ofile)
                         else:
                             break
                     obs.to_netcdf(ofile, False)
@@ -657,7 +657,7 @@ class navo_sst_map(obsgen):
         # this is an analyzed product and provides errors as a function
         # of space and time directly the temperature is the bulk
         # temperature (ie at around 4m depth, below the e-folding depths of
-        # sunlight in the ocean so the product does not have a diuranl cycle
+        # sunlight in the ocean so the product does not have a diurnal cycle
         # (ie you don;t have to worry about hourly variations)
         time = seapy.roms.num2date(
             nc, "time", records=[0], epoch=self.epoch)[0]
@@ -713,7 +713,7 @@ class modis_sst_map(obsgen):
         err = np.ones(dat.shape) * self.temp_error
 
         time = seapy.date2day(datetime.datetime.strptime(
-            re.sub('\.[0-9]+Z$', '', nc.time_coverage_end),
+            re.sub(r'\.[0-9]+Z$', '', nc.time_coverage_end),
             "%Y-%m-%dT%H:%M:%S"), self.epoch)
 
         # Check the data flags
@@ -973,7 +973,7 @@ class seaglider_profile(obsgen):
             pro = np.loadtxt(myfile, self.dtype, delimiter=',', comments='%')
 
         # Parse the header information
-        parser = re.compile('^%(\w+): (.*)$')
+        parser = re.compile(r'^%(\w+): (.*)$')
         params = {}
         for line in header:
             try:
@@ -987,7 +987,7 @@ class seaglider_profile(obsgen):
                       "GLIDER_SG" + params["glider"]
         provenance = seapy.roms.obs.asprovenance(glider_name)
         try:
-            date = [int(s) for s in re.findall('([\d]{2})\s', params["start"])]
+            date = [int(s) for s in re.findall(r'([\d]{2})\s', params["start"])]
             start_time = datetime.datetime.strptime(params["start"].strip(),
                                                     "%m %d 1%y %H %M %S")
             dtime = (start_time - self.epoch).total_seconds() / 86400

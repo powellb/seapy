@@ -3,7 +3,7 @@
   Functions to generate ROMS netcdf files
 
   Written by Brian Powell on 04/26/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -14,14 +14,13 @@ import numpy as np
 from datetime import datetime
 from seapy.lib import default_epoch
 from seapy.cdl_parser import cdl_parser
-from seapy.roms import lib
 from warnings import warn
+import importlib.resources as importer
 
 """
     Module variables
 """
-_cdl_dir = os.path.dirname(lib.__file__)
-_cdl_dir = "/".join((('.' if not _cdl_dir else _cdl_dir), "cdl/"))
+_cdl_dir = importer.files("seapy.roms").joinpath("cdl")
 _format = "NETCDF4_CLASSIC"
 
 
@@ -160,7 +159,7 @@ def _set_time_ref(vars, timevar, reftime, cycle=None):
         for nvar in vars:
             if nvar["name"] == tvar:
                 if "units" in nvar["attr"]:
-                    t = re.findall('(\w+) since .*', nvar["attr"]["units"])
+                    t = re.findall(r'(\w+) since .*', nvar["attr"]["units"])
                     nvar["attr"]["units"] = \
                         "{:s} since {:s}".format(t[0], str(reftime))
                 else:
@@ -278,7 +277,7 @@ def create_psource(filename, nriver=1, s_rho=5,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_rivers.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_rivers.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate river values
     dims["river"] = nriver
@@ -325,7 +324,7 @@ def create_grid(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "roms_grid.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("roms_grid.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -367,7 +366,8 @@ def create_adsen(filename, eta_rho=10, xi_rho=10, s_rho=1,
 
     """
     # Create the general file
-    return _create_generic_file(filename, _cdl_dir + "adsen.cdl" if cdl is None else cdl,
+    return _create_generic_file(filename,
+                                _cdl_dir.joinpath(adsen.cdl) if cdl is None else cdl,
                                 eta_rho, xi_rho, s_rho, reftime, clobber, title)
 
 
@@ -404,7 +404,7 @@ def create_bry(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "bry_unlimit.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("bry_unlimit.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -451,7 +451,7 @@ def create_clim(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "clm_ts.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("clm_ts.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -497,7 +497,7 @@ def create_frc_bulk(filename, lat=10, lon=10,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_bulk.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_bulk.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["lat"] = lat
@@ -544,7 +544,7 @@ def create_frc_direct(filename, eta_rho=10, xi_rho=10,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_direct.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_direct.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = {'y_rho': eta_rho,
@@ -603,7 +603,7 @@ def create_frc_flux(filename, eta_rho=10, xi_rho=10, ntimes=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_fluxclm.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_fluxclm.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, 1)
@@ -656,7 +656,7 @@ def create_frc_srelax(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_srelax.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_srelax.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -704,7 +704,7 @@ def create_frc_qcorr(filename, lat=10, lon=10, cycle=None,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_qcorr.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_qcorr.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims['lat'] = lat
@@ -755,7 +755,7 @@ def create_frc_wind(filename, eta_rho=10, xi_rho=10, s_rho=1, cycle=None,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_windstress.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_windstress.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -800,7 +800,7 @@ def create_frc_wave(filename, eta_rho=10, xi_rho=10, reftime=default_epoch,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "frc_wave.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("frc_wave.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho=1)
@@ -846,7 +846,7 @@ def create_tide(filename, eta_rho=10, xi_rho=10, s_rho=1, ntides=1,
 
     """
     # Generate the Structure
-    dims, vars, attr = cdl_parser(_cdl_dir + "frc_tides.cdl")
+    dims, vars, attr = cdl_parser(_cdl_dir.joinpath("frc_tides.cdl"))
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -893,7 +893,7 @@ def create_ini(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "ini_hydro.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("ini_hydro.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -938,7 +938,7 @@ def create_nudge_coef(filename, eta_rho=10, xi_rho=10, s_rho=1, clobber=False,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "nudge_coef.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("nudge_coef.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -986,7 +986,7 @@ def create_da_obs(filename, state_variable=20, survey=1, provenance=None,
 
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_obs.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_obs.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["survey"] = survey
@@ -1037,7 +1037,7 @@ def create_da_ray_obs(filename, ray_datum=1, provenance="None",
 
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_obs_ray.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_obs_ray.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims["ray_datum"] = ray_datum
@@ -1090,7 +1090,7 @@ def create_da_bry_std(filename, eta_rho=10, xi_rho=10, s_rho=1, bry=4,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_std_b.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_std_b.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1140,7 +1140,7 @@ def create_da_frc_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_std_f.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_std_f.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1188,7 +1188,7 @@ def create_da_ini_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_std_i.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_std_i.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1236,7 +1236,7 @@ def create_da_model_std(filename, eta_rho=10, xi_rho=10, s_rho=1,
     """
     # Generate the Structure
     dims, vars, attr = cdl_parser(
-        _cdl_dir + "s4dvar_std_m.cdl" if cdl is None else cdl)
+        _cdl_dir.joinpath("s4dvar_std_m.cdl") if cdl is None else cdl)
 
     # Fill in the appropriate dimension values
     dims = _set_grid_dimensions(dims, eta_rho, xi_rho, s_rho)
@@ -1284,9 +1284,9 @@ def create_zlevel_grid(filename, lat=10, lon=10, depth=1,
     """
     if cdl == None:
         if dims == 1:
-            cdlfile = _cdl_dir + "zlevel_1d_grid.cdl"
+            cdlfile = _cdl_dir.joinpath("zlevel_1d_grid.cdl")
         else:
-            cdlfile = _cdl_dir + "zlevel_2d_grid.cdl"
+            cdlfile = _cdl_dir.joinpath("zlevel_2d_grid.cdl")
     else:
         cdlfile = cdl
 
@@ -1343,9 +1343,9 @@ def create_zlevel(filename, lat=10, lon=10, depth=1,
     """
     if cdl == None:
         if dims == 1:
-            cdlfile = _cdl_dir + "zlevel_1d.cdl"
+            cdlfile = _cdl_dir.joinpath("zlevel_1d.cdl")
         else:
-            cdlfile = _cdl_dir + "zlevel_2d.cdl"
+            cdlfile = _cdl_dir.joinpath("zlevel_2d.cdl")
     else:
         cdlfile = cdl
 

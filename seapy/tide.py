@@ -5,13 +5,14 @@
   Functions for working with tidal time-series
 
   Written by Glenn Carter and Dale Partridge
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import datetime
 from collections import namedtuple
 import os
 from warnings import warn
+import importlib.resources as importer
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
@@ -22,7 +23,8 @@ __shallowinfo = namedtuple('__shallowinfo', 'isshallow iname coef')
 # Load the constituent data when the module is imported
 __reftime = datetime.datetime(1899, 12, 31, 12, 0, 0)
 
-with np.load(os.path.dirname(__file__) + "/constituents.npz", allow_pickle=True) as data:
+with np.load(importer.files("seapy").joinpath("constituents.npz"),
+             allow_pickle=True) as data:
     __const_file = data['__const'][()]
 
 __const = {}
@@ -175,7 +177,7 @@ def vuf(time, tides=None, lat=55):
     # due to second-order forcing off the equator from about the 5 degree
     # location. Latitudes are hence (somewhat arbitrarily) forced to be
     # no closer than 5 degrees to the equator.
-    if(np.abs(lat) < 5.0):
+    if (np.abs(lat) < 5.0):
         lat = 5 * np.sign(lat + np.finfo('float').eps)
     slat = np.sin(lat * np.pi / 180.)
 
@@ -326,24 +328,26 @@ def predict(times, tide, tide_minor=None, lat=55, tide_start=None):
         ctime = times[0] + (times[-1] - times[0]) / 2
         vufs = vuf(ctime, clist, lat)
         hours = np.array([(t - ctime).total_seconds() / 3600.0 for t in times])
-    
+
     # Calculate time series
-    ts = np.zeros(len(times), dtype=complex)    
+    ts = np.zeros(len(times), dtype=complex)
     for i, td in enumerate(clist):
         if not tide_minor:
-            ap = tide[td].amp/2*np.exp(-1 * 1j*tide[td].phase)
+            ap = tide[td].amp / 2 * np.exp(-1 * 1j * tide[td].phase)
             am = ap.conjugate()
         else:
             ellipse = vel_ellipse(tide, tide_minor)
-            ap = (ellipse[td].major+ellipse[td].minor)/2*np.exp(1j*(ellipse[td].angle-ellipse[td].phase))
-            am = (ellipse[td].major-ellipse[td].minor)/2*np.exp(1j*(ellipse[td].angle+ellipse[td].phase))
-        
-        
-        ap = ap * vufs[td].f * np.exp(1j*2.0*np.pi*(vufs[td].v+vufs[td].u))
-        am = am * vufs[td].f * np.exp(-1*1j*2.0*np.pi*(vufs[td].v+vufs[td].u))
-        
-        ts += np.exp(1j*2.0*np.pi*np.dot(freq[i], hours)) * ap + np.exp(-1*1j*2.0*np.pi*np.dot(freq[i], hours)) * am
-        
+            ap = (ellipse[td].major + ellipse[td].minor) / 2 * \
+                np.exp(1j * (ellipse[td].angle - ellipse[td].phase))
+            am = (ellipse[td].major - ellipse[td].minor) / 2 * \
+                np.exp(1j * (ellipse[td].angle + ellipse[td].phase))
+
+        ap = ap * vufs[td].f * np.exp(1j * 2.0 * np.pi * (vufs[td].v + vufs[td].u))
+        am = am * vufs[td].f * np.exp(-1 * 1j * 2.0 * np.pi * (vufs[td].v + vufs[td].u))
+
+        ts += np.exp(1j * 2.0 * np.pi * np.dot(freq[i], hours)) * ap + \
+            np.exp(-1 * 1j * 2.0 * np.pi * np.dot(freq[i], hours)) * am
+
     return ts if tide_minor else ts.real
 
 

@@ -5,7 +5,7 @@
   Methods for working tidal forcing files in ROMS
 
   Written by Brian Powell on 04/05/16
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -127,16 +127,16 @@ def load_forcing(filename):
     else:
         if getattr(nc, 'tide_start', None):
             frc['tide_start'] = datetime.datetime.strptime(
-                re.sub('^[^\(]*', '', getattr(nc, 'tide_start')),
+                re.sub(r'^[^\(]*', '', getattr(nc, 'tide_start')),
                 "(%Y-%m-%d %H:%M:%S)")
         elif getattr(nc, 'base_date', None):
             frc['tide_start'] = datetime.datetime.strptime(
-                re.sub('^.*since\s*', '', getattr(nc, 'base_date')),
+                re.sub(r'^.*since\s*', '', getattr(nc, 'base_date')),
                 "%Y-%m-%d %H:%M:%S")
     tides = getattr(nc, 'tidal_constituents', None) or \
         getattr(nc, 'tides', None) or getattr(nc, 'components', None)
-    frc['tides'] = [s for s in re.split(
-        '[\W, ]', tides.upper()) if s][:frc['Eamp'].shape[0]]
+    frc['tides'] = [s for s in re.split(r'[\W, ]',
+                                        tides.upper()) if s][:frc['Eamp'].shape[0]]
     nc.close()
     return frc
 

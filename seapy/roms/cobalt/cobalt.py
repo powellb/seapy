@@ -6,10 +6,11 @@
    and ROMS
 
    Author: Brian Powell <powellb@hawaii.edu>
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 import seapy
 import os
+import importlib.resources as importer
 
 # Define the COBALT fields that are used
 fields = {"alk": {"grid": "rho", "dims": 3},
@@ -77,15 +78,16 @@ frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
 vmap = {k: k for k in fields}
 
 # Create a dictionary of CDL files
-_cdl_dir = os.path.dirname(__file__)
-cdl = {"ini": _cdl_dir + "/ini.cdl",
-       "his": _cdl_dir + "/his.cdl",
-       "fullhis": _cdl_dir + "/his-full.cdl",
-       "nudge": _cdl_dir + "/nudge.cdl",
-       "clim": _cdl_dir + "/clim.cdl",
-       "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_bulk.cdl",
-       "zlevel": _cdl_dir + "/zlevel-cobalt-2d.cdl"}
+
+_cdl_dir = importer.files("seapy.roms.cobalt")
+cdl = {"ini": _cdl_dir.joinpath("ini.cdl"),
+       "his": _cdl_dir.joinpath("his.cdl"),
+       "fullhis": _cdl_dir.joinpath("his-full.cdl"),
+       "nudge": _cdl_dir.joinpath("nudge.cdl"),
+       "clim": _cdl_dir.joinpath("clim.cdl"),
+       "bry": _cdl_dir.joinpath("bry.cdl"),
+       "frc": _cdl_dir.joinpath("frc_bulk.cdl"),
+       "zlevel": _cdl_dir.joinpath("zlevel-cobalt-2d.cdl")}
 
 
 # Keep track of original ROMS fields

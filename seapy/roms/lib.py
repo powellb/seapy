@@ -5,7 +5,7 @@
   General ROMS utils
 
   Written by Brian Powell on 05/24/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -213,6 +213,86 @@ def thickness(vtransform=1, h=None, hc=100, scoord=None,
     # Get the w-coordinate depths and return the differenc
     z_w = depth(vtransform, h, hc, scoord, stretching, zeta, True)
     return z_w[1:, :, :] - z_w[0:-1, :, :]
+
+
+def extract(fld, i, j, k=None, depths=None, mask=None, u=False, v=False):
+    """
+    Extract value(s) from a ROMS gridded field using fractional i,j(,k)
+    coordinates. This uses the ROMS Fortran routine so that there is
+    direct correspondence between offline and online extraction.
+
+    Parameters
+    ----------
+    fld : np.ma.array,
+      ROMS field (2D or 3D) to extract the values from
+    i : np.array,
+      Grid i-locations to extract
+    j : np.array,
+      Grid j-locations to extract
+    k : np.array [optional if 2d],
+      Grid k-locations to extract
+    depths : np.array [optional],
+      ROMS depths for k location of depth in meters
+    mask : np.array [optional],
+      Land/Sea mask (1=ocean, 0=land)
+    u : boolean [optional]
+      If True, then the fld is on a u-grid, which will adjust the points
+      accordingly
+    v : boolean [optional]
+      If True, then the fld is on a v-grid, which will adjust the points
+      accordingly
+
+    Returns
+    -------
+    vals : np.ma.array,
+      array containing the values requested at the points
+    """
+
+    # Check dimensions
+    if len(i) != len(j):
+        raise IndexError("i is not the same size as j")
+
+    if mask is None:
+        mask = np.ones(fld.shape[:2])
+
+    # Python/Fortran
+    di = 1
+    dj = 1
+    # Set up the point locations based on grid
+    if u:
+        di = 0
+    if v:
+        dj = 0
+
+    # Check if this is a 3D or 2D field
+    if fld.ndim == 3:
+        try:
+            from seapy.external.extractobs import extract_obs3d
+        except ImportError:
+            raise RuntimeError(
+                "The extractobs library was not built on install. Cannot use extract.")
+
+        if mask.shape[:2] != fld.shape[1:]:
+            raise IndexError("mask is wrong size for fld")
+        if depths is None:
+            depths = np.ones(fld.shape)
+        if k is None:
+            raise IndexError("k is not the same size as i,j")
+        vals = extract_obs3d(np.transpose(fld.data, (2, 1, 0)),
+                             np.transpose(depths, (2, 1, 0)), mask.T,
+                             i + di, j + dj, k)
+    else:
+        try:
+            from seapy.external.extractobs import extract_obs2d
+        except ImportError:
+            raise RuntimeError(
+                "The extractobs library was not built on install. Cannot use extract.")
+
+        if mask.shape[:2] != fld.shape[:2]:
+            raise IndexError("mask is wrong size for fld")
+        vals = extract_obs2d(fld.T.data, mask.T, i + di, j + dj)
+
+    return np.ma.masked_equal(vals, -9999)
 
 
 def gen_boundary_region(shp, north=None, east=None, west=None, south=None,

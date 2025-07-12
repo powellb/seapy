@@ -5,7 +5,7 @@
    Routines for dealing with point source files in ROMS
 
    Author: Brian Powell <powellb@hawaii.edu>
-   Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+   Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 
 """
 

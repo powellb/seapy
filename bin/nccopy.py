@@ -6,8 +6,7 @@
    file to another. It only handles variables that are in both.
 
    Author: Brian Powell <powellb@hawaii.edu>
-   Copyright (c) 2024, Brian Powell, all rights reserved.
-   Created:  5 January 2024
+   Copyright (c) 2025, Brian Powell, all rights reserved.
 
 """
 import netCDF4

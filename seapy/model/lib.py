@@ -6,7 +6,7 @@
   when importing the model module
 
   Written by Brian Powell on 10/18/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 import numpy as np
 import seapy
@@ -26,9 +26,9 @@ def _cgrid_rho_vel(rho, dim, fill):
     if fill:
         rho = seapy.convolve_mask(rho, copy=True)
     shp = np.array(rho.shape)
-    fore = np.product([shp[i] for i in np.arange(0, dim)]).astype(int)
-    aft = np.product([shp[i]
-                      for i in np.arange(dim + 1, rho.ndim)]).astype(int)
+    fore = np.prod([shp[i] for i in np.arange(0, dim)]).astype(int)
+    aft = np.prod([shp[i]
+                   for i in np.arange(dim + 1, rho.ndim)]).astype(int)
     nfld = 0.5 * (rho.reshape([fore, shp[dim], aft])[:, 0:-1, :].filled(np.nan) +
                   rho.reshape([fore, shp[dim], aft])[:, 1:, :].filled(np.nan))
     shp[dim] = shp[dim] - 1
@@ -92,7 +92,7 @@ def u2rho(u, fill=False):
     shp = np.array(u.shape)
     nshp = shp.copy()
     nshp[-1] = nshp[-1] + 1
-    fore = np.product([shp[i] for i in np.arange(0, u.ndim - 1)]).astype(int)
+    fore = np.prod([shp[i] for i in np.arange(0, u.ndim - 1)]).astype(int)
     nfld = np.ones([fore, nshp[-1]])
     nfld[:, 1:-1] = 0.5 * \
         (u.reshape([fore, shp[-1]])[:, 0:-1].filled(np.nan) +
@@ -123,7 +123,7 @@ def v2rho(v, fill=False):
     shp = np.array(v.shape)
     nshp = shp.copy()
     nshp[-2] = nshp[-2] + 1
-    fore = np.product([shp[i] for i in np.arange(0, v.ndim - 2)]).astype(int)
+    fore = np.prod([shp[i] for i in np.arange(0, v.ndim - 2)]).astype(int)
     nfld = np.ones([fore, nshp[-2], nshp[-1]])
     nfld[:, 1:-1, :] = 0.5 * \
         (v.reshape([fore, shp[-2], shp[-1]])[:, 0:-1, :].filled(np.nan) +
@@ -400,7 +400,7 @@ def bvf(depth, rho, axis=None, drhodt=None, drhods=None):
         else:
             axis = 1
 
-    Zw = 0.5 * ( Z[:-1,:,:] + Z[1:,:,:] )
+    Zw = 0.5 * (Z[:-1, :, :] + Z[1:, :, :])
     rho0 = _R0 + _R0a * Zw - _R0b * Zw * Zw
     bvf = - scipy.constants.g / rho0 * \
         np.diff(rho, axis=axis) / -np.diff(Z, axis=0)

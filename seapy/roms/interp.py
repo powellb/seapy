@@ -5,7 +5,7 @@
   Methods to interpolate ROMS fields onto other grids
 
   Written by Brian Powell on 11/02/13
-  Copyright (c)2010--2023 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
 """
 
 
@@ -25,7 +25,7 @@ _down_scaling = {"zeta": 1.0, "u": 0.999,
 _ksize_range = (7, 15)
 # Limit amount of memory in bytes to process in a single read. This determines how to
 # divide up the time-records in interpolation
-_max_memory = 768 * 1024 * 1024   # 768 MBytes
+_max_memory = 1024**3   # 1 GB
 
 
 def __mask_z_grid(z_data, src_depth, z_depth):
@@ -242,12 +242,12 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                                         tmp, child_grid.lon_rho,
                                         child_grid.lat_rho,
                                         weight=weight, nx=nx, ny=ny)
-            tmp = np.ma.masked_equal(src_grid.mask_u, 0)
+            tmp = np.ma.masked_equal(src_grid.mask_u.astype(float), 0)
             tmp, pmapu = seapy.oasurf(src_grid.lon_u, src_grid.lat_u,
                                       tmp, child_grid.lon_rho,
                                       child_grid.lat_rho,
                                       weight=weight, nx=nx, ny=ny)
-            tmp = np.ma.masked_equal(src_grid.mask_v, 0)
+            tmp = np.ma.masked_equal(src_grid.mask_v.astype(float), 0)
             tmp, pmapv = seapy.oasurf(src_grid.lon_v, src_grid.lat_v,
                                       tmp, child_grid.lon_rho,
                                       child_grid.lat_rho,
@@ -312,9 +312,9 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                 # Compute the max number of hold in memory
                 maxrecs = np.maximum(1,
                                      np.minimum(len(records),
-                                                np.int8(_max_memory /
-                                                        (child_grid.lon_rho.nbytes +
-                                                         src_grid.lon_rho.nbytes))))
+                                                np.int32(_max_memory /
+                                                         (child_grid.lon_rho.nbytes +
+                                                          src_grid.lon_rho.nbytes))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                     outr = np.s_[
                         rn * maxrecs: np.minimum((rn + 1) * maxrecs,
@@ -334,11 +334,11 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
                     ncout.sync()
             else:
                 maxrecs = np.maximum(1, np.minimum(
-                    len(records), np.int8(_max_memory /
-                                          (child_grid.lon_rho.nbytes *
-                                           child_grid.n +
-                                           src_grid.lon_rho.nbytes *
-                                           src_grid.n))))
+                    len(records), np.int32(_max_memory /
+                                           (child_grid.lon_rho.nbytes *
+                                            child_grid.n +
+                                            src_grid.lon_rho.nbytes *
+                                            src_grid.n))))
                 for rn, recs in enumerate(seapy.chunker(records, maxrecs)):
                     outr = np.s_[
                         rn * maxrecs: np.minimum((rn + 1) * maxrecs, len(records))]
@@ -378,11 +378,11 @@ def __interp_grids(src_grid, child_grid, ncsrc, ncout, records=None,
         srcangle = getattr(src_grid, 'angle', None)
         dstangle = getattr(child_grid, 'angle', None)
         maxrecs = np.minimum(len(records),
-                             np.int8(_max_memory /
-                                     (2 * (child_grid.lon_rho.nbytes *
-                                           child_grid.n +
-                                           src_grid.lon_rho.nbytes *
-                                           src_grid.n))))
+                             np.int32(_max_memory /
+                                      (2 * (child_grid.lon_rho.nbytes *
+                                            child_grid.n +
+                                            src_grid.lon_rho.nbytes *
+                                            src_grid.n))))
         progress.update(_task_id, description="velocity")
         inc_count = child_grid.n / maxrecs
         for nr, recs in enumerate(seapy.chunker(records, maxrecs)):
@@ -488,8 +488,8 @@ def field2d(src_lon, src_lat, src_field, dest_lon, dest_lat, dest_mask=None,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int8(_max_memory /
-                                            (dest_lon.nbytes + src_lon.nbytes))))
+                                    np.int32(_max_memory /
+                                             (dest_lon.nbytes + src_lon.nbytes))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 2d".center(20)):
         nfield = np.ma.array(Parallel(n_jobs=threads)
@@ -560,11 +560,11 @@ def field3d(src_lon, src_lat, src_depth, src_field, dest_lon, dest_lat,
     records = np.arange(0, src_field.shape[0])
     maxrecs = np.maximum(1,
                          np.minimum(records.size,
-                                    np.int8(_max_memory /
-                                            (dest_lon.nbytes *
-                                             dest_depth.shape[0] +
-                                             src_lon.nbytes *
-                                             src_depth.shape[0]))))
+                                    np.int32(_max_memory /
+                                             (dest_lon.nbytes *
+                                              dest_depth.shape[0] +
+                                              src_lon.nbytes *
+                                              src_depth.shape[0]))))
     for rn, recs in track(enumerate(seapy.chunker(records, maxrecs)),
                           total=maxrecs, description="interp 3d".center(20)):
         nfield = np.ma.array(Parallel(n_jobs=threads)
