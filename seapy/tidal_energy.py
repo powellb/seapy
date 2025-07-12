@@ -16,7 +16,7 @@ Barotropic to Baroclinic conversion is given by:
 
 .. math::
 
-    C=1 / T_t \int_0^T_t P'_t * wbar_t * dt,                    (1)
+    C=1 / T_t int_0^T_t P'_t * wbar_t * dt,                    (1)
 
 where, T_t is the tidal period for consituent, t, P' is the pressure perturbation,
 wbar is the vertical velocity. Hence, conversion is the time average of the
@@ -39,8 +39,8 @@ Energy Flux is given by:
 
 .. math::
 
-    Flux_u = 1 / T_t * \int_0^T_t u'_t * P'_t * dt,                        (5) \\
-    Flux_v = 1 / T_t * \int_0^T_t v'_t * P'_t * dt,                        (6)
+    Flux_u = 1 / T_t * int_0^T_t u'_t * P'_t * dt,                        (5) \\
+    Flux_v = 1 / T_t * int_0^T_t v'_t * P'_t * dt,                        (6)
 
 where u' and v' are the velocity anomalies for the constituent, t. As per
 above, we can express as waves to yield:
@@ -54,7 +54,7 @@ Displacement is given by:
 
 .. math::
 
-    Displace = \int_0^T_t/2 g * rho'_t / ( rho0 * N_t**2 ) * dt,           (9)
+    Displace = int_0^T_t/2 g * rho'_t / ( rho0 * N_t**2 ) * dt,           (9)
 
 where rho' is the density anomaly and N**2 is the Brunt-Vaisala. NOTE:
 this is integrated over one-half period becuase (by definition), it would
@@ -63,15 +63,15 @@ we can integrate it for one-half period for the todal displacement:
 
 .. math::
 
-    Displace = \int_0^T_t/2 w_t * dt \\
-        = \int_0^T_t/2 Amp_w_t * sin( 2 * pi * t / T_t )               (10) \\
+    Displace = int_0^T_t/2 w_t * dt \\
+        = int_0^T_t/2 Amp_w_t * sin( 2 * pi * t / T_t )               (10) \\
         = Amp_w_t * T_t / pi
 
 Horizontal Kinetic Energy is given by:
 
 .. math::
 
-    HKE = 0.5 * rho0 * 1 / T_t * \int_0^T_t (u'_t**2 + v'_t**2) * dt        (11)
+    HKE = 0.5 * rho0 * 1 / T_t * int_0^T_t (u'_t**2 + v'_t**2) * dt        (11)
 
 substitute u' and v' as waveforms and integrate over a period,
 
@@ -83,14 +83,14 @@ Available Potential Energy is given by:
 
 .. math::
 
-    APE = 0.5 * rho0 * 1 / T_t * \int_0^T_t N_t**2 * Displace_t**2 * dt     (13)
+    APE = 0.5 * rho0 * 1 / T_t * int_0^T_t N_t**2 * Displace_t**2 * dt     (13)
 
 For this, we will use the time-average N**2 (not at the specific tidal
 frequency) and use (10); hence, it becomes:
 
 .. math::
 
-    APE = 0.5 * rho0 * (Amp_w_t * T_t / pi)**2 * 1/T_t \int_0^T_t N**2 * dt (14)
+    APE = 0.5 * rho0 * (Amp_w_t * T_t / pi)**2 * 1/T_t int_0^T_t N**2 * dt (14)
 """
 
 import numpy as np
