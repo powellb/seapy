@@ -10,7 +10,7 @@
 """
 import seapy
 import os
-import importlib
+import importlib.resources as importer
 
 # Define the COBALT fields that are used
 fields = {"alk": {"grid": "rho", "dims": 3},
@@ -78,16 +78,16 @@ frc_fields = {"atmCO2": {"grid": "rho", "dims": 2},
 vmap = {k: k for k in fields}
 
 # Create a dictionary of CDL files
-with importlib.resources.path("seapy.roms", "cobalt") as fspath:
-    _cdl_dir = str(fspath)
-cdl = {"ini": _cdl_dir + "/ini.cdl",
-       "his": _cdl_dir + "/his.cdl",
-       "fullhis": _cdl_dir + "/his-full.cdl",
-       "nudge": _cdl_dir + "/nudge.cdl",
-       "clim": _cdl_dir + "/clim.cdl",
-       "bry": _cdl_dir + "/bry.cdl",
-       "frc": _cdl_dir + "/frc_bulk.cdl",
-       "zlevel": _cdl_dir + "/zlevel-cobalt-2d.cdl"}
+
+_cdl_dir = importer.files("seapy.roms.cobalt")
+cdl = {"ini": _cdl_dir.joinpath("ini.cdl"),
+       "his": _cdl_dir.joinpath("his.cdl"),
+       "fullhis": _cdl_dir.joinpath("his-full.cdl"),
+       "nudge": _cdl_dir.joinpath("nudge.cdl"),
+       "clim": _cdl_dir.joinpath("clim.cdl"),
+       "bry": _cdl_dir.joinpath("bry.cdl"),
+       "frc": _cdl_dir.joinpath("frc_bulk.cdl"),
+       "zlevel": _cdl_dir.joinpath("zlevel-cobalt-2d.cdl")}
 
 
 # Keep track of original ROMS fields

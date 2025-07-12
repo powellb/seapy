@@ -12,7 +12,7 @@ import datetime
 from collections import namedtuple
 import os
 from warnings import warn
-import importlib
+import importlib.resources as importer
 
 amp_phase = namedtuple('amp_phase', 'amp phase')
 tellipse = namedtuple('tellipse', 'major minor angle phase')
@@ -23,9 +23,9 @@ __shallowinfo = namedtuple('__shallowinfo', 'isshallow iname coef')
 # Load the constituent data when the module is imported
 __reftime = datetime.datetime(1899, 12, 31, 12, 0, 0)
 
-with importlib.resources.path("seapy", "constituents.npz") as fspath:
-    with np.load(fspath, allow_pickle=True) as data:
-        __const_file = data['__const'][()]
+with np.load(importer.files("seapy").joinpath("constituents.npz"),
+             allow_pickle=True) as data:
+    __const_file = data['__const'][()]
 
 __const = {}
 for f in list(__const_file.keys()):

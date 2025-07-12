@@ -86,7 +86,7 @@ class map(object):
     >>> m=seapy.mapping.map(region=(lon[0,0],lat[0,0],lon[-1,-1],lat[-1,-1]))
     >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
     >>> m.land()
-    >>> m.colorbar(label=r"Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
+    >>> m.colorbar(label="Sea Surface Temp",cticks=[22,23,24,25,26])
     >>> m.ax.patch.set_alpha(1)
     >>> m.fig.patch.set_alpha(0.0)
     >>> m.fig.savefig("sst.png",dpi=100)
@@ -503,7 +503,7 @@ class hawaii(map):
         >>> m=seapy.hawaii()
         >>> m.pcolormesh(lon,lat,sst,vmin=22,vmax=26,cmap=plt.cm.bwr)
         >>> m.land()
-        >>> m.colorbar(label=r"Sea Surface Temp [$^\circ$C]",cticks=[22,23,24,25,26])
+        >>> m.colorbar(label="Sea Surface Temp",cticks=[22,23,24,25,26])
         >>> m.ax.patch.set_alpha(1)
         >>> m.fig.patch.set_alpha(0.0)
         >>> m.fig.savefig("sst.png",dpi=100)
@@ -511,9 +511,8 @@ class hawaii(map):
       Copyright (c)2010--2025 University of Hawaii under the MIT-License.
     """
     # Class variable for the shapes
-    import importlib
-    with importlib.resources.path("seapy.hawaii_coast", "hawaii.shp") as fspath:
-        _shape_file = fspath
+    import importlib.resources as importer
+    _shape_file = importer.files("seapy").joinpath("hawaii_coast", "hawaii.shp")
 
     def __init__(self, *args, region=(-163, 17, -153, 24), figsize=(8., 6.),
                  **kwargs):
