@@ -1,0 +1,65 @@
+[build-system]
+    build-backend = 'mesonpy'
+    requires = [
+        "wheel",
+        "meson-python>=0.8.0",
+        "setuptools<60.0",  # Do not increase, 60.0 enables vendored distutils
+        # "oldest-supported-numpy; python_version>'3.9'",
+        # "numpy; python_version<='3.9'"
+        "numpy",
+    ]
+
+[project]
+    name = "seapy"
+    license = {file = "LICENSE.txt"}
+    description = "State Estimation and Analysis in PYthon"
+    maintainers = [{ name = "Brian Powell", email = "powellb@hawaii.edu" }]
+    requires-python = ">=3.8"
+    dependencies = [
+        # TODO: update to "pin-compatible" once possible, see
+        # https://github.com/FFY00/meson-python/issues/29
+        "numpy>=1.19.5,<2.0.0",
+        "cartopy",
+        "h5py",
+        "joblib",
+        "netcdf4",
+        "numpy",
+        "numpy_groupies",
+        "rich",
+        "scipy"
+    ]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Fortran",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Utilities",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+dynamic = ['version']
+
+[project.optional-dependencies]
+    test = [
+        "pytest",
+        "meson",
+        "tox",
+    ]
+
+    dev = [
+        "ruff",
+    ]

@@ -1,8 +1,0 @@
-cartopy
-h5py
-joblib
-netcdf4
-numpy
-numpy_groupies
-rich
-scipy

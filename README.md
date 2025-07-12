@@ -1,11 +1,31 @@
 # State Estimation and Analysis in PYthon (SEAPY)
 
+[![Test](https://github.com/rsoutelino/seapy/actions/workflows/test.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/test.yml)
+[![Build](https://github.com/rsoutelino/seapy/actions/workflows/build.yml/badge.svg)](https://github.com/rsoutelino/seapy/actions/workflows/build.yml)
+
+
+
 Tools for working with ocean models and data.
 
 SEAPY requires: basemap, h5py, joblib, netcdf4, numpy, numpy_groupies, rich and scipy.
 
 
 ## Installation
+
+### Install with pip
+
+Pip installation is based on [meson-python](https://mesonbuild.com/meson-python/), following example from [pyfort](https://github.com/larsbuntemeyer/pyfort).
+
+- create a python virtual environment using your preferred tool, activate the environment and run `pip install .`
+
+Simple example using virtualenvwrapper assuming you are in the root directory of cloned
+version of this repository:
+
+```bash
+mkvirtualenv seapy
+workon seapy # if not activated automatically
+pip install .
+```
 
 ### Install from Conda-Forge
 
