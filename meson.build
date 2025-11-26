@@ -1,6 +1,6 @@
 project( 'seapy', 'c',
   # Note that the git commit hash cannot be added dynamically here
-  version: '1.2',
+  version: '1.2.1',
   license: 'MIT',
   meson_version: '>= 0.64.0',
   default_options: [

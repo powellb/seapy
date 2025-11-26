@@ -708,7 +708,7 @@ class grid:
         """
 
         try:
-            from seapy.external.hindices import hindices
+            from seapy.external.oalib import hindices
         except ImportError:
             raise RuntimeError(
                 "The hindices library was not built on install. Cannot use the ij method.")
