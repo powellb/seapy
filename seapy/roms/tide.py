@@ -70,6 +70,8 @@ def create_forcing(filename, tide, title="Tidal Forcing", epoch=seapy.default_ep
     tideout.variables['tide_Cmin'][:] = tide['Cminor']
     tideout.variables['tide_Cphase'][:] = np.degrees(tide['Cphase'])
     tideout.variables['tide_Cangle'][:] = np.degrees(tide['Cangle'])
+    for n, t in enumerate(tide['tides']):
+        tideout.variables['tidal_constituents'][n, :] = [t[0], t[1]]
     t0 = tide['tide_start']
     tideout.variables['zero_phase_date'][:] = t0.year * 1e4 + t0.month * 1e2 + \
         t0.day + t0.hour / 24 + t0.minute / (24 * 60)
