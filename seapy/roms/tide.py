@@ -116,7 +116,6 @@ def load_forcing(filename):
         frc['Uphase'] = np.radians(nc.variables['tide_Uphase'][:])
         frc['Vphase'] = np.radians(nc.variables['tide_Vphase'][:])
     except:
-        print("GEN UV")
         frc['Uamp'], frc['Uphase'], frc['Vamp'], frc['Vphase'] = \
             seapy.tide.ellipse_amppha(frc['Cmajor'], frc['Cminor'],
                                       frc['Cphase'], frc['Cangle'])
