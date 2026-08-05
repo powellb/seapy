@@ -364,7 +364,7 @@ class aquarius_sss(obsgen):
             pass
         finally:
             f.close()
-            return st, en
+        return st, en
 
     def convert_file(self, file, title="AQUARIUS Obs"):
         """
@@ -430,7 +430,7 @@ class aviso_sla_map(obsgen):
             pass
         finally:
             nc.close()
-            return st, en
+        return st, en
 
     def convert_file(self, file, title="AVISO Obs"):
         """
@@ -637,7 +637,7 @@ class navo_sst_map(obsgen):
             pass
         finally:
             nc.close()
-            return st, en
+        return st, en
 
     def convert_file(self, file, title="NAVO SST Obs"):
         """
@@ -1239,7 +1239,7 @@ class argo_ctd(obsgen):
             pass
         finally:
             nc.close()
-            return st, en
+        return st, en
 
     def convert_file(self, file, title="Argo Obs"):
         """
