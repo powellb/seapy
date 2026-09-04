@@ -9,7 +9,7 @@
              specific subclasses
 
   Written by Brian Powell on 08/15/15
-  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2026 University of Hawaii under the MIT-License.
 """
 
 
@@ -72,7 +72,7 @@ def error_profile(obs, depth, error, provenance=None):
             fint = interp1d(depth, error[var].flatten(), copy=False)
             if pro.any():
                 l = np.where(np.logical_and(obs.type == typ,
-                                            np.in1d(obs.provenance, pro)))
+                                            np.isin(obs.provenance, pro)))
             else:
                 l = np.where(np.logical_and(obs.type == typ, obs.depth < 0))
             nerr = fint(np.abs(obs.depth[l].data))
@@ -141,7 +141,7 @@ def add_ssh_tides(obs, tide_file, tide_error, tide_start=None, provenance=None,
     pro = seapy.roms.obs.asprovenance(provenance) if provenance else None
     if pro:
         l = np.where(np.logical_and(obs.type == 1,
-                                    np.in1d(obs.provenance, pro)))
+                                    np.isin(obs.provenance, pro)))
     else:
         l = np.where(obs.type == 1)
 
@@ -929,8 +929,6 @@ class viirs_swath(obsgen):
 # IN SITU DATA
 #
 ##############################################################################
-
-
 class seaglider_profile(obsgen):
     """
     class to process SeaGlider .pro files into ROMS observation
@@ -1022,6 +1020,89 @@ class seaglider_profile(obsgen):
                                       pro["lat"][good],
                                       depth.compressed(),
                                       data, self.dt, title=title)
+
+
+class seaglider_ncprofile(obsgen):
+    """
+    class to process SeaGlider .nc files into ROMS observation
+    files. This is a subclass of seapy.roms.genobs.genobs, and handles
+    the loading of the data.
+    """
+
+    def __init__(self, grid, dt, reftime=seapy.default_epoch, temp_limits=None,
+                 salt_limits=None, depth_limit=-15, temp_error=0.2,
+                 salt_error=0.05):
+        if temp_limits is None:
+            self.temp_limits = (5, 30)
+        else:
+            self.temp_limits = temp_limits
+        if salt_limits is None:
+            self.salt_limits = (31, 35.5)
+        else:
+            self.salt_limits = salt_limits
+        self.depth_limit = depth_limit
+        self.temp_error = temp_error
+        self.salt_error = salt_error
+        super().__init__(grid, dt, reftime)
+
+    def convert_file(self, file, title="SeaGlider Obs"):
+        """
+        Load a SeaGlider .nc file and convert into an obs structure
+        """
+        # Process the netcdf file
+        with seapy.netcdf(file) as nc:
+            # Set the provenance
+            glider_name = "GLIDER"
+            try:
+                glider_name = "GLIDER_SG" + ''.join(
+                    nc.variables['sg_cal_id_str'][:].astype(str).tolist())
+            except:
+                print("Cannot get glider name")
+            provenance = seapy.roms.obs.asprovenance(glider_name)
+
+            # Load the Glider data
+            try:
+                time = nc.variables['ctd_time'][:]
+                lat = nc.variables['latitude_gsm'][:]
+                lon = nc.variables['longitude_gsm'][:]
+                depth = nc.variables['depth'][:]
+                temp = nc.variables['temperature'][:]
+                salt = nc.variables['salinity'][:]
+            except Exception as e:
+                raise ValueError(f"Cannot load Seaglider: {e}")
+
+            # Make sure that the GPS fix isn't screwy
+            if self.grid.east():
+                lon[lon < 0] += 360
+            dist = seapy.earth_distance(lon[0], lat[0],
+                                        lon[-1], lat[-1])
+            velocity = dist / time[-1]
+
+            if velocity > 2:
+                warn("WARNING: GPS fix is incorrect for " + file)
+                return None
+
+            time = time / 86400 + \
+                seapy.date2day(datetime.datetime(1970, 1, 1))
+
+            # Build the data with masked entries
+            temp = np.ma.masked_outside(temp, self.temp_limits[0],
+                                        self.temp_limits[1])
+            salt = np.ma.masked_outside(salt, self.salt_limits[0],
+                                        self.salt_limits[1])
+            depth = np.ma.masked_greater(-depth, self.depth_limit)
+            good = ~np.ma.getmaskarray(depth)
+
+            # Grid it
+            data = [seapy.roms.obs.raw_data("TEMP", provenance, temp[good],
+                                            None, self.temp_error),
+                    seapy.roms.obs.raw_data("SALT", provenance, salt[good],
+                                            None, self.salt_error)]
+            return seapy.roms.obs.gridder(self.grid, time[good],
+                                          lon[good],
+                                          lat[good],
+                                          depth.compressed(),
+                                          data, self.dt, title=title)
 
 
 class mooring(obsgen):

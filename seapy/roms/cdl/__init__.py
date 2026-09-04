@@ -5,6 +5,6 @@
 
     Module for working with oceanographic data and models
 
-  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2026 University of Hawaii under the MIT-License.
 
 """

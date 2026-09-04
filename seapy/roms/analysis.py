@@ -5,7 +5,7 @@
   Methods to assist in the analysis of ROMS fields
 
   Written by Brian Powell on 05/24/15
-  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2026 University of Hawaii under the MIT-License.
 """
 
 import numpy as np
@@ -683,7 +683,7 @@ def plot_obs_spatial(obs, type='zeta', prov=None, time=None, depth=0,
 
     # If there is a time specific condition, find the sets
     if time is not None:
-        idx = idx[np.in1d(obs.time[idx], time)]
+        idx = idx[np.isin(obs.time[idx], time)]
 
     # If we don't have anything to plot, return
     if not idx.any():
@@ -752,7 +752,7 @@ def plot_obs_profile(obs, type='temp', prov=None, time=None,
 
     # If there is a time specific condition, find the sets
     if time is not None:
-        idx = idx[np.in1d(obs.time[idx], time)]
+        idx = idx[np.isin(obs.time[idx], time)]
 
     # If we don't have anything to plot, return
     if not idx.any():

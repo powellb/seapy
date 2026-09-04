@@ -5,7 +5,7 @@
 
     Module for working with oceanographic data and models
 
-  Copyright (c)2010--2025 University of Hawaii under the MIT-License.
+  Copyright (c)2010--2026 University of Hawaii under the MIT-License.
 
   Requires the following packages: joblib, rich, cartopy, numpy_groupies
 
@@ -54,4 +54,4 @@ from .environ import opt
 from .mapping import map, hawaii
 from .oa import *
 
-__version__ = "1.2.2"
+__version__ = "1.2.5"
